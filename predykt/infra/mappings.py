@@ -27,6 +27,7 @@ def map_project_definition_from_dao(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
+        plugins=src.plugins
     )
 
 
@@ -37,6 +38,7 @@ def map_project_definition_to_dao(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
+        plugins=src.plugins,
         creation_date_utc=datetime.utcnow(),
     )
 

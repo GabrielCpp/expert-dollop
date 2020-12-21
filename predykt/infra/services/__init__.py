@@ -2,3 +2,5 @@ from .project_definition_service import ProjectDefinitionService
 from .project_definition_container_service import ProjectDefinitionContainerService
 from .project_service import ProjectService
 from .translation_service import TranslationService
+from .ressource_service import RessourceService
+from .project_definition_plugin_service import ProjectDefinitionPluginService

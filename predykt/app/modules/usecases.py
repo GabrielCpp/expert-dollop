@@ -1,8 +1,14 @@
 from injector import Binder, inject
-from predykt.core.usecases import ProjectDefinitonUseCase, ProjectDefinitonContainerUseCase
+from predykt.core.usecases import ProjectDefinitonUseCase, ProjectDefinitonContainerUseCase, TranslationUseCase, ProjectUseCase
 
 
 def bind_usecases(binder: Binder) -> None:
-    binder.bind(ProjectDefinitonUseCase, inject(ProjectDefinitonUseCase))
-    binder.bind(ProjectDefinitonContainerUseCase,
-                inject(ProjectDefinitonContainerUseCase))
+    usecases = [
+        ProjectDefinitonUseCase,
+        ProjectDefinitonContainerUseCase,
+        TranslationUseCase,
+        ProjectUseCase,
+    ]
+
+    for usecase_type in usecases:
+        binder.bind(usecase_type, inject(usecase_type))

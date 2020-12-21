@@ -30,7 +30,7 @@ def runMigration(c):
 
 
 @task(name='migration:sql')
-def newMigration(c, migration):
+def migrate(c, migration):
     c.run("poetry run alembic upgrade {} --sql".format(message))
 
 

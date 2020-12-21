@@ -19,6 +19,7 @@ project_definition_table = Table(
     Column('id', postgresql.UUID(), nullable=False, primary_key=True),
     Column('name', String, nullable=False),
     Column('default_datasheet_id', postgresql.UUID(), nullable=False),
+    Column('plugins', ARRAY(postgresql.UUID(), dimensions=1), nullable=False),
     Column('creation_date_utc', DateTime(timezone=True), nullable=False),
 )
 
@@ -27,6 +28,7 @@ class ProjectDefinitionDao(BaseModel):
     id: UUID
     name: str
     default_datasheet_id: UUID
+    plugins: List[UUID]
     creation_date_utc: datetime
 
 
@@ -120,6 +122,24 @@ class ProjectDefinitionFunctionDao(BaseModel):
     dependencies: dict
     struct_id: UUID
     package_id: UUID
+
+
+project_definition_plugin_table = Table(
+    "project_definition_plugin", metadata,
+    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
+    Column('validation_schema', postgresql.JSON(), nullable=False),
+    Column('default_config', postgresql.JSON(), nullable=False),
+    Column('form_config', postgresql.JSON(), nullable=False),
+    Column('name', String, nullable=False),
+)
+
+
+class ProjectDefinitionPluginDao(BaseModel):
+    id: UUID
+    validation_schema: dict
+    default_config: dict
+    form_config: dict
+    name: str
 
 
 project_table = Table(

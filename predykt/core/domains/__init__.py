@@ -3,5 +3,7 @@ from .project_definition_container import ProjectDefinitionContainer
 from .project_definition_package import ProjectDefinitionPackage
 from .project_definition_struct import ProjectDefinitionStruct
 from .project_definition_function import ProjectDefinitionFunction
+from .project_definition_plugin import ProjectDefinitionPlugin
 from .project import Project
 from .translation import Translation
+from .ressource import Ressource

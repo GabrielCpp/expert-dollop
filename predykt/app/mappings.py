@@ -24,6 +24,7 @@ def map_project_definition_from_dto(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
+        plugins=src.plugins
     )
 
 
@@ -34,6 +35,7 @@ def map_project_definition_to_dto(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
+        plugins=src.plugins
     )
 
 
