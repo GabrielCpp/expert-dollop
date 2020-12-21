@@ -6,7 +6,6 @@ Create Date: 2020-11-25 22:14:43.244618
 
 """
 import datetime
-from sqlalchemy_utils.types.uuid import UUIDType
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy import String, Boolean, DateTime, Column, Binary, Text
@@ -28,8 +27,19 @@ def create_global_table():
     )
 
     op.create_table(
+        "ressource",
+        Column('id', postgresql.UUID(), nullable=False, primary_key=True),
+        Column('owner_id', postgresql.UUID(), nullable=False),
+        Column('name', String, nullable=False)
+    )
+
+    op.create_index(op.f('ix_ressource_name'),
+                    'ressource', ['name'], unique=True)
+
+    op.create_table(
         "translation",
-        Column('ressource_id', UUIDType(), nullable=False, primary_key=True),
+        Column('ressource_id', postgresql.UUID(),
+               nullable=False, primary_key=True),
         Column('locale', String(5), nullable=False, primary_key=True),
         Column('name', String, nullable=False, primary_key=True),
         Column('value', String, nullable=False),
@@ -39,10 +49,9 @@ def create_global_table():
 def create_project_definition_tables():
     op.create_table(
         "project_definition",
-        Column('id', UUIDType(), nullable=False, primary_key=True),
+        Column('id', postgresql.UUID(), nullable=False, primary_key=True),
         Column('name', String, nullable=False),
-        Column('default_datasheet_id', UUIDType(), nullable=False),
-        Column('owner_id', UUIDType(), nullable=False),
+        Column('default_datasheet_id', postgresql.UUID(), nullable=False),
         Column('creation_date_utc', DateTime(timezone=True), nullable=False),
     )
 
@@ -51,8 +60,8 @@ def create_project_definition_tables():
 
     op.create_table(
         "project_definition_container",
-        Column('id', UUIDType(), nullable=False, primary_key=True),
-        Column('project_def_id', UUIDType(), nullable=False),
+        Column('id', postgresql.UUID(), nullable=False, primary_key=True),
+        Column('project_def_id', postgresql.UUID(), nullable=False),
         Column('name', String, nullable=False),
         Column('is_collection', Boolean, nullable=False),
         Column('instanciate_by_default', Boolean, nullable=False),
@@ -78,15 +87,15 @@ def create_project_definition_tables():
 
     op.create_table(
         "project_definition_package",
-        Column('id', UUIDType(), nullable=False, primary_key=True),
-        Column('project_def_id', UUIDType(), nullable=False),
+        Column('id', postgresql.UUID(), nullable=False, primary_key=True),
+        Column('project_def_id', postgresql.UUID(), nullable=False),
         Column('name', String, nullable=False),
         Column('package', String, nullable=False)
     )
 
     op.create_table(
         "project_definition_struct",
-        Column('id', UUIDType(), nullable=False, primary_key=True),
+        Column('id', postgresql.UUID(), nullable=False, primary_key=True),
         Column('name', String, nullable=False),
         Column('package_id', String, nullable=False),
         Column('properties', postgresql.JSON(), nullable=True),
@@ -95,34 +104,33 @@ def create_project_definition_tables():
 
     op.create_table(
         "project_definition_function",
-        Column('id', UUIDType(), nullable=False, primary_key=True),
+        Column('id', postgresql.UUID(), nullable=False, primary_key=True),
         Column('name', String, nullable=False),
         Column('code', Text, nullable=False),
         Column('ast', postgresql.JSON(), nullable=True),
         Column('signature', postgresql.JSON(), nullable=True),
         Column('dependencies', postgresql.JSON(), nullable=True),
-        Column('struct_id', UUIDType(), nullable=True),
-        Column('package_id', UUIDType(), nullable=True)
+        Column('struct_id', postgresql.UUID(), nullable=True),
+        Column('package_id', postgresql.UUID(), nullable=True)
     )
 
 
 def create_project_tables():
     op.create_table(
         "project",
-        Column('id', UUIDType(), nullable=False, primary_key=True),
+        Column('id', postgresql.UUID(), nullable=False, primary_key=True),
         Column('name', String, nullable=False),
         Column('is_staged', Boolean, nullable=False),
-        Column('project_def_id', UUIDType(), nullable=True),
-        Column('datasheet_id', UUIDType(), nullable=False),
-        Column('owner_id', UUIDType(), nullable=False),
+        Column('project_def_id', postgresql.UUID(), nullable=True),
+        Column('datasheet_id', postgresql.UUID(), nullable=False),
         Column('creation_date_utc', DateTime(timezone=True), nullable=False),
     )
 
     op.create_table(
         "project_container",
-        Column('id', UUIDType(), nullable=False, primary_key=True),
-        Column('project_id', UUIDType(), nullable=False),
-        Column('type_id', UUIDType(), nullable=False),
+        Column('id', postgresql.UUID(), nullable=False, primary_key=True),
+        Column('project_id', postgresql.UUID(), nullable=False),
+        Column('type_id', postgresql.UUID(), nullable=False),
         Column('path', ARRAY(String, dimensions=1), nullable=False),
         Column('custom_attributes', postgresql.JSON(), nullable=False),
         Column('value', postgresql.JSON(), nullable=True),
@@ -136,15 +144,14 @@ def create_project_tables():
 def create_datasheet_tables():
     op.create_table(
         "datasheet",
-        Column('id', UUIDType(), nullable=False, primary_key=True),
+        Column('id', postgresql.UUID(), nullable=False, primary_key=True),
         Column('name', String, nullable=False),
-        Column('owner_id', UUIDType(), nullable=False),
         Column('creation_date_utc', DateTime(timezone=True), nullable=False),
     )
 
     op.create_table(
         "datasheet_content",
-        Column('id', UUIDType(), nullable=False, primary_key=True),
+        Column('id', postgresql.UUID(), nullable=False, primary_key=True),
         Column('name', String, nullable=False),
         Column('creation_date_utc', DateTime(timezone=True), nullable=False),
     )

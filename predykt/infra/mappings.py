@@ -27,7 +27,6 @@ def map_project_definition_from_dao(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        owner_id=src.owner_id,
     )
 
 
@@ -38,7 +37,6 @@ def map_project_definition_to_dao(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        owner_id=src.owner_id,
         creation_date_utc=datetime.utcnow(),
     )
 
@@ -164,7 +162,6 @@ def map_project_from_dao(src: ProjectDao, mapper: Mapper = None) -> Project:
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
-        owner_id=src.owner_id,
     )
 
 
@@ -175,5 +172,4 @@ def map_project_to_dao(src: Project, mapper: Mapper = None) -> ProjectDao:
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
-        owner_id=src.owner_id,
     )

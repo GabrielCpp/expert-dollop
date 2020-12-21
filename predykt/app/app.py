@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from structlog import configure
 from structlog.contextvars import merge_contextvars
 from predykt.infra.predykt_db import PredyktDatabase
-import predykt.app.controllers.project as api_routers
+import predykt.app.controllers as api_routers
 from .modules import build_container
 from .middlewares import create_database_transaction_middleware, create_container_middleware, LoggerMiddleware, create_error_middleware, ExceptionHandlerDict
 

@@ -6,6 +6,7 @@ from async_asgi_testclient import TestClient
 from predykt.infra.predykt_db import PredyktDatabase
 from predykt.app.app import creat_app
 from predykt.app.modules import build_container
+from .fixtures import init_db, load_fixture, PredyktDbFixture
 
 
 @pytest.fixture
@@ -42,3 +43,10 @@ async def ac(app, container, dal, caplog) -> TestClient:
 
     async with TestClient(app) as ac:
         yield ac
+
+
+@pytest.fixture
+async def predykt_simple_project(dal):
+    fixture = load_fixture(PredyktDbFixture.SimpleProject)
+    await init_db(dal, fixture)
+    yield fixture

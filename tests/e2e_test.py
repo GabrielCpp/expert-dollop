@@ -11,7 +11,6 @@ class ProjectDefinitionDtoFactory(factory.Factory):
     id = factory.LazyFunction(uuid4)
     name = factory.Sequence(lambda n: f"Gab{n}")
     default_datasheet_id = factory.LazyFunction(uuid4)
-    owner_id = factory.LazyFunction(uuid4)
 
 
 class ProjectDefinitionContainerDtoFactory(factory.Factory):
@@ -38,7 +37,7 @@ async def test_given_project_definition_should_be_able_to_create_delete_update(a
     response = await ac.get(f"/api/project_definition/{expected_project_definition.id}")
     assert response.status_code == 200
 
-    actual = ProjectDefinitionDtoFactory(**response.json())
+    actual = ProjectDefinitionDto(**response.json())
     assert actual == expected_project_definition
 
     response = await ac.delete(f"/api/project_definition/{expected_project_definition.id}")
@@ -49,7 +48,7 @@ async def test_given_project_definition_should_be_able_to_create_delete_update(a
 
 
 @pytest.mark.asyncio
-async def test_given_proejct_definition_container_should_be_able_to_create_update_delete(ac):
+async def test_given_project_definition_container_should_be_able_to_create_update_delete(ac):
     project_definition = ProjectDefinitionDtoFactory()
     expected_project_definition_container = ProjectDefinitionContainerDtoFactory(
         project_def_id=project_definition.id)
@@ -59,3 +58,15 @@ async def test_given_proejct_definition_container_should_be_able_to_create_updat
 
     response = await ac.post("/api/project_definition_container", data=expected_project_definition_container.json())
     assert response.status_code == 200
+
+    response = await ac.get(f"/api/project_definition_container/{expected_project_definition_container.id}")
+    assert response.status_code == 200
+
+    actual = ProjectDefinitionContainerDto(**response.json())
+    assert actual == expected_project_definition_container
+
+    response = await ac.delete(f"/api/project_definition_container/{expected_project_definition_container.id}")
+    assert response.status_code == 200
+
+    response = await ac.get(f"/api/project_definition_container/{expected_project_definition_container.id}")
+    assert response.status_code == 404

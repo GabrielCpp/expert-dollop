@@ -8,4 +8,3 @@ class ProjectDefinition:
     id: UUID
     name: str
     default_datasheet_id: UUID
-    owner_id: UUID

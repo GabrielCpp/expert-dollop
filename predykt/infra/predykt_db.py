@@ -1,12 +1,11 @@
+from typing import List, Optional, Union
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import Table, MetaData, String, Boolean, DateTime, Column, Binary, Text
-from sqlalchemy_utils.types.uuid import UUIDType
 from databases import Database
 from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime
-from typing import List, Optional
 
 
 class PredyktDatabase(Database):
@@ -20,7 +19,6 @@ project_definition_table = Table(
     Column('id', postgresql.UUID(), nullable=False, primary_key=True),
     Column('name', String, nullable=False),
     Column('default_datasheet_id', postgresql.UUID(), nullable=False),
-    Column('owner_id', postgresql.UUID(), nullable=False),
     Column('creation_date_utc', DateTime(timezone=True), nullable=False),
 )
 
@@ -29,15 +27,14 @@ class ProjectDefinitionDao(BaseModel):
     id: UUID
     name: str
     default_datasheet_id: UUID
-    owner_id: UUID
     creation_date_utc: datetime
 
 
 project_definition_container_table = Table(
     "project_definition_container",
     metadata,
-    Column('id', UUIDType(), nullable=False, primary_key=True),
-    Column('project_def_id', UUIDType(), nullable=False),
+    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
+    Column('project_def_id', postgresql.UUID(), nullable=False),
     Column('name', String, nullable=False),
     Column('is_collection', Boolean, nullable=False),
     Column('instanciate_by_default', Boolean, nullable=False),
@@ -67,8 +64,8 @@ class ProjectDefinitionContainerDao(BaseModel):
 project_definition_package_table = Table(
     'project_definition_package',
     metadata,
-    Column('id', UUIDType(), nullable=False, primary_key=True),
-    Column('project_def_id', UUIDType(), nullable=False),
+    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
+    Column('project_def_id', postgresql.UUID(), nullable=False),
     Column('name', String, nullable=False),
     Column('package', String, nullable=False)
 )
@@ -84,7 +81,7 @@ class ProjectDefinitionPackageDao(BaseModel):
 project_definition_struct_table = Table(
     "project_definition_struct",
     metadata,
-    Column('id', UUIDType(), nullable=False, primary_key=True),
+    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
     Column('name', String, nullable=False),
     Column('package_id', String, nullable=False),
     Column('properties', postgresql.JSON(), nullable=True),
@@ -103,14 +100,14 @@ class ProjectDefinitionStructDao(BaseModel):
 project_definition_function_table = Table(
     "project_definition_function",
     metadata,
-    Column('id', UUIDType(), nullable=False, primary_key=True),
+    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
     Column('name', String, nullable=False),
     Column('code', Text, nullable=False),
     Column('ast', postgresql.JSON(), nullable=True),
     Column('signature', postgresql.JSON(), nullable=True),
     Column('dependencies', postgresql.JSON(), nullable=True),
-    Column('struct_id', UUIDType(), nullable=True),
-    Column('package_id', UUIDType(), nullable=True)
+    Column('struct_id', postgresql.UUID(), nullable=True),
+    Column('package_id', postgresql.UUID(), nullable=True)
 )
 
 
@@ -128,12 +125,11 @@ class ProjectDefinitionFunctionDao(BaseModel):
 project_table = Table(
     "project",
     metadata,
-    Column('id', UUIDType(), nullable=False, primary_key=True),
+    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
     Column('name', String, nullable=False),
     Column('is_staged', Boolean, nullable=False),
-    Column('project_def_id', UUIDType(), nullable=True),
-    Column('datasheet_id', UUIDType(), nullable=False),
-    Column('owner_id', UUIDType(), nullable=False),
+    Column('project_def_id', postgresql.UUID(), nullable=True),
+    Column('datasheet_id', postgresql.UUID(), nullable=False),
     Column('creation_date_utc', DateTime(timezone=True), nullable=False),
 )
 
@@ -151,11 +147,64 @@ class ProjectDao(BaseModel):
 project_container_table = Table(
     "project_container",
     metadata,
-    Column('id', UUIDType(), nullable=False, primary_key=True),
-    Column('project_id', UUIDType(), nullable=False),
-    Column('type_id', UUIDType(), nullable=False),
+    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
+    Column('project_id', postgresql.UUID(), nullable=False),
+    Column('type_id', postgresql.UUID(), nullable=False),
     Column('path', ARRAY(String, dimensions=1), nullable=False),
     Column('custom_attributes', postgresql.JSON(), nullable=False),
     Column('value', postgresql.JSON(), nullable=True),
     Column('creation_date_utc', DateTime(timezone=True), nullable=False),
 )
+
+
+class ProjectContainerDao(BaseModel):
+    id: UUID
+    project_id: UUID
+    type_id: UUID
+    path: List[str]
+    custom_attributes: dict
+    value: dict
+    creation_date_utc: datetime
+
+
+ressource_table = Table(
+    "ressource", metadata,
+    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
+    Column('owner_id', postgresql.UUID(), nullable=False),
+    Column('name', String, nullable=False)
+)
+
+
+class RessourceDao(BaseModel):
+    id: UUID
+    name: str
+    owner_id: UUID
+
+
+translation_table = Table(
+    "translation", metadata,
+    Column('ressource_id', postgresql.UUID(),
+           nullable=False, primary_key=True),
+    Column('locale', String(5), nullable=False, primary_key=True),
+    Column('name', String, nullable=False, primary_key=True),
+    Column('value', String, nullable=False),
+)
+
+
+class TranslationDao(BaseModel):
+    ressource_id: UUID
+    locale: str
+    name: str
+    value: str
+
+
+setting_table = Table(
+    "settings", metadata,
+    Column('key', String, nullable=False, primary_key=True),
+    Column('value', postgresql.JSON(), nullable=False)
+)
+
+
+class SettingDao(BaseModel):
+    key: str
+    value: Union[dict, str, bool, int, list]

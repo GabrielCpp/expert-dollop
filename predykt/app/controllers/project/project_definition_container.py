@@ -43,4 +43,4 @@ async def delete_project_definition(
     usecase=Depends(Inject(ProjectDefinitonContainerUseCase)),
     request_handler=Depends(Inject(RequestHandler))
 ):
-    await usecase.delete_by_id(id)
+    await usecase.remove_by_id(id)

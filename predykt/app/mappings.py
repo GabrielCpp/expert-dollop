@@ -24,7 +24,6 @@ def map_project_definition_from_dto(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        owner_id=src.owner_id,
     )
 
 
@@ -35,7 +34,6 @@ def map_project_definition_to_dto(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        owner_id=src.owner_id,
     )
 
 
@@ -148,7 +146,6 @@ def map_project_from_dto(src: ProjectDto, mapper: Mapper = None) -> Project:
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
-        owner_id=src.owner_id,
     )
 
 
@@ -159,5 +156,4 @@ def map_project_to_dto(src: Project, mapper: Mapper = None) -> ProjectDto:
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
-        owner_id=src.owner_id,
     )

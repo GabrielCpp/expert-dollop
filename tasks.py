@@ -49,3 +49,13 @@ def deleteDb(c):
 @task
 def dbUp(c):
     c.run("docker-compose up --force-recreate --abort-on-container-exit --attach-dependencies adminer")
+
+
+@task
+def fixture(c, poetry=False):
+
+    if poetry:
+        from predykt.dev.init_db import generate_json
+        generate_json()
+    else:
+        c.run("poetry run invoke fixture --poetry")

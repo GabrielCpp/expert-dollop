@@ -1,5 +1,5 @@
 from predykt.infra.predykt_db import PredyktDatabase, project_definition_table, ProjectDefinitionDao
-from predykt.core.domains.project_definition import ProjectDefinition
+from predykt.core.domains import ProjectDefinition
 from predykt.shared.database_services import BaseCrudTableService
 
 

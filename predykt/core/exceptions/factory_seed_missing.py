@@ -1,0 +1,4 @@
+
+
+class FactorySeedMissing(Exception):
+    pass

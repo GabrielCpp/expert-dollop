@@ -4,3 +4,4 @@ from .project_definition_package import ProjectDefinitionPackage
 from .project_definition_struct import ProjectDefinitionStruct
 from .project_definition_function import ProjectDefinitionFunction
 from .project import Project
+from .translation import Translation

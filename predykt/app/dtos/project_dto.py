@@ -9,4 +9,3 @@ class ProjectDto(BaseModel):
     is_staged: bool
     project_def_id: UUID
     datasheet_id: UUID
-    owner_id: UUID
