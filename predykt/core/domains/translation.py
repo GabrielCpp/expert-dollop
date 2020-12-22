@@ -8,3 +8,10 @@ class Translation:
     locale: str
     name: str
     value: str
+
+
+@dataclass
+class TranslationId:
+    ressource_id: UUID
+    locale: str
+    name: str

@@ -1,8 +1,7 @@
 
 from typing import Awaitable
-from uuid import UUID
-from predykt.core.exceptions import RessourceNotFound
-from predykt.core.domains import Translation, Ressource
+from predykt.core.exceptions import RessourceNotFound, ValidationError
+from predykt.core.domains import Translation, TranslationId, Ressource
 from predykt.infra.services import TranslationService, RessourceService
 
 
@@ -16,15 +15,23 @@ class TranslationUseCase:
         self.ressource_service = ressource_service
 
     async def add(self, domain: Translation) -> Awaitable:
+        if not await self.ressource_service.has(domain.ressource_id):
+            raise ValidationError.for_field(
+                "ressource_id", "Missing an attached ressource")
+
         await self.service.insert(domain)
 
-    async def remove_by_id(self, id: UUID) -> Awaitable:
+    async def remove_by_id(self, id: TranslationId) -> Awaitable:
         await self.service.delete_by_id(id)
 
     async def update(self, domain: Translation) -> Awaitable:
+        if not await self.ressource_service.has(domain.ressource_id):
+            raise ValidationError.for_field(
+                "ressource_id", "Missing an attached ressource")
+
         await self.service.update(domain)
 
-    async def find_by_id(self, id: UUID) -> Awaitable[Translation]:
+    async def find_by_id(self, id: TranslationId) -> Awaitable[Translation]:
         result = await self.service.find_by_id(id)
 
         if result is None:

@@ -9,6 +9,8 @@ from predykt.infra.predykt_db import (
     ProjectDefinitionStructDao,
     ProjectDefinitionFunctionDao,
     ProjectDao,
+    RessourceDao,
+    TranslationDao,
 )
 from predykt.core.domains import (
     ProjectDefinition,
@@ -17,6 +19,9 @@ from predykt.core.domains import (
     ProjectDefinitionStruct,
     ProjectDefinitionFunction,
     Project,
+    Ressource,
+    Translation,
+    TranslationId,
 )
 
 
@@ -174,4 +179,46 @@ def map_project_to_dao(src: Project, mapper: Mapper = None) -> ProjectDao:
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
+    )
+
+
+def map_ressource_from_dao(src: RessourceDao, mapper: Mapper = None) -> Ressource:
+    return Ressource(
+        id=src.id,
+        name=src.name,
+        owner_id=src.owner_id,
+    )
+
+
+def map_ressource_to_dao(src: Ressource, mapper: Mapper = None) -> RessourceDao:
+    return RessourceDao(
+        id=src.id,
+        name=src.name,
+        owner_id=src.owner_id,
+    )
+
+
+def map_translation_from_dao(src: TranslationDao, mapper: Mapper = None) -> Translation:
+    return Translation(
+        ressource_id=src.ressource_id,
+        locale=src.locale,
+        name=src.name,
+        value=src.value,
+    )
+
+
+def map_translation_to_dao(src: Translation, mapper: Mapper = None) -> TranslationDao:
+    return TranslationDao(
+        ressource_id=src.ressource_id,
+        locale=src.locale,
+        name=src.name,
+        value=src.value,
+    )
+
+
+def map_translation_id_to_dict(src: TranslationId, mapper: Mapper = None) -> dict:
+    return dict(
+        ressource_id=src.ressource_id,
+        locale=src.locale,
+        name=src.name
     )

@@ -20,8 +20,8 @@ class ProjectDefinitonUseCase:
         self.project_definition_plugin_service = project_definition_plugin_service
 
     async def add(self, domain: ProjectDefinition) -> Awaitable:
-        suffix_name = self.word_provider.pick_join(3)
-        name = 'project_definition_' + suffix_name + domain.id.hex()
+        suffix_name = self.word_provider.pick_joined(3)
+        name = 'project_definition_' + suffix_name + domain.id.hex
         ressource = Ressource(
             id=domain.id,
             name=name,

@@ -6,6 +6,8 @@ from predykt.app.dtos import (
     ProjectDefinitionStructDto,
     ProjectDefinitionFunctionDto,
     ProjectDto,
+    TranslationDto,
+    TranslationIdDto,
 )
 from predykt.core.domains import (
     ProjectDefinition,
@@ -14,6 +16,8 @@ from predykt.core.domains import (
     ProjectDefinitionStruct,
     ProjectDefinitionFunction,
     Project,
+    Translation,
+    TranslationId,
 )
 
 
@@ -158,4 +162,38 @@ def map_project_to_dto(src: Project, mapper: Mapper = None) -> ProjectDto:
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
+    )
+
+
+def map_translation_from_dto(src: TranslationDto, mapper: Mapper = None) -> Translation:
+    return Translation(
+        ressource_id=src.ressource_id,
+        locale=src.locale,
+        name=src.name,
+        value=src.value,
+    )
+
+
+def map_translation_to_dto(src: Translation, mapper: Mapper = None) -> TranslationDto:
+    return TranslationDto(
+        ressource_id=src.ressource_id,
+        locale=src.locale,
+        name=src.name,
+        value=src.value,
+    )
+
+
+def map_translation_id_from_dto(src: TranslationIdDto, mapper: Mapper = None) -> TranslationId:
+    return TranslationId(
+        ressource_id=src.ressource_id,
+        locale=src.locale,
+        name=src.name,
+    )
+
+
+def map_translation_id_to_dto(src: TranslationId, mapper: Mapper = None) -> TranslationIdDto:
+    return TranslationDto(
+        ressource_id=src.ressource_id,
+        locale=src.locale,
+        name=src.name,
     )
