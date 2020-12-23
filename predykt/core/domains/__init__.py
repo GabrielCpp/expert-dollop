@@ -5,5 +5,7 @@ from .project_definition_struct import ProjectDefinitionStruct
 from .project_definition_function import ProjectDefinitionFunction
 from .project_definition_plugin import ProjectDefinitionPlugin
 from .project import Project
-from .translation import Translation, TranslationId
+from .project_container import ProjectContainer
+from .project_container_meta import ProjectContainerMeta
+from .translation import Translation, TranslationId, TranslationRessourceLocaleQuery
 from .ressource import Ressource

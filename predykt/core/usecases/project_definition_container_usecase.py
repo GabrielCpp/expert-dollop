@@ -31,6 +31,7 @@ class ProjectDefinitonContainerUseCase:
         await self.service.insert(domain)
 
     async def remove_by_id(self, id: UUID) -> Awaitable:
+        await self.service.delete_child_of(id)
         await self.service.delete_by_id(id)
 
     async def update(self, domain: ProjectDefinitionContainer) -> Awaitable:

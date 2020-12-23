@@ -1,7 +1,7 @@
 
 from typing import Awaitable
 from predykt.core.exceptions import RessourceNotFound, ValidationError
-from predykt.core.domains import Translation, TranslationId, Ressource
+from predykt.core.domains import Translation, TranslationId, Ressource, TranslationRessourceLocaleQuery
 from predykt.infra.services import TranslationService, RessourceService
 
 
@@ -38,3 +38,6 @@ class TranslationUseCase:
             raise RessourceNotFound()
 
         return result
+
+    async def find_by_ressource_locale(self, query: TranslationRessourceLocaleQuery):
+        return await self.service.find_by(query)

@@ -43,7 +43,7 @@ project_definition_container_table = Table(
     Column('custom_attributes', postgresql.JSON(), nullable=False),
     Column('value_type', String, nullable=False),
     Column('default_value', postgresql.JSON(), nullable=True),
-    Column('path', ARRAY(String, dimensions=1), nullable=False),
+    Column('path', String, nullable=False),
     Column('mixed_paths', ARRAY(String, dimensions=1), nullable=False),
     Column('creation_date_utc', DateTime(timezone=True), nullable=False),
 )
@@ -58,7 +58,7 @@ class ProjectDefinitionContainerDao(BaseModel):
     custom_attributes: dict
     value_type: str
     default_value: Optional[dict]
-    path: List[str]
+    path: str
     mixed_paths: List[str]
     creation_date_utc: datetime
 
@@ -170,7 +170,7 @@ project_container_table = Table(
     Column('id', postgresql.UUID(), nullable=False, primary_key=True),
     Column('project_id', postgresql.UUID(), nullable=False),
     Column('type_id', postgresql.UUID(), nullable=False),
-    Column('path', ARRAY(String, dimensions=1), nullable=False),
+    Column('path', String, nullable=False),
     Column('custom_attributes', postgresql.JSON(), nullable=False),
     Column('value', postgresql.JSON(), nullable=True),
     Column('creation_date_utc', DateTime(timezone=True), nullable=False),
@@ -181,10 +181,25 @@ class ProjectContainerDao(BaseModel):
     id: UUID
     project_id: UUID
     type_id: UUID
-    path: List[str]
+    path: str
     custom_attributes: dict
     value: dict
     creation_date_utc: datetime
+
+
+project_container_meta_table = Table(
+    "project_container_metadata",
+    metadata,
+    Column('project_id', postgresql.UUID(), nullable=False),
+    Column('type_id', postgresql.UUID(), nullable=False),
+    Column('custom_attributes', postgresql.JSON(), nullable=False),
+)
+
+
+class ProjectContainerMetaDao(BaseModel):
+    project_id: UUID
+    type_id: UUID
+    custom_attributes: dict
 
 
 ressource_table = Table(

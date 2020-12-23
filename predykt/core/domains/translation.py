@@ -15,3 +15,9 @@ class TranslationId:
     ressource_id: UUID
     locale: str
     name: str
+
+
+@dataclass
+class TranslationRessourceLocaleQuery:
+    ressource_id: UUID
+    locale: str

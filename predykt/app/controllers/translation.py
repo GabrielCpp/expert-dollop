@@ -3,7 +3,7 @@ from uuid import UUID
 from predykt.shared.starlette_injection import Inject
 from predykt.shared.handlers import RequestHandler
 from predykt.app.dtos import TranslationDto, TranslationIdDto
-from predykt.core.domains import Translation, TranslationId
+from predykt.core.domains import Translation, TranslationId, TranslationRessourceLocaleQuery
 from predykt.core.usecases import TranslationUseCase
 
 router = APIRouter()
@@ -49,3 +49,16 @@ async def delete_translation(
 ):
     id = TranslationId(ressource_id=ressource_id, locale=locale, name=name)
     await usecase.remove_by_id(id)
+
+
+@router.get("/translation/{ressource_id}/{locale}")
+async def get_all_translation_for_ressource(
+    ressource_id: UUID,
+    locale: str,
+    usecase=Depends(Inject(TranslationUseCase)),
+    handler=Depends(Inject(RequestHandler))
+):
+    query = TranslationRessourceLocaleQuery(
+        ressource_id=ressource_id, locale=locale)
+
+    return await handler.query_with_many_result(query, usecase.find_by_ressource_locale, TranslationDto)

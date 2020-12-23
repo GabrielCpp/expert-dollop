@@ -53,6 +53,7 @@ def create_project_definition_tables():
         Column('name', String, nullable=False),
         Column('default_datasheet_id', postgresql.UUID(), nullable=False),
         Column('creation_date_utc', DateTime(timezone=True), nullable=False),
+        Column('plugins', ARRAY(postgresql.UUID(), dimensions=1), nullable=False),
     )
 
     op.create_index(op.f('ix_project_definition_name'),
@@ -68,14 +69,14 @@ def create_project_definition_tables():
         Column('custom_attributes', postgresql.JSON(), nullable=False),
         Column('value_type', String, nullable=False),
         Column('default_value', postgresql.JSON(), nullable=True),
-        Column('path', ARRAY(String, dimensions=1), nullable=False),
+        Column('path', String, nullable=False),
         Column('mixed_paths', ARRAY(String, dimensions=1), nullable=False),
         Column('creation_date_utc', DateTime(timezone=True), nullable=False),
     )
 
     op.create_index(
         op.f('ix_project_definition_container_value_type'),
-        'project_definition_container', ['path'], postgresql_using='gin')
+        'project_definition_container', ['path'])
 
     op.create_index(
         op.f('ix_project_definition_container_mixed_paths'),
@@ -114,6 +115,15 @@ def create_project_definition_tables():
         Column('package_id', postgresql.UUID(), nullable=True)
     )
 
+    op.create_table(
+        "project_definition_plugin",
+        Column('id', postgresql.UUID(), nullable=False, primary_key=True),
+        Column('validation_schema', postgresql.JSON(), nullable=False),
+        Column('default_config', postgresql.JSON(), nullable=False),
+        Column('form_config', postgresql.JSON(), nullable=False),
+        Column('name', String, nullable=False),
+    )
+
 
 def create_project_tables():
     op.create_table(
@@ -131,14 +141,23 @@ def create_project_tables():
         Column('id', postgresql.UUID(), nullable=False, primary_key=True),
         Column('project_id', postgresql.UUID(), nullable=False),
         Column('type_id', postgresql.UUID(), nullable=False),
-        Column('path', ARRAY(String, dimensions=1), nullable=False),
+        Column('path', String, nullable=False),
         Column('custom_attributes', postgresql.JSON(), nullable=False),
         Column('value', postgresql.JSON(), nullable=True),
         Column('creation_date_utc', DateTime(timezone=True), nullable=False),
+        Column('mixed_paths', ARRAY(String, dimensions=1), nullable=False),
     )
 
-    op.create_index(op.f('ix_project_container_path'),
-                    'project_container', ['path'], postgresql_using='gin')
+    op.create_index(op.f('ix_project_container_mixed_paths'),
+                    'project_container', ['mixed_paths'], postgresql_using='gin')
+
+    op.create_table(
+        "project_container_metadata",
+        Column('project_id', postgresql.UUID(),
+               nullable=False, primary_key=True),
+        Column('type_id', postgresql.UUID(), nullable=False, primary_key=True),
+        Column('custom_attributes', postgresql.JSON(), nullable=False),
+    )
 
 
 def create_datasheet_tables():

@@ -19,3 +19,8 @@ class RequestHandler:
         result = await usecase(query_domain)
         result_dto = self.mapper.map(result, ResultDto)
         return result_dto
+
+    async def query_with_many_result(self, query_domain, usecase, ResultDto):
+        results = await usecase(query_domain)
+        result_dtos = self.mapper.map_many(results, ResultDto)
+        return result_dtos

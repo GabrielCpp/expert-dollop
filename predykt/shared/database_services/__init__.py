@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, TypeVar, Optional, Generic, Awaitable
+from typing import List, TypeVar, Optional, Generic, Awaitable, AsyncGenerator, Any
 from sqlalchemy.sql import select
 from sqlalchemy import and_
 from databases import Database
@@ -7,16 +7,27 @@ from predykt.shared.automapping import Mapper
 
 Domain = TypeVar('Domain')
 Id = TypeVar('Id')
+Query = TypeVar('Query')
 
 
 class AbstractFilter(ABC):
     @abstractmethod
-    def build(self):
+    def build(self, filter: Query):
         pass
 
 
-class AttributeQuery(Generic[Domain]):
-    pass
+class AndColumnFilter(AbstractFilter):
+    def __init__(self, pairs):
+        self.pairs = pairs
+
+    def build(self, query_filter: Query):
+        condition = self.pairs[0][0] == self.pairs[0][1](query_filter)
+
+        for index in range(1, len(self.pairs)):
+            (column, get_value) = self.pairs[index]
+            condition = and_(condition, column == get_value(query_filter))
+
+        return condition
 
 
 class BaseCrudTableService(Generic[Domain]):
@@ -72,20 +83,13 @@ class BaseCrudTableService(Generic[Domain]):
 
         return None
 
-    async def find_by(self, query_filter: AttributeQuery[Domain], limit: Optional[int] = None) -> Awaitable[List[Domain]]:
-        concrete_filter = self._mapper.map(
-            query_filter,
-            AbstractFilter
-        )
-
-        where_filter = concrete_filter.build()
+    async def find_by(self, query_filter: Query, limit: Optional[int] = None) -> Awaitable[List[Domain]]:
+        abstract_filter = self._seach_filters[type(query_filter)]
+        where_filter = abstract_filter.build(query_filter)
         query = self._table.select().where(where_filter)
         values = await self._database.fetch_all(query=query)
-        results = self._mapper.map_many(
-            values,
-            self._domain,
-            after=lambda x: x.dict()
-        )
+        daos = [self._dao(**value) for value in values]
+        results = self._mapper.map_many(daos, self._domain)
 
         return results
 
@@ -100,6 +104,17 @@ class BaseCrudTableService(Generic[Domain]):
             self.table_id == value[self.table_id_name]).values(**value)
 
         await self._database.execute(query=query)
+
+    async def _map_many_to(self, records, dao_type, domain_type):
+        daos = [dao_type(**record) for record in records]
+        results = self._mapper.map_many(daos, domain_type)
+        return results
+
+    async def map_over(self, iterator: AsyncGenerator[Any, Any]) -> AsyncGenerator[Domain, None]:
+        async for record in iterator:
+            dao = dao_type(**record)
+            result = self._mapper.map(dao, self._domain)
+            yield result
 
 
 class BaseCompositeCrudTableService(Generic[Domain]):
@@ -162,20 +177,13 @@ class BaseCompositeCrudTableService(Generic[Domain]):
 
         return None
 
-    async def find_by(self, query_filter: AttributeQuery[Domain], limit: Optional[int] = None) -> Awaitable[List[Domain]]:
-        concrete_filter = self._mapper.map(
-            query_filter,
-            AbstractFilter
-        )
-
-        where_filter = concrete_filter.build()
+    async def find_by(self, query_filter: Query, limit: Optional[int] = None) -> Awaitable[List[Domain]]:
+        abstract_filter = self._seach_filters[type(query_filter)]
+        where_filter = abstract_filter.build(query_filter)
         query = self._table.select().where(where_filter)
         values = await self._database.fetch_all(query=query)
-        results = self._mapper.map_many(
-            values,
-            self._domain,
-            after=lambda x: x.dict()
-        )
+        daos = [self._dao(**value) for value in values]
+        results = self._mapper.map_many(daos, self._domain)
 
         return results
 

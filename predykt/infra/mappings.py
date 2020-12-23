@@ -2,6 +2,7 @@ from typing import List
 from datetime import datetime
 from uuid import UUID
 from predykt.shared.automapping import Mapper
+from predykt.infra.path_transform import join_path, split_uuid_path, join_uuid_path
 from predykt.infra.predykt_db import (
     ProjectDefinitionDao,
     ProjectDefinitionContainerDao,
@@ -60,7 +61,7 @@ def map_project_definition_container_from_dao(
         custom_attributes=src.custom_attributes,
         value_type=src.value_type,
         default_value=src.default_value,
-        path=[UUID(item) for item in src.path],
+        path=split_uuid_path(src.path),
     )
 
 
@@ -71,7 +72,7 @@ def map_project_definition_container_to_dao(
         mixed_path: List[str] = []
 
         for upper_index in range(2, len(path)):
-            mixed_path.append('/'.join(path[0:upper_index]))
+            mixed_path.append(join_path(path[0:upper_index]))
 
         return mixed_path
 
@@ -86,7 +87,7 @@ def map_project_definition_container_to_dao(
         custom_attributes=src.custom_attributes,
         value_type=src.value_type,
         default_value=src.default_value,
-        path=str_path,
+        path=join_uuid_path(src.path),
         mixed_paths=mix_path(str_path),
         creation_date_utc=datetime.utcnow(),
     )
