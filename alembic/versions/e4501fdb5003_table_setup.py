@@ -8,7 +8,7 @@ Create Date: 2020-11-25 22:14:43.244618
 import datetime
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy import String, Boolean, DateTime, Column, Binary, Text
+from sqlalchemy import String, Boolean, DateTime, Column, Binary, Text, Integer
 from alembic import op
 
 
@@ -66,6 +66,7 @@ def create_project_definition_tables():
         Column('name', String, nullable=False),
         Column('is_collection', Boolean, nullable=False),
         Column('instanciate_by_default', Boolean, nullable=False),
+        Column('order_index', Integer, nullable=False),
         Column('custom_attributes', postgresql.JSON(), nullable=False),
         Column('value_type', String, nullable=False),
         Column('default_value', postgresql.JSON(), nullable=True),
@@ -142,7 +143,6 @@ def create_project_tables():
         Column('project_id', postgresql.UUID(), nullable=False),
         Column('type_id', postgresql.UUID(), nullable=False),
         Column('path', String, nullable=False),
-        Column('custom_attributes', postgresql.JSON(), nullable=False),
         Column('value', postgresql.JSON(), nullable=True),
         Column('creation_date_utc', DateTime(timezone=True), nullable=False),
         Column('mixed_paths', ARRAY(String, dimensions=1), nullable=False),

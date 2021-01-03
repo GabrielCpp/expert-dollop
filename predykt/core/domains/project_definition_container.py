@@ -11,6 +11,7 @@ class ProjectDefinitionContainer:
     name: str
     is_collection: bool
     instanciate_by_default: bool
+    order_index: int
     custom_attributes: dict
     value_type: str
     default_value: Optional[dict]

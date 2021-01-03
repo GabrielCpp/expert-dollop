@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects import postgresql
-from sqlalchemy import Table, MetaData, String, Boolean, DateTime, Column, Binary, Text
+from sqlalchemy import Table, MetaData, String, Boolean, DateTime, Column, Binary, Text, Integer
 from databases import Database
 from pydantic import BaseModel
 from uuid import UUID
@@ -40,6 +40,7 @@ project_definition_container_table = Table(
     Column('name', String, nullable=False),
     Column('is_collection', Boolean, nullable=False),
     Column('instanciate_by_default', Boolean, nullable=False),
+    Column('order_index', Integer, nullable=False),
     Column('custom_attributes', postgresql.JSON(), nullable=False),
     Column('value_type', String, nullable=False),
     Column('default_value', postgresql.JSON(), nullable=True),
@@ -55,6 +56,7 @@ class ProjectDefinitionContainerDao(BaseModel):
     name: str
     is_collection: bool
     instanciate_by_default: bool
+    order_index: int
     custom_attributes: dict
     value_type: str
     default_value: Optional[dict]
@@ -171,7 +173,6 @@ project_container_table = Table(
     Column('project_id', postgresql.UUID(), nullable=False),
     Column('type_id', postgresql.UUID(), nullable=False),
     Column('path', String, nullable=False),
-    Column('custom_attributes', postgresql.JSON(), nullable=False),
     Column('value', postgresql.JSON(), nullable=True),
     Column('creation_date_utc', DateTime(timezone=True), nullable=False),
 )
@@ -182,7 +183,6 @@ class ProjectContainerDao(BaseModel):
     project_id: UUID
     type_id: UUID
     path: str
-    custom_attributes: dict
     value: dict
     creation_date_utc: datetime
 

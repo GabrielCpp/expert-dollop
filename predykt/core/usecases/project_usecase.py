@@ -80,7 +80,6 @@ class ProjectUseCase:
                     type_id=container_definition.id,
                     path=[type_to_instance_id[def_id]
                           for def_id in container_definition.path],
-                    custom_attributes={},
                     value=container_definition.default_value
                 )
 

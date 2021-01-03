@@ -24,38 +24,38 @@ def newMigration(c, message=None):
     c.run("poetry run alembic revision -m \"{}\"".format(message))
 
 
-@task(name='migration:run')
+@task(name='db:upgrade:head')
 def runMigration(c):
     c.run("poetry run alembic upgrade head")
 
 
-@task(name='migration:sql')
+@task(name='db:upgrade')
 def migrate(c, migration):
     c.run("poetry run alembic upgrade {} --sql".format(message))
 
 
-@task
+@task(name='db:init')
 def initDb(c):
-    c.run("poetry run python predykt/dev/init_db.py")
+    c.run("poetry run python dev/init_db.py")
 
 
-@task
+@task(name='db:delete')
 def deleteDb(c):
     c.run("docker container stop postgres_data")
     c.run("docker rm postgres_data")
     c.run("docker volume rm postgres_data")
 
 
-@task
+@task(name='db:up')
 def dbUp(c):
     c.run("docker-compose up --force-recreate --abort-on-container-exit --attach-dependencies adminer")
 
 
 @task
-def fixture(c, poetry=False):
+def fixture(c, layer="dao", poetry=False):
 
     if poetry:
-        from predykt.dev.init_db import generate_json
-        generate_json()
+        from dev.init_db import generate_json
+        generate_json(layer)
     else:
-        c.run("poetry run invoke fixture --poetry")
+        c.run(f"poetry run invoke fixture --poetry --layer {layer}")

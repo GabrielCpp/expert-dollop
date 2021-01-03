@@ -9,5 +9,4 @@ class ProjectContainer:
     project_id: UUID
     type_id: UUID
     path: List[UUID]
-    custom_attributes: dict
     value: dict
