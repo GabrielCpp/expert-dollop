@@ -20,6 +20,7 @@ sqlalchemy-utils = "^0.36.8"
 motor = "^2.3.0"
 structlog = "^20.1.0"
 jsonschema = "^3.2.0"
+pyhumps = "^1.6.1"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.8.4"

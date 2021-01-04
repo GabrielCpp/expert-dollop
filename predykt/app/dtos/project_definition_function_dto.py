@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from predykt.shared.modeling import CamelModel
 from uuid import UUID
 
 
-class ProjectDefinitionFunctionDto(BaseModel):
+class ProjectDefinitionFunctionDto(CamelModel):
     id: UUID
     name: str
     code: str

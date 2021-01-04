@@ -1,10 +1,10 @@
-from pydantic import BaseModel
+from predykt.shared.modeling import CamelModel
 from uuid import UUID
 from typing import Optional, List
 from datetime import datetime
 
 
-class ProjectDefinitionContainerDto(BaseModel):
+class ProjectDefinitionContainerDto(CamelModel):
     id: UUID
     project_def_id: UUID
     name: str

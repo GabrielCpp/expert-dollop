@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from predykt.shared.modeling import CamelModel
 from uuid import UUID
 from datetime import datetime
 
 
-class ProjectDto(BaseModel):
+class ProjectDto(CamelModel):
     id: UUID
     name: str
     is_staged: bool
