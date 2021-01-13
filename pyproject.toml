@@ -1,12 +1,8 @@
 [tool.poetry]
-name = "expert-dollup"
+name = "expert_dollup"
 version = "0.1.0"
 description = ""
 authors = ["gabriel <gabcpp@outlook.fr>"]
-packages = [
-    { include = "predykt" },
-    { include = "dev" },
-]
 
 [tool.poetry.dependencies]
 python = "^3.7.4"

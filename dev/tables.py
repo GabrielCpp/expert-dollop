@@ -1,17 +1,17 @@
 from typing import List
 from pydantic import BaseModel
-from predykt.shared.automapping import Mapper
-from predykt.infra.predykt_db import (
+from expert_dollup.shared.automapping import Mapper
+from expert_dollup.infra.expert_dollup_db import (
     ProjectDefinitionDao, TranslationDao, ProjectDefinitionContainerDao,
     project_definition_table, project_definition_container_table, translation_table
 )
 
-from predykt.core.domains import (
+from expert_dollup.core.domains import (
     ProjectDefinition, ProjectDefinitionContainer, Translation
 )
 
 
-from predykt.app.dtos import (
+from expert_dollup.app.dtos import (
     ProjectDefinitionDto, ProjectDefinitionContainerDto, TranslationDto
 )
 

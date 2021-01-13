@@ -1,7 +1,7 @@
 from .simple_project import SimpleProject
 from .tables import insert, to_dto
-from predykt.app.modules.projection import bind_mapper
-from predykt.shared.automapping import Mapper
+from expert_dollup.app.modules.projection import bind_mapper
+from expert_dollup.shared.automapping import Mapper
 
 
 def generate_json(generate_layer, output_path=None):

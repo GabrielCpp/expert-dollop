@@ -3,10 +3,10 @@ import logging
 import os
 from injector import Injector
 from async_asgi_testclient import TestClient
-from predykt.infra.predykt_db import PredyktDatabase
-from predykt.app.app import creat_app
-from predykt.app.modules import build_container
-from .fixtures import init_db, load_fixture, PredyktDbFixture
+from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
+from expert_dollup.app.app import creat_app
+from expert_dollup.app.modules import build_container
+from .fixtures import init_db, load_fixture, expert_dollupDbFixture
 
 
 @pytest.fixture
@@ -28,7 +28,7 @@ async def dal():
         os.environ["POSTGRES_DB"]
     )
 
-    database = PredyktDatabase(DATABASE_URL, force_rollback=True)
+    database = ExpertDollupDatabase(DATABASE_URL, force_rollback=True)
 
     await database.connect()
     yield database
@@ -39,14 +39,14 @@ async def dal():
 async def ac(app, container, dal, caplog) -> TestClient:
     caplog.set_level(logging.ERROR)
 
-    container.binder.bind(PredyktDatabase, dal)
+    container.binder.bind(ExpertDollupDatabase, dal)
 
     async with TestClient(app) as ac:
         yield ac
 
 
 @pytest.fixture
-async def predykt_simple_project(dal):
-    fixture = load_fixture(PredyktDbFixture.SimpleProject)
+async def expert_dollup_simple_project(dal):
+    fixture = load_fixture(expert_dollupDbFixture.SimpleProject)
     await init_db(dal, fixture)
     yield fixture

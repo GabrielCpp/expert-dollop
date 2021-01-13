@@ -4,8 +4,8 @@ from typing import Dict, Type, List, Callable, Any, TypeVar
 from pydantic import BaseModel
 from uuid import uuid4
 from starlette.responses import Response
-from predykt.app.dtos import ProjectDefinitionDto, ProjectDefinitionContainerDto, TranslationDto, TranslationIdDto
-from predykt.infra.predykt_db import translation_table, TranslationDao
+from expert_dollup.app.dtos import ProjectDefinitionDto, ProjectDefinitionContainerDto, TranslationDto, TranslationIdDto
+from expert_dollup.infra.expert_dollup_db import translation_table, TranslationDao
 
 Dao = TypeVar('Dao')
 

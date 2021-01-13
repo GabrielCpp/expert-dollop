@@ -3,10 +3,10 @@ from faker import Faker
 from typing import List
 from random import choice
 from pydantic import BaseModel
-from predykt.infra.path_transform import join_path
+from expert_dollup.infra.path_transform import join_path
 from .tables import Tables
-from predykt.infra.predykt_db import (
-    PredyktDatabase, ProjectDefinitionDao, ProjectDefinitionPluginDao, TranslationDao,
+from expert_dollup.infra.expert_dollup_db import (
+    ExpertDollupDatabase, ProjectDefinitionDao, ProjectDefinitionPluginDao, TranslationDao,
     ProjectDefinitionContainerDao, project_definition_table, project_definition_container_table
 )
 

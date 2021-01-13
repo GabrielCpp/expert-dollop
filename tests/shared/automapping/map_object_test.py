@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from predykt.shared.automapping import Mapper
+from expert_dollup.shared.automapping import Mapper
 
 
 @dataclass
