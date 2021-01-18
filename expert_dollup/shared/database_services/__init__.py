@@ -4,10 +4,11 @@ from sqlalchemy.sql import select
 from sqlalchemy import and_
 from databases import Database
 from expert_dollup.shared.automapping import Mapper
+from .page import Page
 
-Domain = TypeVar('Domain')
-Id = TypeVar('Id')
-Query = TypeVar('Query')
+Domain = TypeVar("Domain")
+Id = TypeVar("Id")
+Query = TypeVar("Query")
 
 
 class AbstractFilter(ABC):
@@ -52,11 +53,7 @@ class BaseCrudTableService(Generic[Domain]):
 
     async def insert_many(self, domains: List[Domain]) -> Awaitable:
         query = self._table.insert()
-        values = self._mapper.map_many(
-            domains,
-            self._dao,
-            after=lambda x: x.dict()
-        )
+        values = self._mapper.map_many(domains, self._dao, after=lambda x: x.dict())
 
         await self._database.execute(query=query, values=values)
 
@@ -74,16 +71,15 @@ class BaseCrudTableService(Generic[Domain]):
         value = await self._database.fetch_one(query=query)
 
         if not value is None:
-            result = self._mapper.map(
-                self._dao(**value),
-                self._domain
-            )
+            result = self._mapper.map(self._dao(**value), self._domain)
 
             return result
 
         return None
 
-    async def find_by(self, query_filter: Query, limit: Optional[int] = None) -> Awaitable[List[Domain]]:
+    async def find_by(
+        self, query_filter: Query, limit: Optional[int] = None
+    ) -> Awaitable[List[Domain]]:
         abstract_filter = self._seach_filters[type(query_filter)]
         where_filter = abstract_filter.build(query_filter)
         query = self._table.select().where(where_filter)
@@ -94,14 +90,13 @@ class BaseCrudTableService(Generic[Domain]):
         return results
 
     async def update_by_id(self, domain: Domain) -> Awaitable:
-        value = self._mapper.map(
-            value,
-            self._dao,
-            after=lambda x: x.dict()
-        )
+        value = self._mapper.map(value, self._dao, after=lambda x: x.dict())
 
-        query = self._table.update().where(
-            self.table_id == value[self.table_id_name]).values(**value)
+        query = (
+            self._table.update()
+            .where(self.table_id == value[self.table_id_name])
+            .values(**value)
+        )
 
         await self._database.execute(query=query)
 
@@ -110,7 +105,9 @@ class BaseCrudTableService(Generic[Domain]):
         results = self._mapper.map_many(daos, domain_type)
         return results
 
-    async def map_over(self, iterator: AsyncGenerator[Any, Any]) -> AsyncGenerator[Domain, None]:
+    async def map_over(
+        self, iterator: AsyncGenerator[Any, Any]
+    ) -> AsyncGenerator[Domain, None]:
         async for record in iterator:
             dao = dao_type(**record)
             result = self._mapper.map(dao, self._domain)
@@ -130,8 +127,10 @@ class BaseCompositeCrudTableService(Generic[Domain]):
         assert len(pks) > 1
 
         self.table_id_names = [pk.name for pk in pks]
-        self.table_ids = [getattr(self._table.c, table_id_name)
-                          for table_id_name in self.table_id_names]
+        self.table_ids = [
+            getattr(self._table.c, table_id_name)
+            for table_id_name in self.table_id_names
+        ]
 
     async def insert(self, domain: Domain) -> Awaitable:
         query = self._table.insert()
@@ -140,11 +139,7 @@ class BaseCompositeCrudTableService(Generic[Domain]):
 
     async def insert_many(self, domains: List[Domain]) -> Awaitable:
         query = self._table.insert()
-        values = self._mapper.map_many(
-            domains,
-            self._dao,
-            after=lambda x: x.dict()
-        )
+        values = self._mapper.map_many(domains, self._dao, after=lambda x: x.dict())
 
         await self._database.execute(query=query, values=values)
 
@@ -168,31 +163,50 @@ class BaseCompositeCrudTableService(Generic[Domain]):
         value = await self._database.fetch_one(query=query)
 
         if not value is None:
-            result = self._mapper.map(
-                self._dao(**value),
-                self._domain
-            )
+            result = self._mapper.map(self._dao(**value), self._domain)
 
             return result
 
         return None
 
-    async def find_by(self, query_filter: Query, limit: Optional[int] = None) -> Awaitable[List[Domain]]:
+    async def find_by(
+        self,
+        query_filter: Query,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> Awaitable[List[Domain]]:
         abstract_filter = self._seach_filters[type(query_filter)]
         where_filter = abstract_filter.build(query_filter)
         query = self._table.select().where(where_filter)
+
+        if not limit is None:
+            query = query.limit(limit)
+
+        if not offset is None:
+            query = query.offset(offset)
+
         values = await self._database.fetch_all(query=query)
         daos = [self._dao(**value) for value in values]
         results = self._mapper.map_many(daos, self._domain)
 
         return results
 
-    async def update_by_id(self, domain: Domain) -> Awaitable:
-        value = self._mapper.map(
-            value,
-            self._dao,
-            after=lambda x: x.dict()
+    async def paginated_find_by(
+        self,
+        query_filter: Query,
+        limit: int,
+        next_page_token: Optional[str],
+    ) -> Awaitable[Page[Domain]]:
+        page_index = 0 if next_page_token is None else int(next_page_token)
+        results = await self.find_by(query_filter, limit, limit * page_index)
+        return Page(
+            next_page_token=str(page_index + 1),
+            limit=limit,
+            results=results,
         )
+
+    async def update_by_id(self, domain: Domain) -> Awaitable:
+        value = self._mapper.map(value, self._dao, after=lambda x: x.dict())
 
         where_filter = self._build_id_filter(value)
         query = self._table.update().where(where_filter).values(**value)
@@ -205,8 +219,7 @@ class BaseCompositeCrudTableService(Generic[Domain]):
 
         for index in range(0, len(self.table_id_names)):
             name = self.table_id_names[index]
-            comparaison = getattr(
-                self._table.c, name) == identifier[name]
+            comparaison = getattr(self._table.c, name) == identifier[name]
             condition = and_(condition, comparaison)
 
         return condition

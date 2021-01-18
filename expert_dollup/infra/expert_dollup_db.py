@@ -1,7 +1,17 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any, Dict
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects import postgresql
-from sqlalchemy import Table, MetaData, String, Boolean, DateTime, Column, Binary, Text, Integer
+from sqlalchemy import (
+    Table,
+    MetaData,
+    String,
+    Boolean,
+    DateTime,
+    Column,
+    Binary,
+    Text,
+    Integer,
+)
 from databases import Database
 from pydantic import BaseModel
 from uuid import UUID
@@ -15,12 +25,13 @@ class ExpertDollupDatabase(Database):
 metadata = MetaData()
 
 project_definition_table = Table(
-    'project_definition', metadata,
-    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
-    Column('name', String, nullable=False),
-    Column('default_datasheet_id', postgresql.UUID(), nullable=False),
-    Column('plugins', ARRAY(postgresql.UUID(), dimensions=1), nullable=False),
-    Column('creation_date_utc', DateTime(timezone=True), nullable=False),
+    "project_definition",
+    metadata,
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("name", String, nullable=False),
+    Column("default_datasheet_id", postgresql.UUID(), nullable=False),
+    Column("plugins", ARRAY(postgresql.UUID(), dimensions=1), nullable=False),
+    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
 )
 
 
@@ -35,18 +46,18 @@ class ProjectDefinitionDao(BaseModel):
 project_definition_container_table = Table(
     "project_definition_container",
     metadata,
-    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
-    Column('project_def_id', postgresql.UUID(), nullable=False),
-    Column('name', String, nullable=False),
-    Column('is_collection', Boolean, nullable=False),
-    Column('instanciate_by_default', Boolean, nullable=False),
-    Column('order_index', Integer, nullable=False),
-    Column('custom_attributes', postgresql.JSON(), nullable=False),
-    Column('value_type', String, nullable=False),
-    Column('default_value', postgresql.JSON(), nullable=True),
-    Column('path', String, nullable=False),
-    Column('mixed_paths', ARRAY(String, dimensions=1), nullable=False),
-    Column('creation_date_utc', DateTime(timezone=True), nullable=False),
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("project_def_id", postgresql.UUID(), nullable=False),
+    Column("name", String, nullable=False),
+    Column("is_collection", Boolean, nullable=False),
+    Column("instanciate_by_default", Boolean, nullable=False),
+    Column("order_index", Integer, nullable=False),
+    Column("custom_attributes", postgresql.JSON(), nullable=False),
+    Column("value_type", String, nullable=False),
+    Column("default_value", postgresql.JSON(), nullable=True),
+    Column("path", String, nullable=False),
+    Column("mixed_paths", ARRAY(String, dimensions=1), nullable=False),
+    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
 )
 
 
@@ -66,12 +77,12 @@ class ProjectDefinitionContainerDao(BaseModel):
 
 
 project_definition_package_table = Table(
-    'project_definition_package',
+    "project_definition_package",
     metadata,
-    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
-    Column('project_def_id', postgresql.UUID(), nullable=False),
-    Column('name', String, nullable=False),
-    Column('package', String, nullable=False)
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("project_def_id", postgresql.UUID(), nullable=False),
+    Column("name", String, nullable=False),
+    Column("package", String, nullable=False),
 )
 
 
@@ -85,11 +96,11 @@ class ProjectDefinitionPackageDao(BaseModel):
 project_definition_struct_table = Table(
     "project_definition_struct",
     metadata,
-    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
-    Column('name', String, nullable=False),
-    Column('package_id', String, nullable=False),
-    Column('properties', postgresql.JSON(), nullable=True),
-    Column('dependencies', postgresql.JSON(), nullable=True),
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("name", String, nullable=False),
+    Column("package_id", String, nullable=False),
+    Column("properties", postgresql.JSON(), nullable=True),
+    Column("dependencies", postgresql.JSON(), nullable=True),
 )
 
 
@@ -104,14 +115,14 @@ class ProjectDefinitionStructDao(BaseModel):
 project_definition_function_table = Table(
     "project_definition_function",
     metadata,
-    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
-    Column('name', String, nullable=False),
-    Column('code', Text, nullable=False),
-    Column('ast', postgresql.JSON(), nullable=True),
-    Column('signature', postgresql.JSON(), nullable=True),
-    Column('dependencies', postgresql.JSON(), nullable=True),
-    Column('struct_id', postgresql.UUID(), nullable=True),
-    Column('package_id', postgresql.UUID(), nullable=True)
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("name", String, nullable=False),
+    Column("code", Text, nullable=False),
+    Column("ast", postgresql.JSON(), nullable=True),
+    Column("signature", postgresql.JSON(), nullable=True),
+    Column("dependencies", postgresql.JSON(), nullable=True),
+    Column("struct_id", postgresql.UUID(), nullable=True),
+    Column("package_id", postgresql.UUID(), nullable=True),
 )
 
 
@@ -127,12 +138,13 @@ class ProjectDefinitionFunctionDao(BaseModel):
 
 
 project_definition_plugin_table = Table(
-    "project_definition_plugin", metadata,
-    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
-    Column('validation_schema', postgresql.JSON(), nullable=False),
-    Column('default_config', postgresql.JSON(), nullable=False),
-    Column('form_config', postgresql.JSON(), nullable=False),
-    Column('name', String, nullable=False),
+    "project_definition_plugin",
+    metadata,
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("validation_schema", postgresql.JSON(), nullable=False),
+    Column("default_config", postgresql.JSON(), nullable=False),
+    Column("form_config", postgresql.JSON(), nullable=False),
+    Column("name", String, nullable=False),
 )
 
 
@@ -147,12 +159,12 @@ class ProjectDefinitionPluginDao(BaseModel):
 project_table = Table(
     "project",
     metadata,
-    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
-    Column('name', String, nullable=False),
-    Column('is_staged', Boolean, nullable=False),
-    Column('project_def_id', postgresql.UUID(), nullable=True),
-    Column('datasheet_id', postgresql.UUID(), nullable=False),
-    Column('creation_date_utc', DateTime(timezone=True), nullable=False),
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("name", String, nullable=False),
+    Column("is_staged", Boolean, nullable=False),
+    Column("project_def_id", postgresql.UUID(), nullable=True),
+    Column("datasheet_id", postgresql.UUID(), nullable=False),
+    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
 )
 
 
@@ -169,12 +181,12 @@ class ProjectDao(BaseModel):
 project_container_table = Table(
     "project_container",
     metadata,
-    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
-    Column('project_id', postgresql.UUID(), nullable=False),
-    Column('type_id', postgresql.UUID(), nullable=False),
-    Column('path', String, nullable=False),
-    Column('value', postgresql.JSON(), nullable=True),
-    Column('creation_date_utc', DateTime(timezone=True), nullable=False),
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("project_id", postgresql.UUID(), nullable=False),
+    Column("type_id", postgresql.UUID(), nullable=False),
+    Column("path", String, nullable=False),
+    Column("value", postgresql.JSON(), nullable=True),
+    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
 )
 
 
@@ -190,9 +202,9 @@ class ProjectContainerDao(BaseModel):
 project_container_meta_table = Table(
     "project_container_metadata",
     metadata,
-    Column('project_id', postgresql.UUID(), nullable=False),
-    Column('type_id', postgresql.UUID(), nullable=False),
-    Column('custom_attributes', postgresql.JSON(), nullable=False),
+    Column("project_id", postgresql.UUID(), nullable=False),
+    Column("type_id", postgresql.UUID(), nullable=False),
+    Column("custom_attributes", postgresql.JSON(), nullable=False),
 )
 
 
@@ -203,10 +215,11 @@ class ProjectContainerMetaDao(BaseModel):
 
 
 ressource_table = Table(
-    "ressource", metadata,
-    Column('id', postgresql.UUID(), nullable=False, primary_key=True),
-    Column('owner_id', postgresql.UUID(), nullable=False),
-    Column('name', String, nullable=False)
+    "ressource",
+    metadata,
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("owner_id", postgresql.UUID(), nullable=False),
+    Column("name", String, nullable=False),
 )
 
 
@@ -217,12 +230,12 @@ class RessourceDao(BaseModel):
 
 
 translation_table = Table(
-    "translation", metadata,
-    Column('ressource_id', postgresql.UUID(),
-           nullable=False, primary_key=True),
-    Column('locale', String(5), nullable=False, primary_key=True),
-    Column('name', String, nullable=False, primary_key=True),
-    Column('value', String, nullable=False),
+    "translation",
+    metadata,
+    Column("ressource_id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("locale", String(5), nullable=False, primary_key=True),
+    Column("name", String, nullable=False, primary_key=True),
+    Column("value", String, nullable=False),
 )
 
 
@@ -234,9 +247,10 @@ class TranslationDao(BaseModel):
 
 
 setting_table = Table(
-    "settings", metadata,
-    Column('key', String, nullable=False, primary_key=True),
-    Column('value', postgresql.JSON(), nullable=False)
+    "settings",
+    metadata,
+    Column("key", String, nullable=False, primary_key=True),
+    Column("value", postgresql.JSON(), nullable=False),
 )
 
 

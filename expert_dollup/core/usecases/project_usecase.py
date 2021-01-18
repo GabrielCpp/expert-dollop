@@ -11,7 +11,7 @@ from expert_dollup.infra.services import (
     ProjectDefinitionService,
     ProjectDefinitionContainerService,
     ProjectContainerService,
-    ProjectContainerMetaService
+    ProjectContainerMetaService,
 )
 
 
@@ -35,12 +35,13 @@ class ProjectUseCase:
         self.ressource_service = ressource_service
 
     async def add(self, domain: Project) -> Awaitable:
-        ressource = self.ressource_builder.build(domain.id, 'project_')
+        ressource = self.ressource_builder.build(domain.id, "project_")
 
         await self._ensure_project_valid(domain)
         await self.ressource_service.insert(ressource)
         await self.service.insert(domain)
         await self._create_container_from_porject_def(domain)
+        return await self.find_by_id(domain.id)
 
     async def remove_by_id(self, id: UUID) -> Awaitable:
         await self.service.delete_by_id(id)
@@ -49,6 +50,7 @@ class ProjectUseCase:
     async def update(self, domain: Project) -> Awaitable:
         await self._ensure_project_valid(domain)
         await self.service.update(domain)
+        return await self.find_by_id(domain.id)
 
     async def find_by_id(self, id: UUID) -> Awaitable[Project]:
         result = await self.service.find_by_id(id)
@@ -60,15 +62,17 @@ class ProjectUseCase:
 
     async def _ensure_project_valid(self, project: Project):
         if not await self.self.project_definition_service.has(project.project_def_id):
-            raise ValidationError.for_field(
-                "project_def_id", "Project does not exists")
+            raise ValidationError.for_field("project_def_id", "Project does not exists")
 
     async def _create_container_from_project_def(self, project: Project):
         project_containers = []
         project_container_metas
         type_to_instance_id = defaultdict(uuid4)
-        container_definitions = self.project_definition_container_service.all_from_project(
-            roject.project_def_id)
+        container_definitions = (
+            self.project_definition_container_service.all_from_project(
+                roject.project_def_id
+            )
+        )
 
         async for container_definition in container_definitions:
             container_id = type_to_instance_id[container_definition.id]
@@ -78,9 +82,11 @@ class ProjectUseCase:
                     id=container_id,
                     project_id=project.id,
                     type_id=container_definition.id,
-                    path=[type_to_instance_id[def_id]
-                          for def_id in container_definition.path],
-                    value=container_definition.default_value
+                    path=[
+                        type_to_instance_id[def_id]
+                        for def_id in container_definition.path
+                    ],
+                    value=container_definition.default_value,
                 )
 
                 project_containers.append(container)
@@ -88,7 +94,7 @@ class ProjectUseCase:
             container_meta = ProjectContainerMeta(
                 project_id=project.id,
                 type_id=container_definition.id,
-                custom_attributes=container_definition.custom_attributes
+                custom_attributes=container_definition.custom_attributes,
             )
 
             project_container_metas.append(container_meta)

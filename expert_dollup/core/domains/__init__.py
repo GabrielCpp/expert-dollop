@@ -9,3 +9,4 @@ from .project_container import ProjectContainer
 from .project_container_meta import ProjectContainerMeta
 from .translation import Translation, TranslationId, TranslationRessourceLocaleQuery
 from .ressource import Ressource
+from .paginated_ressource import PaginatedRessource

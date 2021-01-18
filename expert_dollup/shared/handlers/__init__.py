@@ -1,26 +1,33 @@
+from typing import Type, Optional
+from dataclasses import dataclass
 from ..automapping import Mapper
+
+
+@dataclass
+class MappingChain:
+    dto: Optional[Type] = None
+    domain: Optional[Type] = None
+    out_domain: Optional[Type] = None
+    out_dto: Optional[Type] = None
 
 
 class RequestHandler:
     def __init__(self, mapper: Mapper):
         self.mapper = mapper
 
-    async def handle(self, query_dto, QueryDto, QueryDomain, usecase):
-        query_domain = self.mapper.map(query_dto, QueryDomain, QueryDto)
-        await usecase(query_domain)
+    async def handle(self, usecase, query_dto, mapping_chain: MappingChain):
+        query_domain = query_dto
 
-    async def handle_id_with_result(self, id, usecase, ResultDto):
-        result = await usecase(id)
-        result_dto = self.mapper.map(result, ResultDto)
-        return result_dto
+        if not mapping_chain.dto is None:
+            query_domain = self.mapper.map(
+                query_dto, mapping_chain.domain, mapping_chain.dto
+            )
 
-    async def handle_with_result(self, query_dto, QueryDto, QueryDomain, usecase, ResultDto):
-        query_domain = self.mapper.map(query_dto, QueryDomain, QueryDto)
         result = await usecase(query_domain)
-        result_dto = self.mapper.map(result, ResultDto)
-        return result_dto
 
-    async def query_with_many_result(self, query_domain, usecase, ResultDto):
-        results = await usecase(query_domain)
-        result_dtos = self.mapper.map_many(results, ResultDto)
-        return result_dtos
+        if not mapping_chain.out_dto is None:
+            result = self.mapper.map(
+                result, mapping_chain.out_dto, mapping_chain.out_domain
+            )
+
+        return result
