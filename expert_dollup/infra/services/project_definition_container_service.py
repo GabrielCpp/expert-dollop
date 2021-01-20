@@ -1,17 +1,24 @@
-from typing import Awaitable, List, AsyncGenerator
+from typing import Awaitable, List, AsyncGenerator, Optional
 from uuid import UUID
 from sqlalchemy import select, text, bindparam, String, and_
 from sqlalchemy.dialects.postgresql import ARRAY
-from expert_dollup.infra.expert_dollup_db import project_definition_container_table, ProjectDefinitionContainerDao
-from expert_dollup.core.domains import ProjectDefinitionContainer
-from expert_dollup.shared.database_services import BaseCrudTableService
 from sqlalchemy.dialects import postgresql
+from expert_dollup.shared.database_services import BaseCrudTableService, Page
+from expert_dollup.core.domains import ProjectDefinitionContainer, PaginatedRessource
+from expert_dollup.infra.expert_dollup_db import (
+    project_definition_container_table,
+    ProjectDefinitionContainerDao,
+)
+
 
 DELETE_BY_MIXED_PATH = text(
-    f"DELETE FROM {project_definition_container_table.name} WHERE mixed_paths <@ :element")
+    f"DELETE FROM {project_definition_container_table.name} WHERE mixed_paths <@ :element"
+)
 
 
-class ProjectDefinitionContainerService(BaseCrudTableService[ProjectDefinitionContainer]):
+class ProjectDefinitionContainerService(
+    BaseCrudTableService[ProjectDefinitionContainer]
+):
     class Meta:
         table = project_definition_container_table
         dao = ProjectDefinitionContainerDao
@@ -36,15 +43,36 @@ class ProjectDefinitionContainerService(BaseCrudTableService[ProjectDefinitionCo
             return
 
         value = ProjectDefinitionContainerDao(**value)
-        path_to_delete = '/'.join([*value.path, str(value.id)])
-        sql = DELETE_BY_MIXED_PATH.bindparams(bindparam(
-            key="element",
-            value=[path_to_delete],
-            type_=ARRAY(String, dimensions=1)
-        ))
+        path_to_delete = "/".join([*value.path, str(value.id)])
+        sql = DELETE_BY_MIXED_PATH.bindparams(
+            bindparam(
+                key="element", value=[path_to_delete], type_=ARRAY(String, dimensions=1)
+            )
+        )
 
         await self._database.execute(sql)
 
-    async def all_from_project(self, project_def_id: UUID) -> AsyncGenerator[ProjectDefinitionContainer, None]:
-        query = self._table.select().where(self._table.c.project_def_id == project_def_id)
-        return self.map_over(self._database.iterate(query))
+    async def find_all_project_containers(
+        self,
+        paginated_ressource: PaginatedRessource[UUID],
+    ) -> AsyncGenerator[Page[ProjectDefinitionContainer], None]:
+        offset = (
+            0
+            if paginated_ressource.next_page_token is None
+            else int(paginated_ressource.next_page_token)
+        )
+
+        query = (
+            self._table.select()
+            .where(self._table.c.project_def_id == paginated_ressource.query)
+            .limit(limit)
+            .offset(limit * offset)
+        )
+
+        results = self.map_over(self._database.iterate(query))
+
+        return Page(
+            next_page_token=str(offset + 1),
+            limit=paginated_ressource.limit,
+            results=results,
+        )

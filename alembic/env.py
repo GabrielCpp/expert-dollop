@@ -32,7 +32,7 @@ DATABASE_URL = "postgres://{}:{}@{}/{}".format(
     os.environ["POSTGRES_USERNAME"],
     os.environ["POSTGRES_PASSWORD"],
     os.environ["POSTGRES_HOST"],
-    os.environ["POSTGRES_DB"]
+    os.environ["POSTGRES_DB"],
 )
 
 
@@ -69,7 +69,7 @@ def run_migrations_online():
     """
 
     alembic_config = config.get_section(config.config_ini_section)
-    alembic_config['sqlalchemy.url'] = DATABASE_URL
+    alembic_config["sqlalchemy.url"] = DATABASE_URL
     connectable = engine_from_config(
         alembic_config,
         prefix="sqlalchemy.",
@@ -77,9 +77,7 @@ def run_migrations_online():
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

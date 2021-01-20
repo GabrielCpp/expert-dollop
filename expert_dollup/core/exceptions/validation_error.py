@@ -2,7 +2,6 @@ from typing import List, Tuple
 
 
 class ValidationError(Exception):
-
     @staticmethod
     def for_field(name: str, message: str) -> "ValidationError":
         return ValidationError([(name, message)])

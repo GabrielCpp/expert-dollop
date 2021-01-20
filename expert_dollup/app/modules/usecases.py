@@ -1,5 +1,10 @@
 from injector import Binder, inject
-from expert_dollup.core.usecases import ProjectDefinitonUseCase, ProjectDefinitonContainerUseCase, TranslationUseCase, ProjectUseCase
+from expert_dollup.core.usecases import (
+    ProjectDefinitonUseCase,
+    ProjectDefinitonContainerUseCase,
+    TranslationUseCase,
+    ProjectUseCase,
+)
 
 
 def bind_usecases(binder: Binder) -> None:

@@ -2,7 +2,11 @@ from typing import List
 from datetime import datetime
 from uuid import UUID
 from expert_dollup.shared.automapping import Mapper
-from expert_dollup.infra.path_transform import join_path, split_uuid_path, join_uuid_path
+from expert_dollup.infra.path_transform import (
+    join_path,
+    split_uuid_path,
+    join_uuid_path,
+)
 from expert_dollup.infra.expert_dollup_db import (
     ProjectDefinitionDao,
     ProjectDefinitionContainerDao,
@@ -33,7 +37,7 @@ def map_project_definition_from_dao(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        plugins=src.plugins
+        plugins=src.plugins,
     )
 
 
@@ -220,8 +224,4 @@ def map_translation_to_dao(src: Translation, mapper: Mapper = None) -> Translati
 
 
 def map_translation_id_to_dict(src: TranslationId, mapper: Mapper = None) -> dict:
-    return dict(
-        ressource_id=src.ressource_id,
-        locale=src.locale,
-        name=src.name
-    )
+    return dict(ressource_id=src.ressource_id, locale=src.locale, name=src.name)

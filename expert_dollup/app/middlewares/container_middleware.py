@@ -6,15 +6,16 @@ from starlette.types import ASGIApp
 from injector import Injector
 
 
-def create_container_middleware(global_container: Injector, build_request_container: Callable[[Injector], Injector]):
+def create_container_middleware(
+    global_container: Injector, build_request_container: Callable[[Injector], Injector]
+):
     class ContainerMiddleware(BaseHTTPMiddleware):
         async def dispatch(
             self, request: Request, call_next: RequestResponseEndpoint
         ) -> Response:
 
             request.state.global_container = global_container
-            request.state.container = build_request_container(
-                global_container)
+            request.state.container = build_request_container(global_container)
 
             return await call_next(request)
 

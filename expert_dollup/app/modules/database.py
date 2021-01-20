@@ -8,7 +8,7 @@ def bind_database(binder: Binder) -> None:
         os.environ["POSTGRES_USERNAME"],
         os.environ["POSTGRES_PASSWORD"],
         os.environ["POSTGRES_HOST"],
-        os.environ["POSTGRES_DB"]
+        os.environ["POSTGRES_DB"],
     )
 
     database = ExpertDollupDatabase(DATABASE_URL)

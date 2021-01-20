@@ -2,7 +2,7 @@ from injector import Injector, Provider
 from typing import Type, TypeVar, Callable
 from inspect import signature, Parameter
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class ArgProvider(Provider):
@@ -11,12 +11,13 @@ class ArgProvider(Provider):
         self.kwargs = kwargs
 
     def get(self, injector: Injector) -> T:
-        mapped_kwargs = {key: injector.get(arg_type)
-                         for key, arg_type in self.kwargs.items()}
+        mapped_kwargs = {
+            key: injector.get(arg_type) for key, arg_type in self.kwargs.items()
+        }
         return self.type_class(**mapped_kwargs)
 
     def __repr__(self) -> str:
-        return '%s(%r)' % (type(self).__name__, self._callable)
+        return "%s(%r)" % (type(self).__name__, self._callable)
 
 
 def factory_of(type_class: Type[T], **kwargs):

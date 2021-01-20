@@ -1,4 +1,8 @@
-from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase, ressource_table, RessourceDao
+from expert_dollup.infra.expert_dollup_db import (
+    ExpertDollupDatabase,
+    ressource_table,
+    RessourceDao,
+)
 from expert_dollup.core.domains import Ressource
 from expert_dollup.shared.database_services import BaseCrudTableService
 

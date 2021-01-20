@@ -11,7 +11,7 @@ def generate_json(generate_layer, output_path=None):
     fixture.generate()
     model = fixture.model()
 
-    if generate_layer == 'dto':
+    if generate_layer == "dto":
         injector = Injector([bind_mapper])
         mapper = injector.get(Mapper)
         model = to_dto(model, mapper)
@@ -23,7 +23,7 @@ def generate_json(generate_layer, output_path=None):
     if output_path is None:
         print(json_content)
     else:
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             f.write(json_content)
 
 
@@ -37,7 +37,7 @@ def generate_sql():
         os.environ["POSTGRES_USERNAME"],
         os.environ["POSTGRES_PASSWORD"],
         os.environ["POSTGRES_HOST"],
-        os.environ["POSTGRES_DB"]
+        os.environ["POSTGRES_DB"],
     )
 
     engine = create_engine(DATABASE_URL)

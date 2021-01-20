@@ -21,16 +21,16 @@ def problem(status=None, title=None, detail=None, type=None, instance=None, **kw
     """
     problem_dict = {}
     if status:
-        problem_dict['status'] = int(status)
-        if (not title or title == 'about:blank') and status in httplib.responses:
-            problem_dict['title'] = httplib.responses[status]
+        problem_dict["status"] = int(status)
+        if (not title or title == "about:blank") and status in httplib.responses:
+            problem_dict["title"] = httplib.responses[status]
     if title:
-        problem_dict['title'] = str(title)
+        problem_dict["title"] = str(title)
     if detail:
-        problem_dict['detail'] = str(detail)
+        problem_dict["detail"] = str(detail)
     if type:
-        problem_dict['type'] = str(type)
+        problem_dict["type"] = str(type)
     if instance:
-        problem_dict['instance'] = str(instance)
+        problem_dict["instance"] = str(instance)
     problem_dict.update(kwargs)
     return problem_dict

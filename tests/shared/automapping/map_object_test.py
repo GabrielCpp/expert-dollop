@@ -15,15 +15,12 @@ class Bar:
 
 
 def map_foo_to_bar(src: Foo, mapper: Mapper = None) -> Bar:
-    return Bar(
-        name=src.name,
-        age=src.age
-    )
+    return Bar(name=src.name, age=src.age)
 
 
 def test_given_identical_object_should_copy_each_member():
-    expected_bar = Bar(name='Joe', age=18)
-    foo = Foo(name='Joe', age=18)
+    expected_bar = Bar(name="Joe", age=18)
+    foo = Foo(name="Joe", age=18)
 
     mapper = Mapper()
     mapper.add_mapping(Foo, Bar, map_foo_to_bar)

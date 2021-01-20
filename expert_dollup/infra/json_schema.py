@@ -9,7 +9,7 @@ def validate_instance(validator: Draft7Validator, instance: dict) -> None:
     if len(errors) > 0:
         for error in errors:
             for suberror in sorted(error.context, key=lambda e: e.schema_path):
-                target = '.'.join(list(suberror.schema_path))
+                target = ".".join(list(suberror.schema_path))
                 message = suberror.message
                 error_item = (target, message)
                 error_tuples.append(error_item)

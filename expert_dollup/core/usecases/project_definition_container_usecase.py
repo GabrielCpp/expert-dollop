@@ -8,6 +8,7 @@ from expert_dollup.core.exceptions import (
 from expert_dollup.core.domains import (
     ProjectDefinitionContainer,
     ProjectDefinition,
+    PaginatedRessource,
 )
 from expert_dollup.infra.services import (
     ProjectDefinitionContainerService,
@@ -16,6 +17,7 @@ from expert_dollup.infra.services import (
 )
 from expert_dollup.infra.factories import ValueTypeValidatorFactory
 from expert_dollup.infra.validators import ProjectDefinitionConfigValidator
+from expert_dollup.shared.database_services import Page
 
 
 class IdentifiedRessourceUseCase:
@@ -26,13 +28,13 @@ class ProjectDefinitonContainerUseCase:
     def __init__(
         self,
         service: ProjectDefinitionContainerService,
-        project_container_service: ProjectDefinitionService,
+        project_definition_service: ProjectDefinitionService,
         value_type_validator_factory: ValueTypeValidatorFactory,
         project_definition_plugin_service: ProjectDefinitionPluginService,
         project_definition_config_validator: ProjectDefinitionConfigValidator,
     ):
         self.service = service
-        self.project_container_service = project_container_service
+        self.project_definition_service = project_definition_service
         self.value_type_validator_factory = value_type_validator_factory
         self.project_definition_plugin_service = project_definition_plugin_service
         self.project_definition_config_validator = project_definition_config_validator
@@ -61,8 +63,14 @@ class ProjectDefinitonContainerUseCase:
 
         return result
 
+    async def find_by_project_definition(
+        paginated_ressource: PaginatedRessource[UUID],
+    ) -> Awaitable[Page[ProjectDefinitionContainer]]:
+        results = await self.service.find_all_project_containers(paginated_ressource)
+        return results
+
     async def _ensure_container_is_valid(self, domain: ProjectDefinitionContainer):
-        project_def = await self.project_container_service.find_by_id(
+        project_def = await self.project_definition_service.find_by_id(
             domain.project_def_id
         )
 

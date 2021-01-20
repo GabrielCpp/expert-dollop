@@ -3,22 +3,22 @@ from uuid import UUID
 
 
 def join_path(path: List[str]) -> str:
-    return '/'.join(path)
+    return "/".join(path)
 
 
 def split_path(path: str) -> List[str]:
-    if path == '':
+    if path == "":
         return []
 
-    return path.split('/')
+    return path.split("/")
 
 
 def split_uuid_path(path: str) -> List[UUID]:
-    if path == '':
+    if path == "":
         return []
 
-    return [UUID(item) for item in path.split('/')]
+    return [UUID(item) for item in path.split("/")]
 
 
 def join_uuid_path(path: List[UUID]) -> str:
-    return '/'.join([str(item) for item in path])
+    return "/".join([str(item) for item in path])

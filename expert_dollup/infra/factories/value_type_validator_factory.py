@@ -27,27 +27,21 @@ BOOLEAN_SCHEMA = {
 STRING_SCHEMA = {
     "type": "object",
     "properties": {
-        "value": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 255
-        },
+        "value": {"type": "string", "minLength": 1, "maxLength": 255},
     },
 }
 
-CONTAINER_SCHEMA = {
-    "type": "null"
-}
+CONTAINER_SCHEMA = {"type": "null"}
 
 
 class ValueTypeValidatorFactory:
     def __init__(self):
         self._schemas = {
-            'INT': Draft7Validator(INT_SCHEMA),
-            'DECIMAL': Draft7Validator(DECIMAL_SCHEMA),
-            'BOOL': Draft7Validator(BOOLEAN_SCHEMA),
-            'STRING': Draft7Validator(STRING_SCHEMA),
-            'CONTAINER': Draft7Validator(CONTAINER_SCHEMA),
+            "INT": Draft7Validator(INT_SCHEMA),
+            "DECIMAL": Draft7Validator(DECIMAL_SCHEMA),
+            "BOOL": Draft7Validator(BOOLEAN_SCHEMA),
+            "STRING": Draft7Validator(STRING_SCHEMA),
+            "CONTAINER": Draft7Validator(CONTAINER_SCHEMA),
         }
 
     def native_schemas(self) -> List[str]:

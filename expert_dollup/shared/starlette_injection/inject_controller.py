@@ -1,7 +1,7 @@
 from typing import TypeVar, Type
 from starlette.requests import Request
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class Inject:
@@ -10,6 +10,6 @@ class Inject:
 
     def __call__(self, request: Request) -> T:
         container = request.state.container
-        assert not container is None, 'Container middleware may not be present'
+        assert not container is None, "Container middleware may not be present"
 
         return container.get(self.object_class)

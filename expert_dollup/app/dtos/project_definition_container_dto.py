@@ -15,3 +15,9 @@ class ProjectDefinitionContainerDto(CamelModel):
     value_type: str
     default_value: Optional[dict]
     path: List[UUID]
+
+
+class ProjectDefinitionContainerPageDto(CamelModel):
+    next_page_token: str
+    limit: int
+    results: List[ProjectDefinitionContainerDto]

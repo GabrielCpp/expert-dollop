@@ -9,7 +9,13 @@ from structlog.contextvars import merge_contextvars
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 import expert_dollup.app.controllers as api_routers
 from .modules import build_container
-from .middlewares import create_database_transaction_middleware, create_container_middleware, LoggerMiddleware, create_error_middleware, ExceptionHandlerDict
+from .middlewares import (
+    create_database_transaction_middleware,
+    create_container_middleware,
+    LoggerMiddleware,
+    create_error_middleware,
+    ExceptionHandlerDict,
+)
 
 
 def add_timestamp(_, __, event_dict):
@@ -29,7 +35,6 @@ configure(
         structlog.processors.UnicodeDecoder(),
         structlog.dev.ConsoleRenderer(),
         structlog.processors.JSONRenderer(indent=1, sort_keys=True),
-
     ],
     context_class=dict,
     logger_factory=structlog.stdlib.LoggerFactory(),
@@ -45,19 +50,16 @@ def creat_app(container: Injector = None):
     exception_handler = container.get(ExceptionHandlerDict)
 
     app = FastAPI()
+    app.add_middleware(create_database_transaction_middleware(ExpertDollupDatabase))
     app.add_middleware(
-        create_database_transaction_middleware(ExpertDollupDatabase))
-    app.add_middleware(create_container_middleware(
-        container, lambda parent: Injector(parent=parent)))
+        create_container_middleware(container, lambda parent: Injector(parent=parent))
+    )
     app.add_middleware(LoggerMiddleware)
     app.add_middleware(create_error_middleware(exception_handler))
 
     for router in api_routers.__dict__.values():
         if isinstance(router, APIRouter):
-            app.include_router(
-                router,
-                prefix="/api"
-            )
+            app.include_router(router, prefix="/api")
 
     database = container.get(ExpertDollupDatabase)
 

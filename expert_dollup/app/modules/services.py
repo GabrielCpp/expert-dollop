@@ -1,8 +1,12 @@
 from injector import Binder, inject
 from expert_dollup.shared.starlette_injection import factory_of
 from expert_dollup.infra.services import (
-    ProjectDefinitionService, ProjectDefinitionContainerService, TranslationService,
-    ProjectService, RessourceService, ProjectDefinitionPluginService
+    ProjectDefinitionService,
+    ProjectDefinitionContainerService,
+    TranslationService,
+    ProjectService,
+    RessourceService,
+    ProjectDefinitionPluginService,
 )
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 
