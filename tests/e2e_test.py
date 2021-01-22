@@ -35,7 +35,6 @@ class ProjectDefinitionDtoFactory(factory.Factory):
     id = factory.LazyFunction(uuid4)
     name = factory.Sequence(lambda n: f"Gab{n}")
     default_datasheet_id = factory.LazyFunction(uuid4)
-    plugins = []
 
 
 class ProjectDefinitionContainerDtoFactory(factory.Factory):

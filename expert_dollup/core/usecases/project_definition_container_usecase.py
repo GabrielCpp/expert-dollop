@@ -13,10 +13,9 @@ from expert_dollup.core.domains import (
 from expert_dollup.infra.services import (
     ProjectDefinitionContainerService,
     ProjectDefinitionService,
-    ProjectDefinitionPluginService,
 )
 from expert_dollup.infra.factories import ValueTypeValidatorFactory
-from expert_dollup.infra.validators import ProjectDefinitionConfigValidator
+from expert_dollup.infra.validators import ProjectDefinitionValueTypeValidator
 from expert_dollup.shared.database_services import Page
 
 
@@ -30,14 +29,14 @@ class ProjectDefinitonContainerUseCase:
         service: ProjectDefinitionContainerService,
         project_definition_service: ProjectDefinitionService,
         value_type_validator_factory: ValueTypeValidatorFactory,
-        project_definition_plugin_service: ProjectDefinitionPluginService,
-        project_definition_config_validator: ProjectDefinitionConfigValidator,
+        project_definition_value_type_validator: ProjectDefinitionValueTypeValidator,
     ):
         self.service = service
         self.project_definition_service = project_definition_service
         self.value_type_validator_factory = value_type_validator_factory
-        self.project_definition_plugin_service = project_definition_plugin_service
-        self.project_definition_config_validator = project_definition_config_validator
+        self.project_definition_value_type_validator = (
+            project_definition_value_type_validator
+        )
 
     async def add(
         self, domain: ProjectDefinitionContainer
@@ -83,7 +82,7 @@ class ProjectDefinitonContainerUseCase:
         if not await self.service.has_path(domain.path):
             raise InvalidObject("bad_tree_path", "Tree path is invalid.")
 
-        await self._ensure_plugin_config_valid(project_def, domain)
+        await self._ensure_container_config_valid(project_def, domain)
 
         try:
             validate = self.value_type_validator_factory.create(domain.value_type)
@@ -91,18 +90,10 @@ class ProjectDefinitonContainerUseCase:
         except FactorySeedMissing:
             ValidationError.for_field("value_type", "Value type not found")
 
-    async def _ensure_plugin_config_valid(
+    async def _ensure_container_config_valid(
         self, project_def: ProjectDefinition, domain: ProjectDefinitionContainer
     ) -> None:
-        schema_by_name = (
-            await self.project_definition_plugin_service.get_config_validation_schemas(
-                project_def.plugins
-            )
-        )
 
-        if len(schema_by_name) < len(project_def.plugins):
-            raise RessourceNotFound("One or more plugin not found")
-
-        self.project_definition_config_validator.validate(
-            domain.custom_attributes, schema_by_name
+        await self.project_definition_value_type_validator.validate_config(
+            domain.value_type, domain.custom_attributes
         )

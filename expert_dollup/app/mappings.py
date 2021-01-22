@@ -3,9 +3,6 @@ from expert_dollup.shared.database_services import Page
 from expert_dollup.app.dtos import (
     ProjectDefinitionDto,
     ProjectDefinitionContainerDto,
-    ProjectDefinitionPackageDto,
-    ProjectDefinitionStructDto,
-    ProjectDefinitionFunctionDto,
     ProjectDto,
     TranslationDto,
     TranslationIdDto,
@@ -14,9 +11,6 @@ from expert_dollup.app.dtos import (
 from expert_dollup.core.domains import (
     ProjectDefinition,
     ProjectDefinitionContainer,
-    ProjectDefinitionPackage,
-    ProjectDefinitionStruct,
-    ProjectDefinitionFunction,
     Project,
     Translation,
     TranslationId,
@@ -30,7 +24,6 @@ def map_project_definition_from_dto(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        plugins=src.plugins,
     )
 
 
@@ -41,7 +34,6 @@ def map_project_definition_to_dto(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        plugins=src.plugins,
     )
 
 
@@ -76,76 +68,6 @@ def map_project_definition_container_to_dto(
         value_type=src.value_type,
         default_value=src.default_value,
         path=src.path,
-    )
-
-
-def map_project_definition_package_from_dto(
-    src: ProjectDefinitionPackageDto, mapper: Mapper
-) -> ProjectDefinitionPackage:
-    return ProjectDefinitionPackage(
-        id=src.id, project_def_id=src.project_def_id, name=src.name, package=src.package
-    )
-
-
-def map_project_definition_package_to_dto(
-    src: ProjectDefinitionPackage, mapper: Mapper
-) -> ProjectDefinitionPackageDto:
-    return ProjectDefinitionPackageDto(
-        id=src.id, project_def_id=src.project_def_id, name=src.name, package=src.package
-    )
-
-
-def map_project_definition_struct_from_dto(
-    src: ProjectDefinitionStructDto, mapper: Mapper
-) -> ProjectDefinitionStruct:
-    return ProjectDefinitionStruct(
-        id=src.id,
-        name=src.name,
-        package_id=src.package_id,
-        properties=src.properties,
-        dependencies=src.dependencies,
-    )
-
-
-def map_project_definition_struct_to_dto(
-    src: ProjectDefinitionStruct, mapper: Mapper
-) -> ProjectDefinitionStructDto:
-    return ProjectDefinitionStructDto(
-        id=src.id,
-        name=src.name,
-        package_id=src.package_id,
-        properties=src.properties,
-        dependencies=src.dependencies,
-    )
-
-
-def map_project_definition_function_from_dto(
-    src: ProjectDefinitionFunctionDto, mapper: Mapper
-) -> ProjectDefinitionFunction:
-    return ProjectDefinitionFunction(
-        id=src.id,
-        name=src.name,
-        code=src.code,
-        ast=src.ast,
-        signature=src.signature,
-        dependencies=src.dependencies,
-        struct_id=src.struct_id,
-        package_id=src.package_id,
-    )
-
-
-def map_project_definition_function_to_dto(
-    src: ProjectDefinitionFunction, mapper: Mapper
-) -> ProjectDefinitionFunctionDto:
-    return ProjectDefinitionFunctionDto(
-        id=src.id,
-        name=src.name,
-        code=src.code,
-        ast=src.ast,
-        signature=src.signature,
-        dependencies=src.dependencies,
-        struct_id=src.struct_id,
-        package_id=src.package_id,
     )
 
 

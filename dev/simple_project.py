@@ -9,7 +9,6 @@ from .tables import Tables
 from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
     ProjectDefinitionDao,
-    ProjectDefinitionPluginDao,
     TranslationDao,
     ProjectDefinitionContainerDao,
     project_definition_table,
@@ -145,7 +144,6 @@ class SimpleProject:
     def __init__(self):
         self.project_container_definitions: List[ProjectDefinitionContainerDao] = []
         self.project_definitions: List[ProjectDefinitionDao] = []
-        self.project_definition_plugins: List[ProjectDefinitionPluginDao] = []
         self.tanslations: List[TranslationDao] = []
         self.fake = Faker()
         self.value_type_factory = ValueTypeFactory(self.fake)
@@ -245,39 +243,10 @@ class SimpleProject:
             status="OPEN",
             default_datasheet_id=uuid4(),
             creation_date_utc=self.fake.date_time(),
-            plugins=[UUID("986663da-e409-430b-a8d1-489666ef1719")],
         )
 
         self.project_definitions.append(project_definition)
         self.generate_project_container_definition(project_definition.id)
-
-    def generate_plugins(self):
-        pass
-        """
-        translation_plugin = ProjectDefinitionPluginDao(
-            id=UUID("986663da-e409-430b-a8d1-489666ef1719"),
-            name="translation",
-            validation_schema={
-                "type": "object",
-                "properties": {
-                    "tooltip"
-                }
-            },
-            default_config={}
-            form_config=''
-            node_condition={
-                condition: [
-                    "$in", [
-                        "container_type",
-                        ":container_type"
-                    ] 
-                ],
-                parameters: {
-                    "container_type": ["CONTAINER", "INTEGER", ""]
-                }
-            }
-        )
-        """
 
     def generate_translations(self):
         for project_container_definition in self.project_container_definitions:
@@ -318,7 +287,6 @@ class SimpleProject:
             )
 
     def generate(self):
-        self.generate_plugins()
         self.generate_project_definition()
         self.generate_translations()
 

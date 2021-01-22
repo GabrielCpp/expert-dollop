@@ -1,1 +1,1 @@
-from .project_definition_config_validator import ProjectDefinitionConfigValidator
+from .project_definition_value_type_validator import ProjectDefinitionValueTypeValidator

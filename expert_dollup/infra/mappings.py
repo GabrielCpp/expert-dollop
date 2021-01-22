@@ -10,24 +10,31 @@ from expert_dollup.infra.path_transform import (
 from expert_dollup.infra.expert_dollup_db import (
     ProjectDefinitionDao,
     ProjectDefinitionContainerDao,
-    ProjectDefinitionPackageDao,
-    ProjectDefinitionStructDao,
-    ProjectDefinitionFunctionDao,
     ProjectDao,
     RessourceDao,
     TranslationDao,
+    ProjectDefinitionValueTypeDao,
 )
 from expert_dollup.core.domains import (
     ProjectDefinition,
     ProjectDefinitionContainer,
-    ProjectDefinitionPackage,
-    ProjectDefinitionStruct,
-    ProjectDefinitionFunction,
     Project,
     Ressource,
     Translation,
     TranslationId,
+    ProjectDefinitionValueType,
 )
+
+
+def map_project_definition_value_type_from_dao(
+    src: ProjectDefinitionValueTypeDao, mapper: Mapper = None
+) -> ProjectDefinitionValueType:
+    return ProjectDefinitionValueType(
+        id=src.id,
+        value_json_schema=src.value_json_schema,
+        attributes_json_schema=src.attributes_json_schema,
+        display_name=src.display_name,
+    )
 
 
 def map_project_definition_from_dao(
@@ -37,7 +44,6 @@ def map_project_definition_from_dao(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        plugins=src.plugins,
     )
 
 
@@ -48,7 +54,6 @@ def map_project_definition_to_dao(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        plugins=src.plugins,
         creation_date_utc=datetime.utcnow(),
     )
 
@@ -96,76 +101,6 @@ def map_project_definition_container_to_dao(
         path=join_uuid_path(src.path),
         mixed_paths=mix_path(str_path),
         creation_date_utc=datetime.utcnow(),
-    )
-
-
-def map_project_definition_package_from_dao(
-    src: ProjectDefinitionPackageDao, mapper: Mapper = None
-) -> ProjectDefinitionPackage:
-    return ProjectDefinitionPackage(
-        id=src.id, project_def_id=src.project_def_id, name=src.name, package=src.package
-    )
-
-
-def map_project_definition_package_to_dao(
-    src: ProjectDefinitionPackage, mapper: Mapper = None
-) -> ProjectDefinitionPackageDao:
-    return ProjectDefinitionPackageDao(
-        id=src.id, project_def_id=src.project_def_id, name=src.name, package=src.package
-    )
-
-
-def map_project_definition_struct_from_dao(
-    src: ProjectDefinitionStructDao, mapper: Mapper = None
-) -> ProjectDefinitionStruct:
-    return ProjectDefinitionStruct(
-        id=src.id,
-        name=src.name,
-        package_id=src.package_id,
-        properties=src.properties,
-        dependencies=src.dependencies,
-    )
-
-
-def map_project_definition_struct_to_dao(
-    src: ProjectDefinitionStruct, mapper: Mapper = None
-) -> ProjectDefinitionStructDao:
-    return ProjectDefinitionStructDao(
-        id=src.id,
-        name=src.name,
-        package_id=src.package_id,
-        properties=src.properties,
-        dependencies=src.dependencies,
-    )
-
-
-def map_project_definition_function_from_dao(
-    src: ProjectDefinitionFunctionDao, mapper: Mapper = None
-) -> ProjectDefinitionFunction:
-    return ProjectDefinitionFunction(
-        id=src.id,
-        name=src.name,
-        code=src.code,
-        ast=src.ast,
-        signature=src.signature,
-        dependencies=src.dependencies,
-        struct_id=src.struct_id,
-        package_id=src.package_id,
-    )
-
-
-def map_project_definition_function_to_dao(
-    src: ProjectDefinitionFunction, mapper: Mapper = None
-) -> ProjectDefinitionFunctionDao:
-    return ProjectDefinitionFunctionDao(
-        id=src.id,
-        name=src.name,
-        code=src.code,
-        ast=src.ast,
-        signature=src.signature,
-        dependencies=src.dependencies,
-        struct_id=src.struct_id,
-        package_id=src.package_id,
     )
 
 

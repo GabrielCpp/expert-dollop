@@ -44,6 +44,82 @@ def create_global_table():
     )
 
 
+def create_default_value_types(project_definition_value_type):
+    INT_SCHEMA = {
+        "id": "INT",
+        "value_json_schema": {"maximum": 100000, "minimum": 0, "type": "integer"},
+        "attributes_json_schema": {"type": "object"},
+        "template_location": None,
+        "display_name": "integer",
+    }
+
+    DECIMAL_SCHEMA = {
+        "id": "DECIMAL",
+        "value_json_schema": {"maximum": 100000, "minimum": -100000, "type": "number"},
+        "attributes_json_schema": {"type": "object"},
+        "template_location": None,
+        "display_name": "decimal",
+    }
+
+    BOOLEAN_SCHEMA = {
+        "id": "BOOLEAN",
+        "value_json_schema": {"type": "boolean"},
+        "attributes_json_schema": {"type": "object"},
+        "template_location": None,
+        "display_name": "boolean",
+    }
+
+    STRING_SCHEMA = {
+        "id": "STRING",
+        "value_json_schema": {"maxLength": 200, "minLength": 1, "type": "string"},
+        "attributes_json_schema": {"type": "object"},
+        "template_location": None,
+        "display_name": "string",
+    }
+
+    STATIC_CHOICE_SCHEMA = {
+        "id": "STATIC_CHOICE",
+        "value_json_schema": {"type": "string"},
+        "attributes_json_schema": {"type": "object", "enum": []},
+        "template_location": None,
+        "display_name": "string",
+    }
+
+    CONTAINER_SCHEMA = {
+        "id": "CONTAINER",
+        "value_json_schema": {"type": "null"},
+        "attributes_json_schema": {"type": "object"},
+        "template_location": None,
+        "display_name": "container",
+    }
+
+    SECTION_CONTAINER_SCHEMA = {
+        "id": "SECTION_CONTAINER",
+        "value_json_schema": {"type": "null"},
+        "attributes_json_schema": {
+            "type": "object",
+            "properties": {
+                "is_collection": {"type": "boolean"},
+            },
+        },
+        "template_location": None,
+        "display_name": "container",
+    }
+
+    op.bulk_insert(
+        project_definition_value_type,
+        [
+            INT_SCHEMA,
+            DECIMAL_SCHEMA,
+            BOOLEAN_SCHEMA,
+            STRING_SCHEMA,
+            STATIC_CHOICE_SCHEMA,
+            CONTAINER_SCHEMA,
+            SECTION_CONTAINER_SCHEMA,
+        ],
+    )
+
+
 def create_project_definition_tables():
     op.create_table(
         "project_definition",
@@ -51,7 +127,6 @@ def create_project_definition_tables():
         Column("name", String, nullable=False),
         Column("default_datasheet_id", postgresql.UUID(), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
-        Column("plugins", ARRAY(postgresql.UUID(), dimensions=1), nullable=False),
     )
 
     op.create_index(op.f("ix_project_definition_name"), "project_definition", ["name"])
@@ -93,42 +168,23 @@ def create_project_definition_tables():
     )
 
     op.create_table(
-        "project_definition_package",
+        "project_definition_formula",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("project_def_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
-        Column("package", String, nullable=False),
+        Column("expression", String, nullable=False),
     )
 
-    op.create_table(
-        "project_definition_struct",
-        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("name", String, nullable=False),
-        Column("package_id", String, nullable=False),
-        Column("properties", postgresql.JSON(), nullable=True),
-        Column("dependencies", postgresql.JSON(), nullable=True),
+    project_definition_value_type = op.create_table(
+        "project_definition_value_type",
+        Column("id", String(32), nullable=False, primary_key=True),
+        Column("value_json_schema", postgresql.JSON(), nullable=False),
+        Column("attributes_json_schema", postgresql.JSON(), nullable=True),
+        Column("template_location", String, nullable=True),
+        Column("display_name", String, nullable=False),
     )
 
-    op.create_table(
-        "project_definition_function",
-        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("name", String, nullable=False),
-        Column("code", Text, nullable=False),
-        Column("ast", postgresql.JSON(), nullable=True),
-        Column("signature", postgresql.JSON(), nullable=True),
-        Column("dependencies", postgresql.JSON(), nullable=True),
-        Column("struct_id", postgresql.UUID(), nullable=True),
-        Column("package_id", postgresql.UUID(), nullable=True),
-    )
-
-    op.create_table(
-        "project_definition_plugin",
-        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("validation_schema", postgresql.JSON(), nullable=False),
-        Column("default_config", postgresql.JSON(), nullable=False),
-        Column("form_config", postgresql.JSON(), nullable=False),
-        Column("name", String, nullable=False),
-    )
+    create_default_value_types(project_definition_value_type)
 
 
 def create_project_tables():
@@ -184,22 +240,10 @@ def create_datasheet_tables():
     )
 
 
-def create_plugin_tables():
-    op.create_table(
-        "project_definition_value_type",
-        Column("id", String(16), nullable=False, primary_key=True),
-        Column("value_json_schema", postgresql.JSON(), nullable=False),
-        Column("attributes_json_schema", postgresql.JSON(), nullable=True),
-        Column("template_location", String, nullable=True),
-        Column("display_name", String, nullable=False),
-    )
-
-
 def upgrade():
     create_global_table()
     create_project_definition_tables()
     create_project_tables()
-    create_plugin_tables()
 
 
 def downgrade():

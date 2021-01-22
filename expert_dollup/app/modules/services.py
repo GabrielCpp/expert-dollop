@@ -6,16 +6,16 @@ from expert_dollup.infra.services import (
     TranslationService,
     ProjectService,
     RessourceService,
-    ProjectDefinitionPluginService,
 )
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
+from expert_dollup.infra.services import ProjectDefinitionValueTypeService
 
 
 def bind_services(binder: Binder) -> None:
     services = [
         ProjectDefinitionService,
         ProjectDefinitionContainerService,
-        ProjectDefinitionPluginService,
+        ProjectDefinitionValueTypeService,
         ProjectService,
         RessourceService,
         TranslationService,

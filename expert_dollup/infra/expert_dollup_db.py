@@ -30,7 +30,6 @@ project_definition_table = Table(
     Column("id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("name", String, nullable=False),
     Column("default_datasheet_id", postgresql.UUID(), nullable=False),
-    Column("plugins", ARRAY(postgresql.UUID(), dimensions=1), nullable=False),
     Column("creation_date_utc", DateTime(timezone=True), nullable=False),
 )
 
@@ -39,7 +38,6 @@ class ProjectDefinitionDao(BaseModel):
     id: UUID
     name: str
     default_datasheet_id: UUID
-    plugins: List[UUID]
     creation_date_utc: datetime
 
 
@@ -76,84 +74,23 @@ class ProjectDefinitionContainerDao(BaseModel):
     creation_date_utc: datetime
 
 
-project_definition_package_table = Table(
-    "project_definition_package",
+project_definition_value_type_table = Table(
+    "project_definition_value_type",
     metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("project_def_id", postgresql.UUID(), nullable=False),
-    Column("name", String, nullable=False),
-    Column("package", String, nullable=False),
+    Column("id", String(32), nullable=False, primary_key=True),
+    Column("value_json_schema", postgresql.JSON(), nullable=False),
+    Column("attributes_json_schema", postgresql.JSON(), nullable=True),
+    Column("template_location", String, nullable=True),
+    Column("display_name", String, nullable=False),
 )
 
 
-class ProjectDefinitionPackageDao(BaseModel):
-    id: UUID
-    project_def_id: UUID
-    name: str
-    package: str
-
-
-project_definition_struct_table = Table(
-    "project_definition_struct",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("name", String, nullable=False),
-    Column("package_id", String, nullable=False),
-    Column("properties", postgresql.JSON(), nullable=True),
-    Column("dependencies", postgresql.JSON(), nullable=True),
-)
-
-
-class ProjectDefinitionStructDao(BaseModel):
-    id: UUID
-    name: str
-    package_id: UUID
-    properties: dict
-    dependencies: dict
-
-
-project_definition_function_table = Table(
-    "project_definition_function",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("name", String, nullable=False),
-    Column("code", Text, nullable=False),
-    Column("ast", postgresql.JSON(), nullable=True),
-    Column("signature", postgresql.JSON(), nullable=True),
-    Column("dependencies", postgresql.JSON(), nullable=True),
-    Column("struct_id", postgresql.UUID(), nullable=True),
-    Column("package_id", postgresql.UUID(), nullable=True),
-)
-
-
-class ProjectDefinitionFunctionDao(BaseModel):
-    id: UUID
-    name: str
-    code: str
-    ast: dict
-    signature: list
-    dependencies: dict
-    struct_id: UUID
-    package_id: UUID
-
-
-project_definition_plugin_table = Table(
-    "project_definition_plugin",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("validation_schema", postgresql.JSON(), nullable=False),
-    Column("default_config", postgresql.JSON(), nullable=False),
-    Column("form_config", postgresql.JSON(), nullable=False),
-    Column("name", String, nullable=False),
-)
-
-
-class ProjectDefinitionPluginDao(BaseModel):
-    id: UUID
-    validation_schema: dict
-    default_config: dict
-    form_config: dict
-    name: str
+class ProjectDefinitionValueTypeDao(BaseModel):
+    id: str
+    value_json_schema: dict
+    attributes_json_schema: dict
+    template_location: Optional[str]
+    display_name: str
 
 
 project_table = Table(

@@ -66,6 +66,12 @@ class BaseCrudTableService(Generic[Domain]):
         value = await self._database.fetch_one(query=query)
         return not value is None
 
+    async def find_all(self, limit: int = 1000) -> Awaitable[List[Domain]]:
+        query = self._table.select().limit(limit)
+        records = await self._database.fetch_all(query=query)
+        results = self._map_many_to(records, self._dao, self._domain)
+        return results
+
     async def find_by_id(self, pk_id: Id) -> Awaitable[Domain]:
         query = self._table.select().where(self.table_id == pk_id)
         value = await self._database.fetch_one(query=query)
@@ -100,7 +106,7 @@ class BaseCrudTableService(Generic[Domain]):
 
         await self._database.execute(query=query)
 
-    async def _map_many_to(self, records, dao_type, domain_type):
+    def _map_many_to(self, records, dao_type, domain_type):
         daos = [dao_type(**record) for record in records]
         results = self._mapper.map_many(daos, domain_type)
         return results
