@@ -61,3 +61,13 @@ def fixture(c, layer="dao", poetry=False):
         generate_json(layer)
     else:
         c.run(f"poetry run invoke fixture --poetry --layer {layer}")
+
+
+@task(name="db:truncate")
+def truncate_db(c, poetry=False):
+    if poetry:
+        from dev.clean_db import truncate_db
+
+        truncate_db()
+    else:
+        c.run("poetry run invoke db:truncate --poetry")

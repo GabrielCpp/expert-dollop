@@ -1,10 +1,11 @@
 from typing import Awaitable, List, AsyncGenerator, Optional
 from uuid import UUID
-from sqlalchemy import select, text, bindparam, String, and_
+from sqlalchemy import select, text, bindparam, String, and_, or_
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects import postgresql
 from expert_dollup.shared.database_services import BaseCrudTableService, Page
 from expert_dollup.core.domains import ProjectDefinitionContainer, PaginatedRessource
+from expert_dollup.infra.path_transform import join_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
     project_definition_container_table,
     ProjectDefinitionContainerDao,
@@ -29,8 +30,11 @@ class ProjectDefinitionContainerService(
         if len(path) == 0:
             return True
 
-        path_str = [str(element) for element in path]
-        query = select([self.table_id]).where(self._table.c.path == path_str)
+        parent_id = path[-1]
+        parent_path = join_uuid_path(path[0:-1])
+        query = select([self.table_id]).where(
+            and_(self._table.c.path == parent_path, self._table.c.id == parent_id)
+        )
         value = await self._database.fetch_one(query=query)
 
         return not value is None

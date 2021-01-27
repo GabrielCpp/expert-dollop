@@ -7,23 +7,7 @@ from starlette.responses import Response
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_db import translation_table, TranslationDao
-from expert_dollup.app.modules.projection import bind_mapper
-from injector import Injector
-from expert_dollup.shared.automapping import Mapper
-
-
-@pytest.fixture
-def mapper():
-    injector = Injector([bind_mapper])
-    yield injector.get(Mapper)
-
-
-def map_dao_to_dto(mapper, daos_dict, dao, domain, dto):
-    daos = list(daos_dict.values())
-    domains = mapper.map_many(daos, domain, dao)
-    dtos = mapper.map_many(domains, dto, domain)
-    return {key: item for key, item in zip(daos_dict.keys(), dtos)}
-
+from .fixtures import map_dao_to_dto
 
 Dao = TypeVar("Dao")
 
@@ -168,7 +152,7 @@ async def test_given_translation_should_be_able_to_create_update_delete(ac):
 
 
 @pytest.mark.asyncio
-async def test_given_translation_should_be_able_to_retrieve_it(ac, dal, mapper):
+async def test_given_translation_should_be_able_to_retrieve_it(ac, dal, map_dao_to_dto):
     ressource_id = uuid4()
     translations = dict(
         a_fr=TranslationDao(
@@ -183,7 +167,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(ac, dal, mapper):
     )
 
     dto_translations = map_dao_to_dto(
-        mapper, translations, TranslationDto, Translation, TranslationDto
+        translations, TranslationDto, Translation, TranslationDto
     )
 
     expected_translations = TranslationPageDto(

@@ -1,3 +1,4 @@
+import structlog
 from fastapi import APIRouter, Depends, Query
 from typing import Optional
 from uuid import UUID
@@ -9,7 +10,6 @@ from expert_dollup.app.dtos import (
 )
 from expert_dollup.core.domains import ProjectDefinitionContainer
 from expert_dollup.core.usecases import ProjectDefinitonContainerUseCase
-
 
 router = APIRouter()
 
@@ -68,7 +68,7 @@ async def delete_project_definition_container(
     await usecase.remove_by_id(id)
 
 
-@router.get("/{project_def_id}/project_container_definitions")
+@router.get("/{project_def_id}/project_definition_container")
 async def get_project_definition_container_by_project(
     project_def_id: UUID,
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),

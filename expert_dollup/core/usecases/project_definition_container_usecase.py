@@ -1,3 +1,4 @@
+import structlog
 from typing import Awaitable
 from uuid import UUID
 from expert_dollup.core.exceptions import (
@@ -14,13 +15,10 @@ from expert_dollup.infra.services import (
     ProjectDefinitionContainerService,
     ProjectDefinitionService,
 )
-from expert_dollup.infra.factories import ValueTypeValidatorFactory
 from expert_dollup.infra.validators import ProjectDefinitionValueTypeValidator
 from expert_dollup.shared.database_services import Page
 
-
-class IdentifiedRessourceUseCase:
-    pass
+logger = structlog.get_logger(__name__)
 
 
 class ProjectDefinitonContainerUseCase:
@@ -28,12 +26,10 @@ class ProjectDefinitonContainerUseCase:
         self,
         service: ProjectDefinitionContainerService,
         project_definition_service: ProjectDefinitionService,
-        value_type_validator_factory: ValueTypeValidatorFactory,
         project_definition_value_type_validator: ProjectDefinitionValueTypeValidator,
     ):
         self.service = service
         self.project_definition_service = project_definition_service
-        self.value_type_validator_factory = value_type_validator_factory
         self.project_definition_value_type_validator = (
             project_definition_value_type_validator
         )
@@ -82,18 +78,13 @@ class ProjectDefinitonContainerUseCase:
         if not await self.service.has_path(domain.path):
             raise InvalidObject("bad_tree_path", "Tree path is invalid.")
 
-        await self._ensure_container_config_valid(project_def, domain)
-
         try:
-            validate = self.value_type_validator_factory.create(domain.value_type)
-            validate(domain.default_value)
+            await self.project_definition_value_type_validator.validate_config(
+                domain.value_type, domain.custom_attributes
+            )
+
+            await self.project_definition_value_type_validator.validate_value(
+                domain.value_type, domain.custom_attributes, domain.default_value
+            )
         except FactorySeedMissing:
             ValidationError.for_field("value_type", "Value type not found")
-
-    async def _ensure_container_config_valid(
-        self, project_def: ProjectDefinition, domain: ProjectDefinitionContainer
-    ) -> None:
-
-        await self.project_definition_value_type_validator.validate_config(
-            domain.value_type, domain.custom_attributes
-        )

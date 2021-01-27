@@ -2,6 +2,7 @@ from uuid import UUID
 from typing import List, Dict, Awaitable, Optional
 from dataclasses import dataclass
 from jsonschema import Draft7Validator
+from expert_dollup.core.exceptions import FactorySeedMissing
 from expert_dollup.core.domains import ProjectDefinitionValueType
 from expert_dollup.infra.json_schema import validate_instance
 from expert_dollup.infra.services import ProjectDefinitionValueTypeService
@@ -43,3 +44,25 @@ class ProjectDefinitionValueTypeValidator:
 
         value_type_schemas = value_types[value_type_id]
         validate_instance(value_type_schemas.attributes_json_schema, custom_attributes)
+
+    async def validate_value(
+        self, value_type_id: str, custom_attributes: dict, value: dict
+    ) -> Awaitable:
+        value_types = await self._get_values_types()
+
+        if not value_type_id in value_types:
+            raise FactorySeedMissing(f"Value type {value_type_id} not found.")
+
+        value_type_schemas = value_types[value_type_id]
+        schema = {
+            "type": "object",
+            "properties": {
+                "value": {
+                    **value_type_schemas.value_json_schema,
+                    **custom_attributes.get("validator", {}),
+                }
+            },
+        }
+
+        validator = Draft7Validator(schema)
+        validate_instance(validator, value)

@@ -38,12 +38,12 @@ class ValueTypeFactory:
                 build_value=self._create_decimal_value,
                 build_custom_attr=self._create_decimal_custom_attr,
             ),
-            "BOOL": TypeFactory(
+            "BOOLEAN": TypeFactory(
                 build_value=self._create_bool_value,
                 build_custom_attr=self._create_bool_custom_attr,
             ),
             "CONTAINER": TypeFactory(
-                build_value=lambda: None,
+                build_value=self._create_container_value,
                 build_custom_attr=self._create_container_custom_attr,
             ),
             "STATIC_CHOICE": TypeFactory(
@@ -52,7 +52,13 @@ class ValueTypeFactory:
             ),
         }
 
-        self.field_value_types = ["INT", "STRING", "DECIMAL", "BOOL", "STATIC_CHOICE"]
+        self.field_value_types = [
+            "INT",
+            "STRING",
+            "DECIMAL",
+            "BOOLEAN",
+            "STATIC_CHOICE",
+        ]
 
     def pick_value_type(self, label):
         return "CONTAINER" if label != "field" else choice(self.field_value_types)
@@ -139,10 +145,13 @@ class ValueTypeFactory:
 
         return {}
 
+    def _create_container_value(self):
+        return {"value": None}
+
 
 class SimpleProject:
     def __init__(self):
-        self.project_container_definitions: List[ProjectDefinitionContainerDao] = []
+        self.project_definition_container: List[ProjectDefinitionContainerDao] = []
         self.project_definitions: List[ProjectDefinitionDao] = []
         self.tanslations: List[TranslationDao] = []
         self.fake = Faker()
@@ -155,7 +164,7 @@ class SimpleProject:
             combinaisons = []
 
             for index in range(2, len(parents)):
-                combinaisons.append("/".join(combinaisons[0:index]))
+                combinaisons.append("/".join(parents[0:index]))
 
             return combinaisons
 
@@ -195,7 +204,7 @@ class SimpleProject:
                     **other_field,
                 )
 
-                self.project_container_definitions.append(sub_container)
+                self.project_definition_container.append(sub_container)
                 generate_child_container(
                     sub_container, [*parents, str(sub_container.id)]
                 )
@@ -211,11 +220,11 @@ class SimpleProject:
             order_index=0,
             custom_attributes=dict(),
             creation_date_utc=self.fake.date_time(),
-            default_value=None,
+            default_value=self.value_type_factory.build_value("CONTAINER"),
             mixed_paths=[],
         )
 
-        self.project_container_definitions.append(root_a)
+        self.project_definition_container.append(root_a)
         generate_child_container(root_a, [str(root_a.id)])
 
         root_b = ProjectDefinitionContainerDao(
@@ -229,11 +238,11 @@ class SimpleProject:
             order_index=1,
             custom_attributes=dict(),
             creation_date_utc=self.fake.date_time(),
-            default_value=None,
+            default_value=self.value_type_factory.build_value("CONTAINER"),
             mixed_paths=[],
         )
 
-        self.project_container_definitions.append(root_b)
+        self.project_definition_container.append(root_b)
         generate_child_container(root_b, [str(root_b.id)])
 
     def generate_project_definition(self):
@@ -249,7 +258,7 @@ class SimpleProject:
         self.generate_project_container_definition(project_definition.id)
 
     def generate_translations(self):
-        for project_container_definition in self.project_container_definitions:
+        for project_container_definition in self.project_definition_container:
             self.tanslations.append(
                 TranslationDao(
                     ressource_id=self.project_definitions[0].id,
@@ -293,6 +302,6 @@ class SimpleProject:
     def model(self) -> Tables:
         return Tables(
             project_definitions=self.project_definitions,
-            project_container_definitions=self.project_container_definitions,
+            project_definition_container=self.project_definition_container,
             translations=self.tanslations,
         )

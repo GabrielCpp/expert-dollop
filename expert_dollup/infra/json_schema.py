@@ -13,5 +13,10 @@ def validate_instance(validator: Draft7Validator, instance: dict) -> None:
                 message = suberror.message
                 error_item = (target, message)
                 error_tuples.append(error_item)
+            else:
+                target = ".".join(list(error.schema_path))
+                message = error.message
+                error_item = (target, message)
+                error_tuples.append(error_item)
 
         raise ValidationError(error_tuples)

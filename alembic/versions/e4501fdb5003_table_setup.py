@@ -80,7 +80,23 @@ def create_default_value_types(project_definition_value_type):
     STATIC_CHOICE_SCHEMA = {
         "id": "STATIC_CHOICE",
         "value_json_schema": {"type": "string"},
-        "attributes_json_schema": {"type": "object", "enum": []},
+        "attributes_json_schema": {
+            "type": "object",
+            "properties": {
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "help_text": {"type": "string"},
+                            "id": {"type": "string"},
+                            "label": {"type": "string"},
+                        },
+                    },
+                },
+                "validator": {"type": "object"},
+            },
+        },
         "template_location": None,
         "display_name": "string",
     }
