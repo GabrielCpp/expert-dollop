@@ -261,7 +261,7 @@ class BaseCompositeCrudTableService(Generic[Domain]):
             query = query.offset(offset)
 
         records = await self._database.fetch_all(query=query)
-        daos = [self._dao(**value) for value in values]
+        daos = [self._dao(**value) for value in records]
         results = self._mapper.map_many(daos, self._domain)
 
         return results

@@ -68,7 +68,7 @@ async def test_project_creation(ac, map_dao_to_dto):
     assert response.status_code == 200, response.json()
 
     project_definition_containers_dto = map_dao_to_dto(
-        db.project_definition_container,
+        db.project_definition_containers,
         ProjectDefinitionContainerDao,
         ProjectDefinitionContainer,
         ProjectDefinitionContainerDto,
