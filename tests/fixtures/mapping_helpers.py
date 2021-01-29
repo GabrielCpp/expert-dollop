@@ -28,3 +28,32 @@ def map_dao_to_dto():
         return dtos
 
     return apply_map
+
+
+def dump_to_file(path, json_serializable):
+    import json
+    from uuid import UUID
+
+    class UUIDEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, UUID):
+                return str(obj)
+
+            return json.JSONEncoder.default(self, obj)
+
+    with open(path, "w") as outfile:
+        json.dump(json_serializable, outfile, indent=2, sort_keys=True, cls=UUIDEncoder)
+
+
+def normalize_request_results(dto_cls, key: str):
+    def parse_dto(data: list):
+        return sorted(
+            [dto_cls(**item).dict() for item in data],
+            key=lambda c: c[key],
+        )
+
+    return parse_dto
+
+
+def normalize_dtos(dtos, key: str):
+    return sorted([dto.dict() for dto in dtos], key=lambda c: c[key])

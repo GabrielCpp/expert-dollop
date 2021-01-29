@@ -302,6 +302,6 @@ class SimpleProject:
     def model(self) -> Tables:
         return Tables(
             project_definitions=self.project_definitions,
-            project_definition_container=self.project_definition_container,
+            project_definition_containers=self.project_definition_container,
             translations=self.tanslations,
         )

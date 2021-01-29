@@ -13,3 +13,4 @@ class ProjectDefinitionService(BaseCrudTableService[ProjectDefinition]):
         dao = ProjectDefinitionDao
         domain = ProjectDefinition
         seach_filters = {}
+        table_filter_type = None

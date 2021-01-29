@@ -2,32 +2,20 @@ from typing import List
 from datetime import datetime
 from uuid import UUID
 from expert_dollup.shared.automapping import Mapper
+from expert_dollup.shared.database_services import map_dict_keys
 from expert_dollup.infra.path_transform import (
     join_path,
     split_uuid_path,
     join_uuid_path,
+    build_path_steps,
 )
-from expert_dollup.infra.expert_dollup_db import (
-    ProjectDefinitionDao,
-    ProjectDefinitionContainerDao,
-    ProjectDao,
-    RessourceDao,
-    TranslationDao,
-    ProjectDefinitionValueTypeDao,
-)
-from expert_dollup.core.domains import (
-    ProjectDefinition,
-    ProjectDefinitionContainer,
-    Project,
-    Ressource,
-    Translation,
-    TranslationId,
-    ProjectDefinitionValueType,
-)
+
+from expert_dollup.infra.expert_dollup_db import *
+from expert_dollup.core.domains import *
 
 
 def map_project_definition_value_type_from_dao(
-    src: ProjectDefinitionValueTypeDao, mapper: Mapper = None
+    src: ProjectDefinitionValueTypeDao, mapper: Mapper
 ) -> ProjectDefinitionValueType:
     return ProjectDefinitionValueType(
         id=src.id,
@@ -38,7 +26,7 @@ def map_project_definition_value_type_from_dao(
 
 
 def map_project_definition_from_dao(
-    src: ProjectDefinitionDao, mapper: Mapper = None
+    src: ProjectDefinitionDao, mapper: Mapper
 ) -> ProjectDefinition:
     return ProjectDefinition(
         id=src.id,
@@ -48,7 +36,7 @@ def map_project_definition_from_dao(
 
 
 def map_project_definition_to_dao(
-    src: ProjectDefinition, mapper: Mapper = None
+    src: ProjectDefinition, mapper: Mapper
 ) -> ProjectDefinitionDao:
     return ProjectDefinitionDao(
         id=src.id,
@@ -59,7 +47,7 @@ def map_project_definition_to_dao(
 
 
 def map_project_definition_container_from_dao(
-    src: ProjectDefinitionContainerDao, mapper: Mapper = None
+    src: ProjectDefinitionContainerDao, mapper: Mapper
 ) -> ProjectDefinitionContainer:
     return ProjectDefinitionContainer(
         id=src.id,
@@ -76,18 +64,8 @@ def map_project_definition_container_from_dao(
 
 
 def map_project_definition_container_to_dao(
-    src: ProjectDefinitionContainer, mapper: Mapper = None
+    src: ProjectDefinitionContainer, mapper: Mapper
 ) -> ProjectDefinitionContainerDao:
-    def mix_path(path: List[str]) -> List[str]:
-        mixed_path: List[str] = []
-
-        for upper_index in range(2, len(path)):
-            mixed_path.append(join_path(path[0:upper_index]))
-
-        return mixed_path
-
-    str_path = [str(item) for item in src.path]
-
     return ProjectDefinitionContainerDao(
         id=src.id,
         project_def_id=src.project_def_id,
@@ -99,12 +77,12 @@ def map_project_definition_container_to_dao(
         value_type=src.value_type,
         default_value=src.default_value,
         path=join_uuid_path(src.path),
-        mixed_paths=mix_path(str_path),
+        mixed_paths=build_path_steps(src.path),
         creation_date_utc=datetime.utcnow(),
     )
 
 
-def map_project_from_dao(src: ProjectDao, mapper: Mapper = None) -> Project:
+def map_project_from_dao(src: ProjectDao, mapper: Mapper) -> Project:
     return Project(
         id=src.id,
         name=src.name,
@@ -114,17 +92,42 @@ def map_project_from_dao(src: ProjectDao, mapper: Mapper = None) -> Project:
     )
 
 
-def map_project_to_dao(src: Project, mapper: Mapper = None) -> ProjectDao:
+def map_project_to_dao(src: Project, mapper: Mapper) -> ProjectDao:
     return ProjectDao(
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
+        creation_date_utc=datetime.utcnow(),
     )
 
 
-def map_ressource_from_dao(src: RessourceDao, mapper: Mapper = None) -> Ressource:
+def map_project_container_to_dao(
+    src: ProjectContainer, mapper: Mapper
+) -> ProjectContainerDao:
+    return ProjectContainerDao(
+        id=src.id,
+        project_id=src.project_id,
+        type_id=src.type_id,
+        path=join_uuid_path(src.path),
+        value=src.value,
+        mixed_paths=build_path_steps(src.path),
+        creation_date_utc=datetime.utcnow(),
+    )
+
+
+def map_project_container_meta_to_dao(
+    src: ProjectContainerMeta, mapper: Mapper
+) -> ProjectContainerMetaDao:
+    return ProjectContainerMetaDao(
+        project_id=src.project_id,
+        type_id=src.type_id,
+        custom_attributes=src.custom_attributes,
+    )
+
+
+def map_ressource_from_dao(src: RessourceDao, mapper: Mapper) -> Ressource:
     return Ressource(
         id=src.id,
         name=src.name,
@@ -132,7 +135,7 @@ def map_ressource_from_dao(src: RessourceDao, mapper: Mapper = None) -> Ressourc
     )
 
 
-def map_ressource_to_dao(src: Ressource, mapper: Mapper = None) -> RessourceDao:
+def map_ressource_to_dao(src: Ressource, mapper: Mapper) -> RessourceDao:
     return RessourceDao(
         id=src.id,
         name=src.name,
@@ -140,7 +143,7 @@ def map_ressource_to_dao(src: Ressource, mapper: Mapper = None) -> RessourceDao:
     )
 
 
-def map_translation_from_dao(src: TranslationDao, mapper: Mapper = None) -> Translation:
+def map_translation_from_dao(src: TranslationDao, mapper: Mapper) -> Translation:
     return Translation(
         ressource_id=src.ressource_id,
         locale=src.locale,
@@ -149,7 +152,7 @@ def map_translation_from_dao(src: TranslationDao, mapper: Mapper = None) -> Tran
     )
 
 
-def map_translation_to_dao(src: Translation, mapper: Mapper = None) -> TranslationDao:
+def map_translation_to_dao(src: Translation, mapper: Mapper) -> TranslationDao:
     return TranslationDao(
         ressource_id=src.ressource_id,
         locale=src.locale,
@@ -158,5 +161,25 @@ def map_translation_to_dao(src: Translation, mapper: Mapper = None) -> Translati
     )
 
 
-def map_translation_id_to_dict(src: TranslationId, mapper: Mapper = None) -> dict:
+def map_translation_id_to_dict(src: TranslationId, mapper: Mapper) -> dict:
     return dict(ressource_id=src.ressource_id, locale=src.locale, name=src.name)
+
+
+def map_project_definition_container_filter_to_dict(
+    src: ProjectDefinitionContainerFilter, mapper: Mapper
+) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "id": ("id", None),
+            "project_def_id": ("project_def_id", None),
+            "name": ("name", None),
+            "is_collection": ("is_collection", None),
+            "instanciate_by_default": ("instanciate_by_default", None),
+            "order_index": ("order_index", None),
+            "custom_attributes": ("custom_attributes", None),
+            "value_type": ("value_type", None),
+            "default_value": ("default_value", None),
+            "path": ("default_value", join_uuid_path),
+        },
+    )

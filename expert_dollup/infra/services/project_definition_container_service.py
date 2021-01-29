@@ -1,10 +1,14 @@
 from typing import Awaitable, List, AsyncGenerator, Optional
 from uuid import UUID
-from sqlalchemy import select, text, bindparam, String, and_, or_
+from sqlalchemy import select, text, bindparam, String, and_, or_, desc
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects import postgresql
 from expert_dollup.shared.database_services import BaseCrudTableService, Page
-from expert_dollup.core.domains import ProjectDefinitionContainer, PaginatedRessource
+from expert_dollup.core.domains import (
+    ProjectDefinitionContainer,
+    PaginatedRessource,
+    ProjectDefinitionContainerFilter,
+)
 from expert_dollup.infra.path_transform import join_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
     project_definition_container_table,
@@ -25,6 +29,7 @@ class ProjectDefinitionContainerService(
         dao = ProjectDefinitionContainerDao
         domain = ProjectDefinitionContainer
         seach_filters = {}
+        table_filter_type = ProjectDefinitionContainerFilter
 
     async def has_path(self, path: List[UUID]) -> Awaitable[bool]:
         if len(path) == 0:
@@ -59,7 +64,7 @@ class ProjectDefinitionContainerService(
     async def find_all_project_containers(
         self,
         paginated_ressource: PaginatedRessource[UUID],
-    ) -> AsyncGenerator[Page[ProjectDefinitionContainer], None]:
+    ) -> Awaitable[Page[ProjectDefinitionContainer]]:
         offset = (
             0
             if paginated_ressource.next_page_token is None
@@ -69,11 +74,13 @@ class ProjectDefinitionContainerService(
         query = (
             self._table.select()
             .where(self._table.c.project_def_id == paginated_ressource.query)
-            .limit(limit)
-            .offset(limit * offset)
+            .order_by(desc(self._table.c.creation_date_utc), desc(self._table.c.id))
+            .limit(paginated_ressource.limit)
+            .offset(paginated_ressource.limit * offset)
         )
 
-        results = self.map_over(self._database.iterate(query))
+        records = await self._database.fetch_all(query)
+        results = self._map_many_to(records, self._dao, self._domain)
 
         return Page(
             next_page_token=str(offset + 1),

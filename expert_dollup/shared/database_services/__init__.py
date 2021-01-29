@@ -1,5 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import List, TypeVar, Optional, Generic, Awaitable, AsyncGenerator, Any
+from typing import (
+    List,
+    TypeVar,
+    Optional,
+    Generic,
+    Awaitable,
+    AsyncGenerator,
+    Any,
+    Tuple,
+    Dict,
+    Union,
+)
+from pydantic import BaseModel
 from sqlalchemy.sql import select
 from sqlalchemy import and_
 from databases import Database
@@ -11,13 +23,13 @@ Id = TypeVar("Id")
 Query = TypeVar("Query")
 
 
-class AbstractFilter(ABC):
+class AbstractFilterBuilder(ABC):
     @abstractmethod
     def build(self, filter: Query):
         pass
 
 
-class AndColumnFilter(AbstractFilter):
+class AndColumnFilter(AbstractFilterBuilder):
     def __init__(self, pairs):
         self.pairs = pairs
 
@@ -31,6 +43,46 @@ class AndColumnFilter(AbstractFilter):
         return condition
 
 
+def build_and_column_filter(table, fields: dict):
+    condition = None
+
+    for column_name, value in fields.items():
+        if condition is None:
+            condition = getattr(table.c, column_name) == value
+        else:
+            condition = and_(condition, getattr(table.c, column_name) == value)
+
+    return condition
+
+
+class QueryFilter(BaseModel):
+    class Config:
+        allow_mutation = False
+
+    def __init__(self, **kwargs):
+        BaseModel.__init__(self, **kwargs)
+        self.__dict__["_args"] = kwargs
+
+    @property
+    def args(self) -> dict:
+        return self._args
+
+
+def map_dict_keys(
+    args: dict, mapping: Dict[str, Tuple[str, Union[None, callable]]]
+) -> dict:
+    mapped_args = {}
+
+    for (key, value) in args.items():
+        if key in mapping:
+            (mapped_key, map_value) = mapping[key]
+            mapped_args[mapped_key] = value if map_value is None else map_value(value)
+        else:
+            mapped_args[mapped_key] = value
+
+    return mapped_args
+
+
 class BaseCrudTableService(Generic[Domain]):
     def __init__(self, database: Database, mapper: Mapper):
         self._database = database
@@ -38,10 +90,13 @@ class BaseCrudTableService(Generic[Domain]):
         self._table = self.__class__.Meta.table
         self._dao = self.__class__.Meta.dao
         self._domain = self.__class__.Meta.domain
+        self._table_filter_type = self.__class__.Meta.table_filter_type
         self._seach_filters = self.__class__.Meta.seach_filters or {}
 
         pk = list(self._table.primary_key.columns.values())
-        assert len(pk) == 1
+        assert (
+            len(pk) == 1
+        ), f"Crub table service must have single value primary key for table {self._table}"
 
         self.table_id_name = pk[0].name
         self.table_id = getattr(self._table.c, self.table_id_name)
@@ -54,8 +109,7 @@ class BaseCrudTableService(Generic[Domain]):
     async def insert_many(self, domains: List[Domain]) -> Awaitable:
         query = self._table.insert()
         values = self._mapper.map_many(domains, self._dao, after=lambda x: x.dict())
-
-        await self._database.execute(query=query, values=values)
+        await self._database.execute_many(query=query, values=values)
 
     async def delete_by_id(self, pk_id: Id) -> Awaitable:
         query = self._table.delete().where(self.table_id == pk_id)
@@ -83,15 +137,30 @@ class BaseCrudTableService(Generic[Domain]):
 
         return None
 
-    async def find_by(
+    async def query_by(
         self, query_filter: Query, limit: Optional[int] = None
     ) -> Awaitable[List[Domain]]:
         abstract_filter = self._seach_filters[type(query_filter)]
         where_filter = abstract_filter.build(query_filter)
         query = self._table.select().where(where_filter)
-        values = await self._database.fetch_all(query=query)
-        daos = [self._dao(**value) for value in values]
-        results = self._mapper.map_many(daos, self._domain)
+        records = await self._database.fetch_all(query=query)
+        results = self._map_many_to(records, self._dao, self._domain)
+
+        return results
+
+    async def find_by(
+        self, query_filter: QueryFilter, limit: Optional[int] = None
+    ) -> Awaitable[List[Domain]]:
+        filter_fields = (
+            query_filter
+            if self._table_filter_type is None
+            else self._mapper.map(query_filter, dict, self._table_filter_type)
+        )
+
+        where_filter = build_and_column_filter(self._table, filter_fields)
+        query = self._table.select().where(where_filter)
+        records = await self._database.fetch_all(query=query)
+        results = self._map_many_to(records, self._dao, self._domain)
 
         return results
 
@@ -130,7 +199,7 @@ class BaseCompositeCrudTableService(Generic[Domain]):
         self._seach_filters = self.__class__.Meta.seach_filters or {}
 
         pks = list(self._table.primary_key.columns.values())
-        assert len(pks) > 1
+        assert len(pks) > 1, f"Compose crud must have composite key for {self._table}"
 
         self.table_id_names = [pk.name for pk in pks]
         self.table_ids = [
@@ -147,7 +216,7 @@ class BaseCompositeCrudTableService(Generic[Domain]):
         query = self._table.insert()
         values = self._mapper.map_many(domains, self._dao, after=lambda x: x.dict())
 
-        await self._database.execute(query=query, values=values)
+        await self._database.execute_many(query=query, values=values)
 
     async def delete_by_id(self, pk_id: Id) -> Awaitable:
         identifier = self._mapper.map(pk_id, dict)
@@ -191,7 +260,7 @@ class BaseCompositeCrudTableService(Generic[Domain]):
         if not offset is None:
             query = query.offset(offset)
 
-        values = await self._database.fetch_all(query=query)
+        records = await self._database.fetch_all(query=query)
         daos = [self._dao(**value) for value in values]
         results = self._mapper.map_many(daos, self._domain)
 

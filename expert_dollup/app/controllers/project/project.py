@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from uuid import UUID
+from uuid import UUID, uuid4
 from expert_dollup.shared.starlette_injection import Inject
 from expert_dollup.shared.handlers import RequestHandler, MappingChain
 from expert_dollup.app.dtos import ProjectDto
@@ -25,22 +25,10 @@ async def create_project(
     project: ProjectDto,
     usecase=Depends(Inject(ProjectUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    request_handler=Depends(Inject(RequestHandler)),
 ):
     return await request_handler.handle(
-        usecase.insert,
-        project,
-        MappingChain(dto=ProjectDto, domain=Project, out_dto=ProjectDto),
-    )
-
-
-@router.put("/project")
-async def update_project(
-    project: ProjectDto,
-    usecase=Depends(Inject(ProjectUseCase)),
-    handler=Depends(Inject(RequestHandler)),
-):
-    return await request_handler.handle(
-        usecase.update,
+        usecase.add,
         project,
         MappingChain(dto=ProjectDto, domain=Project, out_dto=ProjectDto),
     )

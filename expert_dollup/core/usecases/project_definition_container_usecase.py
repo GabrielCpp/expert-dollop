@@ -59,6 +59,7 @@ class ProjectDefinitonContainerUseCase:
         return result
 
     async def find_by_project_definition(
+        self,
         paginated_ressource: PaginatedRessource[UUID],
     ) -> Awaitable[Page[ProjectDefinitionContainer]]:
         results = await self.service.find_all_project_containers(paginated_ressource)

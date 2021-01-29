@@ -111,7 +111,6 @@ class ProjectDao(BaseModel):
     is_staged: bool
     project_def_id: UUID
     datasheet_id: UUID
-    owner_id: UUID
     creation_date_utc: datetime
 
 
@@ -123,6 +122,7 @@ project_container_table = Table(
     Column("type_id", postgresql.UUID(), nullable=False),
     Column("path", String, nullable=False),
     Column("value", postgresql.JSON(), nullable=True),
+    Column("mixed_paths", ARRAY(String, dimensions=1), nullable=False),
     Column("creation_date_utc", DateTime(timezone=True), nullable=False),
 )
 
@@ -133,14 +133,15 @@ class ProjectContainerDao(BaseModel):
     type_id: UUID
     path: str
     value: dict
+    mixed_paths: List[str]
     creation_date_utc: datetime
 
 
 project_container_meta_table = Table(
     "project_container_metadata",
     metadata,
-    Column("project_id", postgresql.UUID(), nullable=False),
-    Column("type_id", postgresql.UUID(), nullable=False),
+    Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("type_id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("custom_attributes", postgresql.JSON(), nullable=False),
 )
 

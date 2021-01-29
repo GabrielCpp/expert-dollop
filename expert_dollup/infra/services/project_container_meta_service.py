@@ -13,3 +13,4 @@ class ProjectContainerMetaService(BaseCompositeCrudTableService[ProjectContainer
         dao = ProjectContainerMetaDao
         domain = ProjectContainerMeta
         seach_filters = {}
+        table_filter_type = None

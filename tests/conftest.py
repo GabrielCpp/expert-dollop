@@ -33,7 +33,7 @@ async def dal():
         os.environ["POSTGRES_DB"],
     )
 
-    force_rollback = os.getenv("FORCE_ROLLBACK", True) is True
+    force_rollback = os.getenv("FORCE_ROLLBACK", True) in [True, "True"]
     database = ExpertDollupDatabase(DATABASE_URL, force_rollback=force_rollback)
 
     await database.connect()

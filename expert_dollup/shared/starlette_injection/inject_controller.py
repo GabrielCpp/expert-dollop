@@ -1,5 +1,8 @@
+import structlog
 from typing import TypeVar, Type
 from starlette.requests import Request
+
+logger = structlog.get_logger(__name__)
 
 T = TypeVar("T")
 
@@ -12,4 +15,8 @@ class Inject:
         container = request.state.container
         assert not container is None, "Container middleware may not be present"
 
-        return container.get(self.object_class)
+        try:
+            return container.get(self.object_class)
+        except Exception as e:
+            logger.error(f"Fail to inject class {self.object_class.__name__}")
+            raise e

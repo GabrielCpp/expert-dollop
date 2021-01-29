@@ -13,3 +13,4 @@ class RessourceService(BaseCrudTableService[Ressource]):
         dao = RessourceDao
         domain = Ressource
         seach_filters = {}
+        table_filter_type = None

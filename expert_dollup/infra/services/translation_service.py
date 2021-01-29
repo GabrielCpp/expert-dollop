@@ -23,3 +23,4 @@ class TranslationService(BaseCompositeCrudTableService[Translation]):
                 ]
             )
         }
+        table_filter_type = None

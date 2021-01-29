@@ -1,4 +1,5 @@
 from expert_dollup.shared.modeling import CamelModel
+from typing import Optional
 from uuid import UUID
 from datetime import datetime
 

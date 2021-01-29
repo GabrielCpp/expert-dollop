@@ -13,3 +13,4 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
         dao = ProjectContainerDao
         domain = ProjectContainer
         seach_filters = {}
+        table_filter_type = None

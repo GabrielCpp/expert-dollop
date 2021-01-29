@@ -1,50 +1,14 @@
 import pytest
-import factory
 from typing import Dict, Type, List, Callable, Any, TypeVar
 from pydantic import BaseModel
 from uuid import uuid4
 from starlette.responses import Response
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
-from expert_dollup.infra.expert_dollup_db import translation_table, TranslationDao
-from .fixtures import map_dao_to_dto
+from expert_dollup.infra.expert_dollup_db import *
+from ..fixtures import *
 
 Dao = TypeVar("Dao")
-
-
-class ProjectDefinitionDtoFactory(factory.Factory):
-    class Meta:
-        model = ProjectDefinitionDto
-
-    id = factory.LazyFunction(uuid4)
-    name = factory.Sequence(lambda n: f"Gab{n}")
-    default_datasheet_id = factory.LazyFunction(uuid4)
-
-
-class ProjectDefinitionContainerDtoFactory(factory.Factory):
-    class Meta:
-        model = ProjectDefinitionContainerDto
-
-    id = factory.LazyFunction(uuid4)
-    project_def_id = factory.LazyFunction(uuid4)
-    name = factory.Sequence(lambda n: f"Container{n}")
-    is_collection = False
-    instanciate_by_default = True
-    order_index = factory.Sequence(lambda n: n)
-    custom_attributes = {}
-    value_type = "INT"
-    default_value = {"value": 0}
-    path = []
-
-
-class TranslationDtoFactory(factory.Factory):
-    class Meta:
-        model = TranslationDto
-
-    ressource_id = factory.LazyFunction(uuid4)
-    locale = "fr"
-    name = factory.Sequence(lambda n: f"hello{n}")
-    value = factory.Sequence(lambda n: f"translation{n}")
 
 
 async def populate_db(db, table, daos: Dict[str, BaseModel]):

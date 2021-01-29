@@ -26,13 +26,13 @@ from expert_dollup.app.dtos import (
 
 class Tables(BaseModel):
     project_definitions: List[ProjectDefinitionDao]
-    project_definition_container: List[ProjectDefinitionContainerDao]
+    project_definition_containers: List[ProjectDefinitionContainerDao]
     translations: List[TranslationDao]
 
 
 class TablesDto(BaseModel):
     project_definitions: List[ProjectDefinitionDto]
-    project_definition_container: List[ProjectDefinitionContainerDto]
+    project_definition_containers: List[ProjectDefinitionContainerDto]
     translations: List[TranslationDto]
 
 
@@ -49,8 +49,8 @@ def to_dto(tables: Tables, mapper: Mapper) -> TablesDto:
             ProjectDefinition,
             ProjectDefinitionDto,
         ),
-        project_definition_container=double_map(
-            tables.project_definition_container,
+        project_definition_containers=double_map(
+            tables.project_definition_containers,
             ProjectDefinitionContainerDao,
             ProjectDefinitionContainer,
             ProjectDefinitionContainerDto,
@@ -69,7 +69,7 @@ def insert(tables: Tables, database) -> None:
 
     database.execute(
         project_definition_container_table.insert(),
-        [element.dict() for element in tables.project_definition_container],
+        [element.dict() for element in tables.project_definition_containers],
     )
 
     database.execute(

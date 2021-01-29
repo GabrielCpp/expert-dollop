@@ -1,20 +1,7 @@
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import Page
-from expert_dollup.app.dtos import (
-    ProjectDefinitionDto,
-    ProjectDefinitionContainerDto,
-    ProjectDto,
-    TranslationDto,
-    TranslationIdDto,
-    TranslationPageDto,
-)
-from expert_dollup.core.domains import (
-    ProjectDefinition,
-    ProjectDefinitionContainer,
-    Project,
-    Translation,
-    TranslationId,
-)
+from expert_dollup.app.dtos import *
+from expert_dollup.core.domains import *
 
 
 def map_project_definition_from_dto(
@@ -68,6 +55,18 @@ def map_project_definition_container_to_dto(
         value_type=src.value_type,
         default_value=src.default_value,
         path=src.path,
+    )
+
+
+def map_project_definition_container_page_to_dto(
+    src: Page[ProjectDefinitionContainer], mapper: Mapper
+) -> ProjectDefinitionContainerPageDto:
+    return ProjectDefinitionContainerPageDto(
+        next_page_token=src.next_page_token,
+        limit=src.limit,
+        results=mapper.map_many(
+            src.results, ProjectDefinitionContainerDto, ProjectDefinitionContainer
+        ),
     )
 
 

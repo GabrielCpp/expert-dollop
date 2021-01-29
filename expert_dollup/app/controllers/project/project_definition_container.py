@@ -8,8 +8,9 @@ from expert_dollup.app.dtos import (
     ProjectDefinitionContainerDto,
     ProjectDefinitionContainerPageDto,
 )
-from expert_dollup.core.domains import ProjectDefinitionContainer
+from expert_dollup.core.domains import ProjectDefinitionContainer, PaginatedRessource
 from expert_dollup.core.usecases import ProjectDefinitonContainerUseCase
+from expert_dollup.shared.database_services import Page
 
 router = APIRouter()
 
@@ -68,11 +69,13 @@ async def delete_project_definition_container(
     await usecase.remove_by_id(id)
 
 
-@router.get("/{project_def_id}/project_definition_container")
+@router.get("/{project_def_id}/project_definition_containers")
 async def get_project_definition_container_by_project(
     project_def_id: UUID,
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
-    limit: int = Query(alias="limit", default=10),
+    limit: int = Query(alias="limit", default=100),
+    request_handler=Depends(Inject(RequestHandler)),
+    usecase=Depends(Inject(ProjectDefinitonContainerUseCase)),
 ):
     query = PaginatedRessource[UUID](
         next_page_token=next_page_token,
@@ -84,6 +87,7 @@ async def get_project_definition_container_by_project(
         usecase.find_by_project_definition,
         query,
         MappingChain(
+            out_domain=Page[ProjectDefinitionContainer],
             out_dto=ProjectDefinitionContainerPageDto,
         ),
     )
