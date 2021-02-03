@@ -41,15 +41,28 @@ def initDb(c):
 
 @task(name="db:delete")
 def deleteDb(c):
-    c.run("docker container stop postgres_data")
-    c.run("docker rm postgres_data")
-    c.run("docker volume rm postgres_data")
+    if c.run("docker ps -aq").stdout != "":
+        c.run("docker stop $(docker ps -aq)")
+
+    if c.run("docker ps -aq").stdout != "":
+        c.run("docker rm $(docker ps -aq)")
+
+    c.run("docker network prune -f")
+
+    if c.run("docker images --filter dangling=true -qa").stdout != "":
+        c.run("docker rmi -f $(docker images --filter dangling=true -qa)")
+
+    if c.run("docker volume ls --filter dangling=true -q").stdout != "":
+        c.run("docker volume rm $(docker volume ls --filter dangling=true -q)")
+
+    if c.run("docker images -qa").stdout != "":
+        c.run("docker rmi -f $(docker images -qa)")
 
 
 @task(name="db:up")
 def dbUp(c):
     c.run(
-        "docker-compose up --force-recreate --abort-on-container-exit --attach-dependencies adminer"
+        "docker-compose up --force-recreate --abort-on-container-exit --attach-dependencies adminer postgres"
     )
 
 

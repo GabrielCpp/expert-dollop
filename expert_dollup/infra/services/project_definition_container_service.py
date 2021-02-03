@@ -80,7 +80,7 @@ class ProjectDefinitionContainerService(
         )
 
         records = await self._database.fetch_all(query)
-        results = self._map_many_to(records, self._dao, self._domain)
+        results = self.map_many_to(records, self._dao, self._domain)
 
         return Page(
             next_page_token=str(offset + 1),

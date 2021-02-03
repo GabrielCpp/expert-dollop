@@ -1,16 +1,10 @@
 from .mapping_helpers import (
     map_dao_to_dto,
-    dump_to_file,
     normalize_request_results,
     normalize_dtos,
 )
 
-from .fake_db_helpers import (
-    ExpertDollupDbFixture,
-    FakeExpertDollupDb,
-    init_db,
-    load_fixture,
-)
+from .fake_db_helpers import ExpertDollupDbFixture, FakeExpertDollupDb, DbSetupHelper
 
 from .factories_dto import (
     ProjectDefinitionDtoFactory,
@@ -18,3 +12,5 @@ from .factories_dto import (
     TranslationDtoFactory,
     ProjectDtoFactory,
 )
+
+from .object_dump_helpers import dump_to_file, set_dump_path

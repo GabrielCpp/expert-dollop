@@ -31,3 +31,13 @@ class RequestHandler:
             )
 
         return result
+
+    async def forward(self, usecase, params, mapping_chain: MappingChain):
+        result = await usecase(**params)
+
+        if not mapping_chain.out_dto is None:
+            result = self.mapper.map(
+                result, mapping_chain.out_dto, mapping_chain.out_domain
+            )
+
+        return result

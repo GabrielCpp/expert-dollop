@@ -34,7 +34,7 @@ def map_project_definition_container_from_dto(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        custom_attributes=src.custom_attributes,
+        config=src.config,
         value_type=src.value_type,
         default_value=src.default_value,
         path=src.path,
@@ -51,7 +51,7 @@ def map_project_definition_container_to_dto(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        custom_attributes=src.custom_attributes,
+        config=src.config,
         value_type=src.value_type,
         default_value=src.default_value,
         path=src.path,
@@ -87,6 +87,57 @@ def map_project_to_dto(src: Project, mapper: Mapper) -> ProjectDto:
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
+    )
+
+
+def map_project_container_from_dto(
+    src: ProjectContainerDto, mapper: Mapper
+) -> ProjectContainer:
+    return ProjectContainer(
+        id=src.id,
+        project_id=src.project_id,
+        type_id=src.type_id,
+        path=src.path,
+        value=src.value,
+    )
+
+
+def map_project_container_to_dto(
+    src: ProjectContainer, mapper: Mapper
+) -> ProjectContainerDto:
+    return ProjectContainerDto(
+        id=src.id,
+        project_id=src.project_id,
+        type_id=src.type_id,
+        path=src.path,
+        value=src.value,
+    )
+
+
+def map_project_container_meto_to_dto(
+    src: ProjectContainerMeta, mapper: Mapper
+) -> ProjectContainerMetaDto:
+    return ProjectContainerMetaDto(
+        project_id=src.project_id, type_id=src.type_id, state=src.state
+    )
+
+
+def map_project_container_node_to_dto(
+    src: ProjectContainerNode, mapper: Mapper
+) -> ProjectContainerNodeDto:
+    return ProjectContainerNodeDto(
+        container=mapper.map(src.container, ProjectContainerDto),
+        definition=mapper.map(src.definition, ProjectDefinitionContainerDto),
+        meta=mapper.map(src.meta, ProjectContainerMetaDto),
+        children=mapper.map_many(src.children, ProjectContainerNodeDto),
+    )
+
+
+def map_projec_container_tree_to_dto(
+    src: ProjectContainerTree, mapper: Mapper
+) -> ProjectContainerTreeDto:
+    return ProjectContainerTreeDto(
+        roots=mapper.map_many(src.roots, ProjectContainerNodeDto)
     )
 
 

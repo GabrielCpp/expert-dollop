@@ -2,7 +2,7 @@
     "project_definition_containers": [
         {
             "creation_date_utc": "2006-02-19T22:27:56",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -18,7 +18,7 @@
         },
         {
             "creation_date_utc": "1996-11-01T11:46:10",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -34,7 +34,7 @@
         },
         {
             "creation_date_utc": "2002-05-10T05:21:10",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -50,7 +50,7 @@
         },
         {
             "creation_date_utc": "1986-12-20T23:44:26",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -72,7 +72,7 @@
         },
         {
             "creation_date_utc": "2006-02-09T04:15:12",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -99,7 +99,7 @@
         },
         {
             "creation_date_utc": "1981-09-24T15:45:28",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -127,7 +127,7 @@
         },
         {
             "creation_date_utc": "1992-11-30T20:52:20",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -186,7 +186,7 @@
         },
         {
             "creation_date_utc": "1989-02-24T11:39:05",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -216,7 +216,7 @@
         },
         {
             "creation_date_utc": "2000-04-19T12:56:41",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -243,7 +243,7 @@
         },
         {
             "creation_date_utc": "1978-04-10T12:20:13",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -265,7 +265,7 @@
         },
         {
             "creation_date_utc": "1973-06-05T18:54:26",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -290,7 +290,7 @@
         },
         {
             "creation_date_utc": "2020-11-23T11:19:26",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -320,7 +320,7 @@
         },
         {
             "creation_date_utc": "1988-08-22T07:45:38",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -347,7 +347,7 @@
         },
         {
             "creation_date_utc": "1977-11-26T08:04:53",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -406,7 +406,7 @@
         },
         {
             "creation_date_utc": "1981-07-09T11:07:08",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -465,7 +465,7 @@
         },
         {
             "creation_date_utc": "2014-07-11T21:44:54",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -487,7 +487,7 @@
         },
         {
             "creation_date_utc": "1982-08-03T08:11:53",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -515,7 +515,7 @@
         },
         {
             "creation_date_utc": "2020-07-08T07:10:25",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -545,7 +545,7 @@
         },
         {
             "creation_date_utc": "2013-07-08T07:19:20",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -575,7 +575,7 @@
         },
         {
             "creation_date_utc": "2006-08-07T15:02:40",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -605,7 +605,7 @@
         },
         {
             "creation_date_utc": "1975-10-08T02:22:29",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -664,7 +664,7 @@
         },
         {
             "creation_date_utc": "1975-05-30T13:41:22",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": true
                 }
@@ -686,7 +686,7 @@
         },
         {
             "creation_date_utc": "2003-08-11T21:01:15",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -713,7 +713,7 @@
         },
         {
             "creation_date_utc": "1999-12-11T12:04:19",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -743,7 +743,7 @@
         },
         {
             "creation_date_utc": "1981-08-24T04:29:08",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -773,7 +773,7 @@
         },
         {
             "creation_date_utc": "2001-07-04T18:11:32",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -801,7 +801,7 @@
         },
         {
             "creation_date_utc": "2016-04-18T11:40:42",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -829,7 +829,7 @@
         },
         {
             "creation_date_utc": "2006-01-16T01:06:08",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -845,7 +845,7 @@
         },
         {
             "creation_date_utc": "1972-12-21T11:23:47",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -867,7 +867,7 @@
         },
         {
             "creation_date_utc": "2016-03-07T04:34:28",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -894,7 +894,7 @@
         },
         {
             "creation_date_utc": "1985-03-21T19:45:01",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -924,7 +924,7 @@
         },
         {
             "creation_date_utc": "1992-10-02T15:00:50",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -949,7 +949,7 @@
         },
         {
             "creation_date_utc": "1982-05-05T09:02:54",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -979,7 +979,7 @@
         },
         {
             "creation_date_utc": "1980-11-19T15:04:16",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -1007,7 +1007,7 @@
         },
         {
             "creation_date_utc": "1979-08-18T03:12:50",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -1029,7 +1029,7 @@
         },
         {
             "creation_date_utc": "1997-12-30T20:01:12",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -1057,7 +1057,7 @@
         },
         {
             "creation_date_utc": "1970-08-14T23:10:09",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -1116,7 +1116,7 @@
         },
         {
             "creation_date_utc": "1990-08-31T17:40:58",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -1144,7 +1144,7 @@
         },
         {
             "creation_date_utc": "1996-06-16T11:12:47",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -1171,7 +1171,7 @@
         },
         {
             "creation_date_utc": "1996-06-25T00:40:13",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -1198,7 +1198,7 @@
         },
         {
             "creation_date_utc": "1997-06-24T18:52:32",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -1220,7 +1220,7 @@
         },
         {
             "creation_date_utc": "1976-03-07T00:57:34",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -1248,7 +1248,7 @@
         },
         {
             "creation_date_utc": "2014-03-23T18:51:45",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -1278,7 +1278,7 @@
         },
         {
             "creation_date_utc": "1986-04-19T23:12:13",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -1306,7 +1306,7 @@
         },
         {
             "creation_date_utc": "1976-09-14T04:06:53",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -1333,7 +1333,7 @@
         },
         {
             "creation_date_utc": "2007-05-28T06:41:39",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -1361,7 +1361,7 @@
         },
         {
             "creation_date_utc": "1980-10-21T05:54:42",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": true
                 }
@@ -1383,7 +1383,7 @@
         },
         {
             "creation_date_utc": "1990-04-16T01:18:04",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -1410,7 +1410,7 @@
         },
         {
             "creation_date_utc": "2001-02-21T14:17:17",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -1437,7 +1437,7 @@
         },
         {
             "creation_date_utc": "1993-01-28T18:36:46",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -1462,7 +1462,7 @@
         },
         {
             "creation_date_utc": "1986-01-10T00:46:54",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -1490,7 +1490,7 @@
         },
         {
             "creation_date_utc": "1980-06-14T09:20:59",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -1515,7 +1515,7 @@
         },
         {
             "creation_date_utc": "2001-08-06T06:15:34",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -1531,7 +1531,7 @@
         },
         {
             "creation_date_utc": "2001-01-13T11:03:19",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -1553,7 +1553,7 @@
         },
         {
             "creation_date_utc": "1996-09-23T12:51:15",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -1580,7 +1580,7 @@
         },
         {
             "creation_date_utc": "1984-09-28T11:24:10",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -1607,7 +1607,7 @@
         },
         {
             "creation_date_utc": "2002-11-26T18:22:38",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -1635,7 +1635,7 @@
         },
         {
             "creation_date_utc": "2003-12-28T22:45:14",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -1663,7 +1663,7 @@
         },
         {
             "creation_date_utc": "1973-08-05T13:32:43",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -1690,7 +1690,7 @@
         },
         {
             "creation_date_utc": "2002-12-27T14:06:33",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -1712,7 +1712,7 @@
         },
         {
             "creation_date_utc": "2004-01-28T05:08:51",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -1742,7 +1742,7 @@
         },
         {
             "creation_date_utc": "2013-08-14T06:29:48",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -1801,7 +1801,7 @@
         },
         {
             "creation_date_utc": "1991-07-12T09:44:46",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -1826,7 +1826,7 @@
         },
         {
             "creation_date_utc": "1975-04-15T11:28:24",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -1856,7 +1856,7 @@
         },
         {
             "creation_date_utc": "2015-08-11T21:54:19",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -1884,7 +1884,7 @@
         },
         {
             "creation_date_utc": "1987-10-10T21:54:29",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -1906,7 +1906,7 @@
         },
         {
             "creation_date_utc": "1984-06-04T20:30:17",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -1936,7 +1936,7 @@
         },
         {
             "creation_date_utc": "2007-01-30T15:12:53",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -1995,7 +1995,7 @@
         },
         {
             "creation_date_utc": "1975-11-06T13:34:59",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -2020,7 +2020,7 @@
         },
         {
             "creation_date_utc": "2003-03-02T02:48:11",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -2045,7 +2045,7 @@
         },
         {
             "creation_date_utc": "1998-05-27T00:14:35",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -2073,7 +2073,7 @@
         },
         {
             "creation_date_utc": "1970-07-05T14:30:01",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": true
                 }
@@ -2095,7 +2095,7 @@
         },
         {
             "creation_date_utc": "1989-05-28T18:10:35",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -2125,7 +2125,7 @@
         },
         {
             "creation_date_utc": "2002-07-13T04:00:59",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -2184,7 +2184,7 @@
         },
         {
             "creation_date_utc": "1988-09-11T12:59:02",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -2209,7 +2209,7 @@
         },
         {
             "creation_date_utc": "1975-05-21T10:23:37",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -2268,7 +2268,7 @@
         },
         {
             "creation_date_utc": "1987-01-28T05:42:07",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -2293,7 +2293,7 @@
         },
         {
             "creation_date_utc": "2013-12-06T06:32:32",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -2309,7 +2309,7 @@
         },
         {
             "creation_date_utc": "1980-12-07T07:57:16",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -2325,7 +2325,7 @@
         },
         {
             "creation_date_utc": "2007-09-08T16:14:03",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -2347,7 +2347,7 @@
         },
         {
             "creation_date_utc": "2011-12-28T08:11:08",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -2406,7 +2406,7 @@
         },
         {
             "creation_date_utc": "2006-08-06T02:33:37",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -2465,7 +2465,7 @@
         },
         {
             "creation_date_utc": "1989-08-08T01:24:11",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -2492,7 +2492,7 @@
         },
         {
             "creation_date_utc": "1999-09-19T13:25:42",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -2551,7 +2551,7 @@
         },
         {
             "creation_date_utc": "1980-05-26T18:39:28",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -2578,7 +2578,7 @@
         },
         {
             "creation_date_utc": "1973-01-01T13:54:05",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -2600,7 +2600,7 @@
         },
         {
             "creation_date_utc": "2011-10-30T15:42:10",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -2628,7 +2628,7 @@
         },
         {
             "creation_date_utc": "1982-06-25T17:50:43",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -2653,7 +2653,7 @@
         },
         {
             "creation_date_utc": "1976-04-06T21:17:53",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -2678,7 +2678,7 @@
         },
         {
             "creation_date_utc": "1979-01-12T08:46:30",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -2706,7 +2706,7 @@
         },
         {
             "creation_date_utc": "2005-04-22T01:28:05",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -2731,7 +2731,7 @@
         },
         {
             "creation_date_utc": "1994-02-24T00:31:54",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -2753,7 +2753,7 @@
         },
         {
             "creation_date_utc": "1971-04-30T03:12:43",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -2780,7 +2780,7 @@
         },
         {
             "creation_date_utc": "2009-08-07T10:51:47",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -2805,7 +2805,7 @@
         },
         {
             "creation_date_utc": "2017-05-28T07:22:31",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -2830,7 +2830,7 @@
         },
         {
             "creation_date_utc": "2012-01-03T04:20:19",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -2889,7 +2889,7 @@
         },
         {
             "creation_date_utc": "1974-07-20T07:05:56",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -2916,7 +2916,7 @@
         },
         {
             "creation_date_utc": "2002-07-14T00:19:03",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": true
                 }
@@ -2938,7 +2938,7 @@
         },
         {
             "creation_date_utc": "1998-12-21T09:09:45",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -2963,7 +2963,7 @@
         },
         {
             "creation_date_utc": "2002-07-01T06:20:19",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -2988,7 +2988,7 @@
         },
         {
             "creation_date_utc": "2000-06-03T00:22:06",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -3015,7 +3015,7 @@
         },
         {
             "creation_date_utc": "2005-03-27T19:28:58",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -3043,7 +3043,7 @@
         },
         {
             "creation_date_utc": "1987-08-10T20:24:09",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -3070,7 +3070,7 @@
         },
         {
             "creation_date_utc": "1982-12-13T16:18:34",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -3086,7 +3086,7 @@
         },
         {
             "creation_date_utc": "1970-05-15T05:54:54",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -3108,7 +3108,7 @@
         },
         {
             "creation_date_utc": "2002-02-07T00:11:16",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -3135,7 +3135,7 @@
         },
         {
             "creation_date_utc": "2014-08-02T18:45:40",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -3163,7 +3163,7 @@
         },
         {
             "creation_date_utc": "1985-11-22T14:35:08",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -3190,7 +3190,7 @@
         },
         {
             "creation_date_utc": "1973-04-18T11:04:09",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -3218,7 +3218,7 @@
         },
         {
             "creation_date_utc": "2017-07-27T08:53:29",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -3246,7 +3246,7 @@
         },
         {
             "creation_date_utc": "1979-01-24T07:34:26",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -3268,7 +3268,7 @@
         },
         {
             "creation_date_utc": "2001-06-10T08:30:06",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -3293,7 +3293,7 @@
         },
         {
             "creation_date_utc": "1990-06-19T00:50:47",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -3352,7 +3352,7 @@
         },
         {
             "creation_date_utc": "1995-11-20T11:40:24",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -3379,7 +3379,7 @@
         },
         {
             "creation_date_utc": "1977-02-05T01:37:44",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -3409,7 +3409,7 @@
         },
         {
             "creation_date_utc": "1982-07-03T04:40:10",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -3436,7 +3436,7 @@
         },
         {
             "creation_date_utc": "1973-07-22T15:02:19",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -3458,7 +3458,7 @@
         },
         {
             "creation_date_utc": "2015-12-23T08:35:32",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -3488,7 +3488,7 @@
         },
         {
             "creation_date_utc": "2006-06-07T12:26:42",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -3518,7 +3518,7 @@
         },
         {
             "creation_date_utc": "2015-06-13T19:09:32",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -3577,7 +3577,7 @@
         },
         {
             "creation_date_utc": "1987-02-28T07:30:25",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -3602,7 +3602,7 @@
         },
         {
             "creation_date_utc": "2010-12-13T23:54:33",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -3661,7 +3661,7 @@
         },
         {
             "creation_date_utc": "2003-02-06T21:00:36",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": true
                 }
@@ -3683,7 +3683,7 @@
         },
         {
             "creation_date_utc": "2014-08-27T20:52:02",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -3710,7 +3710,7 @@
         },
         {
             "creation_date_utc": "1974-04-10T12:23:14",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -3737,7 +3737,7 @@
         },
         {
             "creation_date_utc": "2007-09-27T00:03:57",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -3764,7 +3764,7 @@
         },
         {
             "creation_date_utc": "2017-11-24T11:42:14",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -3791,7 +3791,7 @@
         },
         {
             "creation_date_utc": "1993-04-05T01:43:19",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -3816,7 +3816,7 @@
         },
         {
             "creation_date_utc": "2001-12-11T20:22:34",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -3832,7 +3832,7 @@
         },
         {
             "creation_date_utc": "1992-12-27T16:41:55",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -3854,7 +3854,7 @@
         },
         {
             "creation_date_utc": "1978-11-13T02:20:46",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -3882,7 +3882,7 @@
         },
         {
             "creation_date_utc": "1989-01-08T19:15:20",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -3907,7 +3907,7 @@
         },
         {
             "creation_date_utc": "1976-12-23T04:42:15",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -3935,7 +3935,7 @@
         },
         {
             "creation_date_utc": "2008-08-30T03:06:10",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -3965,7 +3965,7 @@
         },
         {
             "creation_date_utc": "1976-05-08T00:09:07",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -4024,7 +4024,7 @@
         },
         {
             "creation_date_utc": "1995-02-26T13:26:01",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -4046,7 +4046,7 @@
         },
         {
             "creation_date_utc": "1994-06-22T10:04:35",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -4105,7 +4105,7 @@
         },
         {
             "creation_date_utc": "1972-07-19T07:39:10",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -4132,7 +4132,7 @@
         },
         {
             "creation_date_utc": "2002-12-03T13:59:52",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -4191,7 +4191,7 @@
         },
         {
             "creation_date_utc": "2012-06-09T10:38:03",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -4219,7 +4219,7 @@
         },
         {
             "creation_date_utc": "1971-11-17T06:14:05",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -4246,7 +4246,7 @@
         },
         {
             "creation_date_utc": "1993-10-06T20:38:57",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -4268,7 +4268,7 @@
         },
         {
             "creation_date_utc": "1985-08-05T00:11:51",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -4298,7 +4298,7 @@
         },
         {
             "creation_date_utc": "2000-08-09T00:55:48",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -4357,7 +4357,7 @@
         },
         {
             "creation_date_utc": "1993-07-15T21:17:13",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -4384,7 +4384,7 @@
         },
         {
             "creation_date_utc": "1986-07-28T21:33:29",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -4443,7 +4443,7 @@
         },
         {
             "creation_date_utc": "1981-05-24T04:06:23",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -4471,7 +4471,7 @@
         },
         {
             "creation_date_utc": "1981-07-26T06:13:38",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": true
                 }
@@ -4493,7 +4493,7 @@
         },
         {
             "creation_date_utc": "1977-08-30T05:26:37",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -4552,7 +4552,7 @@
         },
         {
             "creation_date_utc": "2011-08-18T05:32:05",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -4579,7 +4579,7 @@
         },
         {
             "creation_date_utc": "1998-03-21T06:02:41",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -4604,7 +4604,7 @@
         },
         {
             "creation_date_utc": "2011-03-06T21:24:53",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -4663,7 +4663,7 @@
         },
         {
             "creation_date_utc": "1995-12-09T04:55:26",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -4722,7 +4722,7 @@
         },
         {
             "creation_date_utc": "1993-04-16T17:01:59",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -4738,7 +4738,7 @@
         },
         {
             "creation_date_utc": "1975-04-11T13:35:20",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -4754,7 +4754,7 @@
         },
         {
             "creation_date_utc": "1987-11-27T06:02:41",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -4770,7 +4770,7 @@
         },
         {
             "creation_date_utc": "2011-09-14T13:36:48",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -4792,7 +4792,7 @@
         },
         {
             "creation_date_utc": "1994-10-09T14:44:27",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -4822,7 +4822,7 @@
         },
         {
             "creation_date_utc": "1975-01-15T12:43:50",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -4852,7 +4852,7 @@
         },
         {
             "creation_date_utc": "2010-01-07T17:54:41",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -4911,7 +4911,7 @@
         },
         {
             "creation_date_utc": "2006-10-16T16:56:34",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -4941,7 +4941,7 @@
         },
         {
             "creation_date_utc": "2013-04-04T20:48:06",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -4968,7 +4968,7 @@
         },
         {
             "creation_date_utc": "1991-10-11T01:30:55",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -4990,7 +4990,7 @@
         },
         {
             "creation_date_utc": "2011-02-20T12:37:35",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -5017,7 +5017,7 @@
         },
         {
             "creation_date_utc": "1976-12-25T15:28:34",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -5042,7 +5042,7 @@
         },
         {
             "creation_date_utc": "1985-04-24T12:28:43",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -5069,7 +5069,7 @@
         },
         {
             "creation_date_utc": "2003-11-01T11:35:10",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -5099,7 +5099,7 @@
         },
         {
             "creation_date_utc": "1972-01-05T07:37:43",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -5127,7 +5127,7 @@
         },
         {
             "creation_date_utc": "1988-02-22T08:55:37",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -5149,7 +5149,7 @@
         },
         {
             "creation_date_utc": "1989-09-14T17:35:48",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -5179,7 +5179,7 @@
         },
         {
             "creation_date_utc": "2001-03-18T19:27:36",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -5238,7 +5238,7 @@
         },
         {
             "creation_date_utc": "2002-12-15T15:54:42",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -5297,7 +5297,7 @@
         },
         {
             "creation_date_utc": "1985-07-28T04:52:54",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -5356,7 +5356,7 @@
         },
         {
             "creation_date_utc": "1990-09-17T22:25:02",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -5386,7 +5386,7 @@
         },
         {
             "creation_date_utc": "1976-12-15T12:34:19",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": true
                 }
@@ -5408,7 +5408,7 @@
         },
         {
             "creation_date_utc": "2009-12-17T21:17:42",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -5435,7 +5435,7 @@
         },
         {
             "creation_date_utc": "1984-05-01T12:41:58",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -5463,7 +5463,7 @@
         },
         {
             "creation_date_utc": "2009-11-01T22:45:02",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -5522,7 +5522,7 @@
         },
         {
             "creation_date_utc": "1994-08-07T08:46:28",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -5550,7 +5550,7 @@
         },
         {
             "creation_date_utc": "2002-09-24T03:58:26",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -5578,7 +5578,7 @@
         },
         {
             "creation_date_utc": "2016-01-02T22:53:10",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -5594,7 +5594,7 @@
         },
         {
             "creation_date_utc": "1978-10-07T01:26:14",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -5616,7 +5616,7 @@
         },
         {
             "creation_date_utc": "1985-08-17T05:22:01",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -5646,7 +5646,7 @@
         },
         {
             "creation_date_utc": "2010-01-30T22:34:40",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -5674,7 +5674,7 @@
         },
         {
             "creation_date_utc": "2000-01-18T14:25:02",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -5733,7 +5733,7 @@
         },
         {
             "creation_date_utc": "1985-12-17T12:09:59",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -5760,7 +5760,7 @@
         },
         {
             "creation_date_utc": "1997-01-07T18:54:37",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -5788,7 +5788,7 @@
         },
         {
             "creation_date_utc": "1996-03-09T20:43:43",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -5810,7 +5810,7 @@
         },
         {
             "creation_date_utc": "2014-04-20T09:46:07",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -5838,7 +5838,7 @@
         },
         {
             "creation_date_utc": "2004-04-07T10:53:49",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -5863,7 +5863,7 @@
         },
         {
             "creation_date_utc": "2006-02-13T12:51:50",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -5890,7 +5890,7 @@
         },
         {
             "creation_date_utc": "1981-12-27T03:05:54",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -5918,7 +5918,7 @@
         },
         {
             "creation_date_utc": "1982-04-20T15:41:12",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -5943,7 +5943,7 @@
         },
         {
             "creation_date_utc": "1995-03-06T05:10:15",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -5965,7 +5965,7 @@
         },
         {
             "creation_date_utc": "1982-11-23T01:35:46",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -6024,7 +6024,7 @@
         },
         {
             "creation_date_utc": "2014-04-03T05:44:57",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -6051,7 +6051,7 @@
         },
         {
             "creation_date_utc": "2008-01-28T11:43:52",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -6110,7 +6110,7 @@
         },
         {
             "creation_date_utc": "1980-09-23T03:38:25",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -6140,7 +6140,7 @@
         },
         {
             "creation_date_utc": "1999-09-20T23:10:22",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -6170,7 +6170,7 @@
         },
         {
             "creation_date_utc": "1971-06-26T19:42:33",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": true
                 }
@@ -6192,7 +6192,7 @@
         },
         {
             "creation_date_utc": "2012-10-15T20:18:01",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -6219,7 +6219,7 @@
         },
         {
             "creation_date_utc": "2005-09-11T11:19:39",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -6244,7 +6244,7 @@
         },
         {
             "creation_date_utc": "2011-02-18T17:29:33",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -6303,7 +6303,7 @@
         },
         {
             "creation_date_utc": "1977-10-05T22:11:22",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -6328,7 +6328,7 @@
         },
         {
             "creation_date_utc": "2010-06-03T01:08:14",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -6355,7 +6355,7 @@
         },
         {
             "creation_date_utc": "2013-03-30T18:22:02",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -6371,7 +6371,7 @@
         },
         {
             "creation_date_utc": "2001-06-14T02:04:09",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -6393,7 +6393,7 @@
         },
         {
             "creation_date_utc": "1981-04-15T22:39:29",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -6452,7 +6452,7 @@
         },
         {
             "creation_date_utc": "1975-01-16T07:07:40",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -6477,7 +6477,7 @@
         },
         {
             "creation_date_utc": "1986-02-21T11:35:53",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -6536,7 +6536,7 @@
         },
         {
             "creation_date_utc": "2012-06-24T11:42:02",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -6595,7 +6595,7 @@
         },
         {
             "creation_date_utc": "1994-02-07T07:41:41",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -6622,7 +6622,7 @@
         },
         {
             "creation_date_utc": "1986-12-24T09:44:14",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -6644,7 +6644,7 @@
         },
         {
             "creation_date_utc": "2007-09-03T05:13:54",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -6671,7 +6671,7 @@
         },
         {
             "creation_date_utc": "1976-10-31T21:10:11",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -6701,7 +6701,7 @@
         },
         {
             "creation_date_utc": "1998-07-16T13:40:08",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -6729,7 +6729,7 @@
         },
         {
             "creation_date_utc": "2012-06-14T22:44:46",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -6754,7 +6754,7 @@
         },
         {
             "creation_date_utc": "2006-02-27T01:02:21",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -6781,7 +6781,7 @@
         },
         {
             "creation_date_utc": "2020-03-10T01:55:17",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -6803,7 +6803,7 @@
         },
         {
             "creation_date_utc": "1981-12-25T03:37:54",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -6862,7 +6862,7 @@
         },
         {
             "creation_date_utc": "2014-12-14T02:19:36",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -6889,7 +6889,7 @@
         },
         {
             "creation_date_utc": "1990-08-10T22:50:32",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -6919,7 +6919,7 @@
         },
         {
             "creation_date_utc": "2007-07-29T00:31:15",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -6947,7 +6947,7 @@
         },
         {
             "creation_date_utc": "2014-04-29T05:52:35",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -6975,7 +6975,7 @@
         },
         {
             "creation_date_utc": "1973-12-13T07:15:02",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": true
                 }
@@ -6997,7 +6997,7 @@
         },
         {
             "creation_date_utc": "2008-08-11T23:26:23",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -7056,7 +7056,7 @@
         },
         {
             "creation_date_utc": "2001-11-28T17:13:30",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -7081,7 +7081,7 @@
         },
         {
             "creation_date_utc": "2019-07-23T13:15:32",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -7140,7 +7140,7 @@
         },
         {
             "creation_date_utc": "1987-02-10T10:57:27",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -7170,7 +7170,7 @@
         },
         {
             "creation_date_utc": "1988-05-28T19:51:21",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -7195,7 +7195,7 @@
         },
         {
             "creation_date_utc": "1994-10-07T16:26:57",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -7211,7 +7211,7 @@
         },
         {
             "creation_date_utc": "1980-01-12T07:05:45",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -7227,7 +7227,7 @@
         },
         {
             "creation_date_utc": "1988-09-25T00:46:16",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -7249,7 +7249,7 @@
         },
         {
             "creation_date_utc": "2019-03-17T18:16:06",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -7308,7 +7308,7 @@
         },
         {
             "creation_date_utc": "1998-09-16T22:33:20",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -7335,7 +7335,7 @@
         },
         {
             "creation_date_utc": "2005-06-29T14:51:48",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -7394,7 +7394,7 @@
         },
         {
             "creation_date_utc": "2017-04-22T13:33:31",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -7424,7 +7424,7 @@
         },
         {
             "creation_date_utc": "2000-07-12T21:27:39",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -7483,7 +7483,7 @@
         },
         {
             "creation_date_utc": "1992-07-05T16:40:02",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -7505,7 +7505,7 @@
         },
         {
             "creation_date_utc": "2009-09-24T04:18:30",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -7564,7 +7564,7 @@
         },
         {
             "creation_date_utc": "2002-05-24T14:03:44",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -7589,7 +7589,7 @@
         },
         {
             "creation_date_utc": "2010-10-16T12:55:08",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -7619,7 +7619,7 @@
         },
         {
             "creation_date_utc": "2017-01-23T12:25:38",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -7646,7 +7646,7 @@
         },
         {
             "creation_date_utc": "1975-05-31T22:45:27",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -7705,7 +7705,7 @@
         },
         {
             "creation_date_utc": "1998-01-14T16:16:43",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -7727,7 +7727,7 @@
         },
         {
             "creation_date_utc": "1981-12-14T16:34:24",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -7786,7 +7786,7 @@
         },
         {
             "creation_date_utc": "1978-03-18T04:41:12",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -7813,7 +7813,7 @@
         },
         {
             "creation_date_utc": "1980-11-16T07:33:45",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -7841,7 +7841,7 @@
         },
         {
             "creation_date_utc": "1998-04-07T00:22:43",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -7900,7 +7900,7 @@
         },
         {
             "creation_date_utc": "1972-03-10T00:03:58",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -7959,7 +7959,7 @@
         },
         {
             "creation_date_utc": "1998-05-11T09:37:45",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": true
                 }
@@ -7981,7 +7981,7 @@
         },
         {
             "creation_date_utc": "1997-03-09T03:22:18",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -8008,7 +8008,7 @@
         },
         {
             "creation_date_utc": "1997-11-09T07:56:51",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -8067,7 +8067,7 @@
         },
         {
             "creation_date_utc": "1986-05-25T00:34:22",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -8126,7 +8126,7 @@
         },
         {
             "creation_date_utc": "1998-04-30T19:15:47",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -8154,7 +8154,7 @@
         },
         {
             "creation_date_utc": "2000-10-30T19:12:25",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -8182,7 +8182,7 @@
         },
         {
             "creation_date_utc": "2006-02-11T04:16:33",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -8198,7 +8198,7 @@
         },
         {
             "creation_date_utc": "1983-02-02T12:30:00",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -8220,7 +8220,7 @@
         },
         {
             "creation_date_utc": "2017-05-21T19:00:55",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -8250,7 +8250,7 @@
         },
         {
             "creation_date_utc": "2000-11-02T05:55:28",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -8275,7 +8275,7 @@
         },
         {
             "creation_date_utc": "1970-05-02T16:53:30",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -8303,7 +8303,7 @@
         },
         {
             "creation_date_utc": "1983-08-21T00:44:06",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -8331,7 +8331,7 @@
         },
         {
             "creation_date_utc": "2016-03-02T06:58:45",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -8359,7 +8359,7 @@
         },
         {
             "creation_date_utc": "1980-04-27T18:39:29",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -8381,7 +8381,7 @@
         },
         {
             "creation_date_utc": "1992-09-23T21:49:30",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -8406,7 +8406,7 @@
         },
         {
             "creation_date_utc": "1975-08-28T12:41:30",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -8436,7 +8436,7 @@
         },
         {
             "creation_date_utc": "2006-06-25T01:27:10",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -8464,7 +8464,7 @@
         },
         {
             "creation_date_utc": "1971-04-04T10:28:56",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -8492,7 +8492,7 @@
         },
         {
             "creation_date_utc": "2008-02-09T02:14:16",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -8522,7 +8522,7 @@
         },
         {
             "creation_date_utc": "2002-08-16T14:52:36",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -8544,7 +8544,7 @@
         },
         {
             "creation_date_utc": "1991-01-19T18:54:31",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -8603,7 +8603,7 @@
         },
         {
             "creation_date_utc": "1977-12-24T16:14:04",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -8633,7 +8633,7 @@
         },
         {
             "creation_date_utc": "2008-12-12T07:56:18",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -8661,7 +8661,7 @@
         },
         {
             "creation_date_utc": "2018-01-27T02:21:35",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -8688,7 +8688,7 @@
         },
         {
             "creation_date_utc": "1999-02-24T02:30:18",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -8716,7 +8716,7 @@
         },
         {
             "creation_date_utc": "2005-03-03T19:22:57",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": true
                 }
@@ -8738,7 +8738,7 @@
         },
         {
             "creation_date_utc": "1995-12-25T00:36:21",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -8763,7 +8763,7 @@
         },
         {
             "creation_date_utc": "2002-07-03T15:51:52",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -8793,7 +8793,7 @@
         },
         {
             "creation_date_utc": "2004-10-15T18:47:57",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -8820,7 +8820,7 @@
         },
         {
             "creation_date_utc": "2004-11-13T21:53:57",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -8847,7 +8847,7 @@
         },
         {
             "creation_date_utc": "2004-12-14T04:03:44",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -8872,7 +8872,7 @@
         },
         {
             "creation_date_utc": "2011-04-04T09:38:33",
-            "custom_attributes": {},
+            "config": {},
             "default_value": {
                 "value": null
             },
@@ -8888,7 +8888,7 @@
         },
         {
             "creation_date_utc": "2017-08-12T11:54:57",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -8910,7 +8910,7 @@
         },
         {
             "creation_date_utc": "1977-03-08T11:30:56",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -8937,7 +8937,7 @@
         },
         {
             "creation_date_utc": "2007-12-06T08:27:49",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -8965,7 +8965,7 @@
         },
         {
             "creation_date_utc": "1975-02-06T13:08:57",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -8995,7 +8995,7 @@
         },
         {
             "creation_date_utc": "1991-10-20T13:46:11",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -9025,7 +9025,7 @@
         },
         {
             "creation_date_utc": "1970-08-17T01:50:06",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -9084,7 +9084,7 @@
         },
         {
             "creation_date_utc": "2000-01-30T15:14:14",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -9106,7 +9106,7 @@
         },
         {
             "creation_date_utc": "2009-03-30T06:21:24",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -9136,7 +9136,7 @@
         },
         {
             "creation_date_utc": "2019-03-06T10:03:57",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -9163,7 +9163,7 @@
         },
         {
             "creation_date_utc": "2017-07-09T12:29:42",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -9222,7 +9222,7 @@
         },
         {
             "creation_date_utc": "1994-04-27T15:52:44",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -9249,7 +9249,7 @@
         },
         {
             "creation_date_utc": "1978-10-09T21:52:10",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -9274,7 +9274,7 @@
         },
         {
             "creation_date_utc": "2014-06-23T00:48:42",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": false
                 }
@@ -9296,7 +9296,7 @@
         },
         {
             "creation_date_utc": "2006-07-13T01:37:16",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -9324,7 +9324,7 @@
         },
         {
             "creation_date_utc": "1974-02-05T19:01:33",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -9383,7 +9383,7 @@
         },
         {
             "creation_date_utc": "1972-09-10T15:13:55",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -9442,7 +9442,7 @@
         },
         {
             "creation_date_utc": "2009-06-22T00:44:31",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -9472,7 +9472,7 @@
         },
         {
             "creation_date_utc": "2016-03-02T08:31:52",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {
@@ -9500,7 +9500,7 @@
         },
         {
             "creation_date_utc": "2006-10-29T11:35:27",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "is_collapsible": true
                 }
@@ -9522,7 +9522,7 @@
         },
         {
             "creation_date_utc": "2009-12-30T02:40:58",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "transforms": [
                         "trim"
@@ -9552,7 +9552,7 @@
         },
         {
             "creation_date_utc": "1972-07-28T18:15:12",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "maximum": 100000,
@@ -9579,7 +9579,7 @@
         },
         {
             "creation_date_utc": "1990-03-22T05:28:47",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "options": [
                         {
@@ -9638,7 +9638,7 @@
         },
         {
             "creation_date_utc": "1993-05-14T16:27:16",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "validator": {
                         "type": "boolean"
@@ -9663,7 +9663,7 @@
         },
         {
             "creation_date_utc": "1988-01-27T11:19:57",
-            "custom_attributes": {
+            "config": {
                 "value_type": {
                     "precision": 3,
                     "validator": {

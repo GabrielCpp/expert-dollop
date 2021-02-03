@@ -22,7 +22,7 @@ class ProjectDefinitionContainerDtoFactory(factory.Factory):
     is_collection = False
     instanciate_by_default = True
     order_index = factory.Sequence(lambda n: n)
-    custom_attributes = {}
+    config = {}
     value_type = "INT"
     default_value = {"value": 0}
     path = []

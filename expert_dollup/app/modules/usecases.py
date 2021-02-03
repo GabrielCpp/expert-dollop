@@ -1,10 +1,5 @@
 from injector import Binder, inject
-from expert_dollup.core.usecases import (
-    ProjectDefinitonUseCase,
-    ProjectDefinitonContainerUseCase,
-    TranslationUseCase,
-    ProjectUseCase,
-)
+from expert_dollup.core.usecases import *
 
 
 def bind_usecases(binder: Binder) -> None:
@@ -13,6 +8,7 @@ def bind_usecases(binder: Binder) -> None:
         ProjectDefinitonContainerUseCase,
         TranslationUseCase,
         ProjectUseCase,
+        ProjectContainerUseCase,
     ]
 
     for usecase_type in usecases:

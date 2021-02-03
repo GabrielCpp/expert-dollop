@@ -181,7 +181,7 @@ class SimpleProject:
             for index in range(0, level + 1):
                 value_type = self.value_type_factory.pick_value_type(label)
                 value = self.value_type_factory.build_value(value_type)
-                custom_attributes = self.value_type_factory.build_custom_attr(
+                config = self.value_type_factory.build_custom_attr(
                     label, index, value_type
                 )
                 other_field = {}
@@ -199,7 +199,7 @@ class SimpleProject:
                     is_collection=index == 0,
                     instanciate_by_default=True,
                     order_index=index,
-                    custom_attributes=custom_attributes,
+                    config=config,
                     creation_date_utc=self.fake.date_time(),
                     **other_field,
                 )
@@ -218,7 +218,7 @@ class SimpleProject:
             is_collection=False,
             instanciate_by_default=True,
             order_index=0,
-            custom_attributes=dict(),
+            config=dict(),
             creation_date_utc=self.fake.date_time(),
             default_value=self.value_type_factory.build_value("CONTAINER"),
             mixed_paths=[],
@@ -236,7 +236,7 @@ class SimpleProject:
             is_collection=True,
             instanciate_by_default=False,
             order_index=1,
-            custom_attributes=dict(),
+            config=dict(),
             creation_date_utc=self.fake.date_time(),
             default_value=self.value_type_factory.build_value("CONTAINER"),
             mixed_paths=[],

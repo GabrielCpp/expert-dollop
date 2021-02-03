@@ -28,7 +28,7 @@ target_metadata = None
 
 load_dotenv()
 
-DATABASE_URL = "postgres://{}:{}@{}/{}".format(
+DATABASE_URL = "postgresql://{}:{}@{}/{}".format(
     os.environ["POSTGRES_USERNAME"],
     os.environ["POSTGRES_PASSWORD"],
     os.environ["POSTGRES_HOST"],

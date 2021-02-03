@@ -4,7 +4,7 @@ from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 
 
 def bind_database(binder: Binder) -> None:
-    DATABASE_URL = "postgres://{}:{}@{}/{}".format(
+    DATABASE_URL = "postgresql://{}:{}@{}/{}".format(
         os.environ["POSTGRES_USERNAME"],
         os.environ["POSTGRES_PASSWORD"],
         os.environ["POSTGRES_HOST"],

@@ -50,7 +50,7 @@ project_definition_container_table = Table(
     Column("is_collection", Boolean, nullable=False),
     Column("instanciate_by_default", Boolean, nullable=False),
     Column("order_index", Integer, nullable=False),
-    Column("custom_attributes", postgresql.JSON(), nullable=False),
+    Column("config", postgresql.JSON(), nullable=False),
     Column("value_type", String, nullable=False),
     Column("default_value", postgresql.JSON(), nullable=True),
     Column("path", String, nullable=False),
@@ -66,7 +66,7 @@ class ProjectDefinitionContainerDao(BaseModel):
     is_collection: bool
     instanciate_by_default: bool
     order_index: int
-    custom_attributes: dict
+    config: dict
     value_type: str
     default_value: Optional[dict]
     path: str
@@ -142,14 +142,14 @@ project_container_meta_table = Table(
     metadata,
     Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("type_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("custom_attributes", postgresql.JSON(), nullable=False),
+    Column("state", postgresql.JSON(), nullable=False),
 )
 
 
 class ProjectContainerMetaDao(BaseModel):
     project_id: UUID
     type_id: UUID
-    custom_attributes: dict
+    state: dict
 
 
 ressource_table = Table(

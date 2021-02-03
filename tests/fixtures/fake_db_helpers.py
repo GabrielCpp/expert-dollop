@@ -3,7 +3,9 @@ from typing import List
 from pydantic import BaseModel
 from databases import Database
 from os.path import join
+from injector import inject
 from expert_dollup.infra.expert_dollup_db import *
+from expert_dollup.infra.services import *
 
 
 class ExpertDollupDbFixture(Enum):
@@ -19,22 +21,31 @@ class FakeExpertDollupDb(BaseModel):
     translations: List[TranslationDao]
 
 
-async def init_db(database: Database, fake_db: FakeExpertDollupDb):
-    await database.execute_many(
-        project_definition_table.insert(),
-        [element.dict() for element in fake_db.project_definitions],
-    )
+@inject
+class DbSetupHelper:
+    def __init__(
+        self,
+        project_definition_container_service: ProjectDefinitionContainerService,
+        project_definition_service: ProjectDefinitionService,
+        translation_service: TranslationService,
+    ):
+        self.project_definition_container_service = project_definition_container_service
+        self.project_definition_service = project_definition_service
+        self.translation_service = translation_service
 
-    await database.execute_many(
-        project_definition_container_table.insert(),
-        [element.dict() for element in fake_db.project_definition_containers],
-    )
+    async def init_db(self, fake_db: FakeExpertDollupDb):
+        await self.project_definition_service.insert_many_raw(
+            fake_db.project_definitions
+        )
 
-    await database.execute_many(
-        translation_table.insert(),
-        [element.dict() for element in fake_db.translations],
-    )
+        await self.project_definition_container_service.insert_many_raw(
+            fake_db.project_definition_containers,
+        )
 
+        await self.translation_service.insert_many_raw(fake_db.translations)
 
-def load_fixture(fixture: ExpertDollupDbFixture) -> FakeExpertDollupDb:
-    return FakeExpertDollupDb.parse_file(join(".", "tests", "fixtures", str(fixture)))
+    @staticmethod
+    def load_fixture(fixture: ExpertDollupDbFixture) -> FakeExpertDollupDb:
+        return FakeExpertDollupDb.parse_file(
+            join(".", "tests", "fixtures", str(fixture))
+        )

@@ -1,3 +1,4 @@
+import structlog
 from typing import Awaitable
 from collections import deque
 from uuid import UUID, uuid4
@@ -18,6 +19,8 @@ from expert_dollup.infra.services import (
     ProjectContainerService,
     ProjectContainerMetaService,
 )
+
+logger = structlog.get_logger(__name__)
 
 
 class ProjectUseCase:
@@ -76,7 +79,7 @@ class ProjectUseCase:
             container_meta = ProjectContainerMeta(
                 project_id=project.id,
                 type_id=container_definition.id,
-                custom_attributes=container_definition.custom_attributes,
+                state={},
             )
 
             project_container_metas.append(container_meta)

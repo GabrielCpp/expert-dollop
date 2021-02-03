@@ -12,11 +12,14 @@ from typing import (
     Union,
 )
 from pydantic import BaseModel
+from sqlalchemy import and_, Table
 from sqlalchemy.sql import select
-from sqlalchemy import and_
 from databases import Database
+from dataclasses import dataclass
+from sqlalchemy.dialects import postgresql
 from expert_dollup.shared.automapping import Mapper
 from .page import Page
+
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")
@@ -83,7 +86,13 @@ def map_dict_keys(
     return mapped_args
 
 
-class BaseCrudTableService(Generic[Domain]):
+@dataclass
+class TableColumnProcessor:
+    name: str
+    processor: callable
+
+
+class CoreCrudTableService(ABC, Generic[Domain]):
     def __init__(self, database: Database, mapper: Mapper):
         self._database = database
         self._mapper = mapper
@@ -92,6 +101,83 @@ class BaseCrudTableService(Generic[Domain]):
         self._domain = self.__class__.Meta.domain
         self._table_filter_type = self.__class__.Meta.table_filter_type
         self._seach_filters = self.__class__.Meta.seach_filters or {}
+        self._column_processors = self.build_table_raw_processors()
+
+    def build_table_raw_processors(self) -> List[TableColumnProcessor]:
+        noop = lambda x: x
+        dialect = postgresql.dialect()
+
+        return [
+            TableColumnProcessor(
+                name=column.name, processor=column.type.bind_processor(dialect) or noop
+            )
+            for column in self._table.c
+        ]
+
+    async def insert(self, domain: Domain) -> Awaitable:
+        query = self._table.insert()
+        value = self._mapper.map(domain, self._dao).dict()
+        await self._database.execute(query=query, values=value)
+
+    async def insert_many(self, domains: List[Domain]) -> Awaitable:
+        daos = self._mapper.map_many(domains, self._dao)
+        await self.insert_many_raw(daos)
+
+    async def find_all(self, limit: int = 1000) -> Awaitable[List[Domain]]:
+        query = self._table.select().limit(limit)
+        records = await self._database.fetch_all(query=query)
+        results = self.map_many_to(records, self._dao, self._domain)
+        return results
+
+    @abstractmethod
+    async def delete_by_id(self, pk_id: Id) -> Awaitable:
+        pass
+
+    @abstractmethod
+    async def has(self, pk_id: Id) -> Awaitable[bool]:
+        pass
+
+    @abstractmethod
+    async def find_by_id(self, pk_id: Id) -> Awaitable[Domain]:
+        pass
+
+    async def insert_many_raw(self, daos: List[BaseModel]) -> Awaitable:
+        columns_name = [
+            column_processor.name for column_processor in self._column_processors
+        ]
+
+        records = [
+            [
+                column_processor.processor(getattr(dao, column_processor.name))
+                for column_processor in self._column_processors
+            ]
+            for dao in daos
+        ]
+
+        async with self._database.connection() as connection:
+            n = 300
+            for i in range(0, len(records), n):
+                await connection.raw_connection.copy_records_to_table(
+                    self._table.name, records=records[i : i + n], columns=columns_name
+                )
+
+    def map_many_to(self, records, dao_type, domain_type):
+        daos = [dao_type(**record) for record in records]
+        results = self._mapper.map_many(daos, domain_type)
+        return results
+
+    async def map_over(
+        self, iterator: AsyncGenerator[Any, Any]
+    ) -> AsyncGenerator[Domain, None]:
+        async for record in iterator:
+            dao = dao_type(**record)
+            result = self._mapper.map(dao, self._domain)
+            yield result
+
+
+class BaseCrudTableService(CoreCrudTableService[Domain]):
+    def __init__(self, database: Database, mapper: Mapper):
+        CoreCrudTableService.__init__(self, database, mapper)
 
         pk = list(self._table.primary_key.columns.values())
         assert (
@@ -101,16 +187,6 @@ class BaseCrudTableService(Generic[Domain]):
         self.table_id_name = pk[0].name
         self.table_id = getattr(self._table.c, self.table_id_name)
 
-    async def insert(self, domain: Domain) -> Awaitable:
-        query = self._table.insert()
-        value = self._mapper.map(domain, self._dao).dict()
-        await self._database.execute(query=query, values=value)
-
-    async def insert_many(self, domains: List[Domain]) -> Awaitable:
-        query = self._table.insert()
-        values = self._mapper.map_many(domains, self._dao, after=lambda x: x.dict())
-        await self._database.execute_many(query=query, values=values)
-
     async def delete_by_id(self, pk_id: Id) -> Awaitable:
         query = self._table.delete().where(self.table_id == pk_id)
         await self._database.execute(query=query)
@@ -119,12 +195,6 @@ class BaseCrudTableService(Generic[Domain]):
         query = select([self.table_id]).where(self.table_id == pk_id)
         value = await self._database.fetch_one(query=query)
         return not value is None
-
-    async def find_all(self, limit: int = 1000) -> Awaitable[List[Domain]]:
-        query = self._table.select().limit(limit)
-        records = await self._database.fetch_all(query=query)
-        results = self._map_many_to(records, self._dao, self._domain)
-        return results
 
     async def find_by_id(self, pk_id: Id) -> Awaitable[Domain]:
         query = self._table.select().where(self.table_id == pk_id)
@@ -144,7 +214,7 @@ class BaseCrudTableService(Generic[Domain]):
         where_filter = abstract_filter.build(query_filter)
         query = self._table.select().where(where_filter)
         records = await self._database.fetch_all(query=query)
-        results = self._map_many_to(records, self._dao, self._domain)
+        results = self.map_many_to(records, self._dao, self._domain)
 
         return results
 
@@ -160,7 +230,7 @@ class BaseCrudTableService(Generic[Domain]):
         where_filter = build_and_column_filter(self._table, filter_fields)
         query = self._table.select().where(where_filter)
         records = await self._database.fetch_all(query=query)
-        results = self._map_many_to(records, self._dao, self._domain)
+        results = self.map_many_to(records, self._dao, self._domain)
 
         return results
 
@@ -175,28 +245,10 @@ class BaseCrudTableService(Generic[Domain]):
 
         await self._database.execute(query=query)
 
-    def _map_many_to(self, records, dao_type, domain_type):
-        daos = [dao_type(**record) for record in records]
-        results = self._mapper.map_many(daos, domain_type)
-        return results
 
-    async def map_over(
-        self, iterator: AsyncGenerator[Any, Any]
-    ) -> AsyncGenerator[Domain, None]:
-        async for record in iterator:
-            dao = dao_type(**record)
-            result = self._mapper.map(dao, self._domain)
-            yield result
-
-
-class BaseCompositeCrudTableService(Generic[Domain]):
+class BaseCompositeCrudTableService(CoreCrudTableService[Domain]):
     def __init__(self, database: Database, mapper: Mapper):
-        self._database = database
-        self._mapper = mapper
-        self._table = self.__class__.Meta.table
-        self._dao = self.__class__.Meta.dao
-        self._domain = self.__class__.Meta.domain
-        self._seach_filters = self.__class__.Meta.seach_filters or {}
+        CoreCrudTableService.__init__(self, database, mapper)
 
         pks = list(self._table.primary_key.columns.values())
         assert len(pks) > 1, f"Compose crud must have composite key for {self._table}"
@@ -206,17 +258,6 @@ class BaseCompositeCrudTableService(Generic[Domain]):
             getattr(self._table.c, table_id_name)
             for table_id_name in self.table_id_names
         ]
-
-    async def insert(self, domain: Domain) -> Awaitable:
-        query = self._table.insert()
-        value = self._mapper.map(domain, self._dao).dict()
-        await self._database.execute(query=query, values=value)
-
-    async def insert_many(self, domains: List[Domain]) -> Awaitable:
-        query = self._table.insert()
-        values = self._mapper.map_many(domains, self._dao, after=lambda x: x.dict())
-
-        await self._database.execute_many(query=query, values=values)
 
     async def delete_by_id(self, pk_id: Id) -> Awaitable:
         identifier = self._mapper.map(pk_id, dict)

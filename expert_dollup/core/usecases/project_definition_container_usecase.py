@@ -81,11 +81,11 @@ class ProjectDefinitonContainerUseCase:
 
         try:
             await self.project_definition_value_type_validator.validate_config(
-                domain.value_type, domain.custom_attributes
+                domain.value_type, domain.config
             )
 
             await self.project_definition_value_type_validator.validate_value(
-                domain.value_type, domain.custom_attributes, domain.default_value
+                domain.value_type, domain.config, domain.default_value
             )
         except FactorySeedMissing:
             ValidationError.for_field("value_type", "Value type not found")

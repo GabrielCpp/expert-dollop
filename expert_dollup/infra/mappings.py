@@ -56,7 +56,7 @@ def map_project_definition_container_from_dao(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        custom_attributes=src.custom_attributes,
+        config=src.config,
         value_type=src.value_type,
         default_value=src.default_value,
         path=split_uuid_path(src.path),
@@ -73,7 +73,7 @@ def map_project_definition_container_to_dao(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        custom_attributes=src.custom_attributes,
+        config=src.config,
         value_type=src.value_type,
         default_value=src.default_value,
         path=join_uuid_path(src.path),
@@ -117,13 +117,35 @@ def map_project_container_to_dao(
     )
 
 
+def map_project_container_from_dao(
+    src: ProjectContainerDao, mapper: Mapper
+) -> ProjectContainer:
+    return ProjectContainer(
+        id=src.id,
+        project_id=src.project_id,
+        type_id=src.type_id,
+        path=split_uuid_path(src.path),
+        value=src.value,
+    )
+
+
 def map_project_container_meta_to_dao(
     src: ProjectContainerMeta, mapper: Mapper
 ) -> ProjectContainerMetaDao:
     return ProjectContainerMetaDao(
         project_id=src.project_id,
         type_id=src.type_id,
-        custom_attributes=src.custom_attributes,
+        state=src.state,
+    )
+
+
+def map_project_container_meta_from_dao(
+    src: ProjectContainerMetaDao, mapper: Mapper
+) -> ProjectContainerMeta:
+    return ProjectContainerMeta(
+        project_id=src.project_id,
+        type_id=src.type_id,
+        state=src.state,
     )
 
 
@@ -177,7 +199,7 @@ def map_project_definition_container_filter_to_dict(
             "is_collection": ("is_collection", None),
             "instanciate_by_default": ("instanciate_by_default", None),
             "order_index": ("order_index", None),
-            "custom_attributes": ("custom_attributes", None),
+            "config": ("config", None),
             "value_type": ("value_type", None),
             "default_value": ("default_value", None),
             "path": ("default_value", join_uuid_path),

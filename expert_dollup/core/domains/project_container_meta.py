@@ -6,4 +6,4 @@ from uuid import UUID
 class ProjectContainerMeta:
     project_id: UUID
     type_id: UUID
-    custom_attributes: dict
+    state: dict

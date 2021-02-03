@@ -34,19 +34,17 @@ class ProjectDefinitionValueTypeValidator:
 
         return self.value_types
 
-    async def validate_config(
-        self, value_type_id: str, custom_attributes: dict
-    ) -> Awaitable:
+    async def validate_config(self, value_type_id: str, config: dict) -> Awaitable:
         value_types = await self._get_values_types()
 
         if not value_type_id in value_types:
             raise Exception(f"Value type {value_type_id} not found.")
 
         value_type_schemas = value_types[value_type_id]
-        validate_instance(value_type_schemas.attributes_json_schema, custom_attributes)
+        validate_instance(value_type_schemas.attributes_json_schema, config)
 
     async def validate_value(
-        self, value_type_id: str, custom_attributes: dict, value: dict
+        self, value_type_id: str, config: dict, value: dict
     ) -> Awaitable:
         value_types = await self._get_values_types()
 
@@ -59,7 +57,7 @@ class ProjectDefinitionValueTypeValidator:
             "properties": {
                 "value": {
                     **value_type_schemas.value_json_schema,
-                    **custom_attributes.get("validator", {}),
+                    **config.get("validator", {}),
                 }
             },
         }
