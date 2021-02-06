@@ -205,3 +205,18 @@ def map_project_definition_container_filter_to_dict(
             "path": ("default_value", join_uuid_path),
         },
     )
+
+
+def map_project_container_filter_to_dict(
+    src: ProjectContainerFilter, mapper: Mapper
+) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "id": ("id", None),
+            "project_id": ("project_id", None),
+            "type_id": ("type_id", None),
+            "path": ("path", None),
+            "value": ("value", None),
+        },
+    )

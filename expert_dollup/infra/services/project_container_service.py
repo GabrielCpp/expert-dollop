@@ -1,5 +1,6 @@
 from sqlalchemy import select, join, and_, desc
-from typing import List
+from sqlalchemy.sql.expression import func
+from typing import List, Optional
 from uuid import UUID
 from collections import defaultdict
 from expert_dollup.core.domains import (
@@ -8,6 +9,7 @@ from expert_dollup.core.domains import (
     ProjectContainerMeta,
     ProjectDefinitionContainer,
     ProjectContainerTree,
+    ProjectContainerFilter,
 )
 from expert_dollup.shared.database_services import BaseCrudTableService
 from expert_dollup.infra.path_transform import join_uuid_path
@@ -28,20 +30,29 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
         dao = ProjectContainerDao
         domain = ProjectContainer
         seach_filters = {}
-        table_filter_type = None
+        table_filter_type = ProjectContainerFilter
 
-    async def find_container_tree_by_path(self, project_id: UUID, path: List[UUID]):
+    async def find_container_tree_by_path(
+        self, project_id: UUID, path: List[UUID], level: Optional[int] = None
+    ):
         path_filter = join_uuid_path(path)
+        filter_container = and_(
+            project_container_meta_table.c.project_id == project_id,
+            project_container_meta_table.c.type_id == self._table.c.type_id,
+        )
+
+        if len(path_filter) > 0:
+            filter_container = and_(
+                filter_container, self._table.c.mixed_paths.op("@>")([path_filter])
+            )
+
+        if not level is None:
+            filter_container = and_(filter_container, self._table.c.level == level)
+
         join_definition = self._table.join(
             project_definition_container_table,
             project_definition_container_table.c.id == self._table.c.type_id,
-        ).join(
-            project_container_meta_table,
-            and_(
-                project_container_meta_table.c.project_id == project_id,
-                project_container_meta_table.c.type_id == self._table.c.type_id,
-            ),
-        )
+        ).join(project_container_meta_table, filter_container)
 
         query = (
             select(
@@ -53,39 +64,11 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
             )
             .select_from(join_definition)
             .where(self._table.c.project_id == project_id)
-            .order_by(desc(self._table.c.path))
+            .order_by(desc(func.length(self._table.c.path)))
         )
 
-        # self._table.c.path == path_filter,
         records = await self._database.fetch_all(query=query)
-
-        def slice_record(record, delta, columns):
-            mapped = {}
-
-            for index, column in enumerate(columns):
-                mapped[column.name] = record[delta + index]
-
-            return mapped
-
-        def hydrate_joined_table(mapper, records, dao_table_pairs):
-            for record in records:
-                offset = 0
-                domains = []
-                daos = []
-
-                for (dao_type, domain_type, table) in dao_table_pairs:
-                    dao = dao_type(**slice_record(record, offset, table.c))
-                    daos.append(dao)
-
-                    domain = mapper.map(dao, domain_type, dao_type)
-                    domains.append(domain)
-
-                    offset += len(table.c)
-
-                yield domains, daos
-
-        results = hydrate_joined_table(
-            self._mapper,
+        results = self.hydrate_joined_table(
             records,
             [
                 (ProjectContainerDao, ProjectContainer, self._table),
@@ -102,6 +85,19 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
             ],
         )
 
+        if isinstance(level, int):
+            roots = [
+                ProjectContainerNode(
+                    container=container, definition=definition, meta=meta, children=[]
+                )
+                for (container, definition, meta), _ in results
+            ]
+        else:
+            roots = self._build_tree_from_path(results, path_filter)
+
+        return ProjectContainerTree(roots=roots)
+
+    def _build_tree_from_path(self, results, path_filter):
         node_map = defaultdict(list)
         tree_depth = None
 
@@ -115,15 +111,18 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
             if tree_depth is None:
                 tree_depth = len(node.container.path)
 
-            if tree_depth < len(node.container.path):
+            if len(node.container.path) < tree_depth:
                 children_path = join_uuid_path(
                     [*node.container.path, node.container.id]
                 )
-                assert children_path in node_map
 
+                assert children_path in node_map
                 node.children = node_map[children_path]
 
-        assert "" in node_map
-        roots = node_map[""]
+        if len(node_map) == 0:
+            roots = []
+        else:
+            assert path_filter in node_map, "The tree must have a root"
+            roots = node_map[path_filter]
 
-        return ProjectContainerTree(roots=roots)
+        return roots

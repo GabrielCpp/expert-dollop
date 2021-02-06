@@ -52,10 +52,6 @@ class ProjectDefinitonContainerUseCase:
 
     async def find_by_id(self, id: UUID) -> Awaitable[ProjectDefinitionContainer]:
         result = await self.service.find_by_id(id)
-
-        if result is None:
-            raise RessourceNotFound()
-
         return result
 
     async def find_by_project_definition(
@@ -66,11 +62,11 @@ class ProjectDefinitonContainerUseCase:
         return results
 
     async def _ensure_container_is_valid(self, domain: ProjectDefinitionContainer):
-        project_def = await self.project_definition_service.find_by_id(
+        has_project_def = await self.project_definition_service.has(
             domain.project_def_id
         )
 
-        if project_def is None:
+        if has_project_def is False:
             raise InvalidObject(
                 "unexisting_parent_project",
                 "Container must be attached to an existing parent project.",

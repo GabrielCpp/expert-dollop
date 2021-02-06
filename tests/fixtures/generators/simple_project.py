@@ -5,7 +5,8 @@ from random import choice
 from pydantic import BaseModel
 from dataclasses import dataclass
 from expert_dollup.infra.path_transform import join_path
-from .tables import Tables
+from ..fake_db_helpers import FakeExpertDollupDb as Tables
+from expert_dollup.infra.path_transform import build_path_steps
 from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
     ProjectDefinitionDao,
@@ -160,14 +161,6 @@ class SimpleProject:
     def generate_project_container_definition(self, project_def_id: UUID) -> None:
         labels = ["root", "subsection", "form", "section", "field"]
 
-        def generate_index(parents: List[str]):
-            combinaisons = []
-
-            for index in range(2, len(parents)):
-                combinaisons.append("/".join(parents[0:index]))
-
-            return combinaisons
-
         def generate_child_container(
             direct_parent: ProjectDefinitionContainerDao, parents: List[str]
         ) -> None:
@@ -194,10 +187,10 @@ class SimpleProject:
                     name=f"{direct_parent.name}_{label}_{index}",
                     project_def_id=project_def_id,
                     path=join_path(parents),
-                    mixed_paths=generate_index(parents),
+                    mixed_paths=build_path_steps(parents),
                     value_type=value_type,
                     is_collection=index == 0,
-                    instanciate_by_default=True,
+                    instanciate_by_default=direct_parent.instanciate_by_default,
                     order_index=index,
                     config=config,
                     creation_date_utc=self.fake.date_time(),
@@ -298,7 +291,9 @@ class SimpleProject:
     def generate(self):
         self.generate_project_definition()
         self.generate_translations()
+        return self
 
+    @property
     def model(self) -> Tables:
         return Tables(
             project_definitions=self.project_definitions,

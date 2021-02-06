@@ -12,6 +12,7 @@ from sqlalchemy import (
     Text,
     Integer,
 )
+from sqlalchemy.schema import FetchedValue
 from databases import Database
 from pydantic import BaseModel
 from uuid import UUID
@@ -122,6 +123,7 @@ project_container_table = Table(
     Column("type_id", postgresql.UUID(), nullable=False),
     Column("path", String, nullable=False),
     Column("value", postgresql.JSON(), nullable=True),
+    Column("level", Integer, nullable=False, server_default=FetchedValue()),
     Column("mixed_paths", ARRAY(String, dimensions=1), nullable=False),
     Column("creation_date_utc", DateTime(timezone=True), nullable=False),
 )

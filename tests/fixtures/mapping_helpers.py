@@ -1,4 +1,6 @@
 import pytest
+from typing import TypeVar, Type, Callable, Any, List
+from fastapi import Response
 from functools import singledispatch
 from injector import Injector
 from expert_dollup.app.modules.projection import bind_mapper
@@ -42,3 +44,16 @@ def normalize_request_results(dto_cls, key: str):
 
 def normalize_dtos(dtos, key: str):
     return sorted([dto.dict() for dto in dtos], key=lambda c: c[key])
+
+
+Dao = TypeVar("Dao")
+
+
+def unwrap(response: Response, obj_type: Type):
+    return obj_type(**response.json())
+
+
+def unwrap_many(
+    response: Response, dao: Type, sort_by_key: Callable[[Dao], Any]
+) -> List[Dao]:
+    return sorted([dao(**item) for item in response.json()], key=sort_by_key)

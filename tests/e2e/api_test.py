@@ -8,22 +8,6 @@ from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_db import *
 from ..fixtures import *
 
-Dao = TypeVar("Dao")
-
-
-async def populate_db(db, table, daos: Dict[str, BaseModel]):
-    await db.execute_many(table.insert(), [dao.dict() for dao in daos.values()])
-
-
-def unwrap(response: Response, dao: Type):
-    return dao(**response.json())
-
-
-def unwrap_many(
-    response: Response, dao: Type, sort_by_key: Callable[[Dao], Any]
-) -> List[Dao]:
-    return sorted([dao(**item) for item in response.json()], key=sort_by_key)
-
 
 @pytest.mark.asyncio
 async def test_given_project_definition_should_be_able_to_create_delete_update(ac):

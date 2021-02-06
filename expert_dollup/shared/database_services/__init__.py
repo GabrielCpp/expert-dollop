@@ -13,11 +13,13 @@ from typing import (
 )
 from pydantic import BaseModel
 from sqlalchemy import and_, Table
+from sqlalchemy.schema import FetchedValue
 from sqlalchemy.sql import select
 from databases import Database
 from dataclasses import dataclass
 from sqlalchemy.dialects import postgresql
 from expert_dollup.shared.automapping import Mapper
+from expert_dollup.core.exceptions import RessourceNotFound
 from .page import Page
 
 
@@ -112,6 +114,7 @@ class CoreCrudTableService(ABC, Generic[Domain]):
                 name=column.name, processor=column.type.bind_processor(dialect) or noop
             )
             for column in self._table.c
+            if not isinstance(column.server_default, FetchedValue)
         ]
 
     async def insert(self, domain: Domain) -> Awaitable:
@@ -174,6 +177,31 @@ class CoreCrudTableService(ABC, Generic[Domain]):
             result = self._mapper.map(dao, self._domain)
             yield result
 
+    def hydrate_joined_table(self, records, dao_table_pairs):
+        def slice_record(record, delta, columns):
+            mapped = {}
+
+            for index, column in enumerate(columns):
+                mapped[column.name] = record[delta + index]
+
+            return mapped
+
+        for record in records:
+            offset = 0
+            domains = []
+            daos = []
+
+            for (dao_type, domain_type, table) in dao_table_pairs:
+                dao = dao_type(**slice_record(record, offset, table.c))
+                daos.append(dao)
+
+                domain = self._mapper.map(dao, domain_type, dao_type)
+                domains.append(domain)
+
+                offset += len(table.c)
+
+            yield domains, daos
+
 
 class BaseCrudTableService(CoreCrudTableService[Domain]):
     def __init__(self, database: Database, mapper: Mapper):
@@ -200,12 +228,11 @@ class BaseCrudTableService(CoreCrudTableService[Domain]):
         query = self._table.select().where(self.table_id == pk_id)
         value = await self._database.fetch_one(query=query)
 
-        if not value is None:
-            result = self._mapper.map(self._dao(**value), self._domain)
+        if value is None:
+            raise RessourceNotFound()
 
-            return result
-
-        return None
+        result = self._mapper.map(self._dao(**value), self._domain)
+        return result
 
     async def query_by(
         self, query_filter: Query, limit: Optional[int] = None
@@ -221,12 +248,8 @@ class BaseCrudTableService(CoreCrudTableService[Domain]):
     async def find_by(
         self, query_filter: QueryFilter, limit: Optional[int] = None
     ) -> Awaitable[List[Domain]]:
-        filter_fields = (
-            query_filter
-            if self._table_filter_type is None
-            else self._mapper.map(query_filter, dict, self._table_filter_type)
-        )
-
+        assert not self._table_filter_type is None
+        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
         where_filter = build_and_column_filter(self._table, filter_fields)
         query = self._table.select().where(where_filter)
         records = await self._database.fetch_all(query=query)
@@ -234,15 +257,30 @@ class BaseCrudTableService(CoreCrudTableService[Domain]):
 
         return results
 
-    async def update_by_id(self, domain: Domain) -> Awaitable:
-        value = self._mapper.map(value, self._dao, after=lambda x: x.dict())
+    async def find_one_by(
+        self, query_filter: QueryFilter, limit: Optional[int] = None
+    ) -> Awaitable[List[Domain]]:
+        assert not self._table_filter_type is None
+        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
+        where_filter = build_and_column_filter(self._table, filter_fields)
+        query = self._table.select().where(where_filter)
+        record = await self._database.fetch_one(query=query)
 
-        query = (
-            self._table.update()
-            .where(self.table_id == value[self.table_id_name])
-            .values(**value)
-        )
+        if record is None:
+            raise RessourceNotFound()
 
+        result = self._mapper.map(self._dao(**record), self._domain)
+
+        return result
+
+    async def update(
+        self, value_filter: QueryFilter, query_filter: QueryFilter
+    ) -> Awaitable:
+        assert not self._table_filter_type is None
+        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
+        where_filter = build_and_column_filter(self._table, filter_fields)
+        update_fields = self._mapper.map(value_filter, dict, self._table_filter_type)
+        query = self._table.update().where(where_filter).values(update_fields)
         await self._database.execute(query=query)
 
 

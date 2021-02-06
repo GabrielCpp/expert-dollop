@@ -8,17 +8,14 @@ from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.infra.services import *
 
 
-class ExpertDollupDbFixture(Enum):
-    SimpleProject = "simple_project_definition.json"
-
-    def __str__(self):
-        return self.value
-
-
 class FakeExpertDollupDb(BaseModel):
     project_definition_containers: List[ProjectDefinitionContainerDao]
     project_definitions: List[ProjectDefinitionDao]
     translations: List[TranslationDao]
+
+
+async def populate_db(db, table, daos: Dict[str, BaseModel]):
+    await db.execute_many(table.insert(), [dao.dict() for dao in daos.values()])
 
 
 @inject
@@ -43,9 +40,3 @@ class DbSetupHelper:
         )
 
         await self.translation_service.insert_many_raw(fake_db.translations)
-
-    @staticmethod
-    def load_fixture(fixture: ExpertDollupDbFixture) -> FakeExpertDollupDb:
-        return FakeExpertDollupDb.parse_file(
-            join(".", "tests", "fixtures", str(fixture))
-        )

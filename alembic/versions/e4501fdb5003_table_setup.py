@@ -225,6 +225,10 @@ def create_project_tables():
         Column("mixed_paths", ARRAY(String, dimensions=1), nullable=False),
     )
 
+    op.execute(
+        "ALTER TABLE project_container ADD COLUMN level int GENERATED ALWAYS AS ((CASE WHEN LENGTH(path) > 0 THEN 1 ELSE 0 END) + (LENGTH(path) - LENGTH(REPLACE(path,'/','')))) STORED;"
+    )
+
     op.create_index(
         op.f("ix_project_container_mixed_paths"),
         "project_container",

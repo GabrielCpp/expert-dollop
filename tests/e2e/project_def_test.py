@@ -1,10 +1,10 @@
 import pytest
 from ..fixtures import (
     DbSetupHelper,
-    ExpertDollupDbFixture,
     map_dao_to_dto,
     normalize_request_results,
     normalize_dtos,
+    SimpleProject,
 )
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
@@ -59,7 +59,7 @@ class AsyncCursor:
 
 @pytest.mark.asyncio
 async def test_project_creation(ac, map_dao_to_dto):
-    db = DbSetupHelper.load_fixture(ExpertDollupDbFixture.SimpleProject)
+    db = SimpleProject().generate().model
 
     assert len(db.project_definitions) == 1
     project_definition = db.project_definitions[0]

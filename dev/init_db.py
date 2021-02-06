@@ -9,7 +9,7 @@ def generate_json(generate_layer, output_path=None):
 
     fixture = SimpleProject()
     fixture.generate()
-    model = fixture.model()
+    model = fixture.model
 
     if generate_layer == "dto":
         injector = Injector([bind_mapper])
@@ -45,5 +45,5 @@ def generate_sql():
     with engine.connect() as connection:
         fixture = SimpleProject()
         fixture.generate()
-        model = fixture.model()
+        model = fixture.model
         insert(model, connection)

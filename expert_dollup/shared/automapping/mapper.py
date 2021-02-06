@@ -31,13 +31,13 @@ class Mapper:
         from_type = type(instance) if from_type is None else from_type
 
         if not from_type in self._mappings:
-            raise Exception(f"No mapping for instance {from_type}")
+            raise Exception(f"No mapping for instance {from_type} -> {to_type}")
 
         submapper = self._mappings.get(from_type)
         object_mapper = submapper.get(to_type)
 
         if object_mapper is None:
-            raise Exception(f"No mapping for {from_type} -> {to_type}")
+            raise Exception(f"No mapping for target {from_type} -> {to_type}")
 
         result = object_mapper(instance, self)
 
