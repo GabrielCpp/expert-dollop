@@ -22,3 +22,18 @@ from .factories_dto import (
 from .object_dump_helpers import dump_to_file, set_dump_path, dump_snapshot, jsonify
 
 from .generators import SimpleProject
+
+
+class FlowRunner:
+    def __init__(self):
+        self.steps = []
+
+    def step(self, func):
+        self.steps.append(func)
+        return self
+
+    async def run(self, *args):
+        params = args
+
+        for step in self.steps:
+            params = await step(*params)

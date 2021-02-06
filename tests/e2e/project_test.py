@@ -45,58 +45,61 @@ async def test_project_loading(ac, expert_dollup_simple_project, project):
     assert expected_definition_ids == set()
 
 
-class FlowRunner:
-    def __init__(self):
-        self.steps = []
-
-    def step(self, func):
-        self.steps.append(func)
-        return self
-
-    async def run(self, *args):
-        params = args
-
-        for step in self.steps:
-            params = step(*params)
-
-
 @pytest.mark.asyncio
 async def test_mutate_project_field(ac, expert_dollup_simple_project, project):
-    response = await ac.get(f"/api/project/{project.id}/containers?level=0")
-    assert response.status_code == 200, response.text
+    runner = FlowRunner()
 
-    first_layer_tree = unwrap(response, ProjectContainerTreeDto)
-    assert len(field_layer_tree.roots) > 0
+    @runner.step
+    async def get_root_level_containers():
+        response = await ac.get(f"/api/project/{project.id}/containers?level=0")
+        assert response.status_code == 200, response.text
 
-    response = await ac.get(
-        f"/api/project/{project.id}/containers?level=4&path={first_layer_tree.roots[0].container.id}"
-    )
-    assert response.status_code == 200, response.text
+        first_layer_tree = unwrap(response, ProjectContainerTreeDto)
+        assert len(first_layer_tree.roots) > 0
 
-    field_layer_tree = unwrap(response, ProjectContainerTreeDto)
-    assert len(field_layer_tree.roots) > 0
+        return (first_layer_tree,)
 
-    target_field = next(
-        field
-        for field in field_layer_tree.roots
-        if field.definition.value_type == "INT"
-    )
-    assert isinstance(target_field.container.value["value"], int)
+    @runner.step
+    async def extract_int_field_from_root_container_fields(first_layer_tree):
+        response = await ac.get(
+            f"/api/project/{project.id}/containers?level=4&path={first_layer_tree.roots[0].container.id}"
+        )
+        assert response.status_code == 200, response.text
 
-    expected_value = {"value": target_field.container.value["value"] + 10}
-    response = await ac.put(
-        f"/api/project/{project.id}/container/{target_field.container.id}/value",
-        data=jsonify(expected_value),
-    )
-    assert response.status_code == 200, response.text
+        field_layer_tree = unwrap(response, ProjectContainerTreeDto)
+        assert len(field_layer_tree.roots) > 0
 
-    response = await ac.get(
-        f"/api/project/{project.id}/container/{target_field.container.id}"
-    )
-    assert response.status_code == 200, response.text
+        target_field = next(
+            field
+            for field in field_layer_tree.roots
+            if field.definition.value_type == "INT"
+        )
+        assert isinstance(target_field.container.value["value"], int)
 
-    actual_container = unwrap(response, ProjectContainerDto)
-    assert actual_container.value == expected_value
+        return (target_field,)
+
+    @runner.step
+    async def mutate_target_field_by_value_increment(target_field):
+        expected_value = {"value": target_field.container.value["value"] + 10}
+        response = await ac.put(
+            f"/api/project/{project.id}/container/{target_field.container.id}/value",
+            data=jsonify(expected_value),
+        )
+        assert response.status_code == 200, response.text
+
+        return (target_field, expected_value)
+
+    @runner.step
+    async def check_value_mutation_can_be_retrieved(target_field, expected_value):
+        response = await ac.get(
+            f"/api/project/{project.id}/container/{target_field.container.id}"
+        )
+        assert response.status_code == 200, response.text
+
+        actual_container = unwrap(response, ProjectContainerDto)
+        assert actual_container.value == expected_value
+
+    await runner.run()
 
 
 def test_instanciate_collection():
