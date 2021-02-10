@@ -203,17 +203,71 @@ async def test_clone_collection(ac, expert_dollup_simple_project, project):
 
 
 @pytest.mark.asyncio
-async def test_remove_collection():
-    pass
-    # response = await ac.delete(f"/api/project/{project.id}/container/{container_id}")
+async def test_remove_collection(ac, expert_dollup_simple_project, project):
+    fake_db = expert_dollup_simple_project
+    runner = FlowRunner()
+    collection_container_definition = next(
+        container_definition
+        for container_definition in fake_db.project_definition_containers
+        if container_definition.is_collection
+        and container_definition.instanciate_by_default
+        and len(split_uuid_path(container_definition.path)) == 1
+    )
+
+    @runner.step
+    async def find_container_to_clone():
+        response = await ac.get(
+            f"/api/project/{project.id}/containers?typeId={collection_container_definition.id}"
+        )
+        assert response.status_code == 200, response.text
+
+        containers_page = unwrap(response, ProjectContainerPageDto)
+        assert len(containers_page.results) == 1
+
+        collection_container = containers_page.results[0]
+        return (collection_container,)
+
+    @runner.step
+    async def delete_collection_instance(collection_container):
+        response = await ac.delete(
+            f"/api/project/{project.id}/container/{collection_container.id}"
+        )
+        assert response.status_code == 200, response.text
+
+        return (collection_container,)
+
+    @runner.step
+    async def check_that_collection_was_effectively_deleted(collection_container):
+        response = await ac.get(
+            f"/api/project/{project.id}/container/{collection_container.id}"
+        )
+        assert response.status_code == 404, response.text
+
+        query_path = "&".join(
+            [
+                "path=" + str(item)
+                for item in [*collection_container.path, collection_container.id]
+            ]
+        )
+        response = await ac.get(f"/api/project/{project.id}/children?{query_path}")
+        assert response.status_code == 200, response.text
+
+        tree = unwrap(response, ProjectContainerTreeDto)
+        assert tree.roots == []
+
+    await runner.run()
 
 
 @pytest.mark.asyncio
-async def test_remove_project():
-    pass
+async def test_remove_project(ac, project):
+    response = await ac.delete(f"/api/project/{project.id}")
+    assert response.status_code == 200, response.text
+
+    response = await ac.get(f"/api/project/{project.id}")
+    assert response.status_code == 404, response.text
 
 
 @pytest.mark.asyncio
-async def test_clone_project():
-    pass
-    # response = await ac.post(f"/api/project/{project.id}/clone")
+async def test_clone_project(ac, project):
+    response = await ac.post(f"/api/project/{project.id}/clone")
+    assert response.status_code == 200, response.text

@@ -62,9 +62,6 @@ class ProjectContainerUseCase:
             project_id, path, level
         )
 
-    async def remove(self, id: UUID) -> Awaitable:
-        await self.project_container_service.remove(id)
-
     async def update_container_value(
         self, project_id: UUID, container_id: UUID, value: dict
     ):
@@ -184,3 +181,11 @@ class ProjectContainerUseCase:
         )
 
         return subtree
+
+    async def remove_collection(
+        self, project_id: UUID, container_id: UUID
+    ) -> Awaitable:
+        container = await self.project_container_service.find_one_by(
+            ProjectContainerFilter(project_id=project_id, id=container_id)
+        )
+        await self.project_container_service.remove_collection(container)

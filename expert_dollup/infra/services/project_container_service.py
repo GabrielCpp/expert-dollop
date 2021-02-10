@@ -180,6 +180,19 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
 
         return ProjectContainerTree(roots=roots)
 
+    async def remove_collection(self, container: ProjectContainer) -> Awaitable:
+        path_filter = join_uuid_path(container.subpath)
+        query = self._table.delete().where(
+            and_(
+                or_(
+                    self._table.c.mixed_paths.op("@>")([path_filter]),
+                    self._table.c.id == container.id,
+                ),
+                self._table.c.project_id == container.project_id,
+            )
+        )
+        await self._database.execute(query=query)
+
     def _build_tree_from_path(self, results, path_filter):
         node_map = defaultdict(list)
         tree_depth = None

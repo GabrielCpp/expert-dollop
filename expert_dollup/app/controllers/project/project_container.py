@@ -108,8 +108,10 @@ async def clone_project_collection(
     )
 
 
-@router.delete("/project/{id}/container")
-async def remove_project_container(
-    id: UUID, usecase=Depends(Inject(ProjectContainerUseCase))
+@router.delete("/project/{project_id}/container/{container_id}")
+async def remove_project_container_collection(
+    project_id: UUID,
+    container_id: UUID,
+    usecase=Depends(Inject(ProjectContainerUseCase)),
 ):
-    await usecase.remove(id)
+    await usecase.remove_collection(project_id, container_id)

@@ -62,7 +62,7 @@ class TranslationUseCase:
     async def find_by_ressource_locale(
         self, paginated_query: PaginatedRessource[TranslationRessourceLocaleQuery]
     ) -> Awaitable[Page[Translation]]:
-        return await self.service.paginated_find_by(
+        return await self.service.paginated_query(
             paginated_query.query,
             paginated_query.limit,
             paginated_query.next_page_token,

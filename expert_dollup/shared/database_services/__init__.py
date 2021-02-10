@@ -132,6 +132,84 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         results = self.map_many_to(records, self._dao, self._domain)
         return results
 
+    async def find_by(
+        self,
+        query_filter: QueryFilter,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> Awaitable[List[Domain]]:
+        assert not self._table_filter_type is None
+        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
+        where_filter = build_and_column_filter(self._table, filter_fields)
+        query = self._table.select().where(where_filter)
+
+        if not limit is None:
+            query = query.limit(limit)
+
+        if not offset is None:
+            query = query.offset(offset)
+
+        records = await self._database.fetch_all(query=query)
+        results = self.map_many_to(records, self._dao, self._domain)
+
+        return results
+
+    async def find_one_by(self, query_filter: QueryFilter) -> Awaitable[List[Domain]]:
+        assert not self._table_filter_type is None
+        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
+        where_filter = build_and_column_filter(self._table, filter_fields)
+        query = self._table.select().where(where_filter)
+        record = await self._database.fetch_one(query=query)
+
+        if record is None:
+            raise RessourceNotFound()
+
+        result = self._mapper.map(self._dao(**record), self._domain)
+
+        return result
+
+    async def query_by(
+        self,
+        query_filter: Query,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> Awaitable[List[Domain]]:
+        abstract_filter = self._seach_filters[type(query_filter)]
+        where_filter = abstract_filter.build(query_filter)
+        query = self._table.select().where(where_filter)
+
+        if not limit is None:
+            query = query.limit(limit)
+
+        if not offset is None:
+            query = query.offset(offset)
+
+        records = await self._database.fetch_all(query=query)
+        results = self.map_many_to(records, self._dao, self._domain)
+
+        return results
+
+    async def paginated_query(
+        self,
+        query_filter: Query,
+        limit: int,
+        next_page_token: Optional[str],
+    ) -> Awaitable[Page[Domain]]:
+        page_index = 0 if next_page_token is None else int(next_page_token)
+        results = await self.query_by(query_filter, limit, limit * page_index)
+        return Page(
+            next_page_token=str(page_index + 1),
+            limit=limit,
+            results=results,
+        )
+
+    async def remove_by(self, query_filter: QueryFilter) -> Awaitable:
+        assert not self._table_filter_type is None
+        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
+        where_filter = build_and_column_filter(self._table, filter_fields)
+        query = self._table.select().where(where_filter)
+        records = await self._database.execute(query)
+
     @abstractmethod
     async def delete_by_id(self, pk_id: Id) -> Awaitable:
         pass
@@ -143,6 +221,16 @@ class CoreCrudTableService(ABC, Generic[Domain]):
     @abstractmethod
     async def find_by_id(self, pk_id: Id) -> Awaitable[Domain]:
         pass
+
+    async def update(
+        self, value_filter: QueryFilter, query_filter: QueryFilter
+    ) -> Awaitable:
+        assert not self._table_filter_type is None
+        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
+        where_filter = build_and_column_filter(self._table, filter_fields)
+        update_fields = self._mapper.map(value_filter, dict, self._table_filter_type)
+        query = self._table.update().where(where_filter).values(update_fields)
+        await self._database.execute(query=query)
 
     async def insert_many_raw(self, daos: List[BaseModel]) -> Awaitable:
         columns_name = [
@@ -234,55 +322,6 @@ class BaseCrudTableService(CoreCrudTableService[Domain]):
         result = self._mapper.map(self._dao(**value), self._domain)
         return result
 
-    async def query_by(
-        self, query_filter: Query, limit: Optional[int] = None
-    ) -> Awaitable[List[Domain]]:
-        abstract_filter = self._seach_filters[type(query_filter)]
-        where_filter = abstract_filter.build(query_filter)
-        query = self._table.select().where(where_filter)
-        records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
-
-        return results
-
-    async def find_by(
-        self, query_filter: QueryFilter, limit: Optional[int] = None
-    ) -> Awaitable[List[Domain]]:
-        assert not self._table_filter_type is None
-        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
-        where_filter = build_and_column_filter(self._table, filter_fields)
-        query = self._table.select().where(where_filter)
-        records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
-
-        return results
-
-    async def find_one_by(
-        self, query_filter: QueryFilter, limit: Optional[int] = None
-    ) -> Awaitable[List[Domain]]:
-        assert not self._table_filter_type is None
-        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
-        where_filter = build_and_column_filter(self._table, filter_fields)
-        query = self._table.select().where(where_filter)
-        record = await self._database.fetch_one(query=query)
-
-        if record is None:
-            raise RessourceNotFound()
-
-        result = self._mapper.map(self._dao(**record), self._domain)
-
-        return result
-
-    async def update(
-        self, value_filter: QueryFilter, query_filter: QueryFilter
-    ) -> Awaitable:
-        assert not self._table_filter_type is None
-        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
-        where_filter = build_and_column_filter(self._table, filter_fields)
-        update_fields = self._mapper.map(value_filter, dict, self._table_filter_type)
-        query = self._table.update().where(where_filter).values(update_fields)
-        await self._database.execute(query=query)
-
 
 class BaseCompositeCrudTableService(CoreCrudTableService[Domain]):
     def __init__(self, database: Database, mapper: Mapper):
@@ -322,50 +361,6 @@ class BaseCompositeCrudTableService(CoreCrudTableService[Domain]):
             return result
 
         return None
-
-    async def find_by(
-        self,
-        query_filter: Query,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-    ) -> Awaitable[List[Domain]]:
-        abstract_filter = self._seach_filters[type(query_filter)]
-        where_filter = abstract_filter.build(query_filter)
-        query = self._table.select().where(where_filter)
-
-        if not limit is None:
-            query = query.limit(limit)
-
-        if not offset is None:
-            query = query.offset(offset)
-
-        records = await self._database.fetch_all(query=query)
-        daos = [self._dao(**value) for value in records]
-        results = self._mapper.map_many(daos, self._domain)
-
-        return results
-
-    async def paginated_find_by(
-        self,
-        query_filter: Query,
-        limit: int,
-        next_page_token: Optional[str],
-    ) -> Awaitable[Page[Domain]]:
-        page_index = 0 if next_page_token is None else int(next_page_token)
-        results = await self.find_by(query_filter, limit, limit * page_index)
-        return Page(
-            next_page_token=str(page_index + 1),
-            limit=limit,
-            results=results,
-        )
-
-    async def update_by_id(self, domain: Domain) -> Awaitable:
-        value = self._mapper.map(value, self._dao, after=lambda x: x.dict())
-
-        where_filter = self._build_id_filter(value)
-        query = self._table.update().where(where_filter).values(**value)
-
-        await self._database.execute(query=query)
 
     def _build_id_filter(self, identifier: dict):
         name = self.table_id_names[0]

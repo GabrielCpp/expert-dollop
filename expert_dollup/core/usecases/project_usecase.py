@@ -9,6 +9,7 @@ from expert_dollup.core.domains import (
     ProjectContainer,
     ProjectContainerMeta,
     ProjectDefinitionContainerFilter,
+    ProjectContainerFilter,
 )
 from expert_dollup.core.builders import RessourceBuilder
 from expert_dollup.infra.services import (
@@ -52,15 +53,14 @@ class ProjectUseCase:
         return await self.find_by_id(domain.id)
 
     async def remove_by_id(self, id: UUID) -> Awaitable:
+        await self.project_container_service.remove_by(
+            ProjectContainerFilter(project_id=project_id)
+        )
         await self.service.delete_by_id(id)
         await self.ressource_service.delete_by_id(id)
 
     async def find_by_id(self, id: UUID) -> Awaitable[Project]:
         result = await self.service.find_by_id(id)
-
-        if result is None:
-            raise RessourceNotFound()
-
         return result
 
     async def _ensure_project_valid(self, project: Project):
