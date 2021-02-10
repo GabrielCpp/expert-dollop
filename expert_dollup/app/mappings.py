@@ -114,7 +114,17 @@ def map_project_container_to_dto(
     )
 
 
-def map_project_container_meto_to_dto(
+def map_project_container_page_to_dto(
+    src: Page, mapper: Mapper
+) -> ProjectContainerPageDto:
+    return ProjectContainerPageDto(
+        next_page_token=src.next_page_token,
+        limit=src.limit,
+        results=mapper.map_many(src.results, ProjectContainerDto),
+    )
+
+
+def map_project_container_meta_to_dto(
     src: ProjectContainerMeta, mapper: Mapper
 ) -> ProjectContainerMetaDto:
     return ProjectContainerMetaDto(

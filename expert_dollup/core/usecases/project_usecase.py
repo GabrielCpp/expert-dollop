@@ -75,7 +75,9 @@ class ProjectUseCase:
             ProjectDefinitionContainerFilter(project_def_id=project.project_def_id)
         )
 
-        for container_definition in container_definitions:
+        children_to_skip = set()
+
+        for container_definition in sorted(container_definitions, key=lambda d: d.path):
             container_meta = ProjectContainerMeta(
                 project_id=project.id,
                 type_id=container_definition.id,
@@ -84,20 +86,25 @@ class ProjectUseCase:
 
             project_container_metas.append(container_meta)
 
-            if container_definition.instanciate_by_default == True:
-                container_id = type_to_instance_id[container_definition.id]
-                container = ProjectContainer(
-                    id=container_id,
-                    project_id=project.id,
-                    type_id=container_definition.id,
-                    path=[
-                        type_to_instance_id[def_id]
-                        for def_id in container_definition.path
-                    ],
-                    value=container_definition.default_value,
-                )
+            if any(item in children_to_skip for item in container_definition.path):
+                continue
 
-                project_containers.append(container)
+            if container_definition.instanciate_by_default == False:
+                children_to_skip.add(container_definition.id)
+                continue
+
+            container_id = type_to_instance_id[container_definition.id]
+            container = ProjectContainer(
+                id=container_id,
+                project_id=project.id,
+                type_id=container_definition.id,
+                path=[
+                    type_to_instance_id[def_id] for def_id in container_definition.path
+                ],
+                value=container_definition.default_value,
+            )
+
+            project_containers.append(container)
 
         await self.project_container_service.insert_many(project_containers)
         await self.project_container_meta_service.insert_many(project_container_metas)

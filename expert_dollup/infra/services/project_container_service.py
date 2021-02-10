@@ -1,6 +1,6 @@
-from sqlalchemy import select, join, and_, desc
+from sqlalchemy import select, join, and_, desc, or_
 from sqlalchemy.sql.expression import func
-from typing import List, Optional
+from typing import List, Optional, Awaitable
 from uuid import UUID
 from collections import defaultdict
 from expert_dollup.core.domains import (
@@ -32,9 +32,86 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
         seach_filters = {}
         table_filter_type = ProjectContainerFilter
 
-    async def find_container_tree_by_path(
+    async def find_subtree(self, container: ProjectContainer):
+        path_filter = join_uuid_path(container.subpath)
+
+        join_definition = self._table.join(
+            project_definition_container_table,
+            project_definition_container_table.c.id == self._table.c.type_id,
+        ).join(
+            project_container_meta_table,
+            and_(
+                project_container_meta_table.c.project_id == container.project_id,
+                project_container_meta_table.c.type_id == self._table.c.type_id,
+            ),
+        )
+
+        query = (
+            select(
+                [
+                    self._table,
+                    project_definition_container_table,
+                    project_container_meta_table,
+                ]
+            )
+            .select_from(join_definition)
+            .where(
+                and_(
+                    self._table.c.project_id == container.project_id,
+                    or_(
+                        self._table.c.mixed_paths.op("@>")([path_filter]),
+                        self._table.c.id == container.id,
+                    ),
+                )
+            )
+            .order_by(desc(func.length(self._table.c.path)))
+        )
+
+        records = await self._database.fetch_all(query=query)
+        results = self.hydrate_joined_table(
+            records,
+            [
+                (ProjectContainerDao, ProjectContainer, self._table),
+                (
+                    ProjectDefinitionContainerDao,
+                    ProjectDefinitionContainer,
+                    project_definition_container_table,
+                ),
+                (
+                    ProjectContainerMetaDao,
+                    ProjectContainerMeta,
+                    project_container_meta_table,
+                ),
+            ],
+        )
+
+        roots = self._build_tree_from_path(results, join_uuid_path(container.path))
+        assert len(roots) == 1, f"Len is {len(roots)}"
+
+        return ProjectContainerTree(roots=roots)
+
+    async def find_children(
+        self, project_id: UUID, path: List[UUID]
+    ) -> Awaitable[List[ProjectContainer]]:
+        path_filter = join_uuid_path(path)
+        query = (
+            select([self._table])
+            .where(
+                and_(
+                    self._table.c.project_id == project_id,
+                    self._table.c.mixed_paths.op("@>")([path_filter]),
+                )
+            )
+            .order_by(desc(func.length(self._table.c.path)))
+        )
+
+        records = await self._database.fetch_all(query=query)
+        results = self.map_many_to(records, self._dao, self._domain)
+        return results
+
+    async def find_children_tree(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None
-    ):
+    ) -> Awaitable[ProjectContainerTree]:
         path_filter = join_uuid_path(path)
         filter_container = and_(
             project_container_meta_table.c.project_id == project_id,
@@ -52,7 +129,13 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
         join_definition = self._table.join(
             project_definition_container_table,
             project_definition_container_table.c.id == self._table.c.type_id,
-        ).join(project_container_meta_table, filter_container)
+        ).join(
+            project_container_meta_table,
+            and_(
+                project_container_meta_table.c.project_id == project_id,
+                project_container_meta_table.c.type_id == self._table.c.type_id,
+            ),
+        )
 
         query = (
             select(
@@ -63,7 +146,7 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
                 ]
             )
             .select_from(join_definition)
-            .where(self._table.c.project_id == project_id)
+            .where(and_(self._table.c.project_id == project_id, filter_container))
             .order_by(desc(func.length(self._table.c.path)))
         )
 
@@ -117,7 +200,9 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
                 )
 
                 assert children_path in node_map
-                node.children = node_map[children_path]
+                node.children = sorted(
+                    node_map[children_path], key=lambda child: child.container.type_id
+                )
 
         if len(node_map) == 0:
             roots = []

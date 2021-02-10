@@ -19,8 +19,10 @@ def set_dump_path(path: str) -> None:
 
 
 def dump_to_file(json_serializable):
+    global index
 
     path = os.path.join(dump_file_path, f"{index}.txt")
+    index = index + 1
 
     with open(path, "w") as outfile:
         json.dump(json_serializable, outfile, indent=2, sort_keys=True, cls=UUIDEncoder)

@@ -4,8 +4,13 @@ from uuid import UUID
 from expert_dollup.shared.starlette_injection import Inject
 from expert_dollup.shared.handlers import RequestHandler, MappingChain
 from expert_dollup.core.usecases import ProjectContainerUseCase
-from expert_dollup.core.domains import ProjectContainer
-from expert_dollup.app.dtos import ProjectContainerDto, ProjectContainerTreeDto
+from expert_dollup.core.domains import ProjectContainer, ProjectContainerFilter
+from expert_dollup.app.dtos import (
+    ProjectContainerDto,
+    ProjectContainerTreeDto,
+    ProjectContainerCollectionTargetDto,
+    ProjectContainerPageDto,
+)
 
 router = APIRouter()
 
@@ -23,7 +28,21 @@ async def get_project_container(
 
 
 @router.get("/project/{project_id}/containers")
-async def get_project_containers_by_path(
+async def find_project_containers_by(
+    project_id: UUID,
+    type_id: UUID = Query(alias="typeId", default=None),
+    usecase=Depends(Inject(ProjectContainerUseCase)),
+    handler=Depends(Inject(RequestHandler)),
+):
+    return await handler.forward(
+        usecase.find_by_type,
+        {"project_id": project_id, "type_id": type_id},
+        MappingChain(out_dto=ProjectContainerPageDto),
+    )
+
+
+@router.get("/project/{project_id}/children")
+async def find_project_children_tree(
     project_id: UUID,
     path: List[UUID] = Query(alias="path", default=[]),
     level: Optional[int] = Query(alias="level", default=None),
@@ -37,14 +56,56 @@ async def get_project_containers_by_path(
     )
 
 
+@router.get("/project/{project_id}/container/{container_id}/subtree")
+async def find_project_container_subtree(
+    project_id: UUID,
+    container_id: UUID,
+    usecase=Depends(Inject(ProjectContainerUseCase)),
+    handler=Depends(Inject(RequestHandler)),
+):
+    return await handler.forward(
+        usecase.find_subtree,
+        {"project_id": project_id, "container_id": container_id},
+        MappingChain(out_dto=ProjectContainerTreeDto),
+    )
+
+
 @router.put("/project/{project_id}/container/{container_id}/value")
-async def add_project_container_collection(
+async def mutate_project_field(
     project_id: UUID,
     container_id: UUID,
     value: dict,
     usecase=Depends(Inject(ProjectContainerUseCase)),
 ):
     return await usecase.update_container_value(project_id, container_id, value)
+
+
+@router.post("/project/{project_id}/container/collection")
+async def add_project_collection(
+    project_id: UUID,
+    collection_target: ProjectContainerCollectionTargetDto,
+    usecase=Depends(Inject(ProjectContainerUseCase)),
+    handler=Depends(Inject(RequestHandler)),
+):
+    return await handler.forward(
+        usecase.add_collection,
+        {"project_id": project_id, **collection_target.dict()},
+        MappingChain(out_dto=ProjectContainerTreeDto),
+    )
+
+
+@router.post("/project/{project_id}/container/{collection_container_id}/clone")
+async def clone_project_collection(
+    project_id: UUID,
+    collection_container_id: UUID,
+    usecase=Depends(Inject(ProjectContainerUseCase)),
+    handler=Depends(Inject(RequestHandler)),
+):
+    return await handler.forward(
+        usecase.clone_collection,
+        {"project_id": project_id, "container_id": collection_container_id},
+        MappingChain(out_dto=ProjectContainerTreeDto),
+    )
 
 
 @router.delete("/project/{id}/container")

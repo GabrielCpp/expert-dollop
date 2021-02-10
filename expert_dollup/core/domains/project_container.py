@@ -12,6 +12,10 @@ class ProjectContainer:
     path: List[UUID]
     value: dict
 
+    @property
+    def subpath(self):
+        return [*self.path, self.id]
+
 
 class ProjectContainerFilter(QueryFilter):
     id: Optional[UUID]

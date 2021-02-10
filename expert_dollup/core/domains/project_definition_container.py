@@ -18,6 +18,10 @@ class ProjectDefinitionContainer:
     default_value: Optional[dict]
     path: List[UUID]
 
+    @property
+    def subpath(self):
+        return [*self.path, self.id]
+
 
 class ProjectDefinitionContainerFilter(QueryFilter):
     id: Optional[UUID]
