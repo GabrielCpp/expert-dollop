@@ -190,7 +190,7 @@ class SimpleProject:
                     mixed_paths=build_path_steps(parents),
                     value_type=value_type,
                     is_collection=index == 0,
-                    instanciate_by_default=direct_parent.instanciate_by_default,
+                    instanciate_by_default=True,
                     order_index=index,
                     config=config,
                     creation_date_utc=self.fake.date_time(),

@@ -1,6 +1,7 @@
 from typing import List
 from datetime import datetime
 from uuid import UUID
+from dataclasses import asdict
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import map_dict_keys
 from expert_dollup.infra.path_transform import (
@@ -135,7 +136,7 @@ def map_project_container_meta_to_dao(
     return ProjectContainerMetaDao(
         project_id=src.project_id,
         type_id=src.type_id,
-        state=src.state,
+        state=asdict(src.state),
     )
 
 
@@ -145,7 +146,7 @@ def map_project_container_meta_from_dao(
     return ProjectContainerMeta(
         project_id=src.project_id,
         type_id=src.type_id,
-        state=src.state,
+        state=ProjectContainerMetaState(**src.state),
     )
 
 

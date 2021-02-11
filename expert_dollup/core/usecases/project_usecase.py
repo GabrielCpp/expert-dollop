@@ -11,6 +11,7 @@ from expert_dollup.core.domains import (
     ProjectDefinitionContainerFilter,
     ProjectContainerFilter,
     ProjectContainerMetaFilter,
+    ProjectContainerMetaState,
 )
 from expert_dollup.core.builders import RessourceBuilder
 from expert_dollup.infra.services import (
@@ -133,7 +134,10 @@ class ProjectUseCase:
             container_meta = ProjectContainerMeta(
                 project_id=project.id,
                 type_id=container_definition.id,
-                state={},
+                state=ProjectContainerMetaState(
+                    is_visible=container_definition.instanciate_by_default,
+                    selected_child=None,
+                ),
             )
 
             project_container_metas.append(container_meta)

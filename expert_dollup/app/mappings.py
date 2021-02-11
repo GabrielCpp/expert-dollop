@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import Page
 from expert_dollup.app.dtos import *
@@ -128,7 +129,9 @@ def map_project_container_meta_to_dto(
     src: ProjectContainerMeta, mapper: Mapper
 ) -> ProjectContainerMetaDto:
     return ProjectContainerMetaDto(
-        project_id=src.project_id, type_id=src.type_id, state=src.state
+        project_id=src.project_id,
+        type_id=src.type_id,
+        state=ProjectContainerMetaStateDto(**asdict(src.state)),
     )
 
 
