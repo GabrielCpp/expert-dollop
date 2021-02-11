@@ -28,7 +28,10 @@ def over_tree(tree: ProjectContainerTreeDto):
 def assert_valid_tree_for_definition(tree, fake_db, predicate):
     expected_definition_ids = {
         definition.id
-        for definition in fake_db.project_definition_containers
+        for definition in sorted(
+            fake_db.project_definition_containers,
+            key=lambda d: (len(d.path), d.id),
+        )
         if predicate(definition)
     }
 
@@ -41,6 +44,20 @@ def assert_valid_tree_for_definition(tree, fake_db, predicate):
 
 @pytest.mark.asyncio
 async def test_project_loading(ac, expert_dollup_simple_project, project):
+    class IsDefinitionInstanciated:
+        def __init__(self):
+            self.disqualifying_parent = set()
+
+        def __call__(self, definition) -> bool:
+            if definition.instanciate_by_default:
+                return not any(
+                    str(parent_id) in definition.path
+                    for parent_id in self.disqualifying_parent
+                )
+
+            self.disqualifying_parent.add(definition.id)
+            return False
+
     fake_db = expert_dollup_simple_project
 
     response = await ac.get(f"/api/project/{project.id}/children")
@@ -48,9 +65,7 @@ async def test_project_loading(ac, expert_dollup_simple_project, project):
 
     project_container_tree = unwrap(response, ProjectContainerTreeDto)
     assert_valid_tree_for_definition(
-        project_container_tree,
-        fake_db,
-        lambda definition: definition.instanciate_by_default,
+        project_container_tree, fake_db, IsDefinitionInstanciated()
     )
 
 
