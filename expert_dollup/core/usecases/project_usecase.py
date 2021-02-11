@@ -104,12 +104,12 @@ class ProjectUseCase:
 
         return cloned_project
 
-    async def remove_by_id(self, id: UUID) -> Awaitable:
+    async def remove_by_id(self, project_id: UUID) -> Awaitable:
         await self.project_container_service.remove_by(
             ProjectContainerFilter(project_id=project_id)
         )
-        await self.service.delete_by_id(id)
-        await self.ressource_service.delete_by_id(id)
+        await self.service.delete_by_id(project_id)
+        await self.ressource_service.delete_by_id(project_id)
 
     async def find_by_id(self, id: UUID) -> Awaitable[Project]:
         result = await self.service.find_by_id(id)
