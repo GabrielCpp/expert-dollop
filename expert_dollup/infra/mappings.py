@@ -220,3 +220,15 @@ def map_project_container_filter_to_dict(
             "value": ("value", None),
         },
     )
+
+
+def map_project_container_meta_filter_to_dict(
+    src: ProjectContainerMetaFilter, mapper: Mapper
+) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "project_id": ("project_id", None),
+            "type_id": ("type_id", None),
+        },
+    )

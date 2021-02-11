@@ -271,3 +271,11 @@ async def test_remove_project(ac, project):
 async def test_clone_project(ac, project):
     response = await ac.post(f"/api/project/{project.id}/clone")
     assert response.status_code == 200, response.text
+
+    cloned_project = unwrap(response, ProjectDto)
+    assert cloned_project.id != project.id
+
+    response = await ac.get(f"/api/project/{cloned_project.id}")
+    assert response.status_code == 200, response.text
+
+    # TODO: Check result project have same content than before

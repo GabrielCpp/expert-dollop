@@ -10,6 +10,7 @@ from expert_dollup.core.domains import (
     ProjectContainerMeta,
     ProjectDefinitionContainerFilter,
     ProjectContainerFilter,
+    ProjectContainerMetaFilter,
 )
 from expert_dollup.core.builders import RessourceBuilder
 from expert_dollup.infra.services import (
@@ -43,7 +44,7 @@ class ProjectUseCase:
         self.ressource_builder = ressource_builder
         self.ressource_service = ressource_service
 
-    async def add(self, domain: Project) -> Awaitable:
+    async def add(self, domain: Project) -> Awaitable[Project]:
         ressource = self.ressource_builder.build(domain.id, domain.id, "project")
 
         await self._ensure_project_valid(domain)
@@ -51,6 +52,57 @@ class ProjectUseCase:
         await self.service.insert(domain)
         await self._create_container_from_project_definition(domain)
         return await self.find_by_id(domain.id)
+
+    async def clone(self, project_id: UUID) -> Awaitable[Project]:
+        project = await self.find_by_id(project_id)
+        cloned_project = Project(
+            id=uuid4(),
+            name=project.name,
+            is_staged=False,
+            project_def_id=project.project_def_id,
+            datasheet_id=project.datasheet_id,
+        )
+
+        ressource = self.ressource_builder.build(
+            cloned_project.id, cloned_project.id, "project"
+        )
+        await self.ressource_service.insert(ressource)
+        await self.service.insert(cloned_project)
+
+        containers = await self.project_container_service.find_by(
+            ProjectContainerFilter(project_id=project_id)
+        )
+
+        id_mapping = defaultdict(uuid4)
+        project_containers = [
+            ProjectContainer(
+                id=id_mapping[container.id],
+                project_id=cloned_project.id,
+                type_id=container.type_id,
+                path=[id_mapping[container_id] for container_id in container.path],
+                value=container.value,
+            )
+            for container in containers
+        ]
+
+        await self.project_container_service.insert_many(project_containers)
+
+        container_metas = await self.project_container_meta_service.find_by(
+            ProjectContainerMetaFilter(project_id=project_id)
+        )
+
+        project_container_metas = [
+            ProjectContainerMeta(
+                project_id=cloned_project.id,
+                type_id=container_meta.type_id,
+                state=container_meta.state,
+            )
+            for container_meta in container_metas
+        ]
+
+        await self.project_container_meta_service.insert_many(project_container_metas)
+
+        return cloned_project
 
     async def remove_by_id(self, id: UUID) -> Awaitable:
         await self.project_container_service.remove_by(

@@ -25,12 +25,24 @@ async def create_project(
     project: ProjectDto,
     usecase=Depends(Inject(ProjectUseCase)),
     handler=Depends(Inject(RequestHandler)),
-    request_handler=Depends(Inject(RequestHandler)),
 ):
-    return await request_handler.handle(
+    return await handler.handle(
         usecase.add,
         project,
         MappingChain(dto=ProjectDto, domain=Project, out_dto=ProjectDto),
+    )
+
+
+@router.post("/project/{project_id}/clone")
+async def clone_project(
+    project_id: UUID,
+    usecase=Depends(Inject(ProjectUseCase)),
+    handler=Depends(Inject(RequestHandler)),
+):
+    return await handler.handle(
+        usecase.clone,
+        project_id,
+        MappingChain(out_dto=ProjectDto),
     )
 
 
