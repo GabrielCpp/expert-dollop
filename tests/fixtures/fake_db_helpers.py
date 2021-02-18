@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from databases import Database
 from os.path import join
 from injector import inject
@@ -9,9 +9,11 @@ from expert_dollup.infra.services import *
 
 
 class FakeExpertDollupDb(BaseModel):
-    project_definition_containers: List[ProjectDefinitionContainerDao]
-    project_definitions: List[ProjectDefinitionDao]
-    translations: List[TranslationDao]
+    project_definition_containers: List[ProjectDefinitionContainerDao] = Field(
+        default_factory=list
+    )
+    project_definitions: List[ProjectDefinitionDao] = Field(default_factory=list)
+    translations: List[TranslationDao] = Field(default_factory=list)
 
 
 async def populate_db(db, table, daos: Dict[str, BaseModel]):

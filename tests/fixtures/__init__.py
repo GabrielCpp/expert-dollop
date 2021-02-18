@@ -17,11 +17,12 @@ from .factories_dto import (
     ProjectDefinitionContainerDtoFactory,
     TranslationDtoFactory,
     ProjectDtoFactory,
+    FormulaDtoFactory,
 )
 
 from .object_dump_helpers import dump_to_file, set_dump_path, dump_snapshot, jsonify
 
-from .generators import SimpleProject
+from .generators import SimpleProject, MiniProject
 
 
 class FlowRunner:

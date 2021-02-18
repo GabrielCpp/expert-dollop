@@ -197,3 +197,76 @@ setting_table = Table(
 class SettingDao(BaseModel):
     key: str
     value: Union[dict, str, bool, int, list]
+
+
+project_definition_formula_table = Table(
+    "project_definition_formula",
+    metadata,
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("project_def_id", postgresql.UUID(), nullable=False),
+    Column("attached_to_type_id", postgresql.UUID(), nullable=False),
+    Column("name", String, nullable=False),
+    Column("expression", String, nullable=False),
+    Column("generated_ast", String, nullable=False),
+)
+
+
+class ProjectDefinitionFormulaDao(BaseModel):
+    id: UUID
+    project_def_id: UUID
+    attached_to_type_id: UUID
+    name: str
+    expression: str
+    generated_ast: str
+
+
+project_definition_formula_dependency_table = Table(
+    "project_definition_formula_dependencies",
+    metadata,
+    Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("depend_on_formula_id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("project_def_id", postgresql.UUID(), nullable=False),
+)
+
+
+class ProjectDefinitionFormulaDependencyDao(BaseModel):
+    formula_id: UUID
+    depend_on_formula_id: UUID
+    project_def_id: UUID
+
+
+project_definition_formula_container_dependency_table = Table(
+    "project_definition_formula_container_dependencies",
+    metadata,
+    Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column(
+        "depend_on_container_id",
+        postgresql.UUID(),
+        nullable=False,
+        primary_key=True,
+    ),
+    Column("project_def_id", postgresql.UUID(), nullable=False),
+)
+
+
+class ProjectDefinitionFormulaContainerDependencyDao(BaseModel):
+    formula_id: UUID
+    depend_on_container_id: UUID
+    project_def_id: UUID
+
+
+project_formula_cache_table = Table(
+    "project_formula_cache",
+    metadata,
+    Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("calculation_details", String, nullable=False),
+    Column("result", postgresql.JSON(), nullable=False),
+)
+
+
+class ProjectFormulaCacheDao(BaseModel):
+    project_id: UUID
+    formula_id: UUID
+    calculation_details: str
+    result: Any

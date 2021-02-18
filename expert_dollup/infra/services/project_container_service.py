@@ -1,6 +1,6 @@
 from sqlalchemy import select, join, and_, desc, or_
 from sqlalchemy.sql.expression import func
-from typing import List, Optional, Awaitable
+from typing import List, Optional, Awaitable, Any, Dict
 from uuid import UUID
 from collections import defaultdict
 from expert_dollup.core.domains import (
@@ -10,9 +10,10 @@ from expert_dollup.core.domains import (
     ProjectDefinitionContainer,
     ProjectContainerTree,
     ProjectContainerFilter,
+    FieldNode,
 )
 from expert_dollup.shared.database_services import BaseCrudTableService
-from expert_dollup.infra.path_transform import join_uuid_path
+from expert_dollup.infra.path_transform import join_uuid_path, split_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
     project_container_table,
@@ -224,3 +225,39 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
             roots = node_map[path_filter]
 
         return roots
+
+    async def get_all_fields(self, project_id: UUID) -> Awaitable[List[FieldNode]]:
+        join_definition = self._table.join(
+            project_definition_container_table,
+            project_definition_container_table.c.id == self._table.c.type_id,
+        )
+
+        query = (
+            select(
+                [
+                    project_definition_container_table.c.name,
+                    project_definition_container_table.c.id,
+                    project_definition_container_table.c.path,
+                    self._table.c.value,
+                ]
+            )
+            .select_from(join_definition)
+            .where(
+                and_(
+                    self._table.c.project_id == project_id,
+                    self._table.c.value.op("->")("value") != None,
+                )
+            )
+        )
+
+        records = await self._database.fetch_all(query=query)
+
+        return [
+            FieldNode(
+                id=record.get("id"),
+                name=record.get("name"),
+                path=split_uuid_path(record.get("path")),
+                expression=record.get("value")["value"],
+            )
+            for record in records
+        ]

@@ -6,3 +6,5 @@ from .project_container_service import ProjectContainerService
 from .project_container_meta_service import ProjectContainerMetaService
 from .translation_service import TranslationService
 from .ressource_service import RessourceService
+from .formula_service import FormulaService
+from .formula_cache_service import FormulaCacheService

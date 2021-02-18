@@ -1,3 +1,4 @@
+import astor
 from dataclasses import asdict
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import Page
@@ -195,4 +196,26 @@ def map_page_translation_to_dto(
         next_page_token=src.next_page_token,
         limit=src.limit,
         results=mapper.map_many(src.results, TranslationDto, Translation),
+    )
+
+
+def map_formula_from_dto(src: FormulaDto, mapper: Mapper) -> Formula:
+    return Formula(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        attached_to_type_id=src.attached_to_type_id,
+        name=src.name,
+        expression=src.expression,
+        generated_ast=None,
+    )
+
+
+def map_formula_to_dto(src: Formula, mapper: Mapper) -> FormulaDto:
+    return FormulaDto(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        attached_to_type_id=src.attached_to_type_id,
+        name=src.name,
+        expression=src.expression,
+        generated_ast=astor.to_source(src.generated_ast),
     )

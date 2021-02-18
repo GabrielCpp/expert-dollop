@@ -47,3 +47,15 @@ class ProjectDtoFactory(factory.Factory):
     is_staged: bool = False
     project_def_id: UUID = factory.LazyFunction(uuid4)
     datasheet_id: UUID = factory.LazyFunction(uuid4)
+
+
+class FormulaDtoFactory(factory.Factory):
+    class Meta:
+        model = FormulaDto
+
+    id = factory.LazyFunction(uuid4)
+    project_def_id = factory.LazyFunction(uuid4)
+    attached_to_type_id = factory.LazyFunction(uuid4)
+    name = factory.Sequence(lambda n: f"formula{n}")
+    expression = "a+b*c/2"
+    generated_ast = ""

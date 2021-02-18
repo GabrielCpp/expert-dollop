@@ -10,7 +10,7 @@ from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 from expert_dollup.app.app import creat_app
 from expert_dollup.app.modules import build_container
 from dev.clean_db import truncate_db
-from .fixtures import DbSetupHelper, SimpleProject
+from .fixtures import DbSetupHelper, SimpleProject, MiniProject
 
 load_dotenv(dotenv_path=Path(".") / ".env.test")
 load_dotenv()
@@ -60,5 +60,13 @@ async def ac(app, caplog) -> TestClient:
 async def expert_dollup_simple_project(container: Injector):
     db_helper = container.get(DbSetupHelper)
     fixture = SimpleProject().generate().model
+    await db_helper.init_db(fixture)
+    yield fixture
+
+
+@pytest.fixture
+async def expert_dollup_mini_project(container: Injector):
+    db_helper = container.get(DbSetupHelper)
+    fixture = MiniProject().generate().model
     await db_helper.init_db(fixture)
     yield fixture

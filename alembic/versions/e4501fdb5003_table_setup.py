@@ -187,8 +187,38 @@ def create_project_definition_tables():
         "project_definition_formula",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("project_def_id", postgresql.UUID(), nullable=False),
+        Column("attached_to_type_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
         Column("expression", String, nullable=False),
+        Column("generated_ast", String, nullable=False),
+    )
+
+    op.create_index(
+        op.f("ix_project_definition_formula_def_id_name"),
+        "project_definition_formula",
+        ["project_def_id", "name"],
+        unique=True,
+    )
+
+    op.create_table(
+        "project_definition_formula_dependencies",
+        Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column(
+            "depend_on_formula_id", postgresql.UUID(), nullable=False, primary_key=True
+        ),
+        Column("project_def_id", postgresql.UUID(), nullable=False),
+    )
+
+    op.create_table(
+        "project_definition_formula_container_dependencies",
+        Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column(
+            "depend_on_container_id",
+            postgresql.UUID(),
+            nullable=False,
+            primary_key=True,
+        ),
+        Column("project_def_id", postgresql.UUID(), nullable=False),
     )
 
     project_definition_value_type = op.create_table(
@@ -241,6 +271,14 @@ def create_project_tables():
         Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("type_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("state", postgresql.JSON(), nullable=False),
+    )
+
+    op.create_table(
+        "project_formula_cache",
+        Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("calculation_details", String, nullable=False),
+        Column("result", postgresql.JSON(), nullable=False),
     )
 
 

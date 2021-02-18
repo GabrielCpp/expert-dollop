@@ -1,3 +1,4 @@
+import jsonpickle
 from typing import List
 from datetime import datetime
 from uuid import UUID
@@ -232,4 +233,37 @@ def map_project_container_meta_filter_to_dict(
             "project_id": ("project_id", None),
             "type_id": ("type_id", None),
         },
+    )
+
+
+def map_formula_to_dao(src: Formula, mapper: Mapper) -> ProjectDefinitionFormulaDao:
+    return ProjectDefinitionFormulaDao(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        attached_to_type_id=src.attached_to_type_id,
+        name=src.name,
+        expression=src.expression,
+        generated_ast=jsonpickle.encode(src.generated_ast),
+    )
+
+
+def map_formula_cache_result_to_dao(
+    src: FormulaCachedResult, mapper: Mapper
+) -> ProjectFormulaCacheDao:
+    return ProjectFormulaCacheDao(
+        project_id=src.project_id,
+        formula_id=src.formula_id,
+        calculation_details=src.calculation_details,
+        result=src.result,
+    )
+
+
+def map_formula_cache_result_from_dao(
+    src: ProjectFormulaCacheDao, mapper: Mapper
+) -> FormulaCachedResult:
+    return FormulaCachedResult(
+        project_id=src.project_id,
+        formula_id=src.formula_id,
+        calculation_details=src.calculation_details,
+        result=src.result,
     )

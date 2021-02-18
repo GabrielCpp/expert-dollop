@@ -298,7 +298,7 @@ class BaseCrudTableService(CoreCrudTableService[Domain]):
         pk = list(self._table.primary_key.columns.values())
         assert (
             len(pk) == 1
-        ), f"Crub table service must have single value primary key for table {self._table}"
+        ), f"Crud table service must have single value primary key for table {self._table}"
 
         self.table_id_name = pk[0].name
         self.table_id = getattr(self._table.c, self.table_id_name)
