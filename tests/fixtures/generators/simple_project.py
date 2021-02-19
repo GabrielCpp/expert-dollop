@@ -119,6 +119,7 @@ class SimpleProject:
             self.tanslations.append(
                 TranslationDao(
                     ressource_id=self.project_definitions[0].id,
+                    scope=project_container_definition.id,
                     locale="fr",
                     name=project_container_definition.name,
                     value=" ".join(self.fake.words()),
@@ -128,6 +129,7 @@ class SimpleProject:
             self.tanslations.append(
                 TranslationDao(
                     ressource_id=self.project_definitions[0].id,
+                    scope=project_container_definition.id,
                     locale="fr",
                     name=f"{project_container_definition.name}_helptext",
                     value=self.fake.sentence(nb_words=20),
@@ -137,6 +139,7 @@ class SimpleProject:
             self.tanslations.append(
                 TranslationDao(
                     ressource_id=self.project_definitions[0].id,
+                    scope=project_container_definition.id,
                     locale="en",
                     name=project_container_definition.name,
                     value=" ".join(self.fake.words()),
@@ -146,6 +149,7 @@ class SimpleProject:
             self.tanslations.append(
                 TranslationDao(
                     ressource_id=self.project_definitions[0].id,
+                    scope=project_container_definition.id,
                     locale="en",
                     name=f"{project_container_definition.name}_helptext",
                     value=self.fake.sentence(nb_words=20),

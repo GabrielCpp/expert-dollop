@@ -33,6 +33,7 @@ class TranslationDtoFactory(factory.Factory):
         model = TranslationDto
 
     ressource_id = factory.LazyFunction(uuid4)
+    scope = factory.LazyFunction(uuid4)
     locale = "fr"
     name = factory.Sequence(lambda n: f"hello{n}")
     value = factory.Sequence(lambda n: f"translation{n}")

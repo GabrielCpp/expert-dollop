@@ -28,6 +28,7 @@ class TranslationUseCase:
         return await self.find_by_id(
             TranslationId(
                 ressource_id=domain.ressource_id,
+                scope=domain.scope,
                 locale=domain.locale,
                 name=domain.name,
             )
@@ -46,6 +47,7 @@ class TranslationUseCase:
         return await self.find_by_id(
             TranslationId(
                 ressource_id=domain.ressource_id,
+                scope=scope,
                 locale=domain.locale,
                 name=domain.name,
             )

@@ -173,6 +173,7 @@ translation_table = Table(
     "translation",
     metadata,
     Column("ressource_id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("scope", postgresql.UUID(), nullable=False, primary_key=True),
     Column("locale", String(5), nullable=False, primary_key=True),
     Column("name", String, nullable=False, primary_key=True),
     Column("value", String, nullable=False),
@@ -182,6 +183,7 @@ translation_table = Table(
 class TranslationDao(BaseModel):
     ressource_id: UUID
     locale: str
+    scope: UUID
     name: str
     value: str
 

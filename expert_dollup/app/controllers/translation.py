@@ -16,15 +16,19 @@ from expert_dollup.core.domains import (
 router = APIRouter()
 
 
-@router.get("/translation/{ressource_id}/{locale}/{name}")
+@router.get("/translation/{ressource_id}/{scope}/{locale}/{name}")
 async def get_translation(
     ressource_id: UUID,
+    scope: UUID,
     locale: str,
     name: str,
     usecase=Depends(Inject(TranslationUseCase)),
     handler=Depends(Inject(RequestHandler)),
 ):
-    id = TranslationIdDto(ressource_id=ressource_id, locale=locale, name=name)
+    id = TranslationIdDto(
+        ressource_id=ressource_id, scope=scope, locale=locale, name=name
+    )
+
     return await handler.handle(
         usecase.find_by_id,
         id,
@@ -58,15 +62,16 @@ async def update_translation(
     )
 
 
-@router.delete("/translation/{ressource_id}/{locale}/{name}")
+@router.delete("/translation/{ressource_id}/{scope}/{locale}/{name}")
 async def delete_translation(
     ressource_id: UUID,
+    scope: UUID,
     locale: str,
     name: str,
     usecase=Depends(Inject(TranslationUseCase)),
     handler=Depends(Inject(RequestHandler)),
 ):
-    id = TranslationId(ressource_id=ressource_id, locale=locale, name=name)
+    id = TranslationId(ressource_id=ressource_id, locale=locale, scope=scope, name=name)
     await usecase.remove_by_id(id)
 
 

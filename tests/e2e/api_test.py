@@ -81,7 +81,7 @@ async def test_given_translation_should_be_able_to_create_update_delete(ac):
     assert response.status_code == 200
 
     response = await ac.get(
-        f"/api/translation/{translation.ressource_id}/{translation.locale}/{translation.name}"
+        f"/api/translation/{translation.ressource_id}/{translation.scope}/{translation.locale}/{translation.name}"
     )
     assert response.status_code == 200
 
@@ -89,12 +89,12 @@ async def test_given_translation_should_be_able_to_create_update_delete(ac):
     assert actual == translation
 
     response = await ac.delete(
-        f"/api/translation/{translation.ressource_id}/{translation.locale}/{translation.name}"
+        f"/api/translation/{translation.ressource_id}/{translation.scope}/{translation.locale}/{translation.name}"
     )
     assert response.status_code == 200
 
     response = await ac.get(
-        f"/api/translation/{translation.ressource_id}/{translation.locale}/{translation.name}"
+        f"/api/translation/{translation.ressource_id}/{translation.scope}/{translation.locale}/{translation.name}"
     )
     assert response.status_code == 404
 
@@ -104,13 +104,25 @@ async def test_given_translation_should_be_able_to_retrieve_it(ac, dal, map_dao_
     ressource_id = uuid4()
     translations = dict(
         a_fr=TranslationDao(
-            ressource_id=ressource_id, locale="fr", name="a", value="a_fr"
+            ressource_id=ressource_id,
+            scope=ressource_id,
+            locale="fr",
+            name="a",
+            value="a_fr",
         ),
         a_en=TranslationDao(
-            ressource_id=ressource_id, locale="en", name="a", value="a_en"
+            ressource_id=ressource_id,
+            scope=ressource_id,
+            locale="en",
+            name="a",
+            value="a_en",
         ),
         b_fr=TranslationDao(
-            ressource_id=ressource_id, locale="fr", name="b", value="b_fr"
+            ressource_id=ressource_id,
+            scope=ressource_id,
+            locale="fr",
+            name="b",
+            value="b_fr",
         ),
     )
 

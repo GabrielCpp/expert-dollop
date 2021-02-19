@@ -160,6 +160,7 @@ def map_translation_from_dto(src: TranslationDto, mapper: Mapper) -> Translation
         ressource_id=src.ressource_id,
         locale=src.locale,
         name=src.name,
+        scope=src.scope,
         value=src.value,
     )
 
@@ -169,6 +170,7 @@ def map_translation_to_dto(src: Translation, mapper: Mapper) -> TranslationDto:
         ressource_id=src.ressource_id,
         locale=src.locale,
         name=src.name,
+        scope=src.scope,
         value=src.value,
     )
 
@@ -177,6 +179,7 @@ def map_translation_id_from_dto(src: TranslationIdDto, mapper: Mapper) -> Transl
     return TranslationId(
         ressource_id=src.ressource_id,
         locale=src.locale,
+        scope=src.scope,
         name=src.name,
     )
 
@@ -185,6 +188,7 @@ def map_translation_id_to_dto(src: TranslationId, mapper: Mapper) -> Translation
     return TranslationDto(
         ressource_id=src.ressource_id,
         locale=src.locale,
+        scope=src.scope,
         name=src.name,
     )
 

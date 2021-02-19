@@ -171,6 +171,7 @@ def map_translation_from_dao(src: TranslationDao, mapper: Mapper) -> Translation
     return Translation(
         ressource_id=src.ressource_id,
         locale=src.locale,
+        scope=src.scope,
         name=src.name,
         value=src.value,
     )
@@ -180,13 +181,16 @@ def map_translation_to_dao(src: Translation, mapper: Mapper) -> TranslationDao:
     return TranslationDao(
         ressource_id=src.ressource_id,
         locale=src.locale,
+        scope=src.scope,
         name=src.name,
         value=src.value,
     )
 
 
 def map_translation_id_to_dict(src: TranslationId, mapper: Mapper) -> dict:
-    return dict(ressource_id=src.ressource_id, locale=src.locale, name=src.name)
+    return dict(
+        ressource_id=src.ressource_id, scope=src.scope, locale=src.locale, name=src.name
+    )
 
 
 def map_project_definition_container_filter_to_dict(

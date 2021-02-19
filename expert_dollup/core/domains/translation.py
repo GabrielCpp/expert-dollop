@@ -6,6 +6,7 @@ from uuid import UUID
 class Translation:
     ressource_id: UUID
     locale: str
+    scope: UUID
     name: str
     value: str
 
@@ -14,6 +15,7 @@ class Translation:
 class TranslationId:
     ressource_id: UUID
     locale: str
+    scope: UUID
     name: str
 
 

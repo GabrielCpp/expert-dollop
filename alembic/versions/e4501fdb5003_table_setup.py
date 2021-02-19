@@ -38,9 +38,16 @@ def create_global_table():
     op.create_table(
         "translation",
         Column("ressource_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("scope", postgresql.UUID(), nullable=False, primary_key=True),
         Column("locale", String(5), nullable=False, primary_key=True),
         Column("name", String, nullable=False, primary_key=True),
         Column("value", String, nullable=False),
+    )
+
+    op.create_index(
+        op.f("ix_translation_ressource_id_scope"),
+        "translation",
+        ["ressource_id", "scope"],
     )
 
 
@@ -284,6 +291,49 @@ def create_project_tables():
 
 def create_datasheet_tables():
     op.create_table(
+        "abstract_element_label_collection",
+        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("project_def_id", postgresql.UUID(), nullable=False),
+        Column("name", String, nullable=False),
+    )
+
+    op.create_table(
+        "abstract_element_label",
+        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column(
+            "abstract_element_label_collection_id", postgresql.UUID(), nullable=False
+        ),
+        Column("order_index", Integer, nullable=False),
+    )
+
+    op.create_table(
+        "unit",
+        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    )
+
+    op.create_table(
+        "abstract_element",
+        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("unit_id", postgresql.UUID(), nullable=False),
+        Column("is_collection", Boolean, nullable=False),
+        Column("abstract_element_label_id", postgresql.UUID(), nullable=False),
+        Column("properties", postgresql.JSON(), nullable=False),
+        Column("creation_date_utc", DateTime(timezone=True), nullable=False),
+    )
+
+    op.create_index(
+        op.f("ix_abstract_element_unit_id"),
+        "abstract_element",
+        ["unit_id"],
+    )
+
+    op.create_index(
+        op.f("ix_abstract_element_abstract_element_label_id"),
+        "abstract_element",
+        ["abstract_element_label_id"],
+    )
+
+    op.create_table(
         "datasheet",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("name", String, nullable=False),
@@ -292,9 +342,31 @@ def create_datasheet_tables():
 
     op.create_table(
         "datasheet_content",
-        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("name", String, nullable=False),
+        Column("datasheet_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column(
+            "abstract_element_id", postgresql.UUID(), nullable=False, primary_key=True
+        ),
+        Column(
+            "child_element_reference",
+            postgresql.UUID(),
+            nullable=False,
+            primary_key=True,
+        ),
+        Column("content", postgresql.JSON(), nullable=False),
+        Column("original_datasheet_id", postgresql.UUID(), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
+    )
+
+    op.create_index(
+        op.f("ix_datasheet_content_abstract_element_id"),
+        "datasheet_content",
+        ["abstract_element_id"],
+    )
+
+    op.create_index(
+        op.f("ix_datasheet_content_original_datasheet_id"),
+        "datasheet_content",
+        ["original_datasheet_id"],
     )
 
 
@@ -302,6 +374,7 @@ def upgrade():
     create_global_table()
     create_project_definition_tables()
     create_project_tables()
+    create_datasheet_tables()
 
 
 def downgrade():
