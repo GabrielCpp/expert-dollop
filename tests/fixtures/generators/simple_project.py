@@ -108,6 +108,7 @@ class SimpleProject:
             name="".join(self.fake.words()),
             status="OPEN",
             default_datasheet_id=uuid4(),
+            datasheet_def_id=uuid4(),
             creation_date_utc=self.fake.date_time(),
         )
 

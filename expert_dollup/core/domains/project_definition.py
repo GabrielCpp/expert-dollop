@@ -9,3 +9,4 @@ class ProjectDefinition:
     id: UUID
     name: str
     default_datasheet_id: UUID
+    datasheet_def_id: UUID

@@ -22,7 +22,7 @@ async def test_create_get_delete_formula(ac, expert_dollup_mini_project):
         project_def_id=project_definition.id,
         attached_to_type_id=fake_db.project_definition_containers[0].id,
         name="article_price",
-        expression="shipping_price/sqrt(1)+quantity*price*is_confirmed+4*(item_size == '0')",
+        expression="shipping_price/sqrt(1)+quantity*price*is_confirmed+4*(item_size == '0')+taxes",
     )
 
     response = await ac.post("/api/formula", data=formula.json())
@@ -35,3 +35,6 @@ async def test_create_get_delete_formula(ac, expert_dollup_mini_project):
     project = unwrap(response, ProjectDto)
     response = await ac.post(f"/api/project/{project.id}/formula_cache")
     assert response.status_code == 200, response.text
+
+    # response = await ac.get(f"/api/project/{project.id}formula_cache/{formula.id}")
+    # assert response.status_code == 200, response.text

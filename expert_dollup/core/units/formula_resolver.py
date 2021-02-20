@@ -4,7 +4,7 @@ from ast import *
 from typing import Awaitable, List
 from math import sqrt
 from itertools import chain
-from uuid import UUID
+from uuid import UUID, uuid4
 from collections import defaultdict
 from expert_dollup.core.domains import Formula, FormulaDetails, FormulaCachedResult
 from dataclasses import dataclass
@@ -332,6 +332,8 @@ class FormulaResolver:
             FormulaCachedResult(
                 project_id=project_id,
                 formula_id=unit.formula_id,
+                container_id=unit.id,
+                generation_tag=uuid4(),
                 result=unit.value,
                 calculation_details=unit.calculation_details,
             )

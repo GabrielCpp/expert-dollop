@@ -26,6 +26,8 @@ class FormulaDetails:
 class FormulaCachedResult:
     project_id: UUID
     formula_id: UUID
+    container_id: UUID
+    generation_tag: UUID
     calculation_details: str
     result: Union[str, bool, int, float]
 

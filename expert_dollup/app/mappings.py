@@ -13,6 +13,7 @@ def map_project_definition_from_dto(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
+        datasheet_def_id=src.datasheet_def_id,
     )
 
 
@@ -23,6 +24,7 @@ def map_project_definition_to_dto(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
+        datasheet_def_id=src.datasheet_def_id,
     )
 
 

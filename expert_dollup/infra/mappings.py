@@ -34,6 +34,7 @@ def map_project_definition_from_dao(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
+        datasheet_def_id=src.datasheet_def_id,
     )
 
 
@@ -44,6 +45,7 @@ def map_project_definition_to_dao(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
+        datasheet_def_id=src.datasheet_def_id,
         creation_date_utc=datetime.utcnow(),
     )
 
@@ -257,8 +259,11 @@ def map_formula_cache_result_to_dao(
     return ProjectFormulaCacheDao(
         project_id=src.project_id,
         formula_id=src.formula_id,
+        container_id=src.container_id,
+        generation_tag=src.generation_tag,
         calculation_details=src.calculation_details,
         result=src.result,
+        last_modified_date_utc=datetime.utcnow(),
     )
 
 
@@ -268,6 +273,8 @@ def map_formula_cache_result_from_dao(
     return FormulaCachedResult(
         project_id=src.project_id,
         formula_id=src.formula_id,
+        container_id=src.container_id,
+        generation_tag=src.generation_tag,
         calculation_details=src.calculation_details,
         result=src.result,
     )

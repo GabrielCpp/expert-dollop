@@ -31,6 +31,7 @@ project_definition_table = Table(
     Column("id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("name", String, nullable=False),
     Column("default_datasheet_id", postgresql.UUID(), nullable=False),
+    Column("datasheet_def_id", postgresql.UUID(), nullable=False),
     Column("creation_date_utc", DateTime(timezone=True), nullable=False),
 )
 
@@ -39,6 +40,7 @@ class ProjectDefinitionDao(BaseModel):
     id: UUID
     name: str
     default_datasheet_id: UUID
+    datasheet_def_id: UUID
     creation_date_utc: datetime
 
 
@@ -258,17 +260,23 @@ class ProjectDefinitionFormulaContainerDependencyDao(BaseModel):
 
 
 project_formula_cache_table = Table(
-    "project_formula_cache",
+    "project_container_formula_cache",
     metadata,
     Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("container_id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("generation_tag", postgresql.UUID(), nullable=False),
     Column("calculation_details", String, nullable=False),
     Column("result", postgresql.JSON(), nullable=False),
+    Column("last_modified_date_utc", DateTime(timezone=True), nullable=False),
 )
 
 
 class ProjectFormulaCacheDao(BaseModel):
     project_id: UUID
     formula_id: UUID
+    container_id: UUID
+    generation_tag: UUID
     calculation_details: str
     result: Any
+    last_modified_date_utc: datetime

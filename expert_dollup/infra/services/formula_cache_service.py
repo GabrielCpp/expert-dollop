@@ -1,4 +1,5 @@
 from uuid import UUID
+from typing import List
 from expert_dollup.shared.database_services import BaseCompositeCrudTableService
 from expert_dollup.infra.expert_dollup_db import (
     project_formula_cache_table,
@@ -15,7 +16,7 @@ class FormulaCacheService(BaseCompositeCrudTableService[FormulaCachedResult]):
         seach_filters = {}
         table_filter_type = None
 
-    async def repopulate(self, project_id: UUID, domains: FormulaCachedResult):
+    async def repopulate(self, project_id: UUID, domains: List[FormulaCachedResult]):
         query = self._table.delete().where(self._table.c.project_id == project_id)
         await self._database.execute(query=query)
         await self.insert_many(domains)

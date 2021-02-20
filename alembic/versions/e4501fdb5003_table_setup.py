@@ -149,6 +149,7 @@ def create_project_definition_tables():
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("name", String, nullable=False),
         Column("default_datasheet_id", postgresql.UUID(), nullable=False),
+        Column("datasheet_def_id", postgresql.UUID(), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 
@@ -281,92 +282,167 @@ def create_project_tables():
     )
 
     op.create_table(
-        "project_formula_cache",
+        "project_container_formula_cache",
         Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("container_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("generation_tag", postgresql.UUID(), nullable=False),
         Column("calculation_details", String, nullable=False),
         Column("result", postgresql.JSON(), nullable=False),
+        Column("last_modified_date_utc", DateTime(timezone=True), nullable=False),
     )
 
 
 def create_datasheet_tables():
-    op.create_table(
-        "abstract_element_label_collection",
-        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("project_def_id", postgresql.UUID(), nullable=False),
-        Column("name", String, nullable=False),
-    )
-
-    op.create_table(
-        "abstract_element_label",
-        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column(
-            "abstract_element_label_collection_id", postgresql.UUID(), nullable=False
-        ),
-        Column("order_index", Integer, nullable=False),
-    )
-
     op.create_table(
         "unit",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
     )
 
     op.create_table(
-        "abstract_element",
+        "datasheet_definition",
+        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("name", String, nullable=False),
+        Column("element_properties_schema", postgresql.JSON(), nullable=False),
+    )
+
+    op.create_table(
+        "datasheet_definition_label_collection",
+        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("datasheet_definition_id", postgresql.UUID(), nullable=False),
+        Column("name", String, nullable=False),
+    )
+
+    op.create_table(
+        "datasheet_definition_label",
+        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column(
+            "label_collection_id",
+            postgresql.UUID(),
+            nullable=False,
+        ),
+        Column("order_index", Integer, nullable=False),
+    )
+
+    op.create_index(
+        op.f("ix_datasheet_definition_label_label_collection_id"),
+        "datasheet_definition_label",
+        ["label_collection_id"],
+    )
+
+    op.create_table(
+        "datasheet_definition_element",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("unit_id", postgresql.UUID(), nullable=False),
         Column("is_collection", Boolean, nullable=False),
-        Column("abstract_element_label_id", postgresql.UUID(), nullable=False),
-        Column("properties", postgresql.JSON(), nullable=False),
+        Column("datasheet_def_id", postgresql.UUID(), nullable=False),
+        Column("label_id", postgresql.UUID(), nullable=False),
+        Column("default_properties", postgresql.JSON(), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 
     op.create_index(
-        op.f("ix_abstract_element_unit_id"),
-        "abstract_element",
-        ["unit_id"],
-    )
-
-    op.create_index(
-        op.f("ix_abstract_element_abstract_element_label_id"),
-        "abstract_element",
-        ["abstract_element_label_id"],
+        op.f("ix_datasheet_definition_element_label_id"),
+        "datasheet_definition_element",
+        ["label_id"],
     )
 
     op.create_table(
         "datasheet",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("name", String, nullable=False),
+        Column("is_staged", Boolean, nullable=False),
+        Column("datasheet_def_id", postgresql.UUID(), nullable=False),
+        Column("from_datasheet_id", postgresql.UUID(), nullable=True),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 
     op.create_table(
-        "datasheet_content",
+        "datasheet_element",
         Column("datasheet_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column(
-            "abstract_element_id", postgresql.UUID(), nullable=False, primary_key=True
-        ),
+        Column("element_def_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column(
             "child_element_reference",
             postgresql.UUID(),
             nullable=False,
             primary_key=True,
         ),
-        Column("content", postgresql.JSON(), nullable=False),
+        Column("properties", postgresql.JSON(), nullable=False),
         Column("original_datasheet_id", postgresql.UUID(), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 
     op.create_index(
-        op.f("ix_datasheet_content_abstract_element_id"),
-        "datasheet_content",
-        ["abstract_element_id"],
+        op.f("ix_datasheet_element_abstract_element_id"),
+        "datasheet_element",
+        ["element_def_id"],
     )
 
     op.create_index(
-        op.f("ix_datasheet_content_original_datasheet_id"),
-        "datasheet_content",
+        op.f("ix_datasheet_element_original_datasheet_id"),
+        "datasheet_element",
         ["original_datasheet_id"],
+    )
+
+
+def create_report_tables():
+    op.create_table(
+        "project_report_datasheet_rule",
+        Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("substage_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("instance_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("formula_def_id", postgresql.UUID(), nullable=False),
+        Column("derivable_product_reference", postgresql.UUID(), nullable=False),
+    )
+
+    op.create_table(
+        "report_definition",
+        Column("project_def_id", postgresql.UUID(), nullable=False, primary_key=True),
+    )
+
+    """
+id	int(11) Auto Increment	
+floor_id	int(11) NULL	
+localisation	varchar(255)	
+stageOrder	int(11)	
+subStageIndex	int(11)	
+associatedGlobalSection	varchar(255)	
+compileInOne	tinyint(1)
+    """
+    op.create_table(
+        "report_definition_stage",
+        Column("project_def_id", postgresql.UUID(), nullable=False, primary_key=True),
+    )
+
+    """
+id_old	int(11)	
+id	binary(16)	
+stage_id	int(11) NULL	
+stageOrder	int(11)	
+variableName	varchar(5)	
+specialCondition	tinyint(1)	
+quantity	decimal(10,0)	
+abstract_product_id	binary(16)	
+order_form_category_id	int(11) NULL	
+    """
+    op.create_table(
+        "report_definition_substage",
+        Column("project_def_id", postgresql.UUID(), nullable=False, primary_key=True),
+    )
+
+    op.create_table(
+        "report_definition_aggregate",
+        Column("project_def_id", postgresql.UUID(), nullable=False, primary_key=True),
+    )
+
+    op.create_table(
+        "report_stage",
+        Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
+    )
+
+    op.create_table(
+        "report_substage",
+        Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
     )
 
 
