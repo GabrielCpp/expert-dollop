@@ -10,6 +10,8 @@ from expert_dollup.infra.path_transform import (
     split_uuid_path,
     join_uuid_path,
     build_path_steps,
+    list_uuid_to_str,
+    list_str_to_uuid,
 )
 
 from expert_dollup.infra.expert_dollup_db import *
@@ -277,4 +279,90 @@ def map_formula_cache_result_from_dao(
         generation_tag=src.generation_tag,
         calculation_details=src.calculation_details,
         result=src.result,
+    )
+
+
+def map_datasheet_definition_to_dao(
+    src: DatasheetDefinition, mapper: Mapper
+) -> DatasheetDefinitionDao:
+    return DatasheetDefinitionDao(
+        id=src.id,
+        name=src.name,
+        element_properties_schema=src.element_properties_schema,
+    )
+
+
+def map_datasheet_definition_from_dao(
+    src: DatasheetDefinitionDao, mapper: Mapper
+) -> DatasheetDefinition:
+    return DatasheetDefinition(
+        id=src.id,
+        name=src.name,
+        element_properties_schema=src.element_properties_schema,
+    )
+
+
+def map_datasheet_definition_element_to_dao(
+    src: DatasheetDefinitionElement, mapper: Mapper
+) -> DatasheetDefinitionElementDao:
+    return DatasheetDefinitionElementDao(
+        id=src.id,
+        unit_id=src.unit_id,
+        is_collection=src.is_collection,
+        datasheet_def_id=src.datasheet_def_id,
+        order_index=src.order_index,
+        default_properties=src.default_properties.dict(),
+        tags=list_uuid_to_str(src.tags),
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_datasheet_definition_element_from_dao(
+    src: DatasheetDefinitionElementDao, mapper: Mapper
+) -> DatasheetDefinitionElement:
+    return DatasheetDefinitionElement(
+        id=src.id,
+        unit_id=src.unit_id,
+        is_collection=src.is_collection,
+        datasheet_def_id=src.datasheet_def_id,
+        order_index=src.order_index,
+        default_properties=DatasheetDefinitionElementProperty(**src.default_properties),
+        tags=list_str_to_uuid(src.tags),
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_datasheet_definition_label_collection_from_dao(
+    src: LabelCollectionDao, mapper: Mapper
+) -> LabelCollection:
+    return LabelCollection(
+        id=src.id,
+        datasheet_definition_id=src.datasheet_definition_id,
+        name=src.name,
+    )
+
+
+def map_datasheet_definition_label_collection_to_dao(
+    src: LabelCollection, mapper: Mapper
+) -> LabelCollectionDao:
+    return LabelCollectionDao(
+        id=src.id,
+        datasheet_definition_id=src.datasheet_definition_id,
+        name=src.name,
+    )
+
+
+def map_datasheet_definition_label_to_dao(src: Label, mapper: Mapper) -> LabelDao:
+    return LabelDao(
+        id=src.id,
+        label_collection_id=src.label_collection_id,
+        order_index=src.order_index,
+    )
+
+
+def map_datasheet_definition_label_from_dao(src: LabelDao, mapper: Mapper) -> Label:
+    return Label(
+        id=src.id,
+        label_collection_id=src.label_collection_id,
+        order_index=src.order_index,
     )

@@ -22,3 +22,13 @@ from .formula import (
     FormulaNode,
     FieldNode,
 )
+
+from .datasheet_definition import DatasheetDefinition
+from .datasheet_definition_label_collection import LabelCollection
+from .datasheet_definition_label import Label
+from .datasheet_definition_element import (
+    DatasheetDefinitionElement,
+    DatasheetDefinitionElementProperty,
+)
+from .datasheet import Datasheet
+from .datasheet_element import DatasheetElement

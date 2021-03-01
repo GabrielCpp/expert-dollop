@@ -336,15 +336,10 @@ def create_datasheet_tables():
         Column("unit_id", postgresql.UUID(), nullable=False),
         Column("is_collection", Boolean, nullable=False),
         Column("datasheet_def_id", postgresql.UUID(), nullable=False),
-        Column("label_id", postgresql.UUID(), nullable=False),
+        Column("order_index", Integer, nullable=False),
         Column("default_properties", postgresql.JSON(), nullable=False),
+        Column("tags", ARRAY(String, dimensions=1), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
-    )
-
-    op.create_index(
-        op.f("ix_datasheet_definition_element_label_id"),
-        "datasheet_definition_element",
-        ["label_id"],
     )
 
     op.create_table(
@@ -401,13 +396,13 @@ def create_report_tables():
     )
 
     """
-id	int(11) Auto Increment	
-floor_id	int(11) NULL	
-localisation	varchar(255)	
-stageOrder	int(11)	
-subStageIndex	int(11)	
-associatedGlobalSection	varchar(255)	
-compileInOne	tinyint(1)
+    id	int(11) Auto Increment	
+    floor_id	int(11) NULL	
+    localisation	varchar(255)	
+    stageOrder	int(11)	
+    subStageIndex	int(11)	
+    associatedGlobalSection	varchar(255)	
+    compileInOne	tinyint(1)
     """
     op.create_table(
         "report_definition_stage",
@@ -415,15 +410,15 @@ compileInOne	tinyint(1)
     )
 
     """
-id_old	int(11)	
-id	binary(16)	
-stage_id	int(11) NULL	
-stageOrder	int(11)	
-variableName	varchar(5)	
-specialCondition	tinyint(1)	
-quantity	decimal(10,0)	
-abstract_product_id	binary(16)	
-order_form_category_id	int(11) NULL	
+    id_old	int(11)	
+    id	binary(16)	
+    stage_id	int(11) NULL	
+    stageOrder	int(11)	
+    variableName	varchar(5)	
+    specialCondition	tinyint(1)	
+    quantity	decimal(10,0)	
+    abstract_product_id	binary(16)	
+    order_form_category_id	int(11) NULL	
     """
     op.create_table(
         "report_definition_substage",

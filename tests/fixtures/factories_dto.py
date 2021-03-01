@@ -60,3 +60,51 @@ class FormulaDtoFactory(factory.Factory):
     name = factory.Sequence(lambda n: f"formula{n}")
     expression = "a+b*c/2"
     generated_ast = ""
+
+
+class DatasheetDefinitionDtoFactory(factory.Factory):
+    class Meta:
+        model = DatasheetDefinitionDto
+
+    id = factory.LazyFunction(uuid4)
+    name = factory.Sequence(lambda n: f"datasheet_definition{n}")
+    element_properties_schema = {
+        "conversion_factor": {"type": "number"},
+        "lost": {"type": "number"},
+    }
+
+
+class DatasheetDefinitionElementDtoFactory(factory.Factory):
+    class Meta:
+        model = DatasheetDefinitionElementDto
+
+    id = factory.LazyFunction(uuid4)
+    unit_id = factory.LazyFunction(uuid4)
+    is_collection = False
+    datasheet_def_id = factory.LazyFunction(uuid4)
+    order_index = factory.Sequence(lambda n: n)
+    tags = factory.LazyFunction(lambda: [])
+    default_properties = {
+        "conversion_factor": DatasheetDefinitionElementPropertyDto(
+            is_readonly=True, value=2
+        ),
+        "lost": DatasheetDefinitionElementPropertyDto(is_readonly=True, value=2),
+    }
+
+
+class LabelCollectionDtoFactory(factory.Factory):
+    class Meta:
+        model = LabelCollectionDto
+
+    id = factory.LazyFunction(uuid4)
+    datasheet_definition_id = factory.LazyFunction(uuid4)
+    name = factory.Sequence(lambda n: f"label_collection_{n}")
+
+
+class LabelDtoFactory(factory.Factory):
+    class Meta:
+        model = LabelDto
+
+    id = factory.LazyFunction(uuid4)
+    label_collection_id = factory.LazyFunction(uuid4)
+    order_index = factory.Sequence(lambda n: n)

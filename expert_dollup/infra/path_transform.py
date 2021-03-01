@@ -24,6 +24,14 @@ def join_uuid_path(path: List[UUID]) -> str:
     return "/".join([str(item) for item in path])
 
 
+def list_uuid_to_str(ls: List[UUID]) -> List[str]:
+    return [str(item) for item in ls]
+
+
+def list_str_to_uuid(ls: List[str]) -> List[UUID]:
+    return [UUID(item) for item in ls]
+
+
 def build_path_steps(path: List[UUID]) -> List[str]:
     str_path = [str(item) for item in path]
     mixed_path: List[str] = []

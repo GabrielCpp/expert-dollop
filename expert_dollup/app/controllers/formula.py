@@ -18,7 +18,7 @@ async def get_formula(
     return await handler.handle(
         usecase.find_by_id,
         formula_id,
-        MappingChain(out_dto=Formula),
+        MappingChain(out_dto=FormulaDto),
     )
 
 

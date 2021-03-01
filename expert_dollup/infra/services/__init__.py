@@ -8,3 +8,11 @@ from .translation_service import TranslationService
 from .ressource_service import RessourceService
 from .formula_service import FormulaService
 from .formula_cache_service import FormulaCacheService
+from .datasheet_definition_service import DatasheetDefinitionService
+from .datasheet_definition_label_collection_service import (
+    LabelCollectionService,
+)
+from .datasheet_definition_label_service import LabelService
+from .datasheet_definition_element_service import DatasheetDefinitionElementService
+from .datasheet_service import DatasheetService
+from .datasheet_element_service import DatasheetElementService

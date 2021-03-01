@@ -20,6 +20,7 @@ class MiniProject:
     def __init__(self):
         self.tables = Tables()
         self.fake = Faker()
+        self.fake.seed_instance(seed=1)
         self.value_type_factory = ValueTypeFactory(self.fake)
 
     def generate(self):

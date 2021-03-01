@@ -280,3 +280,135 @@ class ProjectFormulaCacheDao(BaseModel):
     calculation_details: str
     result: Any
     last_modified_date_utc: datetime
+
+
+unit_table = Table(
+    "unit",
+    metadata,
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+)
+
+
+class UnitDao(BaseModel):
+    id: UUID
+
+
+datasheet_definition_table = Table(
+    "datasheet_definition",
+    metadata,
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("name", String, nullable=False),
+    Column("element_properties_schema", postgresql.JSON(), nullable=False),
+)
+
+
+class DatasheetDefinitionDao(BaseModel):
+    id: UUID
+    name: str
+    element_properties_schema: Dict[str, dict]
+
+
+datasheet_definition_label_collection_table = Table(
+    "datasheet_definition_label_collection",
+    metadata,
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("datasheet_definition_id", postgresql.UUID(), nullable=False),
+    Column("name", String, nullable=False),
+)
+
+
+class LabelCollectionDao(BaseModel):
+    id: UUID
+    datasheet_definition_id: UUID
+    name: str
+
+
+datasheet_definition_label_table = Table(
+    "datasheet_definition_label",
+    metadata,
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column(
+        "label_collection_id",
+        postgresql.UUID(),
+        nullable=False,
+    ),
+    Column("order_index", Integer, nullable=False),
+)
+
+
+class LabelDao(BaseModel):
+    id: UUID
+    label_collection_id: UUID
+    order_index: int
+
+
+datasheet_definition_element_table = Table(
+    "datasheet_definition_element",
+    metadata,
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("unit_id", postgresql.UUID(), nullable=False),
+    Column("is_collection", Boolean, nullable=False),
+    Column("datasheet_def_id", postgresql.UUID(), nullable=False),
+    Column("order_index", Integer, nullable=False),
+    Column("default_properties", postgresql.JSON(), nullable=False),
+    Column("tags", ARRAY(String, dimensions=1), nullable=False),
+    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
+)
+
+
+class DatasheetDefinitionElementDao(BaseModel):
+    id: UUID
+    unit_id: UUID
+    is_collection: bool
+    datasheet_def_id: UUID
+    order_index: int
+    default_properties: dict
+    tags: List[str]
+    creation_date_utc: datetime
+
+
+datasheet_table = Table(
+    "datasheet",
+    metadata,
+    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("name", String, nullable=False),
+    Column("is_staged", Boolean, nullable=False),
+    Column("datasheet_def_id", postgresql.UUID(), nullable=False),
+    Column("from_datasheet_id", postgresql.UUID(), nullable=True),
+    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
+)
+
+
+class DatasheetDao(BaseModel):
+    id: UUID
+    name: str
+    is_staged: bool
+    datasheet_def_id: UUID
+    from_datasheet_id: UUID
+    creation_date_utc: datetime
+
+
+datasheet_element_table = Table(
+    "datasheet_element",
+    metadata,
+    Column("datasheet_id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("element_def_id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column(
+        "child_element_reference",
+        postgresql.UUID(),
+        nullable=False,
+        primary_key=True,
+    ),
+    Column("properties", postgresql.JSON(), nullable=False),
+    Column("original_datasheet_id", postgresql.UUID(), nullable=False),
+    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
+)
+
+
+class DatasheetElementDao(BaseModel):
+    datasheet_id: UUID
+    element_def_id: UUID
+    child_element_reference: UUID
+    properties: dict
+    original_datasheet_id: UUID
+    creation_date_utc: datetime

@@ -18,11 +18,15 @@ from .factories_dto import (
     TranslationDtoFactory,
     ProjectDtoFactory,
     FormulaDtoFactory,
+    DatasheetDefinitionDtoFactory,
+    DatasheetDefinitionElementDtoFactory,
+    LabelCollectionDtoFactory,
+    LabelDtoFactory,
 )
 
 from .object_dump_helpers import dump_to_file, set_dump_path, dump_snapshot, jsonify
 
-from .generators import SimpleProject, MiniProject
+from .generators import *
 
 
 class FlowRunner:

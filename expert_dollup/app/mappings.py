@@ -1,4 +1,5 @@
 import astor
+from datetime import datetime
 from dataclasses import asdict
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import Page
@@ -224,4 +225,96 @@ def map_formula_to_dto(src: Formula, mapper: Mapper) -> FormulaDto:
         name=src.name,
         expression=src.expression,
         generated_ast=astor.to_source(src.generated_ast),
+    )
+
+
+def map_datasheet_definition_to_dto(
+    src: DatasheetDefinition, mapper: Mapper
+) -> DatasheetDefinitionDto:
+    return DatasheetDefinitionDto(
+        id=src.id,
+        name=src.name,
+        element_properties_schema=src.element_properties_schema,
+    )
+
+
+def map_datasheet_definition_from_dto(
+    src: DatasheetDefinitionDto, mapper: Mapper
+) -> DatasheetDefinition:
+    return DatasheetDefinition(
+        id=src.id,
+        name=src.name,
+        element_properties_schema=src.element_properties_schema,
+    )
+
+
+def map_datasheet_definition_element_to_dto(
+    src: DatasheetDefinitionElement, mapper: Mapper
+) -> DatasheetDefinitionElementDto:
+    return DatasheetDefinitionElementDto(
+        id=src.id,
+        unit_id=src.unit_id,
+        is_collection=src.is_collection,
+        datasheet_def_id=src.datasheet_def_id,
+        order_index=src.order_index,
+        default_properties=DatasheetDefinitionElementPropertyDto(
+            is_readonly=src.default_properties.is_readonly,
+            value=src.default_properties.value,
+        ),
+        tags=src.tags,
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_datasheet_definition_element_from_dto(
+    src: DatasheetDefinitionElementDto, mapper: Mapper
+) -> DatasheetDefinitionElement:
+    return DatasheetDefinitionElement(
+        id=src.id,
+        unit_id=src.unit_id,
+        is_collection=src.is_collection,
+        datasheet_def_id=src.datasheet_def_id,
+        order_index=src.order_index,
+        default_properties=DatasheetDefinitionElementProperty(
+            is_readonly=src.default_properties.is_readonly,
+            value=src.default_properties.value,
+        ),
+        tags=src.tags,
+        creation_date_utc=datetime.utcnow(),
+    )
+
+
+def map_label_collection_from_dto(
+    src: LabelCollectionDto, mapper: Mapper
+) -> LabelCollection:
+    return LabelCollection(
+        id=src.id,
+        datasheet_definition_id=src.datasheet_definition_id,
+        name=src.name,
+    )
+
+
+def map_label_collection_to_dto(
+    src: LabelCollection, mapper: Mapper
+) -> LabelCollectionDto:
+    return LabelCollectionDto(
+        id=src.id,
+        datasheet_definition_id=src.datasheet_definition_id,
+        name=src.name,
+    )
+
+
+def map_datasheet_definition_label_to_dto(src: Label, mapper: Mapper) -> LabelDto:
+    return LabelDto(
+        id=src.id,
+        label_collection_id=src.label_collection_id,
+        order_index=src.order_index,
+    )
+
+
+def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> Label:
+    return Label(
+        id=src.id,
+        label_collection_id=src.label_collection_id,
+        order_index=src.order_index,
     )
