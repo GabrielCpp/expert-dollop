@@ -37,7 +37,7 @@ async def test_datasheet(ac, mini_datasheet):
     assert response.status_code == 200, response.json()
 
     cloned_datasheet = unwrap(response, DatasheetDto)
-    assert cloned_datasheet =  datasheet
+    assert cloned_datasheet == datasheet
 
 
 # add datasheet from definition

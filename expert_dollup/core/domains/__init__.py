@@ -29,6 +29,7 @@ from .datasheet_definition_label import Label
 from .datasheet_definition_element import (
     DatasheetDefinitionElement,
     DatasheetDefinitionElementProperty,
+    DatasheetDefinitionElementFilter,
 )
-from .datasheet import Datasheet
-from .datasheet_element import DatasheetElement
+from .datasheet import Datasheet, DatasheetFilter
+from .datasheet_element import DatasheetElement, DatasheetElementFilter
