@@ -326,7 +326,10 @@ def map_datasheet_definition_element_from_dao(
         is_collection=src.is_collection,
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
-        default_properties=DatasheetDefinitionElementProperty(**src.default_properties),
+        default_properties={
+            name: DatasheetDefinitionElementProperty(**item_property)
+            for name, item_property in src.default_properties.items()
+        },
         tags=list_str_to_uuid(src.tags),
         creation_date_utc=src.creation_date_utc,
     )
@@ -365,4 +368,26 @@ def map_datasheet_definition_label_from_dao(src: LabelDao, mapper: Mapper) -> La
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
+    )
+
+
+def map_datasheet_to_dao(src: Datasheet, mapper: Mapper) -> DatasheetDao:
+    return DatasheetDao(
+        id=src.id,
+        name=src.name,
+        is_staged=src.is_staged,
+        datasheet_def_id=src.datasheet_def_id,
+        from_datasheet_id=src.from_datasheet_id,
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_datasheet_from_dao(src: DatasheetDao, mapper: Mapper) -> Datasheet:
+    return Datasheet(
+        id=src.id,
+        name=src.name,
+        is_staged=src.is_staged,
+        datasheet_def_id=src.datasheet_def_id,
+        from_datasheet_id=src.from_datasheet_id,
+        creation_date_utc=src.creation_date_utc,
     )

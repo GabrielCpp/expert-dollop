@@ -15,6 +15,11 @@ def test(c, test=None):
         c.run(f"poetry run pytest -k '{test}'")
 
 
+@task
+def black(c):
+    c.run("poetry run black .")
+
+
 @task(name="migration:new")
 def newMigration(c, message=None):
     if message is None:

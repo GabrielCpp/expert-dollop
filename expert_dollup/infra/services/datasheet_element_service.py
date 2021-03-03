@@ -1,4 +1,4 @@
-from expert_dollup.shared.database_services import BaseCrudTableService
+from expert_dollup.shared.database_services import BaseCompositeCrudTableService
 from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
     datasheet_element_table,
@@ -7,7 +7,7 @@ from expert_dollup.infra.expert_dollup_db import (
 from expert_dollup.core.domains import DatasheetElement
 
 
-class DatasheetElementService(BaseCrudTableService[DatasheetElement]):
+class DatasheetElementService(BaseCompositeCrudTableService[DatasheetElement]):
     class Meta:
         table = datasheet_element_table
         dao = DatasheetElementDao

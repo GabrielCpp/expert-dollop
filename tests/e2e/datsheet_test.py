@@ -7,8 +7,9 @@ from expert_dollup.infra.expert_dollup_db import *
 
 @pytest.mark.asyncio
 async def test_datasheet(ac, mini_datasheet):
-    datasheet = DatasheetFactoryDto()
-    response = await ac.post("/api/datasheet", datasheet.json())
+    datasheet_definition = mini_datasheet.datasheet_definitions[0]
+    datasheet = DatasheetDtoFactory(datasheet_def_id=datasheet_definition.id)
+    response = await ac.post("/api/datasheet", data=datasheet.json())
     assert response.status_code == 200, response.json()
 
     response = await ac.get(f"/api/datasheet/{datasheet.id}/elements", datasheet.json())
@@ -16,7 +17,10 @@ async def test_datasheet(ac, mini_datasheet):
 
     # Check all element are there
 
-    datasheet_element_child = DatasheetElementDtoFactory()
+    datasheet_element_child = {
+        "conversion_factor": 1.5,
+        "lost": 3,
+    }
 
     response = await ac.post(
         f"/api/datasheet/{datasheet.id}/element_definition/{datasheet_element_child.element_def_id}",

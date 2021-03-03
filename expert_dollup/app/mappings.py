@@ -318,3 +318,25 @@ def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> La
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
     )
+
+
+def map_new_datasheet_from_dto(src: NewDatasheetDto, mapper: Mapper) -> Datasheet:
+    return Datasheet(
+        id=src.id,
+        name=src.name,
+        is_staged=src.is_staged,
+        datasheet_def_id=src.datasheet_def_id,
+        from_datasheet_id=src.from_datasheet_id,
+        creation_date_utc=datetime.utcnow(),
+    )
+
+
+def map_datasheet_to_dto(src: Datasheet, mapper: Mapper) -> DatasheetDto:
+    return DatasheetDto(
+        id=src.id,
+        name=src.name,
+        is_staged=src.is_staged,
+        datasheet_def_id=src.datasheet_def_id,
+        from_datasheet_id=src.from_datasheet_id,
+        creation_date_utc=src.creation_date_utc,
+    )
