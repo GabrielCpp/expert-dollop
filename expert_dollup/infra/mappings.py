@@ -1,6 +1,6 @@
 import jsonpickle
 from typing import List
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 from dataclasses import asdict
 from expert_dollup.shared.automapping import Mapper
@@ -48,7 +48,7 @@ def map_project_definition_to_dao(
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
         datasheet_def_id=src.datasheet_def_id,
-        creation_date_utc=datetime.utcnow(),
+        creation_date_utc=datetime.now(timezone.utc),
     )
 
 
@@ -84,7 +84,7 @@ def map_project_definition_container_to_dao(
         default_value=src.default_value,
         path=join_uuid_path(src.path),
         mixed_paths=build_path_steps(src.path),
-        creation_date_utc=datetime.utcnow(),
+        creation_date_utc=datetime.now(timezone.utc),
     )
 
 
@@ -105,7 +105,7 @@ def map_project_to_dao(src: Project, mapper: Mapper) -> ProjectDao:
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
-        creation_date_utc=datetime.utcnow(),
+        creation_date_utc=datetime.now(timezone.utc),
     )
 
 
@@ -119,7 +119,7 @@ def map_project_container_to_dao(
         path=join_uuid_path(src.path),
         value=src.value,
         mixed_paths=build_path_steps(src.path),
-        creation_date_utc=datetime.utcnow(),
+        creation_date_utc=datetime.now(timezone.utc),
     )
 
 
@@ -265,7 +265,7 @@ def map_formula_cache_result_to_dao(
         generation_tag=src.generation_tag,
         calculation_details=src.calculation_details,
         result=src.result,
-        last_modified_date_utc=datetime.utcnow(),
+        last_modified_date_utc=datetime.now(timezone.utc),
     )
 
 
@@ -309,6 +309,7 @@ def map_datasheet_definition_element_to_dao(
         id=src.id,
         unit_id=src.unit_id,
         is_collection=src.is_collection,
+        name=src.name,
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
         default_properties=src.default_properties.dict(),
@@ -324,6 +325,7 @@ def map_datasheet_definition_element_from_dao(
         id=src.id,
         unit_id=src.unit_id,
         is_collection=src.is_collection,
+        name=src.name,
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
         default_properties={
@@ -391,3 +393,48 @@ def map_datasheet_from_dao(src: DatasheetDao, mapper: Mapper) -> Datasheet:
         from_datasheet_id=src.from_datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )
+
+
+def map_datsheet_element_to_dao(
+    src: DatasheetElement, mapper: Mapper
+) -> DatasheetElementDao:
+    return DatasheetElementDao(
+        datasheet_id=src.datasheet_id,
+        element_def_id=src.element_def_id,
+        child_element_reference=src.child_element_reference,
+        properties=src.properties,
+        original_datasheet_id=src.original_datasheet_id,
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_datsheet_element_from_dao(
+    src: DatasheetElementDao, mapper: Mapper
+) -> DatasheetElement:
+    return DatasheetElement(
+        datasheet_id=src.datasheet_id,
+        element_def_id=src.element_def_id,
+        child_element_reference=src.child_element_reference,
+        properties=src.properties,
+        original_datasheet_id=src.original_datasheet_id,
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_datasheet_element_filter_to_dict(
+    src: DatasheetElementFilter, mapper: Mapper
+) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "datasheet_id": ("datasheet_id", None),
+            "element_def_id": ("element_def_id", None),
+            "child_element_reference": ("child_element_reference", None),
+            "properties": ("properties", None),
+            "creation_date_utc": ("creation_date_utc", None),
+        },
+    )
+
+
+def map_datasheet_element_id_to_dict(src: DatasheetElementId, mapper: Mapper) -> dict:
+    return asdict(src)

@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Union, Dict
+from typing import Union, Dict, Optional, List
 from datetime import datetime
 from expert_dollup.shared.modeling import CamelModel
 
@@ -11,3 +11,9 @@ class DatasheetElementDto(CamelModel):
     properties: Dict[str, Union[float, str, bool]]
     original_datasheet_id: UUID
     creation_date_utc: datetime
+
+
+class DatasheetElementPageDto(CamelModel):
+    next_page_token: Optional[str]
+    limit: int
+    results: List[DatasheetElementDto]

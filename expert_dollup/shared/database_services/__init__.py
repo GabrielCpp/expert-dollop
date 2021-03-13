@@ -355,12 +355,12 @@ class BaseCompositeCrudTableService(CoreCrudTableService[Domain]):
         query = self._table.select().where(where_filter)
         value = await self._database.fetch_one(query=query)
 
-        if not value is None:
-            result = self._mapper.map(self._dao(**value), self._domain)
+        if value is None:
+            raise RessourceNotFound()
 
-            return result
+        result = self._mapper.map(self._dao(**value), self._domain)
 
-        return None
+        return result
 
     def _build_id_filter(self, identifier: dict):
         name = self.table_id_names[0]

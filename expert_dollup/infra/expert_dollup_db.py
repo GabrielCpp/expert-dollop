@@ -347,6 +347,7 @@ datasheet_definition_element_table = Table(
     metadata,
     Column("id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("unit_id", postgresql.UUID(), nullable=False),
+    Column("name", String(64), nullable=False),
     Column("is_collection", Boolean, nullable=False),
     Column("datasheet_def_id", postgresql.UUID(), nullable=False),
     Column("order_index", Integer, nullable=False),
@@ -360,6 +361,7 @@ class DatasheetDefinitionElementDao(BaseModel):
     id: UUID
     unit_id: UUID
     is_collection: bool
+    name: str
     datasheet_def_id: UUID
     order_index: int
     default_properties: dict

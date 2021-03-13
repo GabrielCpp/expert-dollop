@@ -1,13 +1,15 @@
 import structlog
-import datetime
+from datetime import datetime, timezone
 from injector import Injector
 from typing import Optional
 from fastapi import FastAPI, APIRouter
+from ariadne.asgi import GraphQL
 from dotenv import load_dotenv
 from structlog import configure
 from structlog.contextvars import merge_contextvars
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 import expert_dollup.app.controllers as api_routers
+from .schemas import schema
 from .modules import build_container
 from .middlewares import (
     create_database_transaction_middleware,
@@ -19,7 +21,7 @@ from .middlewares import (
 
 
 def add_timestamp(_, __, event_dict):
-    event_dict["timestamp"] = str(datetime.datetime.utcnow().isoformat())
+    event_dict["timestamp"] = str(datetime.now(timezone.utc).isoformat())
     return event_dict
 
 
@@ -60,6 +62,8 @@ def creat_app(container: Injector = None):
     for router in api_routers.__dict__.values():
         if isinstance(router, APIRouter):
             app.include_router(router, prefix="/api")
+
+    app.add_api_route("/graphql", GraphQL(schema, debug=True))
 
     database = container.get(ExpertDollupDatabase)
 

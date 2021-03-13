@@ -15,5 +15,6 @@ class DatasheetDefinitionElementDto(CamelModel):
     is_collection: bool
     datasheet_def_id: UUID
     order_index: int
+    name: str
     tags: List[UUID]
     default_properties: Dict[str, DatasheetDefinitionElementPropertyDto]

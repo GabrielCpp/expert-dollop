@@ -32,4 +32,8 @@ from .datasheet_definition_element import (
     DatasheetDefinitionElementFilter,
 )
 from .datasheet import Datasheet, DatasheetFilter
-from .datasheet_element import DatasheetElement, DatasheetElementFilter
+from .datasheet_element import (
+    DatasheetElement,
+    DatasheetElementFilter,
+    DatasheetElementId,
+)

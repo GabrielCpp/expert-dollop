@@ -1,5 +1,5 @@
 import astor
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import asdict
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import Page
@@ -255,6 +255,7 @@ def map_datasheet_definition_element_to_dto(
         id=src.id,
         unit_id=src.unit_id,
         is_collection=src.is_collection,
+        name=src.name,
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
         default_properties=DatasheetDefinitionElementPropertyDto(
@@ -272,6 +273,7 @@ def map_datasheet_definition_element_from_dto(
     return DatasheetDefinitionElement(
         id=src.id,
         unit_id=src.unit_id,
+        name=src.name,
         is_collection=src.is_collection,
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
@@ -280,7 +282,7 @@ def map_datasheet_definition_element_from_dto(
             value=src.default_properties.value,
         ),
         tags=src.tags,
-        creation_date_utc=datetime.utcnow(),
+        creation_date_utc=datetime.now(timezone.utc),
     )
 
 
@@ -327,7 +329,7 @@ def map_new_datasheet_from_dto(src: NewDatasheetDto, mapper: Mapper) -> Datashee
         is_staged=src.is_staged,
         datasheet_def_id=src.datasheet_def_id,
         from_datasheet_id=src.from_datasheet_id,
-        creation_date_utc=datetime.utcnow(),
+        creation_date_utc=datetime.now(timezone.utc),
     )
 
 
@@ -338,5 +340,41 @@ def map_datasheet_to_dto(src: Datasheet, mapper: Mapper) -> DatasheetDto:
         is_staged=src.is_staged,
         datasheet_def_id=src.datasheet_def_id,
         from_datasheet_id=src.from_datasheet_id,
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_datsheet_page_element_to_dto(
+    src: Page[DatasheetElement], mapper: Mapper
+) -> DatasheetElementPageDto:
+    return DatasheetElementPageDto(
+        next_page_token=src.next_page_token,
+        limit=src.limit,
+        results=mapper.map_many(src.results, DatasheetElementDto, DatasheetElement),
+    )
+
+
+def map_datsheet_element_to_dto(
+    src: DatasheetElement, mapper: Mapper
+) -> DatasheetElementDto:
+    return DatasheetElementDto(
+        datasheet_id=src.datasheet_id,
+        element_def_id=src.element_def_id,
+        child_element_reference=src.child_element_reference,
+        properties=src.properties,
+        original_datasheet_id=src.original_datasheet_id,
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_datsheet_element_from_dto(
+    src: DatasheetElementDto, mapper: Mapper
+) -> DatasheetElement:
+    return DatasheetElement(
+        datasheet_id=src.datasheet_id,
+        element_def_id=src.element_def_id,
+        child_element_reference=src.child_element_reference,
+        properties=src.properties,
+        original_datasheet_id=src.original_datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )

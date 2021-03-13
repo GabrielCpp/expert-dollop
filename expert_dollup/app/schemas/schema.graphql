@@ -1,0 +1,13 @@
+
+type ProjectDefinition {
+    id: ID!
+}
+
+type Query {
+    projectDefinition(id: ID!): ProjectDefinition
+}
+
+schema {
+  query: Query
+}
+

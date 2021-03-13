@@ -18,6 +18,7 @@ class DatasheetDefinitionElement:
     is_collection: bool
     datasheet_def_id: UUID
     order_index: int
+    name: str
     default_properties: DatasheetDefinitionElementProperty
     tags: List[UUID]
     creation_date_utc: datetime

@@ -335,6 +335,7 @@ def create_datasheet_tables():
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("unit_id", postgresql.UUID(), nullable=False),
         Column("is_collection", Boolean, nullable=False),
+        Column("name", String(64), nullable=False),
         Column("datasheet_def_id", postgresql.UUID(), nullable=False),
         Column("order_index", Integer, nullable=False),
         Column("default_properties", postgresql.JSON(), nullable=False),

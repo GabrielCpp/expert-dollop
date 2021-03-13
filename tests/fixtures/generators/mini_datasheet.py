@@ -44,6 +44,7 @@ class MiniDatasheet:
             is_collection=False,
             datasheet_def_id=datasheet_definition.id,
             order_index=0,
+            name="single_element",
             default_properties={
                 "conversion_factor": {"is_readonly": True, "value": 2},
                 "lost": {"is_readonly": False, "value": 1},
@@ -61,9 +62,10 @@ class MiniDatasheet:
             is_collection=True,
             datasheet_def_id=datasheet_definition.id,
             order_index=0,
+            name="collection_element",
             default_properties={
                 "conversion_factor": {"is_readonly": True, "value": 1.5},
-                "lost": {"is_readonly": True, "value": 3},
+                "lost": {"is_readonly": False, "value": 0},
             },
             tags=[str(label_b.id)],
             creation_date_utc=self.fake.date_time(),
