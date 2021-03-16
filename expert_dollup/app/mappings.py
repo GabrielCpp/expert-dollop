@@ -378,3 +378,11 @@ def map_datsheet_element_from_dto(
         original_datasheet_id=src.original_datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )
+
+
+def map_datasheet_clone_target_from_dto(
+    src: DatasheetCloneTargetDto, mapper: Mapper
+) -> DatasheetCloneTarget:
+    return DatasheetCloneTarget(
+        target_datasheet_id=src.target_datasheet_id, new_name=src.new_name
+    )

@@ -14,6 +14,10 @@ class Datasheet:
     from_datasheet_id: UUID
     creation_date_utc: datetime
 
+@dataclass
+class DatasheetCloneTarget:
+    target_datasheet_id: UUID
+    new_name: str
 
 class DatasheetFilter(QueryFilter):
     id: Optional[UUID]

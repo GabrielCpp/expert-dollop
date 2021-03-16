@@ -1,4 +1,4 @@
-from typing import Awaitable
+from typing import Awaitable, Optional
 from uuid import UUID
 from sqlalchemy import desc, select, and_
 from sqlalchemy import func
@@ -36,23 +36,19 @@ class DatasheetElementService(BaseCompositeCrudTableService[DatasheetElement]):
         return count
 
     async def find_datasheet_elements(
-        self, paginated_ressource: PaginatedRessource[UUID]
+        self, query: UUID, limit: int, next_page_token: Optional[str] = None
     ) -> Awaitable[Page[DatasheetElement]]:
-        offset = (
-            0
-            if paginated_ressource.next_page_token is None
-            else int(paginated_ressource.next_page_token)
-        )
+        offset = 0 if next_page_token is None else int(next_page_token)
 
         query = (
             self._table.select()
-            .where(self._table.c.datasheet_id == paginated_ressource.query)
+            .where(self._table.c.datasheet_id == query)
             .order_by(
                 desc(self._table.c.creation_date_utc),
                 desc(self._table.c.child_element_reference),
             )
-            .limit(paginated_ressource.limit)
-            .offset(paginated_ressource.limit * offset)
+            .limit(limit)
+            .offset(limit * offset)
         )
 
         records = await self._database.fetch_all(query)
@@ -60,6 +56,6 @@ class DatasheetElementService(BaseCompositeCrudTableService[DatasheetElement]):
 
         return Page[DatasheetElement](
             next_page_token=str(offset + 1),
-            limit=paginated_ressource.limit,
+            limit=limit,
             results=results,
         )

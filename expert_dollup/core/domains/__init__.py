@@ -31,7 +31,7 @@ from .datasheet_definition_element import (
     DatasheetDefinitionElementProperty,
     DatasheetDefinitionElementFilter,
 )
-from .datasheet import Datasheet, DatasheetFilter
+from .datasheet import Datasheet, DatasheetFilter, DatasheetCloneTarget
 from .datasheet_element import (
     DatasheetElement,
     DatasheetElementFilter,

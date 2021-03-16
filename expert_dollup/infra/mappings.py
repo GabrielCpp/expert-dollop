@@ -438,3 +438,17 @@ def map_datasheet_element_filter_to_dict(
 
 def map_datasheet_element_id_to_dict(src: DatasheetElementId, mapper: Mapper) -> dict:
     return asdict(src)
+
+
+def map_datasheet_filter_to_dict(src: DatasheetFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "id": ("id", None),
+            "name": ("name", None),
+            "is_staged": ("is_staged", None),
+            "datasheet_def_id": ("datasheet_def_id", None),
+            "from_datasheet_id": ("from_datasheet_id", None),
+            "creation_date_utc": ("creation_date_utc", None),
+        },
+    )

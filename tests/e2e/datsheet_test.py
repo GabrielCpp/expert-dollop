@@ -170,18 +170,64 @@ async def test_datasheet(ac, mini_datasheet: MiniDatasheet):
 
 
 @pytest.mark.asyncio
-async def test_datasheet_cruo(ac, mini_datasheet: MiniDatasheet):
+async def test_datasheet_crud(ac, mini_datasheet: MiniDatasheet):
+    runner = FlowRunner()
+    ctx = VarBucket()
+
+    @runner.step
+    async def create_datasheet():
+        ctx.datasheet_definition = mini_datasheet.datasheet_definitions[0]
+        ctx.datasheet = DatasheetDtoFactory(
+            datasheet_def_id=ctx.datasheet_definition.id
+        )
+        response = await ac.post("/api/datasheet", data=ctx.datasheet.json())
+        assert response.status_code == 200, response.json()
+
+    @runner.step
     async def clone_datsheet():
-        response = await ac.post(f"/api/datasheet/{datasheet.id}/clone")
+        datasheet_clone_target = DatasheetCloneTargetDto(
+            target_datasheet_id=ctx.datasheet.id, new_name="Renamed datasheet"
+        )
+        response = await ac.post(
+            f"/api/datasheet/clone", data=datasheet_clone_target.json()
+        )
         assert response.status_code == 200, response.json()
 
         cloned_datasheet = unwrap(response, DatasheetDto)
-        assert cloned_datasheet == datasheet
+        assert cloned_datasheet.name == datasheet_clone_target.new_name
 
+        response = await ac.get(f"/api/datasheet/{cloned_datasheet.id}")
+        assert response.status_code == 200, response.json()
+
+        actual_datasheet = unwrap(response, DatasheetDto)
+        assert actual_datasheet == cloned_datasheet
+
+        return (cloned_datasheet,)
+
+    @runner.step
+    async def update_datasheet(cloned_datasheet: DatasheetDto):
+        update_dto = DatasheetUpdateDto(
+            id=cloned_datasheet.id,
+            updates=DatasheetUpdatableProperties(name="patched name"),
+        )
+        response = await ac.patch("/api/datasheet", data=update_dto.json())
+        assert response.status_code == 200, response.json()
+
+        updated_datasheet = unwrap(response, DatasheetDto)
+        assert updated_datasheet.name == "patched name"
+
+        response = await ac.get(f"/api/datasheet/{cloned_datasheet.id}")
+        assert response.status_code == 200, response.json()
+
+        actual_datasheet = unwrap(response, DatasheetDto)
+        assert actual_datasheet == updated_datasheet
+
+    @runner.step
     async def delete_datasheet():
-        pass
+        response = await ac.delete(f"/api/datasheet/{ctx.datasheet.id}")
+        assert response.status_code == 200, response.json()
 
+        response = await ac.get(f"/api/datasheet/{ctx.datasheet.id}")
+        assert response.status_code == 404, response.json()
 
-# clone datasheet
-# delete datasheet
-# patch datasheet property
+    await runner.run()

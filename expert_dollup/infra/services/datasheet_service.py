@@ -4,7 +4,7 @@ from expert_dollup.infra.expert_dollup_db import (
     datasheet_table,
     DatasheetDao,
 )
-from expert_dollup.core.domains import Datasheet
+from expert_dollup.core.domains import Datasheet, DatasheetFilter
 
 
 class DatasheetService(BaseCrudTableService[Datasheet]):
@@ -13,4 +13,4 @@ class DatasheetService(BaseCrudTableService[Datasheet]):
         dao = DatasheetDao
         domain = Datasheet
         seach_filters = {}
-        table_filter_type = None
+        table_filter_type = DatasheetFilter

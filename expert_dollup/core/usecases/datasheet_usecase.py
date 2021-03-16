@@ -13,6 +13,7 @@ from expert_dollup.core.domains import (
     DatasheetElementId,
     DatasheetDefinitionElement,
     DatasheetDefinition,
+    DatasheetCloneTarget,
 )
 from expert_dollup.infra.services import (
     DatasheetService,
@@ -41,32 +42,55 @@ class DatasheetUseCase:
     async def find_by_id(self, datasheet_id: UUID) -> Awaitable[Datasheet]:
         return await self.datasheet_service.find_by_id(datasheet_id)
 
-    async def clone(self, datasheet_id: UUID):
-        datasheet = await self.datasheet_service.find_by_id(datasheet_id)
+    async def clone(self, datsheet_clone_target: DatasheetCloneTarget):
+        datasheet = await self.datasheet_service.find_by_id(
+            datsheet_clone_target.target_datasheet_id
+        )
         cloned_datasheet = Datasheet(
             id=uuid4(),
             name=datasheet.name,
             is_staged=datasheet.is_staged,
             datasheet_def_id=datasheet.datasheet_def_id,
-            from_datasheet_id=datasheet_id,
+            from_datasheet_id=datsheet_clone_target.target_datasheet_id,
             creation_date_utc=datetime.now(timezone.utc),
         )
 
-        elements = self.datasheet_element_service.find_by()
-        cloned_elements = [
-            DatasheetElement(
-                datasheet_id=cloned_datasheet.id,
-                element_def_id=definition_element.id,
-                child_element_reference=uuid4(),
-                properties=element.properties,
-                original_datasheet_id=element.original_datasheet_id,
-                creation_date_utc=datetime.now(timezone.utc),
-            )
-            for element in elements
-        ]
+        page = Page[DatasheetElement]()
+        cloned_elements = []
 
+        while len(page.results) == page.limit:
+            page = await self.datasheet_element_service.find_datasheet_elements(
+                datsheet_clone_target.target_datasheet_id,
+                page.limit,
+                page.next_page_token,
+            )
+            cloned_elements.extend(
+                [
+                    DatasheetElement(
+                        datasheet_id=cloned_datasheet.id,
+                        element_def_id=definition_element.id,
+                        child_element_reference=uuid4(),
+                        properties=result.properties,
+                        original_datasheet_id=result.original_datasheet_id,
+                        creation_date_utc=datetime.now(timezone.utc),
+                    )
+                    for result in page.results
+                ]
+            )
+
+        cloned_datsheet = Datasheet(
+            id=uuid4(),
+            name=datsheet_clone_target.new_name,
+            is_staged=datasheet.is_staged,
+            datasheet_def_id=datasheet.datasheet_def_id,
+            from_datasheet_id=datasheet.from_datasheet_id,
+            creation_date_utc=datetime.now(timezone.utc),
+        )
+
+        await self.add(cloned_datsheet)
         await self.datasheet_definition_element_service.insert_many(cloned_elements)
-        return await self.datasheet_service.find_by_id(cloned_datasheet.id)
+
+        return cloned_datsheet
 
     async def add(self, datasheet: Datasheet) -> Awaitable[Datasheet]:
         await self.datasheet_service.insert(datasheet)
@@ -89,23 +113,24 @@ class DatasheetUseCase:
         await self.datasheet_element_service.insert_many(elements)
         return await self.datasheet_service.find_by_id(datasheet.id)
 
-    async def update(self, datasheet: Datasheet) -> Awaitable[Datasheet]:
-        await self.datasheet_service.update(
-            DatasheetFilter(**asdict(datasheet)), DatasheetFilter(id=datasheet.id)
-        )
+    async def update(
+        self, datasheet_id: UUID, updates: DatasheetFilter
+    ) -> Awaitable[Datasheet]:
+        print(updates)
+        await self.datasheet_service.update(updates, DatasheetFilter(id=datasheet_id))
         return await self.datasheet_service.find_by_id(datasheet_id)
 
-    async def delete(self, datasheet_id: UUID) -> Awaitable:
+    async def delete_by_id(self, datasheet_id: UUID) -> Awaitable:
         await self.datasheet_element_service.remove_by(
             DatasheetElementFilter(datasheet_id=datasheet_id)
         )
-        await self.datasheet_service.delete_by_id(datasheet.id)
+        await self.datasheet_service.delete_by_id(datasheet_id)
 
     async def find_datasheet_elements(
         self, requested_page: PaginatedRessource[UUID]
     ) -> Awaitable[Page[DatasheetElement]]:
         return await self.datasheet_element_service.find_datasheet_elements(
-            requested_page
+            requested_page.query, requested_page.limit, requested_page.next_page_token
         )
 
     async def find_datasheet_element(

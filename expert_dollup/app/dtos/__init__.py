@@ -26,5 +26,14 @@ from .datasheet_definition_element_dto import (
     DatasheetDefinitionElementDto,
     DatasheetDefinitionElementPropertyDto,
 )
-from .datasheet_dto import DatasheetDto, NewDatasheetDto
-from .datasheet_element_dto import DatasheetElementDto, DatasheetElementPageDto
+from .datasheet_dto import (
+    DatasheetDto,
+    NewDatasheetDto,
+    DatasheetCloneTargetDto,
+    DatasheetUpdateDto,
+    DatasheetUpdatableProperties,
+)
+from .datasheet_element_dto import (
+    DatasheetElementDto,
+    DatasheetElementPageDto,
+)
