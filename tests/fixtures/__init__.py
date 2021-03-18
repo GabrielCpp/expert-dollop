@@ -30,26 +30,4 @@ from .object_dump_helpers import dump_to_file, set_dump_path, dump_snapshot, jso
 from .generators import *
 from .rest_cursors import AsyncCursor
 from .injector_override import *
-
-
-class FlowRunner:
-    def __init__(self):
-        self.steps = []
-
-    def step(self, func: callable):
-        self.steps.append(func)
-        return self
-
-    def extend(self, runner: "FlowRunner"):
-        self.steps.extend(runner.steps)
-
-    async def run(self, *args):
-        params = args
-
-        for step in self.steps:
-            new_params = await step(*params)
-
-            if isinstance(new_params, tuple):
-                params = new_params
-            else:
-                params = []
+from .flow_runner import FlowRunner
