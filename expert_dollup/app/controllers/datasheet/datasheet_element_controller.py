@@ -15,7 +15,7 @@ from expert_dollup.app.dtos import (
     DatasheetElementDto,
     DatasheetElementPageDto,
 )
-from expert_dollup.core.usecases import DatasheetUseCase
+from expert_dollup.core.usecases import DatasheetElementUseCase
 
 router = APIRouter()
 
@@ -26,7 +26,7 @@ async def find_datasheet_elements(
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = Query(alias="limit", default=100),
     request_handler=Depends(Inject(RequestHandler)),
-    usecase=Depends(Inject(DatasheetUseCase)),
+    usecase=Depends(Inject(DatasheetElementUseCase)),
 ):
     return await request_handler.forward(
         usecase.find_datasheet_elements,
@@ -50,7 +50,7 @@ async def find_datasheet_element(
     element_def_id: UUID,
     child_element_reference: UUID,
     request_handler=Depends(Inject(RequestHandler)),
-    usecase=Depends(Inject(DatasheetUseCase)),
+    usecase=Depends(Inject(DatasheetElementUseCase)),
 ):
     return await request_handler.handle(
         usecase.find_datasheet_element,
@@ -75,7 +75,7 @@ async def update_datasheet_element_properties(
     child_element_reference: UUID,
     properties: Dict[str, Union[float, str, bool]],
     request_handler=Depends(Inject(RequestHandler)),
-    usecase=Depends(Inject(DatasheetUseCase)),
+    usecase=Depends(Inject(DatasheetElementUseCase)),
 ):
     return await request_handler.forward(
         usecase.update_datasheet_element_properties,
@@ -100,7 +100,7 @@ async def add_datasheet_element_to_collection(
     element_def_id: UUID,
     properties: Dict[str, Union[float, str, bool]],
     request_handler=Depends(Inject(RequestHandler)),
-    usecase=Depends(Inject(DatasheetUseCase)),
+    usecase=Depends(Inject(DatasheetElementUseCase)),
 ):
     return await request_handler.forward(
         usecase.add_collection_item,
@@ -123,7 +123,7 @@ async def delete_datasheet_element_from_collection(
     datasheet_id: UUID,
     element_def_id: UUID,
     child_element_reference: UUID,
-    usecase=Depends(Inject(DatasheetUseCase)),
+    usecase=Depends(Inject(DatasheetElementUseCase)),
 ):
     await usecase.delete_element(
         DatasheetElementId(

@@ -23,5 +23,5 @@ class LabelCollectionUseCase:
         await self.label_collection_service.update(label_collection)
         return await self.label_collection_service.find_by_id(label_collection.id)
 
-    async def delete_by_id(self, id: UUID) -> Awaitable[LabelCollection]:
+    async def delete_by_id(self, id: UUID) -> Awaitable:
         await self.label_collection_service.delete_by_id(id)

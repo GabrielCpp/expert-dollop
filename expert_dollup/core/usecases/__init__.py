@@ -9,3 +9,4 @@ from .datasheet_definition_element_usecase import DatasheetDefinitionElementUseC
 from .datasheet_definition_label_collection_usecase import LabelCollectionUseCase
 from .datasheet_definition_label_usecase import LabelUseCase
 from .datasheet_usecase import DatasheetUseCase
+from .datasheet_element_usecase import DatasheetElementUseCase

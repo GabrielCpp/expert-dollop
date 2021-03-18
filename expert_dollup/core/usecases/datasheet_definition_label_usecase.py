@@ -19,5 +19,5 @@ class LabelUseCase:
         await self.label_service.update(label)
         return await self.label_service.find_by_id(label.id)
 
-    async def delete_by_id(self, id: UUID) -> Awaitable[Label]:
+    async def delete_by_id(self, id: UUID) -> Awaitable:
         await self.label_service.delete_by_id(id)

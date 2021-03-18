@@ -45,7 +45,7 @@ class DatasheetDefinitionElementUseCase:
             datasheet_definition_element.id
         )
 
-    async def delete_by_id(self, id: UUID) -> Awaitable[DatasheetDefinitionElement]:
+    async def delete_by_id(self, id: UUID) -> Awaitable:
         await self.datasheet_definition_element_service.delete_by_id(id)
 
     async def _validate_element(
