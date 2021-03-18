@@ -14,5 +14,4 @@ class DatasheetDefinitionElementService(
         table = datasheet_definition_element_table
         dao = DatasheetDefinitionElementDao
         domain = DatasheetDefinitionElement
-        seach_filters = {}
         table_filter_type = None

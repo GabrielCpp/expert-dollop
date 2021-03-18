@@ -1,6 +1,6 @@
 import jsonpickle
 from typing import List
-from datetime import datetime, timezone
+from expert_dollup.shared.starlette_injection import Clock
 from uuid import UUID
 from dataclasses import asdict
 from expert_dollup.shared.automapping import Mapper
@@ -48,7 +48,7 @@ def map_project_definition_to_dao(
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
         datasheet_def_id=src.datasheet_def_id,
-        creation_date_utc=datetime.now(timezone.utc),
+        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
@@ -84,7 +84,7 @@ def map_project_definition_container_to_dao(
         default_value=src.default_value,
         path=join_uuid_path(src.path),
         mixed_paths=build_path_steps(src.path),
-        creation_date_utc=datetime.now(timezone.utc),
+        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
@@ -105,7 +105,7 @@ def map_project_to_dao(src: Project, mapper: Mapper) -> ProjectDao:
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
-        creation_date_utc=datetime.now(timezone.utc),
+        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
@@ -119,7 +119,7 @@ def map_project_container_to_dao(
         path=join_uuid_path(src.path),
         value=src.value,
         mixed_paths=build_path_steps(src.path),
-        creation_date_utc=datetime.now(timezone.utc),
+        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
@@ -188,6 +188,7 @@ def map_translation_to_dao(src: Translation, mapper: Mapper) -> TranslationDao:
         scope=src.scope,
         name=src.name,
         value=src.value,
+        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
@@ -265,7 +266,7 @@ def map_formula_cache_result_to_dao(
         generation_tag=src.generation_tag,
         calculation_details=src.calculation_details,
         result=src.result,
-        last_modified_date_utc=datetime.now(timezone.utc),
+        last_modified_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
@@ -312,7 +313,10 @@ def map_datasheet_definition_element_to_dao(
         name=src.name,
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
-        default_properties=src.default_properties.dict(),
+        default_properties={
+            name: asdict(property_details)
+            for (name, property_details) in src.default_properties.items()
+        },
         tags=list_uuid_to_str(src.tags),
         creation_date_utc=src.creation_date_utc,
     )
@@ -452,3 +456,9 @@ def map_datasheet_filter_to_dict(src: DatasheetFilter, mapper: Mapper) -> dict:
             "creation_date_utc": ("creation_date_utc", None),
         },
     )
+
+
+def map_translation_ressource_locale_query_to_dict(
+    src: TranslationRessourceLocaleQuery, mapper: Mapper
+) -> dict:
+    return asdict(src)

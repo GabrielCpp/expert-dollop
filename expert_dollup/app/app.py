@@ -9,7 +9,7 @@ from structlog import configure
 from structlog.contextvars import merge_contextvars
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 import expert_dollup.app.controllers as api_routers
-from .schemas import schema
+from .schemas import schema, GraphqlContext
 from .modules import build_container
 from .middlewares import (
     create_database_transaction_middleware,
@@ -63,7 +63,16 @@ def creat_app(container: Injector = None):
         if isinstance(router, APIRouter):
             app.include_router(router, prefix="/api")
 
-    app.add_api_route("/graphql", GraphQL(schema, debug=True))
+    app.add_route(
+        "/graphql",
+        GraphQL(
+            schema,
+            debug=True,
+            introspection=True,
+            context_value=GraphqlContext(container=container),
+        ),
+        methods=["GET", "POST"],
+    )
 
     database = container.get(ExpertDollupDatabase)
 

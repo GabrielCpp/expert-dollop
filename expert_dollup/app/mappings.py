@@ -1,6 +1,6 @@
 import astor
-from datetime import datetime, timezone
 from dataclasses import asdict
+from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import Page
 from expert_dollup.app.dtos import *
@@ -258,10 +258,13 @@ def map_datasheet_definition_element_to_dto(
         name=src.name,
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
-        default_properties=DatasheetDefinitionElementPropertyDto(
-            is_readonly=src.default_properties.is_readonly,
-            value=src.default_properties.value,
-        ),
+        default_properties={
+            name: DatasheetDefinitionElementPropertyDto(
+                is_readonly=property_details.is_readonly,
+                value=property_details.value,
+            )
+            for (name, property_details) in src.default_properties.items()
+        },
         tags=src.tags,
         creation_date_utc=src.creation_date_utc,
     )
@@ -277,12 +280,15 @@ def map_datasheet_definition_element_from_dto(
         is_collection=src.is_collection,
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
-        default_properties=DatasheetDefinitionElementProperty(
-            is_readonly=src.default_properties.is_readonly,
-            value=src.default_properties.value,
-        ),
+        default_properties={
+            name: DatasheetDefinitionElementProperty(
+                is_readonly=property_details.is_readonly,
+                value=property_details.value,
+            )
+            for (name, property_details) in src.default_properties.items()
+        },
         tags=src.tags,
-        creation_date_utc=datetime.now(timezone.utc),
+        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
@@ -329,7 +335,7 @@ def map_new_datasheet_from_dto(src: NewDatasheetDto, mapper: Mapper) -> Datashee
         is_staged=src.is_staged,
         datasheet_def_id=src.datasheet_def_id,
         from_datasheet_id=src.from_datasheet_id,
-        creation_date_utc=datetime.now(timezone.utc),
+        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 

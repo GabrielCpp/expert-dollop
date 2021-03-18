@@ -37,9 +37,14 @@ async def dal():
 
 
 @pytest.fixture
-def container(dal) -> Injector:
+def container(dal, request) -> Injector:
     container = build_container()
     container.binder.bind(ExpertDollupDatabase, dal)
+
+    other_bindings = get_overrides_for(request.function)
+    for load_binding in other_bindings:
+        load_binding(container)
+
     return container
 
 

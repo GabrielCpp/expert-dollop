@@ -12,5 +12,4 @@ class DatasheetDefinitionService(BaseCrudTableService[DatasheetDefinition]):
         table = datasheet_definition_table
         dao = DatasheetDefinitionDao
         domain = DatasheetDefinition
-        seach_filters = {}
         table_filter_type = None

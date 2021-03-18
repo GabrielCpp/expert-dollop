@@ -42,6 +42,7 @@ def create_global_table():
         Column("locale", String(5), nullable=False, primary_key=True),
         Column("name", String, nullable=False, primary_key=True),
         Column("value", String, nullable=False),
+        Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 
     op.create_index(

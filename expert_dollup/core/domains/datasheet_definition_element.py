@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Dict
 from dataclasses import dataclass
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
@@ -19,7 +19,7 @@ class DatasheetDefinitionElement:
     datasheet_def_id: UUID
     order_index: int
     name: str
-    default_properties: DatasheetDefinitionElementProperty
+    default_properties: Dict[str, DatasheetDefinitionElementProperty]
     tags: List[UUID]
     creation_date_utc: datetime
 

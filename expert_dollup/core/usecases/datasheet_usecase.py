@@ -1,6 +1,5 @@
 from uuid import UUID, uuid4
 from typing import Awaitable, Dict, Union
-from datetime import datetime, timezone
 from dataclasses import asdict
 from expert_dollup.shared.database_services import Page
 from expert_dollup.core.exceptions import ValidationError, InvalidUsageError
@@ -22,6 +21,7 @@ from expert_dollup.infra.services import (
     DatasheetDefinitionService,
 )
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
+from expert_dollup.shared.starlette_injection import Clock
 
 
 class DatasheetUseCase:
@@ -32,12 +32,14 @@ class DatasheetUseCase:
         schema_validator: SchemaValidator,
         datasheet_definition_element_service: DatasheetDefinitionElementService,
         datsheet_definition_service: DatasheetDefinitionService,
+        clock: Clock,
     ):
         self.datasheet_service = datasheet_service
         self.datasheet_element_service = datasheet_element_service
         self.datasheet_definition_element_service = datasheet_definition_element_service
         self.schema_validator = schema_validator
         self.datsheet_definition_service = datsheet_definition_service
+        self.clock = clock
 
     async def find_by_id(self, datasheet_id: UUID) -> Awaitable[Datasheet]:
         return await self.datasheet_service.find_by_id(datasheet_id)
@@ -52,15 +54,17 @@ class DatasheetUseCase:
             is_staged=datasheet.is_staged,
             datasheet_def_id=datasheet.datasheet_def_id,
             from_datasheet_id=datsheet_clone_target.target_datasheet_id,
-            creation_date_utc=datetime.now(timezone.utc),
+            creation_date_utc=self.clock.utcnow(),
         )
 
         page = Page[DatasheetElement]()
         cloned_elements = []
 
         while len(page.results) == page.limit:
-            page = await self.datasheet_element_service.find_datasheet_elements(
-                datsheet_clone_target.target_datasheet_id,
+            page = await self.datasheet_element_service.find_by_paginated(
+                DatasheetElementFilter(
+                    datasheet_id=datsheet_clone_target.target_datasheet_id
+                ),
                 page.limit,
                 page.next_page_token,
             )
@@ -72,7 +76,7 @@ class DatasheetUseCase:
                         child_element_reference=uuid4(),
                         properties=result.properties,
                         original_datasheet_id=result.original_datasheet_id,
-                        creation_date_utc=datetime.now(timezone.utc),
+                        creation_date_utc=self.clock.utcnow(),
                     )
                     for result in page.results
                 ]
@@ -84,7 +88,7 @@ class DatasheetUseCase:
             is_staged=datasheet.is_staged,
             datasheet_def_id=datasheet.datasheet_def_id,
             from_datasheet_id=datasheet.from_datasheet_id,
-            creation_date_utc=datetime.now(timezone.utc),
+            creation_date_utc=self.clock.utcnow(),
         )
 
         await self.add(cloned_datsheet)
@@ -105,7 +109,7 @@ class DatasheetUseCase:
                     for name, default_property in definition_element.default_properties.items()
                 },
                 original_datasheet_id=datasheet.id,
-                creation_date_utc=datetime.now(timezone.utc),
+                creation_date_utc=self.clock.utcnow(),
             )
             for definition_element in definition_elements
         ]
@@ -129,8 +133,10 @@ class DatasheetUseCase:
     async def find_datasheet_elements(
         self, requested_page: PaginatedRessource[UUID]
     ) -> Awaitable[Page[DatasheetElement]]:
-        return await self.datasheet_element_service.find_datasheet_elements(
-            requested_page.query, requested_page.limit, requested_page.next_page_token
+        return await self.datasheet_element_service.find_by_paginated(
+            DatasheetElementFilter(datasheet_id=requested_page.query),
+            requested_page.limit,
+            requested_page.next_page_token,
         )
 
     async def find_datasheet_element(
@@ -190,7 +196,7 @@ class DatasheetUseCase:
             child_element_reference=uuid4(),
             properties=properties,
             original_datasheet_id=datasheet_id,
-            creation_date_utc=datetime.now(timezone.utc),
+            creation_date_utc=self.clock.utcnow(),
         )
         await self.datasheet_element_service.insert(new_element)
 

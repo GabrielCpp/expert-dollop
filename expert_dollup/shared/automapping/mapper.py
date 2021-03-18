@@ -1,14 +1,19 @@
 from typing import Type, TypeVar, Callable, Tuple, Dict, List, Optional, Union
 from collections import defaultdict
 from inspect import getmembers, isfunction, signature
+from injector import Injector
 
 T = TypeVar("T")
 U = TypeVar("U")
 
 
 class Mapper:
-    def __init__(self):
+    def __init__(self, injector: Injector):
         self._mappings = defaultdict(dict)
+        self._injector = injector
+
+    def get(self, class_type):
+        return self._injector.get(class_type)
 
     def add_mapping(
         self,

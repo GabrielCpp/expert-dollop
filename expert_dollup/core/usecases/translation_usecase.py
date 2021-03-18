@@ -1,11 +1,11 @@
-from typing import Awaitable
+from typing import Awaitable, Optional
 from expert_dollup.core.exceptions import RessourceNotFound, ValidationError
 from expert_dollup.core.domains import (
     Translation,
     TranslationId,
     Ressource,
-    TranslationRessourceLocaleQuery,
     PaginatedRessource,
+    TranslationRessourceLocaleQuery,
 )
 from expert_dollup.infra.services import TranslationService, RessourceService
 from expert_dollup.shared.database_services import Page
@@ -62,10 +62,13 @@ class TranslationUseCase:
         return result
 
     async def find_by_ressource_locale(
-        self, paginated_query: PaginatedRessource[TranslationRessourceLocaleQuery]
+        self,
+        query: TranslationRessourceLocaleQuery,
+        limit: int,
+        next_page_token: Optional[str],
     ) -> Awaitable[Page[Translation]]:
-        return await self.service.paginated_query(
-            paginated_query.query,
-            paginated_query.limit,
-            paginated_query.next_page_token,
+        return await self.service.find_by_paginated(
+            query,
+            limit,
+            next_page_token,
         )

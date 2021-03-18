@@ -12,5 +12,4 @@ class DatasheetService(BaseCrudTableService[Datasheet]):
         table = datasheet_table
         dao = DatasheetDao
         domain = Datasheet
-        seach_filters = {}
         table_filter_type = DatasheetFilter

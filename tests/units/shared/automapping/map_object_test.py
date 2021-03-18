@@ -1,3 +1,4 @@
+from unittest.mock import MagicMock
 from dataclasses import dataclass
 from expert_dollup.shared.automapping import Mapper
 
@@ -22,7 +23,7 @@ def test_given_identical_object_should_copy_each_member():
     expected_bar = Bar(name="Joe", age=18)
     foo = Foo(name="Joe", age=18)
 
-    mapper = Mapper()
+    mapper = Mapper(MagicMock())
     mapper.add_mapping(Foo, Bar, map_foo_to_bar)
 
     bar = mapper.map(foo, Bar)

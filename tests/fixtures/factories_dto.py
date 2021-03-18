@@ -9,6 +9,7 @@ class ProjectDefinitionDtoFactory(factory.Factory):
 
     id = factory.LazyFunction(uuid4)
     name = factory.Sequence(lambda n: f"Gab{n}")
+    datasheet_def_id = factory.LazyFunction(uuid4)
     default_datasheet_id = factory.LazyFunction(uuid4)
 
 
@@ -84,6 +85,7 @@ class DatasheetDefinitionElementDtoFactory(factory.Factory):
     datasheet_def_id = factory.LazyFunction(uuid4)
     order_index = factory.Sequence(lambda n: n)
     tags = factory.LazyFunction(lambda: [])
+    name = factory.Sequence(lambda n: f"field_name{n}")
     default_properties = {
         "conversion_factor": DatasheetDefinitionElementPropertyDto(
             is_readonly=True, value=2

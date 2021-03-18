@@ -30,7 +30,6 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
         table = project_container_table
         dao = ProjectContainerDao
         domain = ProjectContainer
-        seach_filters = {}
         table_filter_type = ProjectContainerFilter
 
     async def find_subtree(self, container: ProjectContainer):

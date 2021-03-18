@@ -12,5 +12,4 @@ class ProjectService(BaseCrudTableService[Project]):
         table = project_table
         dao = ProjectDao
         domain = Project
-        seach_filters = {}
         table_filter_type = None

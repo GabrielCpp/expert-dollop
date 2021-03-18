@@ -1,10 +1,39 @@
 
-type ProjectDefinition {
+type DatasheetElement {
+    datasheet_id: String!
+    element_def_id: String!
+    child_element_reference: ID!
+    properties: String!
+    original_datasheet_id: String!
+    creation_date_utc: String!
+} 
+
+type DatasheetElementEdge {
+    node: DatasheetElement!
+    cursor: String!
+}
+
+type DatasheetElementConnection {
+    edges: [DatasheetElementEdge!]!
+    pageInfo: PageInfo!
+}
+
+type Datasheet {
     id: ID!
+    name: String!
+    is_staged: Boolean!
+    datasheet_def_id: ID!
+    from_datasheet_id: ID!
+    elements(first: Int!, after: String!): DatasheetElementConnection
+}
+
+type PageInfo {
+    hasNextPage: Boolean
+    endCursor: String!
 }
 
 type Query {
-    projectDefinition(id: ID!): ProjectDefinition
+    findDatasheet(id: ID!): Datasheet
 }
 
 schema {

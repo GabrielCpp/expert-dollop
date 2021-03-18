@@ -1,10 +1,20 @@
-from injector import Binder, singleton
+from injector import Binder, singleton, Injector, Provider
 from expert_dollup.shared.automapping import Mapper
 import expert_dollup.app.mappings as app_mappings
 import expert_dollup.infra.mappings as infra_mappings
 
 
 def bind_mapper(binder: Binder) -> None:
-    mapper = Mapper()
-    mapper.add_all_mapper_from_module([app_mappings, infra_mappings])
-    binder.bind(Mapper, to=mapper, scope=singleton)
+    class MapperProvider(Provider):
+        def __init__(self):
+            self.mapper = None
+
+        def get(self, injector: Injector) -> Mapper:
+            if self.mapper is None:
+                mapper = Mapper(injector)
+                mapper.add_all_mapper_from_module([app_mappings, infra_mappings])
+                self.mapper = mapper
+
+            return self.mapper
+
+    binder.bind(Mapper, to=MapperProvider(), scope=singleton)

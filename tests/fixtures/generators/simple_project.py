@@ -124,6 +124,7 @@ class SimpleProject:
                     locale="fr",
                     name=project_container_definition.name,
                     value=" ".join(self.fake.words()),
+                    creation_date_utc=self.fake.date_time(),
                 )
             )
 
@@ -134,6 +135,7 @@ class SimpleProject:
                     locale="fr",
                     name=f"{project_container_definition.name}_helptext",
                     value=self.fake.sentence(nb_words=20),
+                    creation_date_utc=self.fake.date_time(),
                 )
             )
 
@@ -144,6 +146,7 @@ class SimpleProject:
                     locale="en",
                     name=project_container_definition.name,
                     value=" ".join(self.fake.words()),
+                    creation_date_utc=self.fake.date_time(),
                 )
             )
 
@@ -154,6 +157,7 @@ class SimpleProject:
                     locale="en",
                     name=f"{project_container_definition.name}_helptext",
                     value=self.fake.sentence(nb_words=20),
+                    creation_date_utc=self.fake.date_time(),
                 )
             )
 

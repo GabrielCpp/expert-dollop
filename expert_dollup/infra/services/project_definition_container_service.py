@@ -29,7 +29,6 @@ class ProjectDefinitionContainerService(
         table = project_definition_container_table
         dao = ProjectDefinitionContainerDao
         domain = ProjectDefinitionContainer
-        seach_filters = {}
         table_filter_type = ProjectDefinitionContainerFilter
 
     async def has_path(self, path: List[UUID]) -> Awaitable[bool]:

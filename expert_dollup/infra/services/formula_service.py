@@ -22,7 +22,6 @@ class FormulaService(BaseCrudTableService[Formula]):
         table = project_definition_formula_table
         dao = ProjectDefinitionFormulaDao
         domain = Formula
-        seach_filters = {}
         table_filter_type = None
 
     async def get_formulas_by_name(

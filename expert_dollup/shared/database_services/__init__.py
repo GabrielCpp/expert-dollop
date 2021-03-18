@@ -21,7 +21,7 @@ from sqlalchemy.dialects import postgresql
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.core.exceptions import RessourceNotFound
 from .page import Page
-
+from .paginator import IdStampedDateCursorEncoder
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")
@@ -32,20 +32,6 @@ class AbstractFilterBuilder(ABC):
     @abstractmethod
     def build(self, filter: Query):
         pass
-
-
-class AndColumnFilter(AbstractFilterBuilder):
-    def __init__(self, pairs):
-        self.pairs = pairs
-
-    def build(self, query_filter: Query):
-        condition = self.pairs[0][0] == self.pairs[0][1](query_filter)
-
-        for index in range(1, len(self.pairs)):
-            (column, get_value) = self.pairs[index]
-            condition = and_(condition, column == get_value(query_filter))
-
-        return condition
 
 
 def build_and_column_filter(table, fields: dict):
@@ -99,10 +85,12 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         self._database = database
         self._mapper = mapper
         self._table = self.__class__.Meta.table
+        self._paginator = getattr(self.__class__.Meta, "paginator", lambda _: None)(
+            self._table
+        )
         self._dao = self.__class__.Meta.dao
         self._domain = self.__class__.Meta.domain
         self._table_filter_type = self.__class__.Meta.table_filter_type
-        self._seach_filters = self.__class__.Meta.seach_filters or {}
         self._column_processors = self.build_table_raw_processors()
 
     def build_table_raw_processors(self) -> List[TableColumnProcessor]:
@@ -154,6 +142,27 @@ class CoreCrudTableService(ABC, Generic[Domain]):
 
         return results
 
+    async def find_by_paginated(
+        self,
+        query_filter: QueryFilter,
+        limit: int,
+        next_page_token: Optional[str] = None,
+    ):
+        assert not self._paginator is None, "Paginator required"
+        filter_fields = self._mapper.map(query_filter, dict)
+        where_filter = build_and_column_filter(self._table, filter_fields)
+        query = self._paginator.build_query(where_filter, limit, next_page_token)
+        records = await self._database.fetch_all(query=query)
+        results = self.map_many_to(records, self._dao, self._domain)
+
+        new_next_page_token = self._paginator.encode_dao(records[-1])
+
+        return Page(
+            next_page_token=new_next_page_token,
+            limit=limit,
+            results=results,
+        )
+
     async def find_one_by(self, query_filter: QueryFilter) -> Awaitable[List[Domain]]:
         assert not self._table_filter_type is None
         filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
@@ -167,41 +176,6 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         result = self._mapper.map(self._dao(**record), self._domain)
 
         return result
-
-    async def query_by(
-        self,
-        query_filter: Query,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-    ) -> Awaitable[List[Domain]]:
-        abstract_filter = self._seach_filters[type(query_filter)]
-        where_filter = abstract_filter.build(query_filter)
-        query = self._table.select().where(where_filter)
-
-        if not limit is None:
-            query = query.limit(limit)
-
-        if not offset is None:
-            query = query.offset(offset)
-
-        records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
-
-        return results
-
-    async def paginated_query(
-        self,
-        query_filter: Query,
-        limit: int,
-        next_page_token: Optional[str],
-    ) -> Awaitable[Page[Domain]]:
-        page_index = 0 if next_page_token is None else int(next_page_token)
-        results = await self.query_by(query_filter, limit, limit * page_index)
-        return Page(
-            next_page_token=str(page_index + 1),
-            limit=limit,
-            results=results,
-        )
 
     async def remove_by(self, query_filter: QueryFilter) -> Awaitable:
         assert not self._table_filter_type is None

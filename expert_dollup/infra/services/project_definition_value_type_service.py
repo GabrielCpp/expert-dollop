@@ -14,5 +14,4 @@ class ProjectDefinitionValueTypeService(
         table = project_definition_value_type_table
         dao = ProjectDefinitionValueTypeDao
         domain = ProjectDefinitionValueType
-        seach_filters = {}
         table_filter_type = None

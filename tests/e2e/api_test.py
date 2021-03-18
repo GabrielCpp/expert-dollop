@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timezone
 from typing import Dict, Type, List, Callable, Any, TypeVar
 from pydantic import BaseModel
 from uuid import uuid4
@@ -100,7 +101,9 @@ async def test_given_translation_should_be_able_to_create_update_delete(ac):
 
 
 @pytest.mark.asyncio
-async def test_given_translation_should_be_able_to_retrieve_it(ac, dal, map_dao_to_dto):
+async def test_given_translation_should_be_able_to_retrieve_it(
+    ac, dal, map_dao_to_dto, static_clock
+):
     ressource_id = uuid4()
     translations = dict(
         a_fr=TranslationDao(
@@ -109,6 +112,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(ac, dal, map_dao_
             locale="fr",
             name="a",
             value="a_fr",
+            creation_date_utc=static_clock.utcnow(),
         ),
         a_en=TranslationDao(
             ressource_id=ressource_id,
@@ -116,6 +120,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(ac, dal, map_dao_
             locale="en",
             name="a",
             value="a_en",
+            creation_date_utc=static_clock.utcnow(),
         ),
         b_fr=TranslationDao(
             ressource_id=ressource_id,
@@ -123,6 +128,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(ac, dal, map_dao_
             locale="fr",
             name="b",
             value="b_fr",
+            creation_date_utc=static_clock.utcnow(),
         ),
     )
 
@@ -131,9 +137,9 @@ async def test_given_translation_should_be_able_to_retrieve_it(ac, dal, map_dao_
     )
 
     expected_translations = TranslationPageDto(
-        next_page_token="1",
+        next_page_token="eyJkYXRlIjogIjIwMDAtMDQtMDNUMDE6MDE6MDEuMDAwMDA3KzAwOjAwIiwgImlkIjogImEifQ==",
         limit=10,
-        results=[dto_translations["a_fr"], dto_translations["b_fr"]],
+        results=[dto_translations["b_fr"], dto_translations["a_fr"]],
     )
 
     await populate_db(dal, translation_table, translations)

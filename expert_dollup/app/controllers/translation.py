@@ -86,8 +86,8 @@ async def get_all_translation_for_ressource(
 ):
     query = TranslationRessourceLocaleQuery(ressource_id=ressource_id, locale=locale)
 
-    return await handler.handle(
+    return await handler.forward(
         usecase.find_by_ressource_locale,
-        PaginatedRessource(next_page_token=next_page_token, limit=limit, query=query),
+        dict(next_page_token=next_page_token, limit=limit, query=query),
         MappingChain(out_domain=Page[Translation], out_dto=TranslationPageDto),
     )

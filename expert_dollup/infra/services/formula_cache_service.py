@@ -13,7 +13,6 @@ class FormulaCacheService(BaseCompositeCrudTableService[FormulaCachedResult]):
         table = project_formula_cache_table
         dao = ProjectFormulaCacheDao
         domain = FormulaCachedResult
-        seach_filters = {}
         table_filter_type = None
 
     async def repopulate(self, project_id: UUID, domains: List[FormulaCachedResult]):

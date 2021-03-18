@@ -12,5 +12,4 @@ class LabelCollectionService(BaseCrudTableService[LabelCollection]):
         table = datasheet_definition_label_collection_table
         dao = LabelCollectionDao
         domain = LabelCollection
-        seach_filters = {}
         table_filter_type = None

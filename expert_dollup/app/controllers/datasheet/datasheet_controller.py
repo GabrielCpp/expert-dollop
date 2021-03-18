@@ -26,7 +26,7 @@ router = APIRouter()
 
 
 @router.get("/datasheet/{datasheet_id}")
-async def add_datasheet(
+async def find_datasheet_by_id(
     datasheet_id: UUID,
     usecase=Depends(Inject(DatasheetUseCase)),
     handler=Depends(Inject(RequestHandler)),

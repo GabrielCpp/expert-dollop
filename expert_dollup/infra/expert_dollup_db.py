@@ -179,6 +179,7 @@ translation_table = Table(
     Column("locale", String(5), nullable=False, primary_key=True),
     Column("name", String, nullable=False, primary_key=True),
     Column("value", String, nullable=False),
+    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
 )
 
 
@@ -188,6 +189,7 @@ class TranslationDao(BaseModel):
     scope: UUID
     name: str
     value: str
+    creation_date_utc: datetime
 
 
 setting_table = Table(
