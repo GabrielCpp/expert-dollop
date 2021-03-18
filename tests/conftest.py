@@ -1,7 +1,6 @@
 import pytest
 import os
 import logging
-import os
 from injector import Injector
 from dotenv import load_dotenv
 from pathlib import Path

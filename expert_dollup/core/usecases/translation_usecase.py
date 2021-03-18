@@ -4,7 +4,6 @@ from expert_dollup.core.domains import (
     Translation,
     TranslationId,
     Ressource,
-    PaginatedRessource,
     TranslationRessourceLocaleQuery,
 )
 from expert_dollup.infra.services import TranslationService, RessourceService

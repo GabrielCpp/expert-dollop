@@ -8,7 +8,7 @@ from expert_dollup.shared.database_services import (
     Page,
     IdStampedDateCursorEncoder,
 )
-from expert_dollup.core.domains import PaginatedRessource, DatasheetElement
+from expert_dollup.core.domains import DatasheetElement
 from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
     datasheet_element_table,

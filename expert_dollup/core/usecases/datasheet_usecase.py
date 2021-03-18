@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import Awaitable, Dict, Union
+from typing import Awaitable, Dict, Union, Optional
 from dataclasses import asdict
 from expert_dollup.shared.database_services import Page
 from expert_dollup.core.exceptions import ValidationError, InvalidUsageError
@@ -8,7 +8,6 @@ from expert_dollup.core.domains import (
     DatasheetElement,
     DatasheetFilter,
     DatasheetElementFilter,
-    PaginatedRessource,
     DatasheetElementId,
     DatasheetDefinitionElement,
     DatasheetDefinition,
@@ -131,12 +130,12 @@ class DatasheetUseCase:
         await self.datasheet_service.delete_by_id(datasheet_id)
 
     async def find_datasheet_elements(
-        self, requested_page: PaginatedRessource[UUID]
+        self, datasheet_id: UUID, limit: int, next_page_token: Optional[str] = None
     ) -> Awaitable[Page[DatasheetElement]]:
         return await self.datasheet_element_service.find_by_paginated(
-            DatasheetElementFilter(datasheet_id=requested_page.query),
-            requested_page.limit,
-            requested_page.next_page_token,
+            DatasheetElementFilter(datasheet_id=datasheet_id),
+            limit,
+            next_page_token,
         )
 
     async def find_datasheet_element(

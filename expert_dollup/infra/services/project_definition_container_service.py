@@ -4,10 +4,13 @@ from sqlalchemy import select, text, bindparam, String, and_, or_, desc
 from sqlalchemy.sql.expression import func
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects import postgresql
-from expert_dollup.shared.database_services import BaseCrudTableService, Page
+from expert_dollup.shared.database_services import (
+    BaseCrudTableService,
+    Page,
+    IdStampedDateCursorEncoder,
+)
 from expert_dollup.core.domains import (
     ProjectDefinitionContainer,
-    PaginatedRessource,
     ProjectDefinitionContainerFilter,
 )
 from expert_dollup.infra.path_transform import join_uuid_path
@@ -30,6 +33,7 @@ class ProjectDefinitionContainerService(
         dao = ProjectDefinitionContainerDao
         domain = ProjectDefinitionContainer
         table_filter_type = ProjectDefinitionContainerFilter
+        paginator = IdStampedDateCursorEncoder.for_fields("creation_date_utc", "name")
 
     async def has_path(self, path: List[UUID]) -> Awaitable[bool]:
         if len(path) == 0:
@@ -77,30 +81,3 @@ class ProjectDefinitionContainerService(
         records = await self._database.fetch_all(query=query)
         results = self.map_many_to(records, self._dao, self._domain)
         return results
-
-    async def find_all_project_containers(
-        self,
-        paginated_ressource: PaginatedRessource[UUID],
-    ) -> Awaitable[Page[ProjectDefinitionContainer]]:
-        offset = (
-            0
-            if paginated_ressource.next_page_token is None
-            else int(paginated_ressource.next_page_token)
-        )
-
-        query = (
-            self._table.select()
-            .where(self._table.c.project_def_id == paginated_ressource.query)
-            .order_by(desc(self._table.c.creation_date_utc), desc(self._table.c.id))
-            .limit(paginated_ressource.limit)
-            .offset(paginated_ressource.limit * offset)
-        )
-
-        records = await self._database.fetch_all(query)
-        results = self.map_many_to(records, self._dao, self._domain)
-
-        return Page(
-            next_page_token=str(offset + 1),
-            limit=paginated_ressource.limit,
-            results=results,
-        )

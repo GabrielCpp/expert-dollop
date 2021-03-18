@@ -14,7 +14,6 @@ from .project_container_meta import (
 from .project_container_tree import ProjectContainerTree, ProjectContainerNode
 from .translation import Translation, TranslationId, TranslationRessourceLocaleQuery
 from .ressource import Ressource
-from .paginated_ressource import PaginatedRessource
 from .formula import (
     Formula,
     FormulaDetails,

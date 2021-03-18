@@ -7,7 +7,6 @@ from expert_dollup.shared.handlers import RequestHandler, MappingChain
 from expert_dollup.core.domains import (
     Datasheet,
     DatasheetElement,
-    PaginatedRessource,
     DatasheetElementId,
     DatasheetCloneTarget,
     DatasheetFilter,

@@ -10,7 +10,6 @@ from expert_dollup.core.domains import (
     Translation,
     TranslationId,
     TranslationRessourceLocaleQuery,
-    PaginatedRessource,
 )
 
 router = APIRouter()

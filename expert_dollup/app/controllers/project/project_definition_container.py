@@ -8,7 +8,7 @@ from expert_dollup.app.dtos import (
     ProjectDefinitionContainerDto,
     ProjectDefinitionContainerPageDto,
 )
-from expert_dollup.core.domains import ProjectDefinitionContainer, PaginatedRessource
+from expert_dollup.core.domains import ProjectDefinitionContainer
 from expert_dollup.core.usecases import ProjectDefinitonContainerUseCase
 from expert_dollup.shared.database_services import Page
 
@@ -77,15 +77,13 @@ async def get_project_definition_container_by_project(
     request_handler=Depends(Inject(RequestHandler)),
     usecase=Depends(Inject(ProjectDefinitonContainerUseCase)),
 ):
-    query = PaginatedRessource[UUID](
-        next_page_token=next_page_token,
-        limit=limit,
-        query=project_def_id,
-    )
-
-    return await request_handler.handle(
-        usecase.find_by_project_definition,
-        query,
+    return await request_handler.forward(
+        usecase.find_project_containers,
+        dict(
+            next_page_token=next_page_token,
+            limit=limit,
+            project_def_id=project_def_id,
+        ),
         MappingChain(
             out_domain=Page[ProjectDefinitionContainer],
             out_dto=ProjectDefinitionContainerPageDto,

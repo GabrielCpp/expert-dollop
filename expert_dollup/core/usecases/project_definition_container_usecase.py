@@ -1,5 +1,5 @@
 import structlog
-from typing import Awaitable
+from typing import Awaitable, Optional
 from uuid import UUID
 from expert_dollup.core.exceptions import (
     RessourceNotFound,
@@ -9,7 +9,7 @@ from expert_dollup.core.exceptions import (
 from expert_dollup.core.domains import (
     ProjectDefinitionContainer,
     ProjectDefinition,
-    PaginatedRessource,
+    ProjectDefinitionContainerFilter,
 )
 from expert_dollup.infra.services import (
     ProjectDefinitionContainerService,
@@ -54,11 +54,14 @@ class ProjectDefinitonContainerUseCase:
         result = await self.service.find_by_id(id)
         return result
 
-    async def find_by_project_definition(
-        self,
-        paginated_ressource: PaginatedRessource[UUID],
+    async def find_project_containers(
+        self, project_def_id: UUID, limit: int, next_page_token: Optional[str] = None
     ) -> Awaitable[Page[ProjectDefinitionContainer]]:
-        results = await self.service.find_all_project_containers(paginated_ressource)
+        results = await self.service.find_by_paginated(
+            ProjectDefinitionContainerFilter(project_def_id=project_def_id),
+            limit,
+            next_page_token,
+        )
         return results
 
     async def _ensure_container_is_valid(self, domain: ProjectDefinitionContainer):

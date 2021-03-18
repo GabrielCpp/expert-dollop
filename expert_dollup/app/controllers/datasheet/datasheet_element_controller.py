@@ -7,7 +7,6 @@ from expert_dollup.shared.handlers import RequestHandler, MappingChain
 from expert_dollup.core.domains import (
     Datasheet,
     DatasheetElement,
-    PaginatedRessource,
     DatasheetElementId,
 )
 from expert_dollup.app.dtos import (
@@ -29,15 +28,13 @@ async def find_datasheet_elements(
     request_handler=Depends(Inject(RequestHandler)),
     usecase=Depends(Inject(DatasheetUseCase)),
 ):
-    query = PaginatedRessource[UUID](
-        next_page_token=next_page_token,
-        limit=limit,
-        query=datasheet_id,
-    )
-
-    return await request_handler.handle(
+    return await request_handler.forward(
         usecase.find_datasheet_elements,
-        query,
+        dict(
+            limit=limit,
+            datasheet_id=datasheet_id,
+            next_page_token=next_page_token,
+        ),
         MappingChain(
             out_domain=Page[DatasheetElement],
             out_dto=DatasheetElementPageDto,
