@@ -24,7 +24,7 @@ type Datasheet {
     is_staged: Boolean!
     datasheet_def_id: ID!
     from_datasheet_id: ID!
-    elements(first: Int!, after: String!): DatasheetElementConnection
+    elements(first: Int!, after: String): DatasheetElementConnection
 }
 
 type PageInfo {

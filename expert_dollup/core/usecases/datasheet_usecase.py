@@ -117,7 +117,6 @@ class DatasheetUseCase:
     async def update(
         self, datasheet_id: UUID, updates: DatasheetFilter
     ) -> Awaitable[Datasheet]:
-        print(updates)
         await self.datasheet_service.update(updates, DatasheetFilter(id=datasheet_id))
         return await self.datasheet_service.find_by_id(datasheet_id)
 

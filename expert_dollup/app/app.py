@@ -69,7 +69,7 @@ def creat_app(container: Injector = None):
             schema,
             debug=True,
             introspection=True,
-            context_value=GraphqlContext(container=container),
+            context_value=lambda request: GraphqlContext(container=container,request=request),
         ),
         methods=["GET", "POST"],
     )

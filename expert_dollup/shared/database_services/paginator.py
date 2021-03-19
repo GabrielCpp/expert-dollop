@@ -35,7 +35,12 @@ class IdStampedDateCursorEncoder:
         self.date_field_name = date_field_name
         self.id_field_name = id_field_name
 
-    def encode_dao(self, record):
+    def encode_dao(self, dao):
+        dao_id = getattr(dao, self.id_field_name)
+        dao_date = getattr(dao, self.date_field_name)
+        return IdStampedDateCursorEncoder.encode(dao_date, dao_id)
+
+    def encode_record(self, record):
         record_id = record[self.id_field_name]
         record_date = record[self.date_field_name]
         return IdStampedDateCursorEncoder.encode(record_date, record_id)

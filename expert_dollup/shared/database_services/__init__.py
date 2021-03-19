@@ -155,13 +155,19 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         records = await self._database.fetch_all(query=query)
         results = self.map_many_to(records, self._dao, self._domain)
 
-        new_next_page_token = self._paginator.encode_dao(records[-1])
+        new_next_page_token = self._paginator.encode_record(records[-1])
 
         return Page(
             next_page_token=new_next_page_token,
             limit=limit,
             results=results,
         )
+
+    def make_record_token(self, domain: Domain) -> str:
+        assert not self._paginator is None, "Paginator required"
+        dao = self._mapper.map(domain, self._dao)
+        next_page_token = self._paginator.encode_dao(dao)
+        return next_page_token
 
     async def find_one_by(self, query_filter: QueryFilter) -> Awaitable[List[Domain]]:
         assert not self._table_filter_type is None
