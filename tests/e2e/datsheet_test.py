@@ -184,7 +184,7 @@ async def test_datasheet_crud(ac, mini_datasheet: MiniDatasheet):
         assert response.status_code == 200, response.json()
 
     @runner.step
-    async def clone_datsheet():
+    async def clone_datasheet():
         datasheet_clone_target = DatasheetCloneTargetDto(
             target_datasheet_id=ctx.datasheet.id, new_name="Renamed datasheet"
         )

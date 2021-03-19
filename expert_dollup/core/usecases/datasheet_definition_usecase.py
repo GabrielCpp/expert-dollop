@@ -21,7 +21,7 @@ class DatasheetDefinitionUseCase:
     async def add(
         self, datasheet_definition: DatasheetDefinition
     ) -> Awaitable[DatasheetDefinition]:
-        self.validate_datsheet(datasheet_definition)
+        self.validate_datasheet(datasheet_definition)
         await self.datasheet_definition_service.insert(datasheet_definition)
         return await self.datasheet_definition_service.find_by_id(
             datasheet_definition.id
@@ -30,7 +30,7 @@ class DatasheetDefinitionUseCase:
     async def update(
         self, datasheet_definition: DatasheetDefinition
     ) -> Awaitable[DatasheetDefinition]:
-        self.validate_datsheet(datasheet_definition)
+        self.validate_datasheet(datasheet_definition)
         await self.datasheet_definition_service.update(datasheet_definition)
         return await self.datasheet_definition_service.find_by_id(
             datasheet_definition.id
@@ -39,7 +39,7 @@ class DatasheetDefinitionUseCase:
     async def delete_by_id(self, id: UUID) -> Awaitable:
         await self.datasheet_definition_service.delete_by_id(id)
 
-    def validate_datsheet(self, datasheet_definition: DatasheetDefinition):
+    def validate_datasheet(self, datasheet_definition: DatasheetDefinition):
         for name, schema in datasheet_definition.element_properties_schema.items():
             if not self.schema_validator.is_valid_schema(schema):
                 raise ValidationError.for_field(

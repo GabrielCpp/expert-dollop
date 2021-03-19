@@ -1,11 +1,57 @@
+type DatasheetDefinitionPropertySchemaDict {
+    name: String!
+    schema: String!
+}
+
+type DatasheetDefinition {
+    id: ID!
+    name: String!
+    elementPropertiesSchema: DatasheetDefinitionPropertySchemaDict
+    elementsDefinition(first: Int!, after: String): DatasheetDefinitionElementConnection
+}
+
+type DatasheetDefinitionElementEdge {
+    node: DatasheetDefinitionElement!
+    cursor: String!
+}
+
+type DatasheetDefinitionElementConnection {
+    edges: [DatasheetDefinitionElement!]!
+    pageInfo: PageInfo!
+}
+
+type DatasheetDefinitionElementProperty {
+    is_readonly: Boolean!
+    value: String!
+}
+
+type DatasheetDefinitionElementPropertyDict {
+    name: String!
+    property: DatasheetDefinitionElementProperty!
+}
+
+type DatasheetDefinitionElement {
+    id: ID!
+    unitId: String!
+    isCollection: Boolean!
+    datasheetDefId: String!
+    datasheetDefinition: DatasheetDefinition
+    orderIndex: Int!
+    name: String!
+    defaultProperties: DatasheetDefinitionElementPropertyDict
+    tags: [String!]!
+    creationDateUtc: String!
+
+}
 
 type DatasheetElement {
-    datasheet_id: String!
-    element_def_id: String!
-    child_element_reference: ID!
+    datasheetId: String!
+    elementDefId: String!
+    elementDefinition: DatasheetDefinitionElement!
+    childElementReference: ID!
     properties: String!
-    original_datasheet_id: String!
-    creation_date_utc: String!
+    originalDatasheetId: String!
+    creationDateUtc: String!
 } 
 
 type DatasheetElementEdge {
@@ -21,10 +67,29 @@ type DatasheetElementConnection {
 type Datasheet {
     id: ID!
     name: String!
-    is_staged: Boolean!
-    datasheet_def_id: ID!
-    from_datasheet_id: ID!
+    isStaged: Boolean!
+    datasheetDefId: ID!
+    fromDatasheetId: ID!
     elements(first: Int!, after: String): DatasheetElementConnection
+}
+
+type ProjectDefinition {
+    id: ID!
+    name: String!
+    defaultDatasheetId: String!
+    defaultDatasheet: Datasheet!
+    datasheetDefId: String!
+    datasheetDefinition: DatasheetDefinition!
+}
+
+type Project {
+    id: ID!
+    name: String!
+    isStaged: Boolean
+    projectDefId: String!
+    projectDefinition: ProjectDefinition!
+    datasheetId: String!
+    datasheet: Datasheet!
 }
 
 type PageInfo {

@@ -20,7 +20,6 @@ async def find_datasheet_elements(
     handler=Depends(
         Inject(HttpPageHandler[DatasheetElementService, DatasheetElementDto])
     ),
-    usecase=Depends(Inject(DatasheetElementUseCase)),
 ):
     return await handler.handle(
         DatasheetElementFilter(datasheet_id=datasheet_id),

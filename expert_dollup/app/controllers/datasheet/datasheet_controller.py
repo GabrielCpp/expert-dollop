@@ -80,7 +80,7 @@ async def patch_datasheet(
 
 
 @router.post("/datasheet/clone")
-async def clone_datsheet(
+async def clone_datasheet(
     datasheet_target: DatasheetCloneTargetDto,
     usecase=Depends(Inject(DatasheetUseCase)),
     handler=Depends(Inject(RequestHandler)),
@@ -97,7 +97,7 @@ async def clone_datsheet(
 
 
 @router.delete("/datasheet/{datasheet_id}")
-async def delete_datsheet(
+async def delete_datasheet(
     datasheet_id: UUID,
     usecase=Depends(Inject(DatasheetUseCase)),
 ):

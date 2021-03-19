@@ -30,14 +30,14 @@ class DatasheetElementUseCase:
         datasheet_element_service: DatasheetElementService,
         schema_validator: SchemaValidator,
         datasheet_definition_element_service: DatasheetDefinitionElementService,
-        datsheet_definition_service: DatasheetDefinitionService,
+        datasheet_definition_service: DatasheetDefinitionService,
         clock: Clock,
     ):
         self.datasheet_service = datasheet_service
         self.datasheet_element_service = datasheet_element_service
         self.datasheet_definition_element_service = datasheet_definition_element_service
         self.schema_validator = schema_validator
-        self.datsheet_definition_service = datsheet_definition_service
+        self.datasheet_definition_service = datasheet_definition_service
         self.clock = clock
 
     async def find_datasheet_element(
@@ -48,9 +48,11 @@ class DatasheetElementUseCase:
     async def update_datasheet_element_properties(
         self, id: DatasheetElementId, properties: Dict[str, Union[float, str, bool]]
     ) -> Awaitable[DatasheetElement]:
-        datsheet: Datasheet = await self.datasheet_service.find_by_id(id.datasheet_id)
-        datsheet_definition: DatasheetDefinition = (
-            await self.datsheet_definition_service.find_by_id(datsheet.datasheet_def_id)
+        datasheet: Datasheet = await self.datasheet_service.find_by_id(id.datasheet_id)
+        datasheet_definition: DatasheetDefinition = (
+            await self.datasheet_definition_service.find_by_id(
+                datasheet.datasheet_def_id
+            )
         )
         element_definition: DatasheetDefinitionElement = (
             await self.datasheet_definition_element_service.find_by_id(
@@ -58,8 +60,8 @@ class DatasheetElementUseCase:
             )
         )
 
-        self._validate_datsheet_element_properties(
-            properties, datsheet_definition, element_definition
+        self._validate_datasheet_element_properties(
+            properties, datasheet_definition, element_definition
         )
 
         await self.datasheet_element_service.update(
@@ -76,9 +78,11 @@ class DatasheetElementUseCase:
     async def add_collection_item(
         self, datasheet_id: UUID, element_def_id: UUID, properties: UUID
     ) -> Awaitable[DatasheetElement]:
-        datsheet: Datasheet = await self.datasheet_service.find_by_id(datasheet_id)
-        datsheet_definition: DatasheetDefinition = (
-            await self.datsheet_definition_service.find_by_id(datsheet.datasheet_def_id)
+        datasheet: Datasheet = await self.datasheet_service.find_by_id(datasheet_id)
+        datasheet_definition: DatasheetDefinition = (
+            await self.datasheet_definition_service.find_by_id(
+                datasheet.datasheet_def_id
+            )
         )
         element_definition: DatasheetDefinitionElement = (
             await self.datasheet_definition_element_service.find_by_id(element_def_id)
@@ -87,8 +91,8 @@ class DatasheetElementUseCase:
         if not element_definition.is_collection:
             raise InvalidUsageError("Non collection element cannot be instanciated.")
 
-        self._validate_datsheet_element_properties(
-            properties, datsheet_definition, element_definition
+        self._validate_datasheet_element_properties(
+            properties, datasheet_definition, element_definition
         )
 
         new_element = DatasheetElement(
@@ -122,10 +126,10 @@ class DatasheetElementUseCase:
 
         await self.datasheet_element_service.delete_by_id(element_id)
 
-    def _validate_datsheet_element_properties(
+    def _validate_datasheet_element_properties(
         self,
         properties: Dict[str, Union[float, str, bool]],
-        datsheet_definition: DatasheetDefinition,
+        datasheet_definition: DatasheetDefinition,
         element_definition: DatasheetDefinitionElement,
     ):
         for name, default_property in element_definition.default_properties.items():
@@ -133,8 +137,8 @@ class DatasheetElementUseCase:
                 if default_property.is_readonly is True:
                     raise ValidationError.for_field(name, "Field is readonly")
 
-                assert name in datsheet_definition.element_properties_schema
-                property_schema = datsheet_definition.element_properties_schema[name]
+                assert name in datasheet_definition.element_properties_schema
+                property_schema = datasheet_definition.element_properties_schema[name]
                 self.schema_validator.validate_instance_of(
                     property_schema, properties[name]
                 )
@@ -143,5 +147,5 @@ class DatasheetElementUseCase:
                 raise ValidationError.for_field(name, "Field is missing")
 
         for name in properties.keys():
-            if not name in datsheet_definition.element_properties_schema:
+            if not name in datasheet_definition.element_properties_schema:
                 raise ValidationError.for_field(name, "Field does not exist")

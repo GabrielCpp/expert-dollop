@@ -350,7 +350,7 @@ def map_datasheet_to_dto(src: Datasheet, mapper: Mapper) -> DatasheetDto:
     )
 
 
-def map_datsheet_page_element_to_dto(
+def map_datasheet_page_element_to_dto(
     src: Page[DatasheetElement], mapper: Mapper
 ) -> DatasheetElementPageDto:
     return DatasheetElementPageDto(
@@ -360,7 +360,7 @@ def map_datsheet_page_element_to_dto(
     )
 
 
-def map_datsheet_element_to_dto(
+def map_datasheet_element_to_dto(
     src: DatasheetElement, mapper: Mapper
 ) -> DatasheetElementDto:
     return DatasheetElementDto(
@@ -373,7 +373,7 @@ def map_datsheet_element_to_dto(
     )
 
 
-def map_datsheet_element_from_dto(
+def map_datasheet_element_from_dto(
     src: DatasheetElementDto, mapper: Mapper
 ) -> DatasheetElement:
     return DatasheetElement(

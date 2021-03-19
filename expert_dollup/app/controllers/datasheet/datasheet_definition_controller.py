@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 @router.get("/datasheet_definition/{datasheet_definition_id}")
-async def get_datasheet_definition_by_id(
+async def find_datasheet_definition_by_id(
     datasheet_definition_id: UUID,
     usecase=Depends(Inject(DatasheetDefinitionUseCase)),
     handler=Depends(Inject(RequestHandler)),

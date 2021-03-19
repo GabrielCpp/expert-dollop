@@ -399,7 +399,7 @@ def map_datasheet_from_dao(src: DatasheetDao, mapper: Mapper) -> Datasheet:
     )
 
 
-def map_datsheet_element_to_dao(
+def map_datasheet_element_to_dao(
     src: DatasheetElement, mapper: Mapper
 ) -> DatasheetElementDao:
     return DatasheetElementDao(
@@ -412,7 +412,7 @@ def map_datsheet_element_to_dao(
     )
 
 
-def map_datsheet_element_from_dao(
+def map_datasheet_element_from_dao(
     src: DatasheetElementDao, mapper: Mapper
 ) -> DatasheetElement:
     return DatasheetElement(

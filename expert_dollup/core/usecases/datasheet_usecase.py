@@ -41,16 +41,16 @@ class DatasheetUseCase:
     async def find_by_id(self, datasheet_id: UUID) -> Awaitable[Datasheet]:
         return await self.datasheet_service.find_by_id(datasheet_id)
 
-    async def clone(self, datsheet_clone_target: DatasheetCloneTarget):
+    async def clone(self, datasheet_clone_target: DatasheetCloneTarget):
         datasheet = await self.datasheet_service.find_by_id(
-            datsheet_clone_target.target_datasheet_id
+            datasheet_clone_target.target_datasheet_id
         )
         cloned_datasheet = Datasheet(
             id=uuid4(),
             name=datasheet.name,
             is_staged=datasheet.is_staged,
             datasheet_def_id=datasheet.datasheet_def_id,
-            from_datasheet_id=datsheet_clone_target.target_datasheet_id,
+            from_datasheet_id=datasheet_clone_target.target_datasheet_id,
             creation_date_utc=self.clock.utcnow(),
         )
 
@@ -60,7 +60,7 @@ class DatasheetUseCase:
         while len(page.results) == page.limit:
             page = await self.datasheet_element_service.find_by_paginated(
                 DatasheetElementFilter(
-                    datasheet_id=datsheet_clone_target.target_datasheet_id
+                    datasheet_id=datasheet_clone_target.target_datasheet_id
                 ),
                 page.limit,
                 page.next_page_token,
@@ -79,19 +79,19 @@ class DatasheetUseCase:
                 ]
             )
 
-        cloned_datsheet = Datasheet(
+        cloned_datasheet = Datasheet(
             id=uuid4(),
-            name=datsheet_clone_target.new_name,
+            name=datasheet_clone_target.new_name,
             is_staged=datasheet.is_staged,
             datasheet_def_id=datasheet.datasheet_def_id,
             from_datasheet_id=datasheet.from_datasheet_id,
             creation_date_utc=self.clock.utcnow(),
         )
 
-        await self.add(cloned_datsheet)
+        await self.add(cloned_datasheet)
         await self.datasheet_definition_element_service.insert_many(cloned_elements)
 
-        return cloned_datsheet
+        return cloned_datasheet
 
     async def add(self, datasheet: Datasheet) -> Awaitable[Datasheet]:
         await self.datasheet_service.insert(datasheet)
