@@ -40,15 +40,6 @@ class DatasheetElementUseCase:
         self.datsheet_definition_service = datsheet_definition_service
         self.clock = clock
 
-    async def find_datasheet_elements(
-        self, datasheet_id: UUID, limit: int, next_page_token: Optional[str] = None
-    ) -> Awaitable[Page[DatasheetElement]]:
-        return await self.datasheet_element_service.find_by_paginated(
-            DatasheetElementFilter(datasheet_id=datasheet_id),
-            limit,
-            next_page_token,
-        )
-
     async def find_datasheet_element(
         self, id: DatasheetElementId
     ) -> Awaitable[DatasheetElement]:

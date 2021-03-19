@@ -1,7 +1,8 @@
-from injector import Binder, singleton, Injector, Provider
-from expert_dollup.shared.automapping import Mapper
 import expert_dollup.app.mappings as app_mappings
 import expert_dollup.infra.mappings as infra_mappings
+from injector import Binder, singleton, Injector, Provider
+from expert_dollup.shared.automapping import Mapper
+from expert_dollup.shared.starlette_injection import Clock, DateTimeClock
 
 
 def bind_mapper(binder: Binder) -> None:
@@ -18,3 +19,4 @@ def bind_mapper(binder: Binder) -> None:
             return self.mapper
 
     binder.bind(Mapper, to=MapperProvider(), scope=singleton)
+    binder.bind(Clock, to=DateTimeClock(), scope=singleton)

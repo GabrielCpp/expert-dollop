@@ -1,9 +1,9 @@
 import http.client as httplib
 from injector import Binder, singleton
-from expert_dollup.app.middlewares import ExceptionHandlerDict
 from starlette.responses import JSONResponse
-from expert_dollup.core.exceptions import RessourceNotFound, ValidationError
 from expert_dollup.shared.problem import problem
+from expert_dollup.app.middlewares import ExceptionHandlerDict
+from expert_dollup.core.exceptions import *
 
 
 exception_handlers = {

@@ -3,7 +3,7 @@ from uuid import UUID
 from typing import Optional, Union, Dict
 from expert_dollup.shared.database_services import Page
 from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.handlers import RequestHandler, MappingChain
+from expert_dollup.shared.handlers import RequestHandler, MappingChain, HttpPageHandler
 from expert_dollup.core.domains import (
     Datasheet,
     DatasheetElement,
@@ -16,6 +16,8 @@ from expert_dollup.app.dtos import (
     DatasheetElementPageDto,
 )
 from expert_dollup.core.usecases import DatasheetElementUseCase
+from expert_dollup.infra.services import DatasheetElementService
+
 
 router = APIRouter()
 
@@ -25,20 +27,15 @@ async def find_datasheet_elements(
     datasheet_id: UUID,
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = Query(alias="limit", default=100),
-    request_handler=Depends(Inject(RequestHandler)),
+    handler=Depends(
+        Inject(HttpPageHandler[DatasheetElementService, DatasheetElementDto])
+    ),
     usecase=Depends(Inject(DatasheetElementUseCase)),
 ):
-    return await request_handler.forward(
-        usecase.find_datasheet_elements,
-        dict(
-            limit=limit,
-            datasheet_id=datasheet_id,
-            next_page_token=next_page_token,
-        ),
-        MappingChain(
-            out_domain=Page[DatasheetElement],
-            out_dto=DatasheetElementPageDto,
-        ),
+    return await handler.handle(
+        DatasheetElementFilter(datasheet_id=datasheet_id),
+        limit,
+        next_page_token,
     )
 
 
