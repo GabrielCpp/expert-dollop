@@ -187,8 +187,8 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         assert not self._table_filter_type is None
         filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
         where_filter = build_and_column_filter(self._table, filter_fields)
-        query = self._table.select().where(where_filter)
-        records = await self._database.execute(query)
+        query = self._table.delete().where(where_filter)
+        await self._database.execute(query)
 
     @abstractmethod
     async def delete_by_id(self, pk_id: Id) -> Awaitable:
