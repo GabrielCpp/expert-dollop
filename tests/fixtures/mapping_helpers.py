@@ -3,14 +3,12 @@ from typing import TypeVar, Type, Callable, Any, List
 from fastapi import Response
 from functools import singledispatch
 from injector import Injector
-from expert_dollup.app.modules.projection import bind_mapper
 from expert_dollup.shared.automapping import Mapper
 
 
 @pytest.fixture
-def map_dao_to_dto():
-    injector = Injector([bind_mapper])
-    mapper = injector.get(Mapper)
+def map_dao_to_dto(container):
+    mapper = container.get(Mapper)
 
     @singledispatch
     def apply_map(daos, dao, domain, dto):

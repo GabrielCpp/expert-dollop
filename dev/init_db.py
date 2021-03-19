@@ -1,6 +1,6 @@
 from .simple_project import SimpleProject
 from .tables import insert, to_dto
-from expert_dollup.app.modules.projection import bind_mapper
+from expert_dollup.app.modules import build_container
 from expert_dollup.shared.automapping import Mapper
 
 
@@ -12,7 +12,7 @@ def generate_json(generate_layer, output_path=None):
     model = fixture.model
 
     if generate_layer == "dto":
-        injector = Injector([bind_mapper])
+        injector = build_container()
         mapper = injector.get(Mapper)
         model = to_dto(model, mapper)
     elif generate_layer != "dao":
