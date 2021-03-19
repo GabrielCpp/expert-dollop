@@ -1,9 +1,12 @@
+import os
+from dotenv import load_dotenv
 from enum import Enum
 from typing import List
 from pydantic import BaseModel, Field
 from databases import Database
 from os.path import join
 from injector import inject
+from sqlalchemy import MetaData, create_engine
 from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.infra.services import *
 
@@ -20,6 +23,30 @@ class FakeExpertDollupDb(BaseModel):
     label_collections: List[LabelCollectionDao] = Field(default_factory=list)
     labels: List[LabelDao] = Field(default_factory=list)
     translations: List[TranslationDao] = Field(default_factory=list)
+
+
+def truncate_db():
+    load_dotenv()
+    DATABASE_URL = "postgresql://{}:{}@{}/{}".format(
+        os.environ["POSTGRES_USERNAME"],
+        os.environ["POSTGRES_PASSWORD"],
+        os.environ["POSTGRES_HOST"],
+        os.environ["POSTGRES_DB"],
+    )
+
+    engine = create_engine(DATABASE_URL)
+    meta = MetaData()
+    meta.reflect(bind=engine)
+    con = engine.connect()
+    trans = con.begin()
+    for table in meta.sorted_tables:
+        if table.name in ["project_definition_value_type"]:
+            continue
+
+        con.execute(f'ALTER TABLE "{table.name}" DISABLE TRIGGER ALL;')
+        con.execute(table.delete())
+        con.execute(f'ALTER TABLE "{table.name}" ENABLE TRIGGER ALL;')
+    trans.commit()
 
 
 async def populate_db(db, table, daos: Dict[str, BaseModel]):

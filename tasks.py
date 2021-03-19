@@ -84,7 +84,7 @@ def fixture(c, layer="dao", poetry=False):
 @task(name="db:truncate")
 def truncate_db(c, poetry=False):
     if poetry:
-        from dev.clean_db import truncate_db
+        from tests.fixtures import truncate_db
 
         truncate_db()
     else:

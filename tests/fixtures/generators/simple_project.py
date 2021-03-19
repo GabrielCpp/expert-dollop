@@ -2,10 +2,7 @@ from uuid import uuid4, UUID
 from faker import Faker
 from typing import List
 from pydantic import BaseModel
-from expert_dollup.infra.path_transform import join_path
-from ..fake_db_helpers import FakeExpertDollupDb as Tables
-from ..factories import ValueTypeFactory
-from expert_dollup.infra.path_transform import build_path_steps
+from expert_dollup.infra.path_transform import join_path, build_path_steps
 from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
     ProjectDefinitionDao,
@@ -14,6 +11,9 @@ from expert_dollup.infra.expert_dollup_db import (
     project_definition_table,
     project_definition_container_table,
 )
+
+from ..fake_db_helpers import FakeExpertDollupDb as Tables
+from ..factories import ValueTypeFactory
 
 
 class SimpleProject:

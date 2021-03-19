@@ -6,11 +6,7 @@ from .mapping_helpers import (
     unwrap_many,
 )
 
-from .fake_db_helpers import (
-    FakeExpertDollupDb,
-    DbSetupHelper,
-    populate_db,
-)
+from .fake_db_helpers import FakeExpertDollupDb, DbSetupHelper, populate_db, truncate_db
 
 from .factories_dto import (
     ProjectDefinitionDtoFactory,

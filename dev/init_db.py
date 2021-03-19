@@ -1,7 +1,33 @@
-from .simple_project import SimpleProject
-from .tables import insert, to_dto
 from expert_dollup.app.modules import build_container
 from expert_dollup.shared.automapping import Mapper
+from tests.fixtures import FakeExpertDollupDb, SimpleProject
+
+
+"""
+def to_dto(tables: FakeExpertDollupDb, mapper: Mapper) -> FakeExpertDollupDbDto:
+    def double_map(data, current_type, domain_type, dto_type):
+        return mapper.map_many(
+            mapper.map_many(data, domain_type, current_type), dto_type
+        )
+
+    return TablesDto(
+        project_definitions=double_map(
+            tables.project_definitions,
+            ProjectDefinitionDao,
+            ProjectDefinition,
+            ProjectDefinitionDto,
+        ),
+        project_definition_containers=double_map(
+            tables.project_definition_containers,
+            ProjectDefinitionContainerDao,
+            ProjectDefinitionContainer,
+            ProjectDefinitionContainerDto,
+        ),
+        translations=double_map(
+            tables.translations, TranslationDao, Translation, TranslationDto
+        ),
+    )
+"""
 
 
 def generate_json(generate_layer, output_path=None):
@@ -41,9 +67,11 @@ def generate_sql():
     )
 
     engine = create_engine(DATABASE_URL)
+    injector = build_container()
+    db_setup_helper = injector.get(DbSetupHelper)
 
     with engine.connect() as connection:
         fixture = SimpleProject()
         fixture.generate()
         model = fixture.model
-        insert(model, connection)
+        db_setup_helper.init_db(model, connection)
