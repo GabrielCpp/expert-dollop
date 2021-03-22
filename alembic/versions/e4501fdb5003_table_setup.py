@@ -157,7 +157,7 @@ def create_project_definition_tables():
     op.create_index(op.f("ix_project_definition_name"), "project_definition", ["name"])
 
     op.create_table(
-        "project_definition_root",
+        "project_definition_node",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("project_def_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
@@ -168,60 +168,26 @@ def create_project_definition_tables():
         Column("value_type", String, nullable=False),
         Column("default_value", postgresql.JSON(), nullable=True),
         Column("path", String, nullable=False),
+        Column("mixed_paths", ARRAY(String, dimensions=1), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 
     op.create_index(
-        op.f("ix_project_definition_root_path"),
-        "project_definition_root",
+        op.f("ix_project_definition_node_value_type"),
+        "project_definition_node",
         ["path"],
     )
 
     op.create_index(
-        op.f("ix_project_definition_root_def_id_name"),
-        "project_definition_root",
-        ["project_def_id", "name"],
-        unique=True,
-    )
-
-    op.create_table(
-        "project_definition_container",
-        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("project_def_id", postgresql.UUID(), nullable=False),
-        Column("name", String, nullable=False),
-        Column("is_collection", Boolean, nullable=False),
-        Column("instanciate_by_default", Boolean, nullable=False),
-        Column("order_index", Integer, nullable=False),
-        Column("config", postgresql.JSON(), nullable=False),
-        Column("value_type", String, nullable=False),
-        Column("default_value", postgresql.JSON(), nullable=True),
-        Column("path", String, nullable=False),
-        Column("root_children", String, nullable=False),
-        Column("section_children", String, nullable=False),
-        Column("creation_date_utc", DateTime(timezone=True), nullable=False),
+        op.f("ix_project_definition_node_mixed_paths"),
+        "project_definition_node",
+        ["mixed_paths"],
+        postgresql_using="gin",
     )
 
     op.create_index(
-        op.f("ix_project_definition_container_root_children"),
-        "project_definition_container",
-        ["root_children"],
-    )
-
-    op.create_index(
-        op.f("ix_project_definition_container_root_path"),
-        "project_definition_container",
-        ["section_children"],
-    )
-
-    op.create_index(
-        op.f("ix_project_definition_container_root_path"),
-        "project_definition_container",
-        ["path"],
-    )
-
-    op.create_index(
-        op.f("ix_project_definition_containerroot_def_id_name"),
-        "project_definition_container",
+        op.f("ix_project_definition_node_def_id_name"),
+        "project_definition_node",
         ["project_def_id", "name"],
         unique=True,
     )
