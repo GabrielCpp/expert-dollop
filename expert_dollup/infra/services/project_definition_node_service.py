@@ -1,6 +1,6 @@
 from typing import Awaitable, List, AsyncGenerator, Optional
 from uuid import UUID
-from sqlalchemy import select, text, bindparam, String, and_, or_, desc
+from sqlalchemy import select, String, and_, or_, desc
 from sqlalchemy.sql.expression import func
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects import postgresql
@@ -20,10 +20,6 @@ from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
 )
 from expert_dollup.shared.automapping import Mapper
-
-DELETE_BY_MIXED_PATH = text(
-    f"DELETE FROM {project_definition_node_table.name} WHERE mixed_paths <@ :element"
-)
 
 
 class ProjectDefinitionNode2(BaseCrudTableService[ProjectDefinitionNode]):
@@ -79,21 +75,16 @@ class ProjectDefinitionNodeService:
         return not value is None
 
     async def delete_child_of(self, id: UUID) -> Awaitable:
-        query = self._node_crud._table.select().where(self._node_crud.table_id == id)
-        value = await self._node_crud._database.fetch_one(query=query)
-
-        if value is None:
-            return
-
-        value = ProjectDefinitionNodeDao(**value)
-        path_to_delete = "/".join([*value.path, str(value.id)])
-        sql = DELETE_BY_MIXED_PATH.bindparams(
-            bindparam(
-                key="element", value=[path_to_delete], type_=ARRAY(String, dimensions=1)
+        value = await self._node_crud.find_by_id(id)
+        path_to_delete = join_uuid_path(value.subpath)
+        query = self._node_crud._table.delete().where(
+            and_(
+                self._node_crud._table.c.project_def_id == value.project_def_id,
+                self._node_crud._table.c.mixed_paths.op("@>")([path_to_delete]),
             )
         )
 
-        await self._node_crud._database.execute(sql)
+        await self._node_crud._database.execute(query)
 
     async def find_children_tree(self, project_def_id: UUID, path: List[UUID]):
         path_filter = join_uuid_path(path)
