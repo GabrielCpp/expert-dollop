@@ -2,15 +2,15 @@ from dataclasses import dataclass
 from uuid import UUID
 from typing import Optional, List
 from datetime import datetime
-from .project_definition_node import ProjectDefinitionContainerNode
+from .project_definition_node import ProjectDefinitionNode
 
 
 @dataclass
-class ProjectDefinitionContainerNodeTreeNode:
-    definition: ProjectDefinitionContainerNode
-    children: List["ProjectDefinitionContainerNodeTreeNode"]
+class ProjectDefinitionTreeNode:
+    definition: ProjectDefinitionNode
+    children: List["ProjectDefinitionTreeNode"]
 
 
 @dataclass
-class ProjectDefinitionContainerNodeTree:
-    roots: List[ProjectDefinitionContainerNodeTreeNode]
+class ProjectDefinitionNodeTree:
+    roots: List[ProjectDefinitionTreeNode]

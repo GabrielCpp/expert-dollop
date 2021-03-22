@@ -6,13 +6,13 @@ from expert_dollup.core.domains import (
     ProjectContainer,
     ProjectContainerTree,
     ProjectContainerFilter,
-    ProjectDefinitionContainerNodeFilter,
+    ProjectDefinitionNodeFilter,
     ProjectContainerNode,
 )
 from expert_dollup.infra.services import (
     ProjectService,
     ProjectContainerService,
-    ProjectDefinitionContainerNodeService,
+    ProjectDefinitionNodeService,
 )
 from expert_dollup.infra.validators import ProjectDefinitionValueTypeValidator
 from expert_dollup.shared.database_services import Page
@@ -23,7 +23,7 @@ class ProjectContainerUseCase:
         self,
         project_service: ProjectService,
         project_container_service: ProjectContainerService,
-        project_definition_node_service: ProjectDefinitionContainerNodeService,
+        project_definition_node_service: ProjectDefinitionNodeService,
         project_definition_value_type_validator: ProjectDefinitionValueTypeValidator,
     ):
         self.project_service = project_service
@@ -93,7 +93,7 @@ class ProjectContainerUseCase:
         project = await self.project_service.find_by_id(project_id)
         collection_definition_container = (
             await self.project_definition_node_service.find_one_by(
-                ProjectDefinitionContainerNodeFilter(
+                ProjectDefinitionNodeFilter(
                     project_def_id=project.project_def_id, id=collection_type_id
                 )
             )

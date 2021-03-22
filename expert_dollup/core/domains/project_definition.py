@@ -10,3 +10,4 @@ class ProjectDefinition:
     name: str
     default_datasheet_id: UUID
     datasheet_def_id: UUID
+    creation_date_utc: datetime

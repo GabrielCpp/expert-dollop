@@ -1,5 +1,6 @@
 from expert_dollup.shared.modeling import CamelModel
 from uuid import UUID
+from datetime import datetime
 
 
 class TranslationDto(CamelModel):

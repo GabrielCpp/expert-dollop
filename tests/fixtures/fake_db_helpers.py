@@ -1,28 +1,27 @@
 import os
 from dotenv import load_dotenv
 from enum import Enum
-from typing import List
-from pydantic import BaseModel, Field
+from typing import List, Dict, Any
+from dataclasses import dataclass, field
 from databases import Database
 from os.path import join
 from injector import inject
 from sqlalchemy import MetaData, create_engine
-from expert_dollup.infra.expert_dollup_db import *
+from expert_dollup.core.domains import *
 from expert_dollup.infra.services import *
 
 
-class FakeExpertDollupDb(BaseModel):
-    project_definition_nodes: List[ProjectDefinitionContainerNodeDao] = Field(
+@dataclass
+class FakeExpertDollupDb:
+    project_definition_nodes: List[ProjectDefinitionNode] = field(default_factory=list)
+    project_definitions: List[ProjectDefinition] = field(default_factory=list)
+    datasheet_definitions: List[DatasheetDefinition] = field(default_factory=list)
+    datasheet_definition_elements: List[DatasheetDefinitionElement] = field(
         default_factory=list
     )
-    project_definitions: List[ProjectDefinitionDao] = Field(default_factory=list)
-    datasheet_definitions: List[DatasheetDefinitionDao] = Field(default_factory=list)
-    datasheet_definition_elements: List[DatasheetDefinitionElementDao] = Field(
-        default_factory=list
-    )
-    label_collections: List[LabelCollectionDao] = Field(default_factory=list)
-    labels: List[LabelDao] = Field(default_factory=list)
-    translations: List[TranslationDao] = Field(default_factory=list)
+    label_collections: List[LabelCollection] = field(default_factory=list)
+    labels: List[Label] = field(default_factory=list)
+    translations: List[Translation] = field(default_factory=list)
 
 
 def truncate_db():
@@ -49,7 +48,7 @@ def truncate_db():
     trans.commit()
 
 
-async def populate_db(db, table, daos: Dict[str, BaseModel]):
+async def populate_db(db, table, daos: Dict[str, Any]):
     await db.execute_many(table.insert(), [dao.dict() for dao in daos.values()])
 
 
@@ -57,7 +56,7 @@ async def populate_db(db, table, daos: Dict[str, BaseModel]):
 class DbSetupHelper:
     def __init__(
         self,
-        project_definition_node_service: ProjectDefinitionContainerNodeService,
+        project_definition_node_service: ProjectDefinitionNodeService,
         project_definition_service: ProjectDefinitionService,
         translation_service: TranslationService,
         datasheet_definition_service: DatasheetDefinitionService,
@@ -74,20 +73,18 @@ class DbSetupHelper:
         self.label_service = label_service
 
     async def init_db(self, fake_db: FakeExpertDollupDb):
-        await self.project_definition_service.insert_many_raw(
-            fake_db.project_definitions
-        )
+        await self.project_definition_service.insert_many(fake_db.project_definitions)
 
-        await self.project_definition_node_service.insert_many_raw(
+        await self.project_definition_node_service.insert_many(
             fake_db.project_definition_nodes,
         )
 
-        await self.translation_service.insert_many_raw(fake_db.translations)
-        await self.datasheet_definition_service.insert_many_raw(
+        await self.translation_service.insert_many(fake_db.translations)
+        await self.datasheet_definition_service.insert_many(
             fake_db.datasheet_definitions
         )
-        await self.datasheet_definition_element_service.insert_many_raw(
+        await self.datasheet_definition_element_service.insert_many(
             fake_db.datasheet_definition_elements
         )
-        await self.label_collection_service.insert_many_raw(fake_db.label_collections)
-        await self.label_service.insert_many_raw(fake_db.labels)
+        await self.label_collection_service.insert_many(fake_db.label_collections)
+        await self.label_service.insert_many(fake_db.labels)

@@ -80,7 +80,7 @@ type ProjectDefinitionValueType {
     displayName: String!
 }
 
-type ProjectDefinitionContainerNode {
+type ProjectDefinitionNode {
     id: ID!
     projectDefId: String!
     name: String!
@@ -92,7 +92,7 @@ type ProjectDefinitionContainerNode {
     valueTypeDetails: ProjectDefinitionValueType!
     defaultValue: String
     path: [String!]!
-    children: [ProjectDefinitionContainerNode!]!
+    children: [ProjectDefinitionNode!]!
 }
 
 type ProjectDefinition {
@@ -102,7 +102,7 @@ type ProjectDefinition {
     defaultDatasheet: Datasheet!
     datasheetDefId: String!
     datasheetDefinition: DatasheetDefinition!
-    viewableLayers(rootSectionID: String, subRootSectionId: String, formId: String): ProjectDefinitionContainerNode
+    viewableLayers(rootSectionID: String, subRootSectionId: String, formId: String): ProjectDefinitionNode
 }
 
 type Project {

@@ -6,7 +6,7 @@ from expert_dollup.shared.database_services import QueryFilter
 
 
 @dataclass
-class ProjectDefinitionContainerNode:
+class ProjectDefinitionNode:
     id: UUID
     project_def_id: UUID
     name: str
@@ -17,13 +17,14 @@ class ProjectDefinitionContainerNode:
     value_type: str
     default_value: Optional[dict]
     path: List[UUID]
+    creation_date_utc: datetime
 
     @property
     def subpath(self):
         return [*self.path, self.id]
 
 
-class ProjectDefinitionContainerNodeFilter(QueryFilter):
+class ProjectDefinitionNodeFilter(QueryFilter):
     id: Optional[UUID]
     project_def_id: Optional[UUID]
     name: Optional[str]
@@ -34,5 +35,4 @@ class ProjectDefinitionContainerNodeFilter(QueryFilter):
     value_type: Optional[str]
     default_value: Optional[dict]
     path: Optional[List[UUID]]
-
-
+    creation_date_utc: Optional[datetime]

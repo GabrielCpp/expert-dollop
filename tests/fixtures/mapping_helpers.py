@@ -7,9 +7,7 @@ from expert_dollup.shared.automapping import Mapper
 
 
 @pytest.fixture
-def map_dao_to_dto(container):
-    mapper = container.get(Mapper)
-
+def map_dao_to_dto(mapper):
     @singledispatch
     def apply_map(daos, dao, domain, dto):
         raise ValueError(f"Unsupported type {type(daos)}")

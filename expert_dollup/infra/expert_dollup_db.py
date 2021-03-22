@@ -62,7 +62,7 @@ project_definition_node_table = Table(
 )
 
 
-class ProjectDefinitionContainerNodeDao(BaseModel):
+class ProjectDefinitionNodeDao(BaseModel):
     id: UUID
     project_def_id: UUID
     name: str

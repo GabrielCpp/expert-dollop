@@ -1,15 +1,23 @@
 import json
 import os
+import dataclasses
+import datetime
 from uuid import UUID
 
 dump_file_path = "."
 index = 0
 
 
-class UUIDEncoder(json.JSONEncoder):
+class ExtraEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, UUID):
             return str(obj)
+
+        if dataclasses.is_dataclass(obj):
+            return dataclasses.asdict(obj)
+
+        if isinstance(obj, (datetime.date, datetime.datetime)):
+            return obj.isoformat()
 
         return json.JSONEncoder.default(self, obj)
 
@@ -25,12 +33,14 @@ def dump_to_file(json_serializable):
     index = index + 1
 
     with open(path, "w") as outfile:
-        json.dump(json_serializable, outfile, indent=2, sort_keys=True, cls=UUIDEncoder)
+        json.dump(
+            json_serializable, outfile, indent=2, sort_keys=True, cls=ExtraEncoder
+        )
 
 
 def dump_snapshot(json_serializable) -> str:
-    return json.dumps(json_serializable, indent=2, sort_keys=True, cls=UUIDEncoder)
+    return json.dumps(json_serializable, indent=2, sort_keys=True, cls=ExtraEncoder)
 
 
 def jsonify(v):
-    return json.dumps(v, indent=2, sort_keys=True, cls=UUIDEncoder)
+    return json.dumps(v, indent=2, sort_keys=True, cls=ExtraEncoder)

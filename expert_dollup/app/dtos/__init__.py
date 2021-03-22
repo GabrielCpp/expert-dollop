@@ -1,11 +1,11 @@
 from .project_definition_dto import ProjectDefinitionDto
 from .project_definition_node_dto import (
-    ProjectDefinitionContainerNodeDto,
-    ProjectDefinitionContainerNodePageDto,
+    ProjectDefinitionNodeDto,
+    ProjectDefinitionNodePageDto,
 )
 from .project_definition_node_tree_dto import (
-    ProjectDefinitionContainerNodeTreeNodeDto,
-    ProjectDefinitionContainerNodeTreeDto,
+    ProjectDefinitionTreeNodeDto,
+    ProjectDefinitionNodeTreeDto,
 )
 from .project_dto import ProjectDto
 from .translation_dto import TranslationDto, TranslationIdDto

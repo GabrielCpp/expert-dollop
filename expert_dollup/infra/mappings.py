@@ -53,9 +53,9 @@ def map_project_definition_to_dao(
 
 
 def map_project_definition_node_from_dao(
-    src: ProjectDefinitionContainerNodeDao, mapper: Mapper
-) -> ProjectDefinitionContainerNode:
-    return ProjectDefinitionContainerNode(
+    src: ProjectDefinitionNodeDao, mapper: Mapper
+) -> ProjectDefinitionNode:
+    return ProjectDefinitionNode(
         id=src.id,
         project_def_id=src.project_def_id,
         name=src.name,
@@ -66,13 +66,14 @@ def map_project_definition_node_from_dao(
         value_type=src.value_type,
         default_value=src.default_value,
         path=split_uuid_path(src.path),
+        creation_date_utc=src.creation_date_utc,
     )
 
 
 def map_project_definition_node_to_dao(
-    src: ProjectDefinitionContainerNode, mapper: Mapper
-) -> ProjectDefinitionContainerNodeDao:
-    return ProjectDefinitionContainerNodeDao(
+    src: ProjectDefinitionNode, mapper: Mapper
+) -> ProjectDefinitionNodeDao:
+    return ProjectDefinitionNodeDao(
         id=src.id,
         project_def_id=src.project_def_id,
         name=src.name,
@@ -178,6 +179,7 @@ def map_translation_from_dao(src: TranslationDao, mapper: Mapper) -> Translation
         scope=src.scope,
         name=src.name,
         value=src.value,
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -198,8 +200,32 @@ def map_translation_id_to_dict(src: TranslationId, mapper: Mapper) -> dict:
     )
 
 
+def map_project_definition_to_dao(
+    src: ProjectDefinition, mapper: Mapper
+) -> ProjectDefinitionDao:
+    return ProjectDefinitionDao(
+        id=src.id,
+        name=src.name,
+        default_datasheet_id=src.default_datasheet_id,
+        datasheet_def_id=src.datasheet_def_id,
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_project_definition_from_dao(
+    src: ProjectDefinitionDao, mapper: Mapper
+) -> ProjectDefinition:
+    return ProjectDefinition(
+        id=src.id,
+        name=src.name,
+        default_datasheet_id=src.default_datasheet_id,
+        datasheet_def_id=src.datasheet_def_id,
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
 def map_project_definition_node_filter_to_dict(
-    src: ProjectDefinitionContainerNodeFilter, mapper: Mapper
+    src: ProjectDefinitionNodeFilter, mapper: Mapper
 ) -> dict:
     return map_dict_keys(
         src.args,

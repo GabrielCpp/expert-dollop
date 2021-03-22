@@ -38,7 +38,7 @@ async def test_given_project_definition_node_should_be_able_to_create_update_del
     ac,
 ):
     project_definition = ProjectDefinitionDtoFactory()
-    expected_project_definition_node = ProjectDefinitionContainerNodeDtoFactory(
+    expected_project_definition_node = ProjectDefinitionNodeDtoFactory(
         project_def_id=project_definition.id
     )
 
@@ -56,7 +56,7 @@ async def test_given_project_definition_node_should_be_able_to_create_update_del
     )
     assert response.status_code == 200
 
-    actual = unwrap(response, ProjectDefinitionContainerNodeDto)
+    actual = unwrap(response, ProjectDefinitionNodeDto)
     assert actual == expected_project_definition_node
 
     response = await ac.delete(

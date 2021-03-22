@@ -7,7 +7,7 @@ from expert_dollup.core.domains import (
     ProjectContainer,
     ProjectContainerNode,
     ProjectContainerMeta,
-    ProjectDefinitionContainerNode,
+    ProjectDefinitionNode,
     ProjectContainerTree,
     ProjectContainerFilter,
     FieldNode,
@@ -19,7 +19,7 @@ from expert_dollup.infra.expert_dollup_db import (
     project_container_table,
     ProjectContainerDao,
     project_definition_node_table,
-    ProjectDefinitionContainerNodeDao,
+    ProjectDefinitionNodeDao,
     project_container_meta_table,
     ProjectContainerMetaDao,
 )
@@ -73,8 +73,8 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
             [
                 (ProjectContainerDao, ProjectContainer, self._table),
                 (
-                    ProjectDefinitionContainerNodeDao,
-                    ProjectDefinitionContainerNode,
+                    ProjectDefinitionNodeDao,
+                    ProjectDefinitionNode,
                     project_definition_node_table,
                 ),
                 (
@@ -156,8 +156,8 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
             [
                 (ProjectContainerDao, ProjectContainer, self._table),
                 (
-                    ProjectDefinitionContainerNodeDao,
-                    ProjectDefinitionContainerNode,
+                    ProjectDefinitionNodeDao,
+                    ProjectDefinitionNode,
                     project_definition_node_table,
                 ),
                 (

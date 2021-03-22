@@ -8,7 +8,7 @@ from expert_dollup.core.domains import (
     Project,
     ProjectContainer,
     ProjectContainerMeta,
-    ProjectDefinitionContainerNodeFilter,
+    ProjectDefinitionNodeFilter,
     ProjectContainerFilter,
     ProjectContainerMetaFilter,
     ProjectContainerMetaState,
@@ -18,7 +18,7 @@ from expert_dollup.infra.services import (
     ProjectService,
     RessourceService,
     ProjectDefinitionService,
-    ProjectDefinitionContainerNodeService,
+    ProjectDefinitionNodeService,
     ProjectContainerService,
     ProjectContainerMetaService,
 )
@@ -34,7 +34,7 @@ class ProjectUseCase:
         project_container_meta_service: ProjectContainerMetaService,
         ressource_service: RessourceService,
         project_definition_service: ProjectDefinitionService,
-        project_definition_node_service: ProjectDefinitionContainerNodeService,
+        project_definition_node_service: ProjectDefinitionNodeService,
         ressource_builder: RessourceBuilder,
     ):
         self.service = service
@@ -125,7 +125,7 @@ class ProjectUseCase:
         project_container_metas = []
         type_to_instance_id = defaultdict(uuid4)
         container_definitions = await self.project_definition_node_service.find_by(
-            ProjectDefinitionContainerNodeFilter(project_def_id=project.project_def_id)
+            ProjectDefinitionNodeFilter(project_def_id=project.project_def_id)
         )
 
         children_to_skip = set()

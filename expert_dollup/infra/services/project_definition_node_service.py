@@ -10,30 +10,57 @@ from expert_dollup.shared.database_services import (
     IdStampedDateCursorEncoder,
 )
 from expert_dollup.core.domains import (
-    ProjectDefinitionContainerNode,
-    ProjectDefinitionContainerNodeFilter,
+    ProjectDefinitionNode,
+    ProjectDefinitionNodeFilter,
 )
 from expert_dollup.infra.path_transform import join_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
     project_definition_node_table,
-    ProjectDefinitionContainerNodeDao,
+    ProjectDefinitionNodeDao,
+    ExpertDollupDatabase,
 )
-
+from expert_dollup.shared.automapping import Mapper
 
 DELETE_BY_MIXED_PATH = text(
     f"DELETE FROM {project_definition_node_table.name} WHERE mixed_paths <@ :element"
 )
 
 
-class ProjectDefinitionContainerNodeService(
-    BaseCrudTableService[ProjectDefinitionContainerNode]
-):
+class ProjectDefinitionNode2(BaseCrudTableService[ProjectDefinitionNode]):
     class Meta:
         table = project_definition_node_table
-        dao = ProjectDefinitionContainerNodeDao
-        domain = ProjectDefinitionContainerNode
-        table_filter_type = ProjectDefinitionContainerNodeFilter
+        dao = ProjectDefinitionNodeDao
+        domain = ProjectDefinitionNode
+        table_filter_type = ProjectDefinitionNodeFilter
         paginator = IdStampedDateCursorEncoder.for_fields("creation_date_utc", "name")
+
+
+class ProjectDefinitionNodeService:
+    def __init__(self, database: ExpertDollupDatabase, mapper: Mapper):
+        self._node_crud = ProjectDefinitionNode2(database, mapper)
+
+    async def find_by_id(self, id: UUID):
+        return await self._node_crud.find_by_id(id)
+
+    async def insert(self, domain):
+        return await self._node_crud.insert(domain)
+
+    async def insert_many(self, domains):
+        return await self._node_crud.insert_many(domains)
+
+    async def find_by(self, query_filter):
+        return await self._node_crud.find_by(query_filter)
+
+    async def find_by_paginated(self, query_filter, limit, next_page_token=None):
+        return await self._node_crud.find_by_paginated(
+            query_filter, limit, next_page_token
+        )
+
+    async def find_one_by(self, query_filter):
+        return await self._node_crud.find_one_by(query_filter)
+
+    async def delete_by_id(self, id: UUID):
+        return await self._node_crud.delete_by_id(id)
 
     async def has_path(self, path: List[UUID]) -> Awaitable[bool]:
         if len(path) == 0:
@@ -41,21 +68,24 @@ class ProjectDefinitionContainerNodeService(
 
         parent_id = path[-1]
         parent_path = join_uuid_path(path[0:-1])
-        query = select([self.table_id]).where(
-            and_(self._table.c.path == parent_path, self._table.c.id == parent_id)
+        query = select([self._node_crud.table_id]).where(
+            and_(
+                self._node_crud._table.c.path == parent_path,
+                self._node_crud._table.c.id == parent_id,
+            )
         )
-        value = await self._database.fetch_one(query=query)
+        value = await self._node_crud._database.fetch_one(query=query)
 
         return not value is None
 
     async def delete_child_of(self, id: UUID) -> Awaitable:
-        query = self._table.select().where(self.table_id == id)
-        value = await self._database.fetch_one(query=query)
+        query = self._node_crud._table.select().where(self._node_crud.table_id == id)
+        value = await self._node_crud._database.fetch_one(query=query)
 
         if value is None:
             return
 
-        value = ProjectDefinitionContainerNodeDao(**value)
+        value = ProjectDefinitionNodeDao(**value)
         path_to_delete = "/".join([*value.path, str(value.id)])
         sql = DELETE_BY_MIXED_PATH.bindparams(
             bindparam(
@@ -63,23 +93,25 @@ class ProjectDefinitionContainerNodeService(
             )
         )
 
-        await self._database.execute(sql)
+        await self._node_crud._database.execute(sql)
 
     async def find_children_tree(self, project_def_id: UUID, path: List[UUID]):
         path_filter = join_uuid_path(path)
         query = (
-            select([self._table])
+            select([self._node_crud._table])
             .where(
                 and_(
-                    self._table.c.project_def_id == project_def_id,
-                    self._table.c.mixed_paths.op("@>")([path_filter]),
+                    self._node_crud._table.c.project_def_id == project_def_id,
+                    self._node_crud._table.c.mixed_paths.op("@>")([path_filter]),
                 )
             )
-            .order_by(desc(func.length(self._table.c.path)))
+            .order_by(desc(func.length(self._node_crud._table.c.path)))
         )
 
-        records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
+        records = await self._node_crud._database.fetch_all(query=query)
+        results = self._node_crud.map_many_to(
+            records, self._node_crud._dao, self._node_crud._domain
+        )
         return results
 
     async def find_viewable_layers(
@@ -88,15 +120,4 @@ class ProjectDefinitionContainerNodeService(
         sub_root_section_id: Optional[UUID],
         form_id: Optional[UUID],
     ):
-        first_layer = (
-            select([self._table])
-            .where(
-                and_(
-                    self._table.c.project_def_id == project_def_id,
-                    self._table.c.mixed_paths.op("@>")([path_filter]),
-                )
-            )
-            .order_by(desc(func.length(self._table.c.path)))
-        )
-
-        records = await self._database.fetch_all(query=first_layer)
+        pass

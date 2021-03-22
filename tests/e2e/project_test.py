@@ -1,6 +1,6 @@
 import pytest
+from typing import List
 from expert_dollup.app.dtos import *
-from expert_dollup.infra.path_transform import *
 from ..fixtures import *
 
 
@@ -132,7 +132,7 @@ async def test_instanciate_collection(ac, expert_dollup_simple_project, project)
     root_collection_container_definition = next(
         container_definition
         for container_definition in fake_db.project_definition_nodes
-        if container_definition.is_collection and container_definition.path == ""
+        if container_definition.is_collection and len(container_definition.path) == 0
     )
 
     response = await ac.post(
@@ -176,7 +176,7 @@ async def test_clone_collection(ac, expert_dollup_simple_project, project):
         for container_definition in fake_db.project_definition_nodes
         if container_definition.is_collection
         and container_definition.instanciate_by_default
-        and len(split_uuid_path(container_definition.path)) == 1
+        and len(container_definition.path) == 1
     )
 
     @runner.step
@@ -226,7 +226,7 @@ async def test_remove_collection(ac, expert_dollup_simple_project, project):
         for container_definition in fake_db.project_definition_nodes
         if container_definition.is_collection
         and container_definition.instanciate_by_default
-        and len(split_uuid_path(container_definition.path)) == 1
+        and len(container_definition.path) == 1
     )
 
     @runner.step

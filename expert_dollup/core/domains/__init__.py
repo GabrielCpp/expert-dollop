@@ -1,14 +1,14 @@
 from .project_definition import ProjectDefinition
 from .project_definition_node import (
-    ProjectDefinitionContainerNode,
-    ProjectDefinitionContainerNodeFilter,
+    ProjectDefinitionNode,
+    ProjectDefinitionNodeFilter,
 )
 from .project_definition_value_type import ProjectDefinitionValueType
 from .project import Project
 from .project_container import ProjectContainer, ProjectContainerFilter
 from .project_definition_node_tree import (
-    ProjectDefinitionContainerNodeTree,
-    ProjectDefinitionContainerNodeTreeNode,
+    ProjectDefinitionNodeTree,
+    ProjectDefinitionTreeNode,
 )
 from .project_container_meta import (
     ProjectContainerMeta,

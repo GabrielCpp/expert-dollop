@@ -5,13 +5,13 @@ from uuid import UUID
 from expert_dollup.shared.starlette_injection import Inject
 from expert_dollup.shared.handlers import RequestHandler, MappingChain
 from expert_dollup.app.dtos import (
-    ProjectDefinitionContainerNodeDto,
-    ProjectDefinitionContainerNodePageDto,
-    ProjectDefinitionContainerNodeTreeDto,
+    ProjectDefinitionNodeDto,
+    ProjectDefinitionNodePageDto,
+    ProjectDefinitionNodeTreeDto,
 )
 from expert_dollup.core.domains import (
-    ProjectDefinitionContainerNode,
-    ProjectDefinitionContainerNodeTree,
+    ProjectDefinitionNode,
+    ProjectDefinitionNodeTree,
 )
 from expert_dollup.core.usecases import ProjectDefinitonContainerUseCase
 from expert_dollup.shared.database_services import Page
@@ -26,13 +26,13 @@ async def get_project_definition_node(
     handler=Depends(Inject(RequestHandler)),
 ):
     return await handler.handle(
-        usecase.find_by_id, id, MappingChain(out_dto=ProjectDefinitionContainerNodeDto)
+        usecase.find_by_id, id, MappingChain(out_dto=ProjectDefinitionNodeDto)
     )
 
 
 @router.post("/project_definition_node")
 async def create_project_definition_node(
-    project_definition_node: ProjectDefinitionContainerNodeDto,
+    project_definition_node: ProjectDefinitionNodeDto,
     usecase=Depends(Inject(ProjectDefinitonContainerUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
@@ -40,16 +40,16 @@ async def create_project_definition_node(
         usecase.add,
         project_definition_node,
         MappingChain(
-            dto=ProjectDefinitionContainerNodeDto,
-            domain=ProjectDefinitionContainerNode,
-            out_dto=ProjectDefinitionContainerNodeDto,
+            dto=ProjectDefinitionNodeDto,
+            domain=ProjectDefinitionNode,
+            out_dto=ProjectDefinitionNodeDto,
         ),
     )
 
 
 @router.put("/project_definition_node")
 async def replace_project_definition_node(
-    project_definition_node: ProjectDefinitionContainerNodeDto,
+    project_definition_node: ProjectDefinitionNodeDto,
     usecase=Depends(Inject(ProjectDefinitonContainerUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
@@ -57,9 +57,9 @@ async def replace_project_definition_node(
         usecase.update,
         project_definition_node,
         MappingChain(
-            dto=ProjectDefinitionContainerNodeDto,
-            domain=ProjectDefinitionContainerNode,
-            out_dto=ProjectDefinitionContainerNodeDto,
+            dto=ProjectDefinitionNodeDto,
+            domain=ProjectDefinitionNode,
+            out_dto=ProjectDefinitionNodeDto,
         ),
     )
 
@@ -89,8 +89,8 @@ async def get_project_definition_node_by_project(
             project_def_id=project_def_id,
         ),
         MappingChain(
-            out_domain=Page[ProjectDefinitionContainerNode],
-            out_dto=ProjectDefinitionContainerNodePageDto,
+            out_domain=Page[ProjectDefinitionNode],
+            out_dto=ProjectDefinitionNodePageDto,
         ),
     )
 
@@ -111,7 +111,7 @@ async def find_viewable_layers(
             form_id=form_id,
         ),
         MappingChain(
-            out_domain=ProjectDefinitionContainerNodeTree,
-            out_dto=ProjectDefinitionContainerNodeTreeDto,
+            out_domain=ProjectDefinitionNodeTree,
+            out_dto=ProjectDefinitionNodeTreeDto,
         ),
     )

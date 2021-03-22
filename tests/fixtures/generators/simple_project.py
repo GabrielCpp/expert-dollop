@@ -2,25 +2,16 @@ from uuid import uuid4, UUID
 from faker import Faker
 from typing import List
 from pydantic import BaseModel
-from expert_dollup.infra.path_transform import join_path, build_path_steps
-from expert_dollup.infra.expert_dollup_db import (
-    ExpertDollupDatabase,
-    ProjectDefinitionDao,
-    TranslationDao,
-    ProjectDefinitionContainerNodeDao,
-    project_definition_table,
-    project_definition_node_table,
-)
-
+from expert_dollup.core.domains import *
 from ..fake_db_helpers import FakeExpertDollupDb as Tables
 from ..factories import ValueTypeFactory
 
 
 class SimpleProject:
     def __init__(self):
-        self.project_definition_node: List[ProjectDefinitionContainerNodeDao] = []
-        self.project_definitions: List[ProjectDefinitionDao] = []
-        self.tanslations: List[TranslationDao] = []
+        self.project_definition_nodes: List[ProjectDefinitionNode] = []
+        self.project_definitions: List[ProjectDefinition] = []
+        self.tanslations: List[Translation] = []
         self.fake = Faker()
         self.value_type_factory = ValueTypeFactory(self.fake)
 
@@ -28,7 +19,7 @@ class SimpleProject:
         labels = ["root", "subsection", "form", "section", "field"]
 
         def generate_child_container(
-            direct_parent: ProjectDefinitionContainerNodeDao, parents: List[str]
+            direct_parent: ProjectDefinitionNode, parents: List[str]
         ) -> None:
             level = len(parents)
 
@@ -46,12 +37,11 @@ class SimpleProject:
                 if not value is None:
                     other_field["default_value"] = value
 
-                sub_container = ProjectDefinitionContainerNodeDao(
+                sub_container = ProjectDefinitionNode(
                     id=uuid4(),
                     name=f"{direct_parent.name}_{label}_{index}",
                     project_def_id=project_def_id,
-                    path=join_path(parents),
-                    mixed_paths=build_path_steps(parents),
+                    path=parents,
                     value_type=value_type,
                     is_collection=index == 0,
                     instanciate_by_default=True,
@@ -61,16 +51,16 @@ class SimpleProject:
                     **other_field,
                 )
 
-                self.project_definition_node.append(sub_container)
+                self.project_definition_nodes.append(sub_container)
                 generate_child_container(
                     sub_container, [*parents, str(sub_container.id)]
                 )
 
-        root_a = ProjectDefinitionContainerNodeDao(
+        root_a = ProjectDefinitionNode(
             id=uuid4(),
             name="root_a",
             project_def_id=project_def_id,
-            path="",
+            path=[],
             value_type="CONTAINER",
             is_collection=False,
             instanciate_by_default=True,
@@ -78,17 +68,16 @@ class SimpleProject:
             config=dict(),
             creation_date_utc=self.fake.date_time(),
             default_value=self.value_type_factory.build_value("CONTAINER"),
-            mixed_paths=[],
         )
 
-        self.project_definition_node.append(root_a)
+        self.project_definition_nodes.append(root_a)
         generate_child_container(root_a, [str(root_a.id)])
 
-        root_b = ProjectDefinitionContainerNodeDao(
+        root_b = ProjectDefinitionNode(
             id=uuid4(),
             name="root_b",
             project_def_id=project_def_id,
-            path="",
+            path=[],
             value_type="CONTAINER",
             is_collection=True,
             instanciate_by_default=False,
@@ -96,17 +85,15 @@ class SimpleProject:
             config=dict(),
             creation_date_utc=self.fake.date_time(),
             default_value=self.value_type_factory.build_value("CONTAINER"),
-            mixed_paths=[],
         )
 
-        self.project_definition_node.append(root_b)
+        self.project_definition_nodes.append(root_b)
         generate_child_container(root_b, [str(root_b.id)])
 
     def generate_project_definition(self):
-        project_definition = ProjectDefinitionDao(
+        project_definition = ProjectDefinition(
             id=uuid4(),
             name="".join(self.fake.words()),
-            status="OPEN",
             default_datasheet_id=uuid4(),
             datasheet_def_id=uuid4(),
             creation_date_utc=self.fake.date_time(),
@@ -116,9 +103,9 @@ class SimpleProject:
         self.generate_project_container_definition(project_definition.id)
 
     def generate_translations(self):
-        for project_container_definition in self.project_definition_node:
+        for project_container_definition in self.project_definition_nodes:
             self.tanslations.append(
-                TranslationDao(
+                Translation(
                     ressource_id=self.project_definitions[0].id,
                     scope=project_container_definition.id,
                     locale="fr",
@@ -129,7 +116,7 @@ class SimpleProject:
             )
 
             self.tanslations.append(
-                TranslationDao(
+                Translation(
                     ressource_id=self.project_definitions[0].id,
                     scope=project_container_definition.id,
                     locale="fr",
@@ -140,7 +127,7 @@ class SimpleProject:
             )
 
             self.tanslations.append(
-                TranslationDao(
+                Translation(
                     ressource_id=self.project_definitions[0].id,
                     scope=project_container_definition.id,
                     locale="en",
@@ -151,7 +138,7 @@ class SimpleProject:
             )
 
             self.tanslations.append(
-                TranslationDao(
+                Translation(
                     ressource_id=self.project_definitions[0].id,
                     scope=project_container_definition.id,
                     locale="en",
@@ -170,6 +157,6 @@ class SimpleProject:
     def model(self) -> Tables:
         return Tables(
             project_definitions=self.project_definitions,
-            project_definition_nodes=self.project_definition_node,
+            project_definition_nodes=self.project_definition_nodes,
             translations=self.tanslations,
         )

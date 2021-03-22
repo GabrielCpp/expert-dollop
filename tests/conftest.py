@@ -8,6 +8,7 @@ from async_asgi_testclient import TestClient
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 from expert_dollup.app.app import creat_app
 from expert_dollup.app.modules import build_container
+from expert_dollup.shared.automapping import Mapper
 from .fixtures import *
 
 load_dotenv(dotenv_path=Path(".") / ".env.test")
@@ -44,6 +45,12 @@ def container(dal, request) -> Injector:
         load_binding(container)
 
     return container
+
+
+@pytest.fixture
+def mapper(container):
+    mapper = container.get(Mapper)
+    return mapper
 
 
 @pytest.fixture

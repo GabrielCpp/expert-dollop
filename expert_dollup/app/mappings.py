@@ -15,6 +15,7 @@ def map_project_definition_from_dto(
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
         datasheet_def_id=src.datasheet_def_id,
+        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
@@ -26,13 +27,14 @@ def map_project_definition_to_dto(
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
         datasheet_def_id=src.datasheet_def_id,
+        creation_date_utc=src.creation_date_utc,
     )
 
 
 def map_project_definition_node_from_dto(
-    src: ProjectDefinitionContainerNodeDto, mapper: Mapper
-) -> ProjectDefinitionContainerNode:
-    return ProjectDefinitionContainerNode(
+    src: ProjectDefinitionNodeDto, mapper: Mapper
+) -> ProjectDefinitionNode:
+    return ProjectDefinitionNode(
         id=src.id,
         project_def_id=src.project_def_id,
         name=src.name,
@@ -43,13 +45,14 @@ def map_project_definition_node_from_dto(
         value_type=src.value_type,
         default_value=src.default_value,
         path=src.path,
+        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
 def map_project_definition_node_to_dto(
-    src: ProjectDefinitionContainerNode, mapper: Mapper
-) -> ProjectDefinitionContainerNodeDto:
-    return ProjectDefinitionContainerNodeDto(
+    src: ProjectDefinitionNode, mapper: Mapper
+) -> ProjectDefinitionNodeDto:
+    return ProjectDefinitionNodeDto(
         id=src.id,
         project_def_id=src.project_def_id,
         name=src.name,
@@ -64,13 +67,13 @@ def map_project_definition_node_to_dto(
 
 
 def map_project_definition_node_page_to_dto(
-    src: Page[ProjectDefinitionContainerNode], mapper: Mapper
-) -> ProjectDefinitionContainerNodePageDto:
-    return ProjectDefinitionContainerNodePageDto(
+    src: Page[ProjectDefinitionNode], mapper: Mapper
+) -> ProjectDefinitionNodePageDto:
+    return ProjectDefinitionNodePageDto(
         next_page_token=src.next_page_token,
         limit=src.limit,
         results=mapper.map_many(
-            src.results, ProjectDefinitionContainerNodeDto, ProjectDefinitionContainerNode
+            src.results, ProjectDefinitionNodeDto, ProjectDefinitionNode
         ),
     )
 
@@ -144,7 +147,7 @@ def map_project_container_node_to_dto(
 ) -> ProjectContainerNodeDto:
     return ProjectContainerNodeDto(
         container=mapper.map(src.container, ProjectContainerDto),
-        definition=mapper.map(src.definition, ProjectDefinitionContainerNodeDto),
+        definition=mapper.map(src.definition, ProjectDefinitionNodeDto),
         meta=mapper.map(src.meta, ProjectContainerMetaDto),
         children=mapper.map_many(src.children, ProjectContainerNodeDto),
     )
@@ -165,6 +168,7 @@ def map_translation_from_dto(src: TranslationDto, mapper: Mapper) -> Translation
         name=src.name,
         scope=src.scope,
         value=src.value,
+        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
@@ -175,6 +179,7 @@ def map_translation_to_dto(src: Translation, mapper: Mapper) -> TranslationDto:
         name=src.name,
         scope=src.scope,
         value=src.value,
+        creation_date_utc=src.creation_date_utc,
     )
 
 

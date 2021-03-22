@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from uuid import UUID
+from datetime import datetime
 
 
 @dataclass
@@ -9,6 +10,7 @@ class Translation:
     scope: UUID
     name: str
     value: str
+    creation_date_utc: datetime
 
 
 @dataclass

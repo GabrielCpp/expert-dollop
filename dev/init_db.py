@@ -20,9 +20,9 @@ def to_dto(tables: FakeExpertDollupDb, mapper: Mapper) -> FakeExpertDollupDbDto:
         ),
         project_definition_nodes=double_map(
             tables.project_definition_nodes,
-            ProjectDefinitionContainerNodeDao,
-            ProjectDefinitionContainerNode,
-            ProjectDefinitionContainerNodeDto,
+            ProjectDefinitionNodeDao,
+            ProjectDefinitionNode,
+            ProjectDefinitionNodeDto,
         ),
         translations=double_map(
             tables.translations, TranslationDao, Translation, TranslationDto
