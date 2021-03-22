@@ -7,7 +7,7 @@ from expert_dollup.core.domains import (
     ProjectContainer,
     ProjectContainerNode,
     ProjectContainerMeta,
-    ProjectDefinitionContainer,
+    ProjectDefinitionContainerNode,
     ProjectContainerTree,
     ProjectContainerFilter,
     FieldNode,
@@ -18,8 +18,8 @@ from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
     project_container_table,
     ProjectContainerDao,
-    project_definition_container_table,
-    ProjectDefinitionContainerDao,
+    project_definition_node_table,
+    ProjectDefinitionContainerNodeDao,
     project_container_meta_table,
     ProjectContainerMetaDao,
 )
@@ -36,8 +36,8 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
         path_filter = join_uuid_path(container.subpath)
 
         join_definition = self._table.join(
-            project_definition_container_table,
-            project_definition_container_table.c.id == self._table.c.type_id,
+            project_definition_node_table,
+            project_definition_node_table.c.id == self._table.c.type_id,
         ).join(
             project_container_meta_table,
             and_(
@@ -50,7 +50,7 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
             select(
                 [
                     self._table,
-                    project_definition_container_table,
+                    project_definition_node_table,
                     project_container_meta_table,
                 ]
             )
@@ -73,9 +73,9 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
             [
                 (ProjectContainerDao, ProjectContainer, self._table),
                 (
-                    ProjectDefinitionContainerDao,
-                    ProjectDefinitionContainer,
-                    project_definition_container_table,
+                    ProjectDefinitionContainerNodeDao,
+                    ProjectDefinitionContainerNode,
+                    project_definition_node_table,
                 ),
                 (
                     ProjectContainerMetaDao,
@@ -127,8 +127,8 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
             filter_container = and_(filter_container, self._table.c.level == level)
 
         join_definition = self._table.join(
-            project_definition_container_table,
-            project_definition_container_table.c.id == self._table.c.type_id,
+            project_definition_node_table,
+            project_definition_node_table.c.id == self._table.c.type_id,
         ).join(
             project_container_meta_table,
             and_(
@@ -141,7 +141,7 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
             select(
                 [
                     self._table,
-                    project_definition_container_table,
+                    project_definition_node_table,
                     project_container_meta_table,
                 ]
             )
@@ -156,9 +156,9 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
             [
                 (ProjectContainerDao, ProjectContainer, self._table),
                 (
-                    ProjectDefinitionContainerDao,
-                    ProjectDefinitionContainer,
-                    project_definition_container_table,
+                    ProjectDefinitionContainerNodeDao,
+                    ProjectDefinitionContainerNode,
+                    project_definition_node_table,
                 ),
                 (
                     ProjectContainerMetaDao,
@@ -227,16 +227,16 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
 
     async def get_all_fields(self, project_id: UUID) -> Awaitable[List[FieldNode]]:
         join_definition = self._table.join(
-            project_definition_container_table,
-            project_definition_container_table.c.id == self._table.c.type_id,
+            project_definition_node_table,
+            project_definition_node_table.c.id == self._table.c.type_id,
         )
 
         query = (
             select(
                 [
-                    project_definition_container_table.c.name,
-                    project_definition_container_table.c.id,
-                    project_definition_container_table.c.path,
+                    project_definition_node_table.c.name,
+                    project_definition_node_table.c.id,
+                    project_definition_node_table.c.path,
                     self._table.c.value,
                 ]
             )

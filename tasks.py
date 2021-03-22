@@ -71,6 +71,16 @@ def dbUp(c):
     )
 
 
+@task(name="db:fixture")
+def fill_db_with_fixture(c, poetry=False):
+    if poetry:
+        from dev.init_db import fill_db
+
+        fill_db()
+    else:
+        c.run("poetry run invoke db:fixture --poetry")
+
+
 @task
 def fixture(c, layer="dao", poetry=False):
     if poetry:

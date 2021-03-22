@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
+from typing import Optional
 from uuid import UUID
 from expert_dollup.shared.handlers import RequestHandler, MappingChain
 from expert_dollup.shared.starlette_injection import Inject
@@ -11,7 +12,7 @@ router = APIRouter()
 
 
 @router.get("/project_definition/{id}")
-async def get_project_definition(
+async def find_project_definition(
     id: UUID,
     usecase=Depends(Inject(ProjectDefinitonUseCase)),
     handler=Depends(Inject(RequestHandler)),

@@ -13,7 +13,7 @@ from expert_dollup.infra.expert_dollup_db import (
     project_definition_formula_table,
     project_definition_formula_dependency_table,
     project_definition_formula_container_dependency_table,
-    project_definition_container_table,
+    project_definition_node_table,
 )
 
 
@@ -40,10 +40,10 @@ class FormulaService(BaseCrudTableService[Formula]):
     async def get_fields_by_name(self, names: List[str]) -> Awaitable[Dict[str, UUID]]:
         query = select(
             [
-                project_definition_container_table.c.id,
-                project_definition_container_table.c.name,
+                project_definition_node_table.c.id,
+                project_definition_node_table.c.name,
             ]
-        ).where(project_definition_container_table.c.name.in_(names))
+        ).where(project_definition_node_table.c.name.in_(names))
 
         records = await self._database.fetch_all(query=query)
         return {record.get("name"): record.get("id") for record in records}
@@ -107,11 +107,11 @@ class FormulaService(BaseCrudTableService[Formula]):
         self, project_definition_id: UUID
     ) -> Awaitable[List[FormulaNode]]:
         join_definition = self._table.join(
-            project_definition_container_table,
+            project_definition_node_table,
             and_(
-                project_definition_container_table.c.id
+                project_definition_node_table.c.id
                 == self._table.c.attached_to_type_id,
-                project_definition_container_table.c.project_def_id
+                project_definition_node_table.c.project_def_id
                 == project_definition_id,
             ),
         )
@@ -122,8 +122,8 @@ class FormulaService(BaseCrudTableService[Formula]):
                     self._table.c.name,
                     self._table.c.generated_ast,
                     self._table.c.id.label("formula_id"),
-                    project_definition_container_table.c.path,
-                    project_definition_container_table.c.id,
+                    project_definition_node_table.c.path,
+                    project_definition_node_table.c.id,
                 ]
             )
             .select_from(join_definition)

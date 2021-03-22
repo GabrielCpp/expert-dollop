@@ -29,7 +29,7 @@ def assert_valid_tree_for_definition(tree, fake_db, predicate):
     expected_definition_ids = {
         definition.id
         for definition in sorted(
-            fake_db.project_definition_containers,
+            fake_db.project_definition_nodes,
             key=lambda d: (len(d.path), d.id),
         )
         if predicate(definition)
@@ -131,7 +131,7 @@ async def test_instanciate_collection(ac, expert_dollup_simple_project, project)
     fake_db = expert_dollup_simple_project
     root_collection_container_definition = next(
         container_definition
-        for container_definition in fake_db.project_definition_containers
+        for container_definition in fake_db.project_definition_nodes
         if container_definition.is_collection and container_definition.path == ""
     )
 
@@ -173,7 +173,7 @@ async def test_clone_collection(ac, expert_dollup_simple_project, project):
     runner = FlowRunner()
     collection_container_definition = next(
         container_definition
-        for container_definition in fake_db.project_definition_containers
+        for container_definition in fake_db.project_definition_nodes
         if container_definition.is_collection
         and container_definition.instanciate_by_default
         and len(split_uuid_path(container_definition.path)) == 1
@@ -223,7 +223,7 @@ async def test_remove_collection(ac, expert_dollup_simple_project, project):
     runner = FlowRunner()
     collection_container_definition = next(
         container_definition
-        for container_definition in fake_db.project_definition_containers
+        for container_definition in fake_db.project_definition_nodes
         if container_definition.is_collection
         and container_definition.instanciate_by_default
         and len(split_uuid_path(container_definition.path)) == 1

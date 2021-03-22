@@ -7,9 +7,9 @@ from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
     ProjectDefinitionDao,
     TranslationDao,
-    ProjectDefinitionContainerDao,
+    ProjectDefinitionContainerNodeDao,
     project_definition_table,
-    project_definition_container_table,
+    project_definition_node_table,
 )
 
 from ..fake_db_helpers import FakeExpertDollupDb as Tables
@@ -18,7 +18,7 @@ from ..factories import ValueTypeFactory
 
 class SimpleProject:
     def __init__(self):
-        self.project_definition_container: List[ProjectDefinitionContainerDao] = []
+        self.project_definition_node: List[ProjectDefinitionContainerNodeDao] = []
         self.project_definitions: List[ProjectDefinitionDao] = []
         self.tanslations: List[TranslationDao] = []
         self.fake = Faker()
@@ -28,7 +28,7 @@ class SimpleProject:
         labels = ["root", "subsection", "form", "section", "field"]
 
         def generate_child_container(
-            direct_parent: ProjectDefinitionContainerDao, parents: List[str]
+            direct_parent: ProjectDefinitionContainerNodeDao, parents: List[str]
         ) -> None:
             level = len(parents)
 
@@ -46,7 +46,7 @@ class SimpleProject:
                 if not value is None:
                     other_field["default_value"] = value
 
-                sub_container = ProjectDefinitionContainerDao(
+                sub_container = ProjectDefinitionContainerNodeDao(
                     id=uuid4(),
                     name=f"{direct_parent.name}_{label}_{index}",
                     project_def_id=project_def_id,
@@ -61,12 +61,12 @@ class SimpleProject:
                     **other_field,
                 )
 
-                self.project_definition_container.append(sub_container)
+                self.project_definition_node.append(sub_container)
                 generate_child_container(
                     sub_container, [*parents, str(sub_container.id)]
                 )
 
-        root_a = ProjectDefinitionContainerDao(
+        root_a = ProjectDefinitionContainerNodeDao(
             id=uuid4(),
             name="root_a",
             project_def_id=project_def_id,
@@ -81,10 +81,10 @@ class SimpleProject:
             mixed_paths=[],
         )
 
-        self.project_definition_container.append(root_a)
+        self.project_definition_node.append(root_a)
         generate_child_container(root_a, [str(root_a.id)])
 
-        root_b = ProjectDefinitionContainerDao(
+        root_b = ProjectDefinitionContainerNodeDao(
             id=uuid4(),
             name="root_b",
             project_def_id=project_def_id,
@@ -99,7 +99,7 @@ class SimpleProject:
             mixed_paths=[],
         )
 
-        self.project_definition_container.append(root_b)
+        self.project_definition_node.append(root_b)
         generate_child_container(root_b, [str(root_b.id)])
 
     def generate_project_definition(self):
@@ -116,7 +116,7 @@ class SimpleProject:
         self.generate_project_container_definition(project_definition.id)
 
     def generate_translations(self):
-        for project_container_definition in self.project_definition_container:
+        for project_container_definition in self.project_definition_node:
             self.tanslations.append(
                 TranslationDao(
                     ressource_id=self.project_definitions[0].id,
@@ -170,6 +170,6 @@ class SimpleProject:
     def model(self) -> Tables:
         return Tables(
             project_definitions=self.project_definitions,
-            project_definition_containers=self.project_definition_container,
+            project_definition_nodes=self.project_definition_node,
             translations=self.tanslations,
         )

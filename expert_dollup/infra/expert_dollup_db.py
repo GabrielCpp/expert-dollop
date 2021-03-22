@@ -44,8 +44,8 @@ class ProjectDefinitionDao(BaseModel):
     creation_date_utc: datetime
 
 
-project_definition_container_table = Table(
-    "project_definition_container",
+project_definition_node_table = Table(
+    "project_definition_node",
     metadata,
     Column("id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("project_def_id", postgresql.UUID(), nullable=False),
@@ -62,7 +62,7 @@ project_definition_container_table = Table(
 )
 
 
-class ProjectDefinitionContainerDao(BaseModel):
+class ProjectDefinitionContainerNodeDao(BaseModel):
     id: UUID
     project_def_id: UUID
     name: str

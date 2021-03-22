@@ -157,7 +157,7 @@ def create_project_definition_tables():
     op.create_index(op.f("ix_project_definition_name"), "project_definition", ["name"])
 
     op.create_table(
-        "project_definition_container",
+        "project_definition_node",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("project_def_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
@@ -173,21 +173,21 @@ def create_project_definition_tables():
     )
 
     op.create_index(
-        op.f("ix_project_definition_container_value_type"),
-        "project_definition_container",
+        op.f("ix_project_definition_node_value_type"),
+        "project_definition_node",
         ["path"],
     )
 
     op.create_index(
-        op.f("ix_project_definition_container_mixed_paths"),
-        "project_definition_container",
+        op.f("ix_project_definition_node_mixed_paths"),
+        "project_definition_node",
         ["mixed_paths"],
         postgresql_using="gin",
     )
 
     op.create_index(
-        op.f("ix_project_definition_container_def_id_name"),
-        "project_definition_container",
+        op.f("ix_project_definition_node_def_id_name"),
+        "project_definition_node",
         ["project_def_id", "name"],
         unique=True,
     )

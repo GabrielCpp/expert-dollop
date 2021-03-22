@@ -73,6 +73,28 @@ type Datasheet {
     elements(first: Int!, after: String): DatasheetElementConnection
 }
 
+type ProjectDefinitionValueType {
+    id: ID!
+    valueJsonSchema: String!
+    attributesJsonSchema: String!
+    displayName: String!
+}
+
+type ProjectDefinitionContainerNode {
+    id: ID!
+    projectDefId: String!
+    name: String!
+    isCollection: Boolean!
+    instanciateByDefault: Boolean!
+    orderIndex: Int!
+    config: String!
+    valueType: String!
+    valueTypeDetails: ProjectDefinitionValueType!
+    defaultValue: String
+    path: [String!]!
+    children: [ProjectDefinitionContainerNode!]!
+}
+
 type ProjectDefinition {
     id: ID!
     name: String!
@@ -80,6 +102,7 @@ type ProjectDefinition {
     defaultDatasheet: Datasheet!
     datasheetDefId: String!
     datasheetDefinition: DatasheetDefinition!
+    viewableLayers(rootSectionID: String, subRootSectionId: String, formId: String): ProjectDefinitionContainerNode
 }
 
 type Project {
@@ -99,6 +122,7 @@ type PageInfo {
 
 type Query {
     findDatasheet(id: ID!): Datasheet
+    findProjectDefinition(id: ID!): ProjectDefinition
 }
 
 schema {

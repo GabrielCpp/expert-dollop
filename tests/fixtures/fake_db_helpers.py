@@ -12,7 +12,7 @@ from expert_dollup.infra.services import *
 
 
 class FakeExpertDollupDb(BaseModel):
-    project_definition_containers: List[ProjectDefinitionContainerDao] = Field(
+    project_definition_nodes: List[ProjectDefinitionContainerNodeDao] = Field(
         default_factory=list
     )
     project_definitions: List[ProjectDefinitionDao] = Field(default_factory=list)
@@ -57,7 +57,7 @@ async def populate_db(db, table, daos: Dict[str, BaseModel]):
 class DbSetupHelper:
     def __init__(
         self,
-        project_definition_container_service: ProjectDefinitionContainerService,
+        project_definition_node_service: ProjectDefinitionContainerNodeService,
         project_definition_service: ProjectDefinitionService,
         translation_service: TranslationService,
         datasheet_definition_service: DatasheetDefinitionService,
@@ -65,7 +65,7 @@ class DbSetupHelper:
         label_collection_service: LabelCollectionService,
         label_service: LabelService,
     ):
-        self.project_definition_container_service = project_definition_container_service
+        self.project_definition_node_service = project_definition_node_service
         self.project_definition_service = project_definition_service
         self.translation_service = translation_service
         self.datasheet_definition_service = datasheet_definition_service
@@ -78,8 +78,8 @@ class DbSetupHelper:
             fake_db.project_definitions
         )
 
-        await self.project_definition_container_service.insert_many_raw(
-            fake_db.project_definition_containers,
+        await self.project_definition_node_service.insert_many_raw(
+            fake_db.project_definition_nodes,
         )
 
         await self.translation_service.insert_many_raw(fake_db.translations)

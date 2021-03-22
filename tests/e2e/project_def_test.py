@@ -15,27 +15,27 @@ async def test_project_creation(ac, map_dao_to_dto):
     response = await ac.post("/api/project_definition", data=project_definition.json())
     assert response.status_code == 200, response.json()
 
-    project_definition_containers_dto = map_dao_to_dto(
-        db.project_definition_containers,
-        ProjectDefinitionContainerDao,
-        ProjectDefinitionContainer,
-        ProjectDefinitionContainerDto,
+    project_definition_nodes_dto = map_dao_to_dto(
+        db.project_definition_nodes,
+        ProjectDefinitionContainerNodeDao,
+        ProjectDefinitionContainerNode,
+        ProjectDefinitionContainerNodeDto,
     )
 
-    for project_definiton_container_dto in project_definition_containers_dto:
+    for project_definiton_container_dto in project_definition_nodes_dto:
         response = await ac.post(
-            "/api/project_definition_container",
+            "/api/project_definition_node",
             data=project_definiton_container_dto.json(),
         )
         assert response.status_code == 200, response.json()
 
     containers = await AsyncCursor.all(
         ac,
-        f"/api/{project_definition.id}/project_definition_containers",
-        after=normalize_request_results(ProjectDefinitionContainerDto, "id"),
+        f"/api/{project_definition.id}/project_definition_nodes",
+        after=normalize_request_results(ProjectDefinitionContainerNodeDto, "id"),
     )
 
-    expected_containers = normalize_dtos(project_definition_containers_dto, "id")
+    expected_containers = normalize_dtos(project_definition_nodes_dto, "id")
 
-    assert len(containers) == len(project_definition_containers_dto)
+    assert len(containers) == len(project_definition_nodes_dto)
     assert containers == expected_containers

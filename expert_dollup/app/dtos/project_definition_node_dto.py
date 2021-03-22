@@ -4,7 +4,7 @@ from typing import Optional, List
 from datetime import datetime
 
 
-class ProjectDefinitionContainerDto(CamelModel):
+class ProjectDefinitionContainerNodeDto(CamelModel):
     id: UUID
     project_def_id: UUID
     name: str
@@ -17,7 +17,7 @@ class ProjectDefinitionContainerDto(CamelModel):
     path: List[UUID]
 
 
-class ProjectDefinitionContainerPageDto(CamelModel):
+class ProjectDefinitionContainerNodePageDto(CamelModel):
     next_page_token: str
     limit: int
-    results: List[ProjectDefinitionContainerDto]
+    results: List[ProjectDefinitionContainerNodeDto]

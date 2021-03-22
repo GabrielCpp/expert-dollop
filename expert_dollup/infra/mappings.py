@@ -52,10 +52,10 @@ def map_project_definition_to_dao(
     )
 
 
-def map_project_definition_container_from_dao(
-    src: ProjectDefinitionContainerDao, mapper: Mapper
-) -> ProjectDefinitionContainer:
-    return ProjectDefinitionContainer(
+def map_project_definition_node_from_dao(
+    src: ProjectDefinitionContainerNodeDao, mapper: Mapper
+) -> ProjectDefinitionContainerNode:
+    return ProjectDefinitionContainerNode(
         id=src.id,
         project_def_id=src.project_def_id,
         name=src.name,
@@ -69,10 +69,10 @@ def map_project_definition_container_from_dao(
     )
 
 
-def map_project_definition_container_to_dao(
-    src: ProjectDefinitionContainer, mapper: Mapper
-) -> ProjectDefinitionContainerDao:
-    return ProjectDefinitionContainerDao(
+def map_project_definition_node_to_dao(
+    src: ProjectDefinitionContainerNode, mapper: Mapper
+) -> ProjectDefinitionContainerNodeDao:
+    return ProjectDefinitionContainerNodeDao(
         id=src.id,
         project_def_id=src.project_def_id,
         name=src.name,
@@ -198,8 +198,8 @@ def map_translation_id_to_dict(src: TranslationId, mapper: Mapper) -> dict:
     )
 
 
-def map_project_definition_container_filter_to_dict(
-    src: ProjectDefinitionContainerFilter, mapper: Mapper
+def map_project_definition_node_filter_to_dict(
+    src: ProjectDefinitionContainerNodeFilter, mapper: Mapper
 ) -> dict:
     return map_dict_keys(
         src.args,

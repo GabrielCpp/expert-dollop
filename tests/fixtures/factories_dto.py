@@ -13,9 +13,9 @@ class ProjectDefinitionDtoFactory(factory.Factory):
     default_datasheet_id = factory.LazyFunction(uuid4)
 
 
-class ProjectDefinitionContainerDtoFactory(factory.Factory):
+class ProjectDefinitionContainerNodeDtoFactory(factory.Factory):
     class Meta:
-        model = ProjectDefinitionContainerDto
+        model = ProjectDefinitionContainerNodeDto
 
     id = factory.LazyFunction(uuid4)
     project_def_id = factory.LazyFunction(uuid4)

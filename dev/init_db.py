@@ -1,6 +1,7 @@
 from expert_dollup.app.modules import build_container
 from expert_dollup.shared.automapping import Mapper
-from tests.fixtures import FakeExpertDollupDb, SimpleProject
+from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
+from tests.fixtures import *
 
 
 """
@@ -17,11 +18,11 @@ def to_dto(tables: FakeExpertDollupDb, mapper: Mapper) -> FakeExpertDollupDbDto:
             ProjectDefinition,
             ProjectDefinitionDto,
         ),
-        project_definition_containers=double_map(
-            tables.project_definition_containers,
-            ProjectDefinitionContainerDao,
-            ProjectDefinitionContainer,
-            ProjectDefinitionContainerDto,
+        project_definition_nodes=double_map(
+            tables.project_definition_nodes,
+            ProjectDefinitionContainerNodeDao,
+            ProjectDefinitionContainerNode,
+            ProjectDefinitionContainerNodeDto,
         ),
         translations=double_map(
             tables.translations, TranslationDao, Translation, TranslationDto
@@ -53,25 +54,27 @@ def generate_json(generate_layer, output_path=None):
             f.write(json_content)
 
 
-def generate_sql():
+def fill_db():
     import os
+    import asyncio
     from dotenv import load_dotenv
-    from sqlalchemy import create_engine
 
     load_dotenv()
-    DATABASE_URL = "postgresql://{}:{}@{}/{}".format(
-        os.environ["POSTGRES_USERNAME"],
-        os.environ["POSTGRES_PASSWORD"],
-        os.environ["POSTGRES_HOST"],
-        os.environ["POSTGRES_DB"],
-    )
-
-    engine = create_engine(DATABASE_URL)
     injector = build_container()
     db_setup_helper = injector.get(DbSetupHelper)
 
-    with engine.connect() as connection:
-        fixture = SimpleProject()
-        fixture.generate()
-        model = fixture.model
-        db_setup_helper.init_db(model, connection)
+    fixture = SimpleProject()
+    fixture.generate()
+    model = fixture.model
+
+    async def main():
+        async with injector.get(ExpertDollupDatabase) as _:
+            await db_setup_helper.init_db(model)
+
+    loop = asyncio.get_event_loop()
+
+    try:
+        loop.run_until_complete(main())
+    finally:
+        loop.run_until_complete(loop.shutdown_asyncgens())
+        loop.close()

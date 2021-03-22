@@ -29,10 +29,10 @@ def map_project_definition_to_dto(
     )
 
 
-def map_project_definition_container_from_dto(
-    src: ProjectDefinitionContainerDto, mapper: Mapper
-) -> ProjectDefinitionContainer:
-    return ProjectDefinitionContainer(
+def map_project_definition_node_from_dto(
+    src: ProjectDefinitionContainerNodeDto, mapper: Mapper
+) -> ProjectDefinitionContainerNode:
+    return ProjectDefinitionContainerNode(
         id=src.id,
         project_def_id=src.project_def_id,
         name=src.name,
@@ -46,10 +46,10 @@ def map_project_definition_container_from_dto(
     )
 
 
-def map_project_definition_container_to_dto(
-    src: ProjectDefinitionContainer, mapper: Mapper
-) -> ProjectDefinitionContainerDto:
-    return ProjectDefinitionContainerDto(
+def map_project_definition_node_to_dto(
+    src: ProjectDefinitionContainerNode, mapper: Mapper
+) -> ProjectDefinitionContainerNodeDto:
+    return ProjectDefinitionContainerNodeDto(
         id=src.id,
         project_def_id=src.project_def_id,
         name=src.name,
@@ -63,14 +63,14 @@ def map_project_definition_container_to_dto(
     )
 
 
-def map_project_definition_container_page_to_dto(
-    src: Page[ProjectDefinitionContainer], mapper: Mapper
-) -> ProjectDefinitionContainerPageDto:
-    return ProjectDefinitionContainerPageDto(
+def map_project_definition_node_page_to_dto(
+    src: Page[ProjectDefinitionContainerNode], mapper: Mapper
+) -> ProjectDefinitionContainerNodePageDto:
+    return ProjectDefinitionContainerNodePageDto(
         next_page_token=src.next_page_token,
         limit=src.limit,
         results=mapper.map_many(
-            src.results, ProjectDefinitionContainerDto, ProjectDefinitionContainer
+            src.results, ProjectDefinitionContainerNodeDto, ProjectDefinitionContainerNode
         ),
     )
 
@@ -144,7 +144,7 @@ def map_project_container_node_to_dto(
 ) -> ProjectContainerNodeDto:
     return ProjectContainerNodeDto(
         container=mapper.map(src.container, ProjectContainerDto),
-        definition=mapper.map(src.definition, ProjectDefinitionContainerDto),
+        definition=mapper.map(src.definition, ProjectDefinitionContainerNodeDto),
         meta=mapper.map(src.meta, ProjectContainerMetaDto),
         children=mapper.map_many(src.children, ProjectContainerNodeDto),
     )

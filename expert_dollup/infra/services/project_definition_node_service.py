@@ -10,29 +10,29 @@ from expert_dollup.shared.database_services import (
     IdStampedDateCursorEncoder,
 )
 from expert_dollup.core.domains import (
-    ProjectDefinitionContainer,
-    ProjectDefinitionContainerFilter,
+    ProjectDefinitionContainerNode,
+    ProjectDefinitionContainerNodeFilter,
 )
 from expert_dollup.infra.path_transform import join_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
-    project_definition_container_table,
-    ProjectDefinitionContainerDao,
+    project_definition_node_table,
+    ProjectDefinitionContainerNodeDao,
 )
 
 
 DELETE_BY_MIXED_PATH = text(
-    f"DELETE FROM {project_definition_container_table.name} WHERE mixed_paths <@ :element"
+    f"DELETE FROM {project_definition_node_table.name} WHERE mixed_paths <@ :element"
 )
 
 
-class ProjectDefinitionContainerService(
-    BaseCrudTableService[ProjectDefinitionContainer]
+class ProjectDefinitionContainerNodeService(
+    BaseCrudTableService[ProjectDefinitionContainerNode]
 ):
     class Meta:
-        table = project_definition_container_table
-        dao = ProjectDefinitionContainerDao
-        domain = ProjectDefinitionContainer
-        table_filter_type = ProjectDefinitionContainerFilter
+        table = project_definition_node_table
+        dao = ProjectDefinitionContainerNodeDao
+        domain = ProjectDefinitionContainerNode
+        table_filter_type = ProjectDefinitionContainerNodeFilter
         paginator = IdStampedDateCursorEncoder.for_fields("creation_date_utc", "name")
 
     async def has_path(self, path: List[UUID]) -> Awaitable[bool]:
@@ -55,7 +55,7 @@ class ProjectDefinitionContainerService(
         if value is None:
             return
 
-        value = ProjectDefinitionContainerDao(**value)
+        value = ProjectDefinitionContainerNodeDao(**value)
         path_to_delete = "/".join([*value.path, str(value.id)])
         sql = DELETE_BY_MIXED_PATH.bindparams(
             bindparam(
@@ -81,3 +81,22 @@ class ProjectDefinitionContainerService(
         records = await self._database.fetch_all(query=query)
         results = self.map_many_to(records, self._dao, self._domain)
         return results
+
+    async def find_viewable_layers(
+        self,
+        root_section_id: Optional[UUID],
+        sub_root_section_id: Optional[UUID],
+        form_id: Optional[UUID],
+    ):
+        first_layer = (
+            select([self._table])
+            .where(
+                and_(
+                    self._table.c.project_def_id == project_def_id,
+                    self._table.c.mixed_paths.op("@>")([path_filter]),
+                )
+            )
+            .order_by(desc(func.length(self._table.c.path)))
+        )
+
+        records = await self._database.fetch_all(query=first_layer)

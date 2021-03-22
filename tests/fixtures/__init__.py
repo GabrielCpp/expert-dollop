@@ -10,7 +10,7 @@ from .fake_db_helpers import FakeExpertDollupDb, DbSetupHelper, populate_db, tru
 
 from .factories_dto import (
     ProjectDefinitionDtoFactory,
-    ProjectDefinitionContainerDtoFactory,
+    ProjectDefinitionContainerNodeDtoFactory,
     TranslationDtoFactory,
     ProjectDtoFactory,
     FormulaDtoFactory,

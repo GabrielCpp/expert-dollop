@@ -10,9 +10,9 @@ from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
     ProjectDefinitionDao,
     TranslationDao,
-    ProjectDefinitionContainerDao,
+    ProjectDefinitionContainerNodeDao,
     project_definition_table,
-    project_definition_container_table,
+    project_definition_node_table,
 )
 
 
@@ -35,7 +35,7 @@ class MiniProject:
 
         self.tables.project_definitions.append(project_definition)
 
-        root = ProjectDefinitionContainerDao(
+        root = ProjectDefinitionContainerNodeDao(
             id=uuid4(),
             name="root",
             project_def_id=project_definition.id,
@@ -50,7 +50,7 @@ class MiniProject:
             mixed_paths=[],
         )
 
-        self.tables.project_definition_containers.append(root)
+        self.tables.project_definition_nodes.append(root)
 
         name_map = {
             "INT": "quantity",
@@ -64,7 +64,7 @@ class MiniProject:
         for index, value_type in enumerate(self.value_type_factory.field_value_types):
             value = self.value_type_factory.build_value(value_type)
             config = self.value_type_factory.build_config(None, index, value_type)
-            definition_container = ProjectDefinitionContainerDao(
+            definition_container = ProjectDefinitionContainerNodeDao(
                 id=uuid4(),
                 name=name_map[value_type],
                 project_def_id=project_definition.id,
@@ -79,14 +79,14 @@ class MiniProject:
                 default_value=value,
             )
 
-            self.tables.project_definition_containers.append(definition_container)
+            self.tables.project_definition_nodes.append(definition_container)
 
         value_type = "DECIMAL"
         value = self.value_type_factory.build_value(value_type)
         index = len(name_map)
         label = "taxes"
         config = self.value_type_factory.build_config(label, index, value_type)
-        definition_container = ProjectDefinitionContainerDao(
+        definition_container = ProjectDefinitionContainerNodeDao(
             id=uuid4(),
             name=label,
             project_def_id=project_definition.id,
@@ -101,7 +101,7 @@ class MiniProject:
             default_value=value,
         )
 
-        self.tables.project_definition_containers.append(definition_container)
+        self.tables.project_definition_nodes.append(definition_container)
 
         return self
 

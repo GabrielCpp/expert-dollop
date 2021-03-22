@@ -34,11 +34,11 @@ async def test_given_project_definition_should_be_able_to_create_delete_update(a
 
 
 @pytest.mark.asyncio
-async def test_given_project_definition_container_should_be_able_to_create_update_delete(
+async def test_given_project_definition_node_should_be_able_to_create_update_delete(
     ac,
 ):
     project_definition = ProjectDefinitionDtoFactory()
-    expected_project_definition_container = ProjectDefinitionContainerDtoFactory(
+    expected_project_definition_node = ProjectDefinitionContainerNodeDtoFactory(
         project_def_id=project_definition.id
     )
 
@@ -46,26 +46,26 @@ async def test_given_project_definition_container_should_be_able_to_create_updat
     assert response.status_code == 200
 
     response = await ac.post(
-        "/api/project_definition_container",
-        data=expected_project_definition_container.json(),
+        "/api/project_definition_node",
+        data=expected_project_definition_node.json(),
     )
     assert response.status_code == 200
 
     response = await ac.get(
-        f"/api/project_definition_container/{expected_project_definition_container.id}"
+        f"/api/project_definition_node/{expected_project_definition_node.id}"
     )
     assert response.status_code == 200
 
-    actual = unwrap(response, ProjectDefinitionContainerDto)
-    assert actual == expected_project_definition_container
+    actual = unwrap(response, ProjectDefinitionContainerNodeDto)
+    assert actual == expected_project_definition_node
 
     response = await ac.delete(
-        f"/api/project_definition_container/{expected_project_definition_container.id}"
+        f"/api/project_definition_node/{expected_project_definition_node.id}"
     )
     assert response.status_code == 200
 
     response = await ac.get(
-        f"/api/project_definition_container/{expected_project_definition_container.id}"
+        f"/api/project_definition_node/{expected_project_definition_node.id}"
     )
     assert response.status_code == 404
 

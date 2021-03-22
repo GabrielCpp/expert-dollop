@@ -2,7 +2,7 @@ import os
 import inspect
 import importlib
 from ariadne import make_executable_schema, load_schema_from_path
-from .graphql_context import GraphqlContext
+from expert_dollup.shared.starlette_injection import GraphqlContext
 
 
 def get_types():

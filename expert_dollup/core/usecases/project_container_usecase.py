@@ -6,13 +6,13 @@ from expert_dollup.core.domains import (
     ProjectContainer,
     ProjectContainerTree,
     ProjectContainerFilter,
-    ProjectDefinitionContainerFilter,
+    ProjectDefinitionContainerNodeFilter,
     ProjectContainerNode,
 )
 from expert_dollup.infra.services import (
     ProjectService,
     ProjectContainerService,
-    ProjectDefinitionContainerService,
+    ProjectDefinitionContainerNodeService,
 )
 from expert_dollup.infra.validators import ProjectDefinitionValueTypeValidator
 from expert_dollup.shared.database_services import Page
@@ -23,12 +23,12 @@ class ProjectContainerUseCase:
         self,
         project_service: ProjectService,
         project_container_service: ProjectContainerService,
-        project_definition_container_service: ProjectDefinitionContainerService,
+        project_definition_node_service: ProjectDefinitionContainerNodeService,
         project_definition_value_type_validator: ProjectDefinitionValueTypeValidator,
     ):
         self.project_service = project_service
         self.project_container_service = project_container_service
-        self.project_definition_container_service = project_definition_container_service
+        self.project_definition_node_service = project_definition_node_service
         self.project_definition_value_type_validator = (
             project_definition_value_type_validator
         )
@@ -70,7 +70,7 @@ class ProjectContainerUseCase:
         )
 
         definition_container = (
-            await self.project_definition_container_service.find_by_id(
+            await self.project_definition_node_service.find_by_id(
                 container.type_id
             )
         )
@@ -92,15 +92,15 @@ class ProjectContainerUseCase:
     ) -> Awaitable[ProjectContainerTree]:
         project = await self.project_service.find_by_id(project_id)
         collection_definition_container = (
-            await self.project_definition_container_service.find_one_by(
-                ProjectDefinitionContainerFilter(
+            await self.project_definition_node_service.find_one_by(
+                ProjectDefinitionContainerNodeFilter(
                     project_def_id=project.project_def_id, id=collection_type_id
                 )
             )
         )
 
         definition_containers = (
-            await self.project_definition_container_service.find_children_tree(
+            await self.project_definition_node_service.find_children_tree(
                 project.project_def_id, collection_definition_container.subpath
             )
         )

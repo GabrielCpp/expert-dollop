@@ -17,17 +17,6 @@ from expert_dollup.app.controllers.datasheet.datasheet_definition_controller imp
 datasheet_definition_element = ObjectType("DatasheetDefinitionElement")
 
 
-@inject_graphql_route(find_datasheet_definition_by_id)
-@datasheet_definition_element.field("datasheetDefinition")
-@convert_kwargs_to_snake_case
-async def resolve_element_definition(
-    parent: DatasheetDefinitionElementDto,
-    info: GraphQLResolveInfo,
-    find_datasheet_definition_by_id: callable,
-):
-    return await find_datasheet_definition_by_id(info, parent.datasheet_def_id)
-
-
 @datasheet_definition_element.field("defaultProperties")
 @convert_kwargs_to_snake_case
 def resolve_default_properties(

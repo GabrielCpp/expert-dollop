@@ -16,12 +16,26 @@ from expert_dollup.app.controllers.datasheet.datasheet_definition_element_contro
 from expert_dollup.app.controllers.datasheet.datasheet_definition_controller import *
 
 datasheet_definition = ObjectType("DatasheetDefinition")
+datasheet_definition_element = ObjectType("DatasheetDefinitionElement")
+project_definition = ObjectType("ProjectDefinition")
+
+
+@inject_graphql_route(find_datasheet_definition_by_id)
+@project_definition.field("datasheetDefinition")
+@datasheet_definition_element.field("datasheetDefinition")
+@convert_kwargs_to_snake_case
+async def resolve_datasheet_definition(
+    parent: DatasheetDefinitionElementDto,
+    info: GraphQLResolveInfo,
+    find_datasheet_definition_by_id: callable,
+):
+    return await find_datasheet_definition_by_id(info, parent.datasheet_def_id)
 
 
 @inject_graphql_route(find_datasheet_definition_elements)
 @datasheet_definition.field("elementsDefinition")
 @convert_kwargs_to_snake_case
-async def resolve_element_definition(
+async def resolve_elements_definition(
     parent: DatasheetDefinitionDto,
     info: GraphQLResolveInfo,
     find_datasheet_definition_elements: callable,
@@ -40,4 +54,4 @@ def resolve_element_definition(
     ]
 
 
-types = [datasheet_definition]
+types = [datasheet_definition, datasheet_definition_element, project_definition]
