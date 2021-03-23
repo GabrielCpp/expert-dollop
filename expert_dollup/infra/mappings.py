@@ -73,6 +73,14 @@ def map_project_definition_node_from_dao(
 def map_project_definition_node_to_dao(
     src: ProjectDefinitionNode, mapper: Mapper
 ) -> ProjectDefinitionNodeDao:
+    display_query_internal_id = src.id
+    level = len(src.path)
+
+    if level >= SECTION_LEVEL and level <= FORM_LEVEL:
+        display_query_internal_id = src.path[ROOT_LEVEL]
+    elif level > FORM_LEVEL:
+        display_query_internal_id = src.path[FORM_LEVEL]
+
     return ProjectDefinitionNodeDao(
         id=src.id,
         project_def_id=src.project_def_id,
@@ -84,7 +92,8 @@ def map_project_definition_node_to_dao(
         value_type=src.value_type,
         default_value=src.default_value,
         path=join_uuid_path(src.path),
-        mixed_paths=build_path_steps(src.path),
+        display_query_internal_id=display_query_internal_id,
+        level=len(src.path),
         creation_date_utc=mapper.get(Clock).utcnow(),
     )
 

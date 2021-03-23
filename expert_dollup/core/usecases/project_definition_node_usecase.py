@@ -64,6 +64,14 @@ class ProjectDefinitonContainerUseCase:
         )
         return results
 
+    async def find_viewable_layers(
+        self,
+        root_section_id: Optional[UUID],
+        sub_root_section_id: Optional[UUID],
+        form_id: Optional[UUID],
+    ):
+        pass
+
     async def _ensure_container_is_valid(self, domain: ProjectDefinitionNode):
         has_project_def = await self.project_definition_service.has(
             domain.project_def_id

@@ -22,7 +22,7 @@ from expert_dollup.infra.expert_dollup_db import (
 from expert_dollup.shared.automapping import Mapper
 
 
-class ProjectDefinitionNode2(BaseCrudTableService[ProjectDefinitionNode]):
+class ProjectDefinitionNodeService(BaseCrudTableService[ProjectDefinitionNode]):
     class Meta:
         table = project_definition_node_table
         dao = ProjectDefinitionNodeDao
@@ -30,85 +30,101 @@ class ProjectDefinitionNode2(BaseCrudTableService[ProjectDefinitionNode]):
         table_filter_type = ProjectDefinitionNodeFilter
         paginator = IdStampedDateCursorEncoder.for_fields("creation_date_utc", "name")
 
-
-class ProjectDefinitionNodeService:
-    def __init__(self, database: ExpertDollupDatabase, mapper: Mapper):
-        self._node_crud = ProjectDefinitionNode2(database, mapper)
-
-    async def find_by_id(self, id: UUID):
-        return await self._node_crud.find_by_id(id)
-
-    async def insert(self, domain):
-        return await self._node_crud.insert(domain)
-
-    async def insert_many(self, domains):
-        return await self._node_crud.insert_many(domains)
-
-    async def find_by(self, query_filter):
-        return await self._node_crud.find_by(query_filter)
-
-    async def find_by_paginated(self, query_filter, limit, next_page_token=None):
-        return await self._node_crud.find_by_paginated(
-            query_filter, limit, next_page_token
-        )
-
-    async def find_one_by(self, query_filter):
-        return await self._node_crud.find_one_by(query_filter)
-
-    async def delete_by_id(self, id: UUID):
-        return await self._node_crud.delete_by_id(id)
-
     async def has_path(self, path: List[UUID]) -> Awaitable[bool]:
         if len(path) == 0:
             return True
 
         parent_id = path[-1]
         parent_path = join_uuid_path(path[0:-1])
-        query = select([self._node_crud.table_id]).where(
+        query = select([self.table_id]).where(
             and_(
-                self._node_crud._table.c.path == parent_path,
-                self._node_crud._table.c.id == parent_id,
+                self._table.c.path == parent_path,
+                self._table.c.id == parent_id,
             )
         )
-        value = await self._node_crud._database.fetch_one(query=query)
+        value = await self._database.fetch_one(query=query)
 
         return not value is None
 
     async def delete_child_of(self, id: UUID) -> Awaitable:
-        value = await self._node_crud.find_by_id(id)
+        value = await self.find_by_id(id)
         path_to_delete = join_uuid_path(value.subpath)
-        query = self._node_crud._table.delete().where(
+        query = self._table.delete().where(
             and_(
-                self._node_crud._table.c.project_def_id == value.project_def_id,
-                self._node_crud._table.c.mixed_paths.op("@>")([path_to_delete]),
+                self._table.c.project_def_id == value.project_def_id,
+                self._table.c.path.like(f"{path_to_delete}%"),
             )
         )
 
-        await self._node_crud._database.execute(query)
+        await self._database.execute(query)
 
-    async def find_children_tree(self, project_def_id: UUID, path: List[UUID]):
+    async def find_children_tree(
+        self, project_def_id: UUID, path: List[UUID]
+    ) -> Awaitable[List[ProjectDefinitionNode]]:
         path_filter = join_uuid_path(path)
         query = (
-            select([self._node_crud._table])
+            select([self._table])
             .where(
                 and_(
-                    self._node_crud._table.c.project_def_id == project_def_id,
-                    self._node_crud._table.c.mixed_paths.op("@>")([path_filter]),
+                    self._table.c.project_def_id == project_def_id,
+                    self._table.c.path.like(f"{path_filter}%"),
                 )
             )
-            .order_by(desc(func.length(self._node_crud._table.c.path)))
+            .order_by(desc(self._table.c.level))
         )
 
-        records = await self._node_crud._database.fetch_all(query=query)
-        results = self._node_crud.map_many_to(
-            records, self._node_crud._dao, self._node_crud._domain
-        )
+        records = await self._database.fetch_all(query=query)
+        results = self.map_many_to(records, self._dao, self._domain)
         return results
 
-    async def find_viewable_layers(
-        self,
-        root_section_id: Optional[UUID],
-        sub_root_section_id: Optional[UUID],
-        form_id: Optional[UUID],
-    ):
-        pass
+    async def find_root_sections(self) -> Awaitable[List[ProjectDefinitionNode]]:
+        query = (
+            select([self._table])
+            .where(
+                and_(
+                    self._table.c.project_def_id == project_def_id,
+                    self._table.c.path == "",
+                )
+            )
+            .order_by(desc(self._table.c.level))
+        )
+
+        records = await self._database.fetch_all(query=query)
+        results = self.map_many_to(records, self._dao, self._domain)
+        return results
+
+    async def find_root_section_containers(
+        self, root_section_id: UUID
+    ) -> Awaitable[List[ProjectDefinitionNode]]:
+        query = (
+            select([self._table])
+            .where(
+                and_(
+                    self._table.c.project_def_id == project_def_id,
+                    self._table.c.display_query_internal_id == root_section_id,
+                )
+            )
+            .order_by(desc(self._table.c.level))
+        )
+
+        records = await self._database.fetch_all(query=query)
+        results = self.map_many_to(records, self._dao, self._domain)
+        return results
+
+    async def find_form_content(
+        self, form_id: UUID
+    ) -> Awaitable[List[ProjectDefinitionNode]]:
+        query = (
+            select([self._table])
+            .where(
+                and_(
+                    self._table.c.project_def_id == project_def_id,
+                    self._table.c.display_query_internal_id == form_id,
+                )
+            )
+            .order_by(desc(self._table.c.level))
+        )
+
+        records = await self._database.fetch_all(query=query)
+        results = self.map_many_to(records, self._dao, self._domain)
+        return results

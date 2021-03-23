@@ -18,6 +18,12 @@ from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime
 
+ROOT_LEVEL = 0
+SECTION_LEVEL = 1
+FORM_LEVEL = 2
+FORM_SECTION_LEVEL = 3
+FIEL_LEVEL = 4
+
 
 class ExpertDollupDatabase(Database):
     pass
@@ -57,7 +63,8 @@ project_definition_node_table = Table(
     Column("value_type", String, nullable=False),
     Column("default_value", postgresql.JSON(), nullable=True),
     Column("path", String, nullable=False),
-    Column("mixed_paths", ARRAY(String, dimensions=1), nullable=False),
+    Column("display_query_internal_id", postgresql.UUID(), nullable=False),
+    Column("level", Integer, nullable=False),
     Column("creation_date_utc", DateTime(timezone=True), nullable=False),
 )
 
@@ -73,7 +80,8 @@ class ProjectDefinitionNodeDao(BaseModel):
     value_type: str
     default_value: Optional[dict]
     path: str
-    mixed_paths: List[str]
+    level: int
+    display_query_internal_id: UUID
     creation_date_utc: datetime
 
 
