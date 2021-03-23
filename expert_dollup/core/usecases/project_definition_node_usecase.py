@@ -21,7 +21,7 @@ from expert_dollup.shared.database_services import Page
 logger = structlog.get_logger(__name__)
 
 
-class ProjectDefinitonContainerUseCase:
+class ProjectDefinitionNodeUseCase:
     def __init__(
         self,
         service: ProjectDefinitionNodeService,

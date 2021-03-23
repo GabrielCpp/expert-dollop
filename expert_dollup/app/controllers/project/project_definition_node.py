@@ -13,7 +13,7 @@ from expert_dollup.core.domains import (
     ProjectDefinitionNode,
     ProjectDefinitionNodeTree,
 )
-from expert_dollup.core.usecases import ProjectDefinitonContainerUseCase
+from expert_dollup.core.usecases import ProjectDefinitionNodeUseCase
 from expert_dollup.shared.database_services import Page
 
 router = APIRouter()
@@ -22,7 +22,7 @@ router = APIRouter()
 @router.get("/project_definition_node/{id}")
 async def get_project_definition_node(
     id: UUID,
-    usecase=Depends(Inject(ProjectDefinitonContainerUseCase)),
+    usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
 ):
     return await handler.handle(
@@ -33,7 +33,7 @@ async def get_project_definition_node(
 @router.post("/project_definition_node")
 async def create_project_definition_node(
     project_definition_node: ProjectDefinitionNodeDto,
-    usecase=Depends(Inject(ProjectDefinitonContainerUseCase)),
+    usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
     return await request_handler.handle(
@@ -50,7 +50,7 @@ async def create_project_definition_node(
 @router.put("/project_definition_node")
 async def replace_project_definition_node(
     project_definition_node: ProjectDefinitionNodeDto,
-    usecase=Depends(Inject(ProjectDefinitonContainerUseCase)),
+    usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
     return await request_handler.handle(
@@ -67,7 +67,7 @@ async def replace_project_definition_node(
 @router.delete("/project_definition_node/{id}")
 async def delete_project_definition_node(
     id: UUID,
-    usecase=Depends(Inject(ProjectDefinitonContainerUseCase)),
+    usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
     await usecase.remove_by_id(id)
@@ -79,7 +79,7 @@ async def get_project_definition_node_by_project(
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = Query(alias="limit", default=100),
     request_handler=Depends(Inject(RequestHandler)),
-    usecase=Depends(Inject(ProjectDefinitonContainerUseCase)),
+    usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
 ):
     return await request_handler.forward(
         usecase.find_project_containers,
@@ -100,7 +100,7 @@ async def find_viewable_layers(
     root_section_id: Optional[UUID] = Query(alias="rootSectionId", default=None),
     sub_root_section_id: Optional[UUID] = Query(alias="subRootSectionId", default=None),
     form_id: Optional[UUID] = Query(alias="formId", default=None),
-    usecase=Depends(Inject(ProjectDefinitonContainerUseCase)),
+    usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
     return await request_handler.forward(
