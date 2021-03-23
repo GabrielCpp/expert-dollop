@@ -1,5 +1,5 @@
 import structlog
-from typing import Awaitable, Optional
+from typing import Awaitable, Optional, List
 from uuid import UUID
 from expert_dollup.core.exceptions import (
     RessourceNotFound,
@@ -10,6 +10,7 @@ from expert_dollup.core.domains import (
     ProjectDefinitionNode,
     ProjectDefinition,
     ProjectDefinitionNodeFilter,
+    ProjectDefinitionNodeTree,
 )
 from expert_dollup.infra.services import (
     ProjectDefinitionNodeService,
@@ -17,6 +18,7 @@ from expert_dollup.infra.services import (
 )
 from expert_dollup.infra.validators import ProjectDefinitionValueTypeValidator
 from expert_dollup.shared.database_services import Page
+from expert_dollup.core.builders import ProjectDefinitionTreeBuilder
 
 logger = structlog.get_logger(__name__)
 
@@ -26,13 +28,17 @@ class ProjectDefinitionNodeUseCase:
         self,
         service: ProjectDefinitionNodeService,
         project_definition_service: ProjectDefinitionService,
+        project_definition_node_service: ProjectDefinitionNodeService,
         project_definition_value_type_validator: ProjectDefinitionValueTypeValidator,
+        project_definition_tree_builder: ProjectDefinitionTreeBuilder,
     ):
         self.service = service
         self.project_definition_service = project_definition_service
+        self.project_definition_node_service = project_definition_node_service
         self.project_definition_value_type_validator = (
             project_definition_value_type_validator
         )
+        self.project_definition_tree_builder = project_definition_tree_builder
 
     async def add(
         self, domain: ProjectDefinitionNode
@@ -64,13 +70,34 @@ class ProjectDefinitionNodeUseCase:
         )
         return results
 
-    async def find_viewable_layers(
-        self,
-        root_section_id: Optional[UUID],
-        sub_root_section_id: Optional[UUID],
-        form_id: Optional[UUID],
-    ):
-        pass
+    async def find_root_sections(
+        self, project_def_id: UUID
+    ) -> Awaitable[List[ProjectDefinitionNode]]:
+        root_sections = await self.project_definition_node_service.find_root_sections(
+            project_def_id
+        )
+        tree = self.project_definition_tree_builder.build(root_sections)
+        return tree
+
+    async def find_root_section_containers(
+        self, project_def_id: UUID, root_section_id: UUID
+    ) -> Awaitable[List[ProjectDefinitionNode]]:
+        containers = (
+            await self.project_definition_node_service.find_root_section_containers(
+                project_def_id, root_section_id
+            )
+        )
+        tree = self.project_definition_tree_builder.build(containers)
+        return tree
+
+    async def find_form_content(
+        self, project_def_id: UUID, form_id: UUID
+    ) -> Awaitable[List[ProjectDefinitionNode]]:
+        form_definitions = await self.project_definition_node_service.find_form_content(
+            project_def_id, form_id
+        )
+        tree = self.project_definition_tree_builder.build(form_definitions)
+        return tree
 
     async def _ensure_container_is_valid(self, domain: ProjectDefinitionNode):
         has_project_def = await self.project_definition_service.has(

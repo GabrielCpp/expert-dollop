@@ -5,7 +5,7 @@ from uuid import UUID
 from dataclasses import asdict
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import map_dict_keys
-from expert_dollup.infra.path_transform import (
+from expert_dollup.core.utils.path_transform import (
     join_path,
     split_uuid_path,
     join_uuid_path,

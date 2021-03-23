@@ -95,6 +95,15 @@ type ProjectDefinitionNode {
     children: [ProjectDefinitionNode!]!
 }
 
+type ProjectDefinitionTreeNode {
+    definition: ProjectDefinitionNode
+    children: [ProjectDefinitionTreeNode!]!
+}
+
+type ProjectDefinitionNodeTree {
+    roots: [ProjectDefinitionTreeNode!]!
+}
+
 type ProjectDefinition {
     id: ID!
     name: String!
@@ -102,7 +111,9 @@ type ProjectDefinition {
     defaultDatasheet: Datasheet!
     datasheetDefId: String!
     datasheetDefinition: DatasheetDefinition!
-    viewableLayers(rootSectionID: String, subRootSectionId: String, formId: String): ProjectDefinitionNode
+    rootSections(projectDefId: String!): ProjectDefinitionNodeTree!
+    rootSectionContainers(projectDefId: String!, rootSectionId: String!): ProjectDefinitionNodeTree!
+    formContent(projectDefId: String!, formId: String!): ProjectDefinitionNodeTree!
 }
 
 type Project {

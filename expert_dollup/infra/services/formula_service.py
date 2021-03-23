@@ -7,7 +7,7 @@ from collections import defaultdict
 from uuid import UUID
 from expert_dollup.shared.database_services import BaseCrudTableService
 from expert_dollup.core.domains import Formula, FormulaDetails, FormulaNode
-from expert_dollup.infra.path_transform import split_uuid_path
+from expert_dollup.core.utils.path_transform import split_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
     ProjectDefinitionFormulaDao,
     project_definition_formula_table,
@@ -109,10 +109,8 @@ class FormulaService(BaseCrudTableService[Formula]):
         join_definition = self._table.join(
             project_definition_node_table,
             and_(
-                project_definition_node_table.c.id
-                == self._table.c.attached_to_type_id,
-                project_definition_node_table.c.project_def_id
-                == project_definition_id,
+                project_definition_node_table.c.id == self._table.c.attached_to_type_id,
+                project_definition_node_table.c.project_def_id == project_definition_id,
             ),
         )
 

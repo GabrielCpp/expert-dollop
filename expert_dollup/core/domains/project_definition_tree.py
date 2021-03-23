@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID
 from typing import Optional, List
 from datetime import datetime
@@ -13,4 +13,4 @@ class ProjectDefinitionTreeNode:
 
 @dataclass
 class ProjectDefinitionNodeTree:
-    roots: List[ProjectDefinitionTreeNode]
+    roots: List[ProjectDefinitionTreeNode] = field(default_factory=list)

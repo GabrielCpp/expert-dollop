@@ -8,6 +8,7 @@ from expert_dollup.core.builders import *
 
 def bind_core_classes(binder: Binder) -> None:
     binder.bind(RessourceBuilder, to=inject(RessourceBuilder))
+    binder.bind(ProjectDefinitionTreeBuilder, to=inject(ProjectDefinitionTreeBuilder))
 
     for class_type in chain(usecases.__dict__.values(), units.__dict__.values()):
         if isclass(class_type):

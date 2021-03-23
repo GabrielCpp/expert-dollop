@@ -1,4 +1,8 @@
-from typing import Any
+from typing import Any, List, Tuple
+
+
+def strip_tree_traces(elements: List[Tuple[Any, List[int]]]):
+    return [item[0] for item in elements]
 
 
 def find_name(elements: list, name: str):

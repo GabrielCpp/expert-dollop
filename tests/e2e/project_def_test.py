@@ -1,13 +1,15 @@
 import pytest
-from ..fixtures import *
+from typing import Generator
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_db import *
+from ..fixtures import *
+from ..utils import strip_tree_traces, find_name
 
 
 @pytest.mark.asyncio
-async def test_project_creation(ac, mapper):
-    db = SimpleProject().generate().model
+async def test_project_creation(ac, mapper, expert_dollup_simple_project):
+    db = expert_dollup_simple_project
 
     assert len(db.project_definitions) == 1
     project_definition = db.project_definitions[0]
@@ -40,3 +42,106 @@ async def test_project_creation(ac, mapper):
 
     assert len(containers) == len(project_definition_nodes_dto)
     assert containers == expected_containers
+
+
+def walk_tree(
+    tree: ProjectDefinitionNodeTreeDto,
+) -> Generator[ProjectDefinitionNodeDto, None, None]:
+    def walk_node(
+        nodes: List[ProjectDefinitionTreeNodeDto], path_trace: List[int]
+    ) -> Generator[ProjectDefinitionNodeDto, None, None]:
+        for index, node in enumerate(nodes):
+            this_trace = [*path_trace, index]
+            yield (node.definition, this_trace)
+            yield from walk_node(node.children, this_trace)
+
+    yield from walk_node(tree.roots, [])
+
+
+@pytest.mark.asyncio
+async def test_query_project_definition_parts(ac, mapper, expert_dollup_simple_project):
+    db = expert_dollup_simple_project
+    project_definition = db.project_definitions[0]
+    runner = FlowRunner()
+
+    @runner.step
+    async def find_all_root_sections():
+        response = await ac.get(
+            f"/api/project_definition/{project_definition.id}/root_sections"
+        )
+        assert response.status_code == 200, response.json()
+
+        root_sections = unwrap(response, ProjectDefinitionNodeTreeDto)
+        flat_tree = [(node.name, trace) for (node, trace) in walk_tree(root_sections)]
+        expected_flat_tree = [("root_a", [0]), ("root_b", [1])]
+        assert flat_tree == expected_flat_tree
+
+        return (root_sections.roots,)
+
+    @runner.step
+    async def find_first_root_section_containers(
+        root_sections: List[ProjectDefinitionTreeNode],
+    ):
+        first_root_section = root_sections[0].definition
+        response = await ac.get(
+            f"/api/project_definition/{project_definition.id}/root_section_containers/{first_root_section.id}"
+        )
+        assert response.status_code == 200, response.json()
+
+        tree = unwrap(response, ProjectDefinitionNodeTreeDto)
+        flat_tree = [(node.name, trace) for (node, trace) in walk_tree(tree)]
+        expected_flat_tree = [
+            ("root_a", [0]),
+            ("root_a_subsection_0", [0, 0]),
+            ("root_a_subsection_0_form_0", [0, 0, 0]),
+            ("root_a_subsection_0_form_1", [0, 0, 1]),
+            ("root_a_subsection_0_form_2", [0, 0, 2]),
+            ("root_a_subsection_1", [0, 1]),
+            ("root_a_subsection_1_form_0", [0, 1, 0]),
+            ("root_a_subsection_1_form_1", [0, 1, 1]),
+            ("root_a_subsection_1_form_2", [0, 1, 2]),
+        ]
+
+        assert flat_tree == expected_flat_tree
+
+    @runner.step
+    async def find_first_root_section_form_content():
+        form_node = find_name(db.project_definition_nodes, "root_a_subsection_0_form_0")
+        response = await ac.get(
+            f"/api/project_definition/{project_definition.id}/form_content/{form_node.id}"
+        )
+        assert response.status_code == 200, response.json()
+
+        tree = unwrap(response, ProjectDefinitionNodeTreeDto)
+        flat_tree = [(node.name, trace) for (node, trace) in walk_tree(tree)]
+        expected_flat_tree = [
+            ("root_a_subsection_0_form_0", [0]),
+            ("root_a_subsection_0_form_0_section_0", [0, 0]),
+            ("root_a_subsection_0_form_0_section_0_field_0", [0, 0, 0]),
+            ("root_a_subsection_0_form_0_section_0_field_1", [0, 0, 1]),
+            ("root_a_subsection_0_form_0_section_0_field_2", [0, 0, 2]),
+            ("root_a_subsection_0_form_0_section_0_field_3", [0, 0, 3]),
+            ("root_a_subsection_0_form_0_section_0_field_4", [0, 0, 4]),
+            ("root_a_subsection_0_form_0_section_1", [0, 1]),
+            ("root_a_subsection_0_form_0_section_1_field_0", [0, 1, 0]),
+            ("root_a_subsection_0_form_0_section_1_field_1", [0, 1, 1]),
+            ("root_a_subsection_0_form_0_section_1_field_2", [0, 1, 2]),
+            ("root_a_subsection_0_form_0_section_1_field_3", [0, 1, 3]),
+            ("root_a_subsection_0_form_0_section_1_field_4", [0, 1, 4]),
+            ("root_a_subsection_0_form_0_section_2", [0, 2]),
+            ("root_a_subsection_0_form_0_section_2_field_0", [0, 2, 0]),
+            ("root_a_subsection_0_form_0_section_2_field_1", [0, 2, 1]),
+            ("root_a_subsection_0_form_0_section_2_field_2", [0, 2, 2]),
+            ("root_a_subsection_0_form_0_section_2_field_3", [0, 2, 3]),
+            ("root_a_subsection_0_form_0_section_2_field_4", [0, 2, 4]),
+            ("root_a_subsection_0_form_0_section_3", [0, 3]),
+            ("root_a_subsection_0_form_0_section_3_field_0", [0, 3, 0]),
+            ("root_a_subsection_0_form_0_section_3_field_1", [0, 3, 1]),
+            ("root_a_subsection_0_form_0_section_3_field_2", [0, 3, 2]),
+            ("root_a_subsection_0_form_0_section_3_field_3", [0, 3, 3]),
+            ("root_a_subsection_0_form_0_section_3_field_4", [0, 3, 4]),
+        ]
+
+        assert flat_tree == expected_flat_tree
+
+    await runner.run()

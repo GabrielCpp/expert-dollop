@@ -15,6 +15,7 @@ from expert_dollup.core.domains import (
 )
 from expert_dollup.core.usecases import ProjectDefinitionNodeUseCase
 from expert_dollup.shared.database_services import Page
+from expert_dollup.infra.services import ProjectDefinitionNodeService
 
 router = APIRouter()
 
@@ -95,21 +96,54 @@ async def get_project_definition_node_by_project(
     )
 
 
-@router.get("/project_definition/viewable_layers")
-async def find_viewable_layers(
-    root_section_id: Optional[UUID] = Query(alias="rootSectionId", default=None),
-    sub_root_section_id: Optional[UUID] = Query(alias="subRootSectionId", default=None),
-    form_id: Optional[UUID] = Query(alias="formId", default=None),
-    usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
+@router.get("/project_definition/{project_def_id}/root_sections")
+async def find_root_sections(
+    project_def_id: UUID,
+    service=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
     return await request_handler.forward(
-        usecase.find_viewable_layers,
-        dict(
-            root_section_id=root_section_id,
-            sub_root_section_id=sub_root_section_id,
-            form_id=form_id,
+        service.find_root_sections,
+        dict(project_def_id=project_def_id),
+        MappingChain(
+            out_domain=ProjectDefinitionNodeTree,
+            out_dto=ProjectDefinitionNodeTreeDto,
         ),
+    )
+
+
+@router.get(
+    "/project_definition/{project_def_id}/root_section_containers/{root_section_id}"
+)
+async def find_root_section_containers(
+    project_def_id: UUID,
+    root_section_id: UUID,
+    service=Depends(Inject(ProjectDefinitionNodeUseCase)),
+    request_handler=Depends(Inject(RequestHandler)),
+):
+    return await request_handler.forward(
+        service.find_root_section_containers,
+        dict(
+            project_def_id=project_def_id,
+            root_section_id=root_section_id,
+        ),
+        MappingChain(
+            out_domain=ProjectDefinitionNodeTree,
+            out_dto=ProjectDefinitionNodeTreeDto,
+        ),
+    )
+
+
+@router.get("/project_definition/{project_def_id}/form_content/{form_id}")
+async def find_form_content(
+    project_def_id: UUID,
+    form_id: UUID,
+    service=Depends(Inject(ProjectDefinitionNodeUseCase)),
+    request_handler=Depends(Inject(RequestHandler)),
+):
+    return await request_handler.forward(
+        service.find_form_content,
+        dict(project_def_id=project_def_id, form_id=form_id),
         MappingChain(
             out_domain=ProjectDefinitionNodeTree,
             out_dto=ProjectDefinitionNodeTreeDto,

@@ -13,7 +13,7 @@ from expert_dollup.core.domains import (
     FieldNode,
 )
 from expert_dollup.shared.database_services import BaseCrudTableService
-from expert_dollup.infra.path_transform import join_uuid_path, split_uuid_path
+from expert_dollup.core.utils.path_transform import join_uuid_path, split_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
     project_container_table,

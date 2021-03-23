@@ -15,20 +15,42 @@ from expert_dollup.core.domains import *
 project_definition = ObjectType("ProjectDefinition")
 
 
-@project_definition.field("viewableLayers")
-@inject_graphql_route(find_viewable_layers)
+@project_definition.field("rootSections")
+@inject_graphql_route(find_root_sections)
 @convert_kwargs_to_snake_case
-async def resolve_viewabl_layers(
+async def resolve_root_sections(
     _: Any,
     info: GraphQLResolveInfo,
-    find_viewable_layers: callable,
-    root_section_id: Optional[UUID] = None,
-    sub_root_section_id: Optional[UUID] = None,
-    form_id: Optional[UUID] = None,
+    project_def_id: UUID,
+    find_root_sections: callable,
 ):
-    return await find_viewable_layers(
-        info, root_section_id, sub_root_section_id, form_id
-    )
+    return await find_root_sections(info, project_def_id)
+
+
+@project_definition.field("rootSectionContainers")
+@inject_graphql_route(find_root_section_containers)
+@convert_kwargs_to_snake_case
+async def resolve_root_section_containers(
+    _: Any,
+    info: GraphQLResolveInfo,
+    project_def_id: UUID,
+    root_section_id: UUID,
+    find_root_section_containers: callable,
+):
+    return await find_root_section_containers(info, project_def_id, root_section_id)
+
+
+@project_definition.field("formContent")
+@inject_graphql_route(find_form_content)
+@convert_kwargs_to_snake_case
+async def resolve_form_content(
+    _: Any,
+    info: GraphQLResolveInfo,
+    project_def_id: UUID,
+    form_id: UUID,
+    find_form_content: callable,
+):
+    return await find_form_content(info, project_def_id, form_id)
 
 
 types = [project_definition]

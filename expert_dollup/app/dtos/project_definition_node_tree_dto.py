@@ -10,5 +10,8 @@ class ProjectDefinitionTreeNodeDto(CamelModel):
     children: List["ProjectDefinitionTreeNodeDto"]
 
 
+ProjectDefinitionTreeNodeDto.update_forward_refs()
+
+
 class ProjectDefinitionNodeTreeDto(CamelModel):
     roots: List[ProjectDefinitionTreeNodeDto]

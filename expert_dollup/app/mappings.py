@@ -78,6 +78,23 @@ def map_project_definition_node_page_to_dto(
     )
 
 
+def map_project_definition_tree_node_to_dto(
+    src: ProjectDefinitionTreeNode, mapper: Mapper
+) -> ProjectDefinitionTreeNodeDto:
+    return ProjectDefinitionTreeNodeDto(
+        definition=mapper.map(src.definition, ProjectDefinitionNodeDto),
+        children=mapper.map_many(src.children, ProjectDefinitionTreeNodeDto),
+    )
+
+
+def map_project_definition_tree_to_dto(
+    src: ProjectDefinitionNodeTree, mapper: Mapper
+) -> ProjectDefinitionNodeTreeDto:
+    return ProjectDefinitionNodeTree(
+        roots=mapper.map_many(src.roots, ProjectDefinitionTreeNodeDto)
+    )
+
+
 def map_project_from_dto(src: ProjectDto, mapper: Mapper) -> Project:
     return Project(
         id=src.id,

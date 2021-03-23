@@ -6,7 +6,7 @@ from .project_definition_node import (
 from .project_definition_value_type import ProjectDefinitionValueType
 from .project import Project
 from .project_container import ProjectContainer, ProjectContainerFilter
-from .project_definition_node_tree import (
+from .project_definition_tree import (
     ProjectDefinitionNodeTree,
     ProjectDefinitionTreeNode,
 )

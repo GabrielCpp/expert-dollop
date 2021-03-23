@@ -13,7 +13,7 @@ from expert_dollup.core.domains import (
     ProjectDefinitionNode,
     ProjectDefinitionNodeFilter,
 )
-from expert_dollup.infra.path_transform import join_uuid_path
+from expert_dollup.core.utils.path_transform import join_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
     project_definition_node_table,
     ProjectDefinitionNodeDao,
@@ -77,7 +77,9 @@ class ProjectDefinitionNodeService(BaseCrudTableService[ProjectDefinitionNode]):
         results = self.map_many_to(records, self._dao, self._domain)
         return results
 
-    async def find_root_sections(self) -> Awaitable[List[ProjectDefinitionNode]]:
+    async def find_root_sections(
+        self, project_def_id: UUID
+    ) -> Awaitable[List[ProjectDefinitionNode]]:
         query = (
             select([self._table])
             .where(
@@ -94,7 +96,7 @@ class ProjectDefinitionNodeService(BaseCrudTableService[ProjectDefinitionNode]):
         return results
 
     async def find_root_section_containers(
-        self, root_section_id: UUID
+        self, project_def_id: UUID, root_section_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
         query = (
             select([self._table])
@@ -112,7 +114,7 @@ class ProjectDefinitionNodeService(BaseCrudTableService[ProjectDefinitionNode]):
         return results
 
     async def find_form_content(
-        self, form_id: UUID
+        self, project_def_id: UUID, form_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
         query = (
             select([self._table])
@@ -127,4 +129,7 @@ class ProjectDefinitionNodeService(BaseCrudTableService[ProjectDefinitionNode]):
 
         records = await self._database.fetch_all(query=query)
         results = self.map_many_to(records, self._dao, self._domain)
-        return results
+
+        form_node = await self.find_by_id(form_id)
+
+        return [*results, form_node]
