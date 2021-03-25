@@ -11,8 +11,7 @@ from expert_dollup.app.controllers.datasheet.datasheet_controller import *
 from expert_dollup.app.dtos import *
 from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
-
-query = QueryType()
+from .types import query, datasheet
 
 
 @query.field("findDatasheet")
@@ -24,7 +23,7 @@ async def resolve_find_datasheet(
     return await find_datasheet_by_id(info, id)
 
 
-datasheet = ObjectType("Datasheet")
+
 
 
 @datasheet.field("elements")
@@ -44,4 +43,3 @@ async def resolve_elements(
     )
 
 
-types = [query, datasheet]

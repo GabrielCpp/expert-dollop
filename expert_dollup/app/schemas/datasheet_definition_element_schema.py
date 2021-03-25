@@ -13,8 +13,7 @@ from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.controllers.datasheet.datasheet_definition_element_controller import *
 from expert_dollup.app.controllers.datasheet.datasheet_definition_controller import *
-
-datasheet_definition_element = ObjectType("DatasheetDefinitionElement")
+from .types import datasheet_definition_element
 
 
 @datasheet_definition_element.field("defaultProperties")
@@ -27,6 +26,3 @@ def resolve_default_properties(
         {"name": name, "property": str(property_value)}
         for name, property_value in parent.default_properties.items()
     ]
-
-
-types = [datasheet_definition_element]

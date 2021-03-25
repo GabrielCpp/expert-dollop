@@ -12,8 +12,7 @@ from expert_dollup.app.dtos import *
 from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.controllers.datasheet.datasheet_element_controller import *
-
-datasheet_element = ObjectType("DatasheetElement")
+from .types import datasheet_element
 
 
 @inject_graphql_route(find_datasheet_element)
@@ -25,6 +24,3 @@ async def resolve_element_definition(
     return await find_datasheet_element(
         info, parent.datasheet_id, parent.element_def_id, parent.child_element_reference
     )
-
-
-types = [datasheet_element]

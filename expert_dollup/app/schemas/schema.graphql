@@ -80,6 +80,19 @@ type ProjectDefinitionValueType {
     displayName: String!
 }
 
+input ProjectDefinitionNodeInput {
+    id: ID!
+    projectDefId: String!
+    name: String!
+    isCollection: Boolean!
+    instanciateByDefault: Boolean!
+    orderIndex: Int!
+    config: String!
+    valueType: String!
+    defaultValue: String
+    path: [String!]!
+}
+
 type ProjectDefinitionNode {
     id: ID!
     projectDefId: String!
@@ -111,9 +124,9 @@ type ProjectDefinition {
     defaultDatasheet: Datasheet!
     datasheetDefId: String!
     datasheetDefinition: DatasheetDefinition!
-    rootSections(projectDefId: String!): ProjectDefinitionNodeTree!
-    rootSectionContainers(projectDefId: String!, rootSectionId: String!): ProjectDefinitionNodeTree!
-    formContent(projectDefId: String!, formId: String!): ProjectDefinitionNodeTree!
+    rootSections(projectDefId: ID!): ProjectDefinitionNodeTree!
+    rootSectionContainers(projectDefId: ID!, rootSectionId: ID!): ProjectDefinitionNodeTree!
+    formContent(projectDefId: ID!, formId: ID!): ProjectDefinitionNodeTree!
 }
 
 type Project {
@@ -126,17 +139,54 @@ type Project {
     datasheet: Datasheet!
 }
 
+type Translation {
+    id: ID!
+    ressourceId: String!
+    locale: String!
+    scope: String!
+    name: String!
+    value: String!
+}
+
+type TranslationEdge {
+    node: Translation!
+    cursor: String!
+}
+
+type TranslationConnection {
+    edges: [TranslationEdge!]!
+    pageInfo: PageInfo!
+}
+
 type PageInfo {
     hasNextPage: Boolean
     endCursor: String!
 }
 
 type Query {
-    findDatasheet(id: ID!): Datasheet
-    findProjectDefinition(id: ID!): ProjectDefinition
+    findDatasheet(id: ID!): Datasheet!
+    findProjectDefinition(id: ID!): ProjectDefinition!
+    findProjectDefinitionRootSections(projectDefId: ID!): ProjectDefinitionNodeTree!
+    findProjectDefinitionRootSectionContainers(projectDefId: ID!, rootSectionId: ID!): ProjectDefinitionNodeTree!
+    findProjectDefinitionFormContent(projectDefId: ID!, formId: ID!): ProjectDefinitionNodeTree!
+    findRessourceTranslation(ressourceId: ID!, language: String!): TranslationConnection!
+}
+
+input TranslationInput {
+    ressourceId: String!
+    locale: String!
+    scope: String!
+    name: String!
+    value: String!
+}
+
+type Mutation {
+    addTranslations(translations: [TranslationInput!]!): [Translation!]!
+    addProjectDefinitionNode(node: ProjectDefinitionNodeInput!): ProjectDefinitionNode!
 }
 
 schema {
   query: Query
+  mutation: Mutation
 }
 

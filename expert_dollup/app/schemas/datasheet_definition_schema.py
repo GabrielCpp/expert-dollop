@@ -14,10 +14,11 @@ from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.controllers.datasheet.datasheet_definition_element_controller import *
 from expert_dollup.app.controllers.datasheet.datasheet_definition_controller import *
-
-datasheet_definition = ObjectType("DatasheetDefinition")
-datasheet_definition_element = ObjectType("DatasheetDefinitionElement")
-project_definition = ObjectType("ProjectDefinition")
+from .types import (
+    datasheet_definition,
+    datasheet_definition_element,
+    project_definition,
+)
 
 
 @inject_graphql_route(find_datasheet_definition_by_id)
@@ -52,6 +53,3 @@ def resolve_element_definition(
         {"name": name, "schema": dumps(schema)}
         for name, schema in parent.element_properties_schema
     ]
-
-
-types = [datasheet_definition, datasheet_definition_element, project_definition]
