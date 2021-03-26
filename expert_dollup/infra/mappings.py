@@ -62,9 +62,11 @@ def map_project_definition_node_from_dao(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        config=src.config,
+        config=jsonpickle.decode(src.config),
         value_type=src.value_type,
-        default_value=src.default_value,
+        default_value=None
+        if src.default_value is None
+        else jsonpickle.decode(src.default_value),
         path=split_uuid_path(src.path),
         creation_date_utc=src.creation_date_utc,
     )
@@ -88,13 +90,15 @@ def map_project_definition_node_to_dao(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        config=src.config,
+        config=jsonpickle.encode(src.config),
         value_type=src.value_type,
-        default_value=src.default_value,
         path=join_uuid_path(src.path),
         display_query_internal_id=display_query_internal_id,
         level=len(src.path),
         creation_date_utc=mapper.get(Clock).utcnow(),
+        default_value=None
+        if src.default_value is None
+        else jsonpickle.encode(src.default_value),
     )
 
 
@@ -127,7 +131,7 @@ def map_project_container_to_dao(
         project_id=src.project_id,
         type_id=src.type_id,
         path=join_uuid_path(src.path),
-        value=src.value,
+        value=None if src.value is None else jsonpickle.encode(src.value),
         mixed_paths=build_path_steps(src.path),
         creation_date_utc=mapper.get(Clock).utcnow(),
     )
@@ -141,7 +145,7 @@ def map_project_container_from_dao(
         project_id=src.project_id,
         type_id=src.type_id,
         path=split_uuid_path(src.path),
-        value=src.value,
+        value=None if src.value is None else jsonpickle.decode(src.value),
     )
 
 
@@ -245,9 +249,9 @@ def map_project_definition_node_filter_to_dict(
             "is_collection": ("is_collection", None),
             "instanciate_by_default": ("instanciate_by_default", None),
             "order_index": ("order_index", None),
-            "config": ("config", None),
+            "config": ("config", jsonpickle.encode),
             "value_type": ("value_type", None),
-            "default_value": ("default_value", None),
+            "default_value": ("default_value", jsonpickle.encode),
             "path": ("default_value", join_uuid_path),
         },
     )
@@ -263,7 +267,7 @@ def map_project_container_filter_to_dict(
             "project_id": ("project_id", None),
             "type_id": ("type_id", None),
             "path": ("path", None),
-            "value": ("value", None),
+            "value": ("value", jsonpickle.encode),
         },
     )
 

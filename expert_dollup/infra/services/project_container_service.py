@@ -1,3 +1,4 @@
+import jsonpickle
 from sqlalchemy import select, join, and_, desc, or_
 from sqlalchemy.sql.expression import func
 from typing import List, Optional, Awaitable, Any, Dict
@@ -11,6 +12,10 @@ from expert_dollup.core.domains import (
     ProjectContainerTree,
     ProjectContainerFilter,
     FieldNode,
+    IntFieldValue,
+    StringFieldValue,
+    BoolFieldValue,
+    DecimalFieldValue,
 )
 from expert_dollup.shared.database_services import BaseCrudTableService
 from expert_dollup.core.utils.path_transform import join_uuid_path, split_uuid_path
@@ -244,7 +249,7 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
             .where(
                 and_(
                     self._table.c.project_id == project_id,
-                    self._table.c.value.op("->")("value") != None,
+                    self._table.c.value.isnot(None),
                 )
             )
         )
@@ -256,7 +261,25 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
                 id=record.get("id"),
                 name=record.get("name"),
                 path=split_uuid_path(record.get("path")),
-                expression=record.get("value")["value"],
+                expression=self._get_inner_value(record.get("value")),
             )
             for record in records
         ]
+
+    def _get_inner_value(self, value_json):
+        assert not value_json is None
+        value_obj = jsonpickle.decode(value_json)
+
+        if isinstance(value_obj, IntFieldValue):
+            return value_obj.integer
+
+        if isinstance(value_obj, StringFieldValue):
+            return value_obj.text
+
+        if isinstance(value_obj, BoolFieldValue):
+            return value_obj.enabled
+
+        if isinstance(value_obj, DecimalFieldValue):
+            return value_obj.numeric
+
+        raise LookupError(f"Unsuported type {type(value_obj)}")

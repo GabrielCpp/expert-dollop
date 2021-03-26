@@ -1,8 +1,86 @@
 from dataclasses import dataclass
 from uuid import UUID
-from typing import Optional, List
+from typing import Optional, List, Union
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
+
+
+@dataclass
+class IntFieldConfig:
+    validator: dict
+
+
+@dataclass
+class DecimalFieldConfig:
+    validator: dict
+    precision: int
+
+
+@dataclass
+class StringFieldConfig:
+    validator: dict
+    transforms: List[str]
+
+
+@dataclass
+class BoolFieldConfig:
+    validator: dict
+
+
+@dataclass
+class StaticChoiceOption:
+    id: str
+    label: str
+    help_text: str
+
+
+@dataclass
+class StaticChoiceFieldConfig:
+    validator: dict
+    options: List[StaticChoiceOption]
+
+
+@dataclass
+class CollapsibleContainerFieldConfig:
+    is_collapsible: bool
+
+
+@dataclass
+class NodeConfig:
+    value_type: Union[
+        IntFieldConfig,
+        DecimalFieldConfig,
+        StringFieldConfig,
+        BoolFieldConfig,
+        StaticChoiceFieldConfig,
+        CollapsibleContainerFieldConfig,
+        None,
+    ] = None
+
+
+@dataclass
+class IntFieldValue:
+    integer: int
+
+
+@dataclass
+class DecimalFieldValue:
+    numeric: float
+
+
+@dataclass
+class StringFieldValue:
+    text: str
+
+
+@dataclass
+class BoolFieldValue:
+    enabled: bool
+
+
+ValueUnion = Union[
+    BoolFieldValue, StringFieldValue, IntFieldValue, DecimalFieldValue, None
+]
 
 
 @dataclass
@@ -13,9 +91,9 @@ class ProjectDefinitionNode:
     is_collection: bool
     instanciate_by_default: bool
     order_index: int
-    config: dict
+    config: NodeConfig
     value_type: str
-    default_value: Optional[dict]
+    default_value: ValueUnion
     path: List[UUID]
     creation_date_utc: datetime
 
@@ -31,8 +109,8 @@ class ProjectDefinitionNodeFilter(QueryFilter):
     is_collection: Optional[bool]
     instanciate_by_default: Optional[bool]
     order_index: Optional[int]
-    config: Optional[dict]
+    config: Optional[NodeConfig]
     value_type: Optional[str]
-    default_value: Optional[dict]
+    default_value: ValueUnion
     path: Optional[List[UUID]]
     creation_date_utc: Optional[datetime]

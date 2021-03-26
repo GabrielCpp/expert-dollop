@@ -8,8 +8,8 @@ from ..utils import strip_tree_traces, find_name
 
 
 @pytest.mark.asyncio
-async def test_project_creation(ac, mapper, expert_dollup_simple_project):
-    db = expert_dollup_simple_project
+async def test_project_creation(ac, mapper):
+    db = SimpleProject().generate().model
 
     assert len(db.project_definitions) == 1
     project_definition = db.project_definitions[0]

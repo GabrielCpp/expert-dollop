@@ -23,9 +23,13 @@ class ProjectDefinitionNodeDtoFactory(factory.Factory):
     is_collection = False
     instanciate_by_default = True
     order_index = factory.Sequence(lambda n: n)
-    config = {}
+    config = NodeConfigDto(
+        value_type=IntFieldConfigDto(
+            validator={"type": "integer", "minimum": 0, "maximum": 100000}
+        )
+    )
     value_type = "INT"
-    default_value = {"value": 0}
+    default_value = IntFieldValueDto(integer=0)
     path = []
 
 

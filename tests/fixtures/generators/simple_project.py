@@ -34,9 +34,6 @@ class SimpleProject:
                 config = self.value_type_factory.build_config(label, index, value_type)
                 other_field = {}
 
-                if not value is None:
-                    other_field["default_value"] = value
-
                 sub_container = ProjectDefinitionNode(
                     id=uuid4(),
                     name=f"{direct_parent.name}_{label}_{index}",
@@ -48,7 +45,7 @@ class SimpleProject:
                     order_index=index,
                     config=config,
                     creation_date_utc=self.fake.date_time(),
-                    **other_field,
+                    default_value=value,
                 )
 
                 self.project_definition_nodes.append(sub_container)
@@ -65,7 +62,7 @@ class SimpleProject:
             is_collection=False,
             instanciate_by_default=True,
             order_index=0,
-            config=dict(),
+            config=NodeConfig(),
             creation_date_utc=self.fake.date_time(),
             default_value=self.value_type_factory.build_value("CONTAINER"),
         )
@@ -82,7 +79,7 @@ class SimpleProject:
             is_collection=True,
             instanciate_by_default=False,
             order_index=1,
-            config=dict(),
+            config=NodeConfig(),
             creation_date_utc=self.fake.date_time(),
             default_value=self.value_type_factory.build_value("CONTAINER"),
         )

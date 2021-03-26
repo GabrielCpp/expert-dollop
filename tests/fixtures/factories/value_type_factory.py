@@ -1,6 +1,7 @@
 from random import choice
 from dataclasses import dataclass
 from faker import Faker
+from expert_dollup.core.domains import *
 
 
 @dataclass
@@ -57,51 +58,51 @@ class ValueTypeFactory:
         return self.value_type_factories[value_type].build_config(label, index)
 
     def _create_int_value(self):
-        return {"value": self.fake.pyint(min_value=0, max_value=100000)}
+        return IntFieldValue(integer=self.fake.pyint(min_value=0, max_value=100000))
 
     def _create_int_custom_attr(self, label: str, index: int):
-        return {
-            "value_type": {
-                "validator": {"type": "integer", "minimum": 0, "maximum": 100000}
-            }
-        }
+        return NodeConfig(
+            value_type=IntFieldConfig(
+                validator={"type": "integer", "minimum": 0, "maximum": 100000}
+            )
+        )
 
     def _create_decimal_value(self):
-        return {
-            "value": self.fake.pyfloat(right_digits=3, min_value=-10, max_value=5000)
-        }
+        return DecimalFieldValue(
+            numeric=self.fake.pyfloat(right_digits=3, min_value=-10, max_value=5000)
+        )
 
     def _create_decimal_custom_attr(self, label: str, index: int):
-        return {
-            "value_type": {
-                "validator": {"type": "number", "minimum": -100000, "maximum": 100000},
-                "precision": 3,
-            }
-        }
+        return NodeConfig(
+            value_type=DecimalFieldConfig(
+                validator={"type": "number", "minimum": -100000, "maximum": 100000},
+                precision=3,
+            )
+        )
 
     def _create_string_value(self):
-        return {"value": " ".join(self.fake.words())}
+        return StringFieldValue(text=" ".join(self.fake.words()))
 
     def _create_string_custom_attr(self, label: str, index: int):
-        return {
-            "value_type": {
-                "validator": {
+        return NodeConfig(
+            value_type=StringFieldConfig(
+                validator={
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 200,
                 },
-                "transforms": ["trim"],
-            }
-        }
+                transforms=["trim"],
+            )
+        )
 
     def _create_bool_value(self):
-        return {"value": self.fake.pybool()}
+        return BoolFieldValue(enabled=self.fake.pybool())
 
     def _create_bool_custom_attr(self, label: str, index: int):
-        return {"value_type": {"validator": {"type": "boolean"}}}
+        return NodeConfig(value_type=BoolFieldConfig(validator={"type": "boolean"}))
 
     def _create_static_choice_value(self):
-        return {"value": str(self.fake.pyint(min_value=0, max_value=4))}
+        return StringFieldValue(text=str(self.fake.pyint(min_value=0, max_value=4)))
 
     def _create_static_choice_custom_attr(self, label: str, index: int):
         options = []
@@ -109,28 +110,28 @@ class ValueTypeFactory:
         for index in range(0, 5):
             name = "_".join(self.fake.words())
             options.append(
-                {"id": str(index), "label": name, "help_text": f"{name}_help_text"}
+                StaticChoiceOption(
+                    id=str(index), label=name, help_text=f"{name}_help_text"
+                )
             )
 
-        return {
-            "value_type": {
-                "validator": {
+        return NodeConfig(
+            value_type=StaticChoiceFieldConfig(
+                validator={
                     "type": "string",
                     "enum": [str(index) for index in range(0, 5)],
                 },
-                "options": options,
-            },
-        }
+                options=options,
+            )
+        )
 
     def _create_container_custom_attr(self, label: str, index: int):
         if label == "section":
-            return {
-                "value_type": {
-                    "is_collapsible": index >= 3,
-                },
-            }
+            return NodeConfig(
+                value_type=CollapsibleContainerFieldConfig(is_collapsible=index >= 3)
+            )
 
-        return {}
+        return NodeConfig(value_type=None)
 
     def _create_container_value(self):
-        return {"value": None}
+        return None

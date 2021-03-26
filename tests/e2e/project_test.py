@@ -98,16 +98,18 @@ async def test_mutate_project_field(ac, expert_dollup_simple_project, project):
             for field in field_layer_tree.roots
             if field.definition.value_type == "INT"
         )
-        assert isinstance(target_field.container.value["value"], int)
+        assert isinstance(target_field.container.value.integer, int)
 
         return (target_field,)
 
     @runner.step
     async def mutate_target_field_by_value_increment(target_field):
-        expected_value = {"value": target_field.container.value["value"] + 10}
+        expected_value = IntFieldValueDto(
+            integer=target_field.container.value.integer + 10
+        )
         response = await ac.put(
             f"/api/project/{project.id}/container/{target_field.container.id}/value",
-            data=jsonify(expected_value),
+            data=expected_value.json(),
         )
         assert response.status_code == 200, response.text
 

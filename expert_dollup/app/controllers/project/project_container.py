@@ -4,12 +4,17 @@ from uuid import UUID
 from expert_dollup.shared.starlette_injection import Inject
 from expert_dollup.shared.handlers import RequestHandler, MappingChain
 from expert_dollup.core.usecases import ProjectContainerUseCase
-from expert_dollup.core.domains import ProjectContainer, ProjectContainerFilter
+from expert_dollup.core.domains import (
+    ProjectContainer,
+    ProjectContainerFilter,
+    ValueUnion,
+)
 from expert_dollup.app.dtos import (
     ProjectContainerDto,
     ProjectContainerTreeDto,
     ProjectContainerCollectionTargetDto,
     ProjectContainerPageDto,
+    ValueUnionDto,
 )
 
 router = APIRouter()
@@ -74,10 +79,16 @@ async def find_project_container_subtree(
 async def mutate_project_field(
     project_id: UUID,
     container_id: UUID,
-    value: dict,
+    value: ValueUnionDto,
     usecase=Depends(Inject(ProjectContainerUseCase)),
+    handler=Depends(Inject(RequestHandler)),
 ):
-    return await usecase.update_container_value(project_id, container_id, value)
+    return await handler.forward_mapped(
+        usecase.update_container_value,
+        dict(project_id=project_id, container_id=container_id, value=value),
+        MappingChain(out_dto=ProjectContainerTreeDto),
+        map_keys=dict(value=MappingChain(dto=ValueUnionDto, domain=ValueUnion)),
+    )
 
 
 @router.post("/project/{project_id}/container/collection")

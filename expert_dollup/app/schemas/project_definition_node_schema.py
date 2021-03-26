@@ -11,9 +11,7 @@ from expert_dollup.app.controllers.project.project_definition_node import *
 from expert_dollup.app.dtos import *
 from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
-from .types import query
-
-project_definition = ObjectType("ProjectDefinition")
+from .types import query, project_definition
 
 
 @project_definition.field("rootSections")
@@ -24,7 +22,8 @@ async def resolve_project_definition_root_sections(
     info: GraphQLResolveInfo,
     find_root_sections: callable,
 ):
-    return await find_root_sections(info, parent.id)
+    result = await find_root_sections(info, parent.id)
+    return result.dict(by_alias=True)
 
 
 @project_definition.field("rootSectionContainers")
@@ -36,7 +35,8 @@ async def resolve_project_definition_root_section_containers(
     root_section_id: UUID,
     find_root_section_containers: callable,
 ):
-    return await find_root_section_containers(info, parent.id, root_section_id)
+    result = await find_root_section_containers(info, parent.id, root_section_id)
+    return result.dict(by_alias=True)
 
 
 @project_definition.field("formContent")
@@ -49,7 +49,8 @@ async def resolve_project_definition_form_content(
     form_id: UUID,
     find_form_content: callable,
 ):
-    return await find_form_content(info, parent.id, form_id)
+    result = await find_form_content(info, parent.id, form_id)
+    return result.dict(by_alias=True)
 
 
 @query.field("findProjectDefinitionRootSections")
@@ -61,7 +62,8 @@ async def resolve_root_sections(
     project_def_id: UUID,
     find_root_sections: callable,
 ):
-    return await find_root_sections(info, project_def_id)
+    result = await find_root_sections(info, project_def_id)
+    return result.dict(by_alias=True)
 
 
 @query.field("findProjectDefinitionRootSectionContainers")
@@ -74,7 +76,8 @@ async def resolve_root_section_containers(
     root_section_id: UUID,
     find_root_section_containers: callable,
 ):
-    return await find_root_section_containers(info, project_def_id, root_section_id)
+    result = await find_root_section_containers(info, project_def_id, root_section_id)
+    return result.dict(by_alias=True)
 
 
 @query.field("findProjectDefinitionFormContent")
@@ -87,7 +90,8 @@ async def resolve_form_content(
     form_id: UUID,
     find_form_content: callable,
 ):
-    return await find_form_content(info, project_def_id, form_id)
+    result = await find_form_content(info, project_def_id, form_id)
+    return result.dict(by_alias=True)
 
 
 types = [project_definition]

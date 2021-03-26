@@ -80,6 +80,152 @@ type ProjectDefinitionValueType {
     displayName: String!
 }
 
+type JsonSchema {
+    type: String
+    enum: [String!]
+    minLength: Int
+    maxLength: Int
+    minimum: Float
+    maximum: Float
+}
+
+type IntFieldConfig {
+    validator: JsonSchema!
+}
+
+type DecimalFieldConfig {
+    validator: JsonSchema!
+    precision: Int!
+}
+
+type StringFieldConfig {
+    validator: JsonSchema!
+    transforms: [String!]!
+}
+
+type BoolFieldConfig {
+    validator: JsonSchema!
+}
+
+type StaticChoiceOption {
+    id: String!
+    label: String!
+    help_text: String!
+}
+
+type StaticChoiceFieldConfig {
+    validator: JsonSchema!
+    options: [StaticChoiceOption!]!
+}
+
+type CollapsibleContainerFieldConfig {
+    isCollapsible: Boolean!
+}
+
+union NodeConfigValueType = IntFieldConfig | DecimalFieldConfig | StringFieldConfig | BoolFieldConfig | StaticChoiceFieldConfig | CollapsibleContainerFieldConfig
+
+type NodeConfig {
+    valueType: NodeConfigValueType
+}
+    
+type IntFieldValue {
+    integer: Int!
+}
+
+type DecimalFieldValue {
+    numeric: Float!
+}
+
+type StringFieldValue {
+    text: String!
+}
+
+type BoolFieldValue {
+    enabled: Boolean!
+}
+
+union FieldValue = IntFieldValue | DecimalFieldValue | StringFieldValue | BoolFieldValue
+
+input JsonSchemaInput {
+    input: String
+    enum: [String!]
+    minLength: Int
+    maxLength: Int
+    minimum: Float
+    maximum: Float
+}
+
+input IntFieldConfigInput {
+    validator: JsonSchemaInput!
+}
+
+input DecimalFieldConfigInput {
+    validator: JsonSchemaInput!
+    precision: Int!
+}
+
+input StringFieldConfigInput {
+    validator: JsonSchemaInput!
+    transforms: [String!]!
+}
+
+input BoolFieldConfigInput {
+    validator: JsonSchemaInput!
+}
+
+input StaticChoiceOptionInput {
+    id: String!
+    label: String!
+    help_text: String!
+}
+
+input StaticChoiceFieldConfigInput {
+    validator: JsonSchemaInput!
+    options: [StaticChoiceOptionInput!]!
+}
+
+input CollapsibleContainerFieldConfigInput {
+    isCollapsible: Boolean!
+}
+
+input NodeConfigValueTypeInput {
+    kind: String!
+    int: IntFieldConfigInput 
+    decimal: DecimalFieldConfigInput
+    string: StringFieldConfigInput
+    bool: BoolFieldConfigInput
+    staticChoice: StaticChoiceFieldConfigInput
+    collapsibleContainer: CollapsibleContainerFieldConfigInput
+}
+
+input NodeConfigInput {
+    valueType: NodeConfigValueTypeInput!
+}
+    
+input IntFieldValueInput {
+    integer: Int!
+}
+
+input DecimalFieldValueInput {
+    numeric: Float!
+}
+
+input StringFieldValueInput {
+    text: String!
+}
+
+input BoolFieldValueInput {
+    enabled: Boolean!
+}
+
+input FieldValueInput {
+    kind: String!
+    int: IntFieldValueInput
+    decimal: DecimalFieldValueInput
+    string: StringFieldValueInput
+    bool: BoolFieldValueInput
+}
+
 input ProjectDefinitionNodeInput {
     id: ID!
     projectDefId: String!
@@ -87,9 +233,9 @@ input ProjectDefinitionNodeInput {
     isCollection: Boolean!
     instanciateByDefault: Boolean!
     orderIndex: Int!
-    config: String!
+    config: NodeConfigInput
     valueType: String!
-    defaultValue: String
+    defaultValue: FieldValueInput
     path: [String!]!
 }
 
@@ -100,10 +246,10 @@ type ProjectDefinitionNode {
     isCollection: Boolean!
     instanciateByDefault: Boolean!
     orderIndex: Int!
-    config: String!
+    config: NodeConfig
     valueType: String!
     valueTypeDetails: ProjectDefinitionValueType!
-    defaultValue: String
+    defaultValue: FieldValue
     path: [String!]!
     children: [ProjectDefinitionNode!]!
 }

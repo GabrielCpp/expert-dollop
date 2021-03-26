@@ -31,6 +31,84 @@ def map_project_definition_to_dto(
     )
 
 
+def map_node_config_from_dto(src: NodeConfigDto, mapper: Mapper) -> NodeConfig:
+    value_type = None
+
+    if isinstance(src.value_type, IntFieldConfigDto):
+        value_type_dto: IntFieldConfigDto = src.value_type
+        value_type = IntFieldConfig(validator=value_type_dto.validator)
+    elif isinstance(src.value_type, DecimalFieldConfigDto):
+        value_type_dto: DecimalFieldConfigDto = src.value_type
+        value_type = DecimalFieldConfig(
+            validator=value_type_dto.validator, precision=value_type_dto.precision
+        )
+    elif isinstance(src.value_type, StringFieldConfigDto):
+        value_type_dto: StringFieldConfigDto = src.value_type
+        value_type = StringFieldConfig(
+            validator=value_type_dto.validator, transforms=value_type_dto.transforms
+        )
+    elif isinstance(src.value_type, BoolFieldConfigDto):
+        value_type_dto: BoolFieldConfigDto = src.value_type
+        value_type = BoolFieldConfig(validator=value_type_dto.validator)
+    elif isinstance(src.value_type, StaticChoiceFieldConfigDto):
+        value_type_dto: StaticChoiceFieldConfigDto = src.value_type
+        value_type = StaticChoiceFieldConfig(
+            validator=value_type_dto.validator,
+            options=[
+                StaticChoiceOption(
+                    id=option.id, label=option.label, help_text=option.help_text
+                )
+                for option in value_type_dto.options
+            ],
+        )
+    elif isinstance(src.value_type, CollapsibleContainerFieldConfigDto):
+        value_type_dto: CollapsibleContainerFieldConfigDto = src.value_type
+        value_type = CollapsibleContainerFieldConfig(
+            is_collapsible=value_type_dto.is_collapsible
+        )
+
+    return NodeConfig(value_type=value_type)
+
+
+def map_node_config_from_to_dto(src: NodeConfig, mapper: Mapper) -> NodeConfigDto:
+    value_type = None
+
+    if isinstance(src.value_type, IntFieldConfig):
+        value_type_dto: IntFieldConfig = src.value_type
+        value_type = IntFieldConfigDto(validator=value_type_dto.validator)
+    elif isinstance(src.value_type, DecimalFieldConfig):
+        value_type_dto: DecimalFieldConfig = src.value_type
+        value_type = DecimalFieldConfigDto(
+            validator=value_type_dto.validator, precision=value_type_dto.precision
+        )
+    elif isinstance(src.value_type, StringFieldConfig):
+        value_type_dto: StringFieldConfig = src.value_type
+        value_type = StringFieldConfigDto(
+            validator=value_type_dto.validator, transforms=value_type_dto.transforms
+        )
+    elif isinstance(src.value_type, BoolFieldConfig):
+        value_type_dto: BoolFieldConfig = src.value_type
+        value_type = BoolFieldConfigDto(validator=value_type_dto.validator)
+    elif isinstance(src.value_type, StaticChoiceFieldConfig):
+        value_type_dto: StaticChoiceFieldConfig = src.value_type
+        value_type = StaticChoiceFieldConfigDto(
+            validator=value_type_dto.validator,
+            options=[
+                StaticChoiceOptionDto(
+                    id=option.id, label=option.label, help_text=option.help_text
+                )
+                for option in value_type_dto.options
+            ],
+        )
+    elif isinstance(src.value_type, CollapsibleContainerFieldConfig):
+        value_type_dto: CollapsibleContainerFieldConfig = src.value_type
+        value_type = CollapsibleContainerFieldConfigDto(
+            is_collapsible=value_type_dto.is_collapsible
+        )
+
+    return NodeConfigDto(value_type=value_type)
+
+
 def map_project_definition_node_from_dto(
     src: ProjectDefinitionNodeDto, mapper: Mapper
 ) -> ProjectDefinitionNode:
@@ -41,9 +119,9 @@ def map_project_definition_node_from_dto(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        config=src.config,
+        config=mapper.map(src.config, NodeConfig),
         value_type=src.value_type,
-        default_value=src.default_value,
+        default_value=mapper.map(src.default_value, ValueUnion, ValueUnionDto),
         path=src.path,
         creation_date_utc=mapper.get(Clock).utcnow(),
     )
@@ -59,10 +137,10 @@ def map_project_definition_node_to_dto(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        config=src.config,
+        config=mapper.map(src.config, NodeConfigDto),
         value_type=src.value_type,
-        default_value=src.default_value,
         path=src.path,
+        default_value=mapper.map(src.default_value, ValueUnionDto, ValueUnion),
     )
 
 
@@ -90,7 +168,7 @@ def map_project_definition_tree_node_to_dto(
 def map_project_definition_tree_to_dto(
     src: ProjectDefinitionNodeTree, mapper: Mapper
 ) -> ProjectDefinitionNodeTreeDto:
-    return ProjectDefinitionNodeTree(
+    return ProjectDefinitionNodeTreeDto(
         roots=mapper.map_many(src.roots, ProjectDefinitionTreeNodeDto)
     )
 
@@ -115,6 +193,40 @@ def map_project_to_dto(src: Project, mapper: Mapper) -> ProjectDto:
     )
 
 
+def map_value_union_from_dto(src: ValueUnionDto, mapper: Mapper) -> ValueUnion:
+    value = None
+
+    if isinstance(src, IntFieldValueDto):
+        value = IntFieldValue(integer=src.integer)
+    elif isinstance(src, DecimalFieldValueDto):
+        value = DecimalFieldValue(numeric=src.numeric)
+    elif isinstance(src, StringFieldValueDto):
+        value = StringFieldValue(text=src.text)
+    elif isinstance(src, BoolFieldValueDto):
+        value = BoolFieldValue(enabled=src.enabled)
+    elif not src is None:
+        raise LookupError("Field type not found")
+
+    return value
+
+
+def map_value_union_to_dto(src: ValueUnion, mapper: Mapper) -> ValueUnionDto:
+    value = None
+
+    if isinstance(src, IntFieldValue):
+        value = IntFieldValueDto(integer=src.integer)
+    elif isinstance(src, DecimalFieldValue):
+        value = DecimalFieldValueDto(numeric=src.numeric)
+    elif isinstance(src, StringFieldValue):
+        value = StringFieldValueDto(text=src.text)
+    elif isinstance(src, BoolFieldValue):
+        value = BoolFieldValueDto(enabled=src.enabled)
+    elif not src is None:
+        raise LookupError("Field type not found")
+
+    return value
+
+
 def map_project_container_from_dto(
     src: ProjectContainerDto, mapper: Mapper
 ) -> ProjectContainer:
@@ -123,7 +235,7 @@ def map_project_container_from_dto(
         project_id=src.project_id,
         type_id=src.type_id,
         path=src.path,
-        value=src.value,
+        value=mapper.map(src.value, ValueUnion, ValueUnionDto),
     )
 
 
@@ -135,7 +247,7 @@ def map_project_container_to_dto(
         project_id=src.project_id,
         type_id=src.type_id,
         path=src.path,
-        value=src.value,
+        value=mapper.map(src.value, ValueUnionDto, ValueUnion),
     )
 
 

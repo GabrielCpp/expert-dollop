@@ -34,7 +34,7 @@ class MiniProject:
             is_collection=False,
             instanciate_by_default=True,
             order_index=0,
-            config=dict(),
+            config=NodeConfig(),
             creation_date_utc=self.fake.date_time(),
             default_value=self.value_type_factory.build_value("CONTAINER"),
         )

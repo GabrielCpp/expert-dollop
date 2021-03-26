@@ -8,6 +8,7 @@ from expert_dollup.core.domains import (
     ProjectContainerFilter,
     ProjectDefinitionNodeFilter,
     ProjectContainerNode,
+    ValueUnion,
 )
 from expert_dollup.infra.services import (
     ProjectService,
@@ -63,16 +64,14 @@ class ProjectContainerUseCase:
         )
 
     async def update_container_value(
-        self, project_id: UUID, container_id: UUID, value: dict
+        self, project_id: UUID, container_id: UUID, value: ValueUnion
     ):
         container = await self.project_container_service.find_one_by(
             ProjectContainerFilter(project_id=project_id, id=container_id)
         )
 
-        definition_container = (
-            await self.project_definition_node_service.find_by_id(
-                container.type_id
-            )
+        definition_container = await self.project_definition_node_service.find_by_id(
+            container.type_id
         )
 
         await self.project_definition_value_type_validator.validate_value(

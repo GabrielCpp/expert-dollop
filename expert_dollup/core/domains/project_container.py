@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Union
 from uuid import UUID
 from expert_dollup.shared.database_services import QueryFilter
+from .project_definition_node import ValueUnion
 
 
 @dataclass
@@ -10,7 +11,7 @@ class ProjectContainer:
     project_id: UUID
     type_id: UUID
     path: List[UUID]
-    value: dict
+    value: ValueUnion
 
     @property
     def subpath(self):
@@ -22,4 +23,4 @@ class ProjectContainerFilter(QueryFilter):
     project_id: Optional[UUID]
     type_id: Optional[UUID]
     path: Optional[List[UUID]]
-    value: Optional[dict]
+    value: ValueUnion

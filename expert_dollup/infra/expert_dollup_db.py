@@ -59,9 +59,9 @@ project_definition_node_table = Table(
     Column("is_collection", Boolean, nullable=False),
     Column("instanciate_by_default", Boolean, nullable=False),
     Column("order_index", Integer, nullable=False),
-    Column("config", postgresql.JSON(), nullable=False),
+    Column("config", String, nullable=False),
     Column("value_type", String, nullable=False),
-    Column("default_value", postgresql.JSON(), nullable=True),
+    Column("default_value", String, nullable=True),
     Column("path", String, nullable=False),
     Column("display_query_internal_id", postgresql.UUID(), nullable=False),
     Column("level", Integer, nullable=False),
@@ -76,9 +76,9 @@ class ProjectDefinitionNodeDao(BaseModel):
     is_collection: bool
     instanciate_by_default: bool
     order_index: int
-    config: dict
+    config: str
     value_type: str
-    default_value: Optional[dict]
+    default_value: Optional[str]
     path: str
     level: int
     display_query_internal_id: UUID
@@ -132,7 +132,7 @@ project_container_table = Table(
     Column("project_id", postgresql.UUID(), nullable=False),
     Column("type_id", postgresql.UUID(), nullable=False),
     Column("path", String, nullable=False),
-    Column("value", postgresql.JSON(), nullable=True),
+    Column("value", String, nullable=True),
     Column("level", Integer, nullable=False, server_default=FetchedValue()),
     Column("mixed_paths", ARRAY(String, dimensions=1), nullable=False),
     Column("creation_date_utc", DateTime(timezone=True), nullable=False),
@@ -144,7 +144,7 @@ class ProjectContainerDao(BaseModel):
     project_id: UUID
     type_id: UUID
     path: str
-    value: dict
+    value: Optional[str]
     mixed_paths: List[str]
     creation_date_utc: datetime
 

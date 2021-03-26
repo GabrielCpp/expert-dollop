@@ -43,18 +43,18 @@ async def test_given_project_definition_node_should_be_able_to_create_update_del
     )
 
     response = await ac.post("/api/project_definition", data=project_definition.json())
-    assert response.status_code == 200
+    assert response.status_code == 200, response.json()
 
     response = await ac.post(
         "/api/project_definition_node",
-        data=expected_project_definition_node.json(),
+        data=expected_project_definition_node.json(by_alias=True),
     )
-    assert response.status_code == 200
+    assert response.status_code == 200, response.json()
 
     response = await ac.get(
         f"/api/project_definition_node/{expected_project_definition_node.id}"
     )
-    assert response.status_code == 200
+    assert response.status_code == 200, response.json()
 
     actual = unwrap(response, ProjectDefinitionNodeDto)
     assert actual == expected_project_definition_node
@@ -62,12 +62,12 @@ async def test_given_project_definition_node_should_be_able_to_create_update_del
     response = await ac.delete(
         f"/api/project_definition_node/{expected_project_definition_node.id}"
     )
-    assert response.status_code == 200
+    assert response.status_code == 200, response.json()
 
     response = await ac.get(
         f"/api/project_definition_node/{expected_project_definition_node.id}"
     )
-    assert response.status_code == 404
+    assert response.status_code == 404, response.json()
 
 
 @pytest.mark.asyncio
@@ -76,15 +76,15 @@ async def test_given_translation_should_be_able_to_create_update_delete(ac):
     translation = TranslationDtoFactory(ressource_id=project_definition.id)
 
     response = await ac.post("/api/project_definition", data=project_definition.json())
-    assert response.status_code == 200
+    assert response.status_code == 200, response.json()
 
     response = await ac.post("/api/translation", data=translation.json())
-    assert response.status_code == 200
+    assert response.status_code == 200, response.json()
 
     response = await ac.get(
         f"/api/translation/{translation.ressource_id}/{translation.scope}/{translation.locale}/{translation.name}"
     )
-    assert response.status_code == 200
+    assert response.status_code == 200, response.json()
 
     actual = unwrap(response, TranslationDto)
     assert actual == translation
@@ -92,12 +92,12 @@ async def test_given_translation_should_be_able_to_create_update_delete(ac):
     response = await ac.delete(
         f"/api/translation/{translation.ressource_id}/{translation.scope}/{translation.locale}/{translation.name}"
     )
-    assert response.status_code == 200
+    assert response.status_code == 200, response.json()
 
     response = await ac.get(
         f"/api/translation/{translation.ressource_id}/{translation.scope}/{translation.locale}/{translation.name}"
     )
-    assert response.status_code == 404
+    assert response.status_code == 404, response.json()
 
 
 @pytest.mark.asyncio
