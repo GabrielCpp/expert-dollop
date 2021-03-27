@@ -58,7 +58,7 @@ class ValueTypeFactory:
         return self.value_type_factories[value_type].build_config(label, index)
 
     def _create_int_value(self):
-        return IntFieldValue(integer=self.fake.pyint(min_value=0, max_value=100000))
+        return self.fake.pyint(min_value=0, max_value=100000)
 
     def _create_int_custom_attr(self, label: str, index: int):
         return NodeConfig(
@@ -68,9 +68,7 @@ class ValueTypeFactory:
         )
 
     def _create_decimal_value(self):
-        return DecimalFieldValue(
-            numeric=self.fake.pyfloat(right_digits=3, min_value=-10, max_value=5000)
-        )
+        return self.fake.pyfloat(right_digits=3, min_value=-10, max_value=5000)
 
     def _create_decimal_custom_attr(self, label: str, index: int):
         return NodeConfig(
@@ -81,7 +79,7 @@ class ValueTypeFactory:
         )
 
     def _create_string_value(self):
-        return StringFieldValue(text=" ".join(self.fake.words()))
+        return " ".join(self.fake.words())
 
     def _create_string_custom_attr(self, label: str, index: int):
         return NodeConfig(
@@ -96,13 +94,13 @@ class ValueTypeFactory:
         )
 
     def _create_bool_value(self):
-        return BoolFieldValue(enabled=self.fake.pybool())
+        return self.fake.pybool()
 
     def _create_bool_custom_attr(self, label: str, index: int):
         return NodeConfig(value_type=BoolFieldConfig(validator={"type": "boolean"}))
 
     def _create_static_choice_value(self):
-        return StringFieldValue(text=str(self.fake.pyint(min_value=0, max_value=4)))
+        return str(self.fake.pyint(min_value=0, max_value=4))
 
     def _create_static_choice_custom_attr(self, label: str, index: int):
         options = []

@@ -197,13 +197,13 @@ def map_value_union_from_dto(src: ValueUnionDto, mapper: Mapper) -> ValueUnion:
     value = None
 
     if isinstance(src, IntFieldValueDto):
-        value = IntFieldValue(integer=src.integer)
+        value = src.integer
     elif isinstance(src, DecimalFieldValueDto):
-        value = DecimalFieldValue(numeric=src.numeric)
+        value = src.numeric
     elif isinstance(src, StringFieldValueDto):
-        value = StringFieldValue(text=src.text)
+        value = src.text
     elif isinstance(src, BoolFieldValueDto):
-        value = BoolFieldValue(enabled=src.enabled)
+        value = src.enabled
     elif not src is None:
         raise LookupError("Field type not found")
 
@@ -213,14 +213,14 @@ def map_value_union_from_dto(src: ValueUnionDto, mapper: Mapper) -> ValueUnion:
 def map_value_union_to_dto(src: ValueUnion, mapper: Mapper) -> ValueUnionDto:
     value = None
 
-    if isinstance(src, IntFieldValue):
-        value = IntFieldValueDto(integer=src.integer)
-    elif isinstance(src, DecimalFieldValue):
-        value = DecimalFieldValueDto(numeric=src.numeric)
-    elif isinstance(src, StringFieldValue):
-        value = StringFieldValueDto(text=src.text)
-    elif isinstance(src, BoolFieldValue):
-        value = BoolFieldValueDto(enabled=src.enabled)
+    if isinstance(src, int):
+        value = IntFieldValueDto(integer=src)
+    elif isinstance(src, float):
+        value = DecimalFieldValueDto(numeric=src)
+    elif isinstance(src, str):
+        value = StringFieldValueDto(text=src)
+    elif isinstance(src, bool):
+        value = BoolFieldValueDto(enabled=src)
     elif not src is None:
         raise LookupError("Field type not found")
 

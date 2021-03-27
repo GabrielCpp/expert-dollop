@@ -4,27 +4,29 @@ from typing import Optional, List, Union
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
 
+JsonSchema = dict
+
 
 @dataclass
 class IntFieldConfig:
-    validator: dict
+    validator: JsonSchema
 
 
 @dataclass
 class DecimalFieldConfig:
-    validator: dict
+    validator: JsonSchema
     precision: int
 
 
 @dataclass
 class StringFieldConfig:
-    validator: dict
+    validator: JsonSchema
     transforms: List[str]
 
 
 @dataclass
 class BoolFieldConfig:
-    validator: dict
+    validator: JsonSchema
 
 
 @dataclass
@@ -36,7 +38,7 @@ class StaticChoiceOption:
 
 @dataclass
 class StaticChoiceFieldConfig:
-    validator: dict
+    validator: JsonSchema
     options: List[StaticChoiceOption]
 
 
@@ -45,42 +47,23 @@ class CollapsibleContainerFieldConfig:
     is_collapsible: bool
 
 
+NodeConfigValueType = Union[
+    IntFieldConfig,
+    DecimalFieldConfig,
+    StringFieldConfig,
+    BoolFieldConfig,
+    StaticChoiceFieldConfig,
+    CollapsibleContainerFieldConfig,
+    None,
+]
+
+
 @dataclass
 class NodeConfig:
-    value_type: Union[
-        IntFieldConfig,
-        DecimalFieldConfig,
-        StringFieldConfig,
-        BoolFieldConfig,
-        StaticChoiceFieldConfig,
-        CollapsibleContainerFieldConfig,
-        None,
-    ] = None
+    value_type: NodeConfigValueType = None
 
 
-@dataclass
-class IntFieldValue:
-    integer: int
-
-
-@dataclass
-class DecimalFieldValue:
-    numeric: float
-
-
-@dataclass
-class StringFieldValue:
-    text: str
-
-
-@dataclass
-class BoolFieldValue:
-    enabled: bool
-
-
-ValueUnion = Union[
-    BoolFieldValue, StringFieldValue, IntFieldValue, DecimalFieldValue, None
-]
+ValueUnion = Union[bool, int, str, float, None]
 
 
 @dataclass

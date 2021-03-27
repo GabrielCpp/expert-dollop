@@ -23,7 +23,7 @@ async def resolve_project_definition_root_sections(
     find_root_sections: callable,
 ):
     result = await find_root_sections(info, parent.id)
-    return result.dict(by_alias=True)
+    return result
 
 
 @project_definition.field("rootSectionContainers")
@@ -36,7 +36,7 @@ async def resolve_project_definition_root_section_containers(
     find_root_section_containers: callable,
 ):
     result = await find_root_section_containers(info, parent.id, root_section_id)
-    return result.dict(by_alias=True)
+    return result
 
 
 @project_definition.field("formContent")
@@ -50,7 +50,7 @@ async def resolve_project_definition_form_content(
     find_form_content: callable,
 ):
     result = await find_form_content(info, parent.id, form_id)
-    return result.dict(by_alias=True)
+    return result
 
 
 @query.field("findProjectDefinitionRootSections")
@@ -63,7 +63,7 @@ async def resolve_root_sections(
     find_root_sections: callable,
 ):
     result = await find_root_sections(info, project_def_id)
-    return result.dict(by_alias=True)
+    return result
 
 
 @query.field("findProjectDefinitionRootSectionContainers")
@@ -77,7 +77,7 @@ async def resolve_root_section_containers(
     find_root_section_containers: callable,
 ):
     result = await find_root_section_containers(info, project_def_id, root_section_id)
-    return result.dict(by_alias=True)
+    return result
 
 
 @query.field("findProjectDefinitionFormContent")
@@ -91,7 +91,7 @@ async def resolve_form_content(
     find_form_content: callable,
 ):
     result = await find_form_content(info, project_def_id, form_id)
-    return result.dict(by_alias=True)
+    return result
 
 
 types = [project_definition]

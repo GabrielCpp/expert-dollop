@@ -37,16 +37,19 @@ class CollapsibleContainerFieldConfigDto(CamelModel):
     is_collapsible: bool
 
 
+NodeConfigValueType = Union[
+    IntFieldConfigDto,
+    DecimalFieldConfigDto,
+    StringFieldConfigDto,
+    BoolFieldConfigDto,
+    StaticChoiceFieldConfigDto,
+    CollapsibleContainerFieldConfigDto,
+    None,
+]
+
+
 class NodeConfigDto(CamelModel):
-    value_type: Union[
-        IntFieldConfigDto,
-        DecimalFieldConfigDto,
-        StringFieldConfigDto,
-        BoolFieldConfigDto,
-        StaticChoiceFieldConfigDto,
-        CollapsibleContainerFieldConfigDto,
-        None,
-    ]
+    value_type: NodeConfigValueType
 
 
 class IntFieldValueDto(CamelModel):

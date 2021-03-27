@@ -15,6 +15,7 @@ from .project_definition_node_dto import (
     StringFieldValueDto,
     BoolFieldValueDto,
     ValueUnionDto,
+    NodeConfigValueType,
 )
 from .project_definition_node_tree_dto import (
     ProjectDefinitionTreeNodeDto,
