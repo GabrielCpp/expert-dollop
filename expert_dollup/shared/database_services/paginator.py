@@ -5,6 +5,7 @@ from typing import Awaitable, Optional, Tuple
 from datetime import datetime
 from uuid import UUID
 from sqlalchemy import desc, select, and_
+from urllib.parse import unquote, quote
 
 
 class IdStampedDateCursorEncoder:
@@ -14,26 +15,27 @@ class IdStampedDateCursorEncoder:
         id_str = str(id)
         cursor = json.dumps({"date": date_str, "id": id_str}, sort_keys=True)
 
-        return base64.b64encode(cursor.encode("ascii")).decode("utf8")
+        return quote(base64.urlsafe_b64encode(cursor.encode("utf8")))
 
     @staticmethod
-    def decode(cursor: str) -> Tuple[datetime, UUID]:
-        cursor_json_str = base64.decode(cursor)
+    def decode(cursor: str, build_id_field) -> Tuple[datetime, UUID]:
+        cursor_json_str = base64.urlsafe_b64decode(unquote(cursor).encode("utf8"))
         cursor_dict = json.loads(cursor_json_str)
         date = dateutil.parser.isoparse(cursor_dict["date"])
-        id = UUID(cursor_dict["id"])
+        id = build_id_field(cursor_dict["id"])
         return (date, id)
 
     @staticmethod
-    def for_fields(date_field_name, id_field_name):
+    def for_fields(date_field_name, id_field_name, build_id_field=UUID):
         return lambda table: IdStampedDateCursorEncoder(
-            table, date_field_name, id_field_name
+            table, date_field_name, id_field_name, build_id_field
         )
 
-    def __init__(self, table, date_field_name, id_field_name):
+    def __init__(self, table, date_field_name, id_field_name, build_id_field):
         self.table = table
         self.date_field_name = date_field_name
         self.id_field_name = id_field_name
+        self._build_id_field = build_id_field
 
     def encode_dao(self, dao):
         dao_id = getattr(dao, self.id_field_name)
@@ -50,7 +52,9 @@ class IdStampedDateCursorEncoder:
         id_column = getattr(self.table.c, self.id_field_name)
 
         if not next_page_token is None:
-            from_date, from_id = IdStampedDateCursorEncoder.decode(next_page_token)
+            from_date, from_id = IdStampedDateCursorEncoder.decode(
+                next_page_token, self._build_id_field
+            )
 
             filter_condition = and_(
                 filter_condition,

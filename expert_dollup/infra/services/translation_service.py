@@ -16,4 +16,6 @@ class TranslationService(BaseCompositeCrudTableService[Translation]):
         dao = TranslationDao
         domain = Translation
         table_filter_type = None
-        paginator = IdStampedDateCursorEncoder.for_fields("creation_date_utc", "name")
+        paginator = IdStampedDateCursorEncoder.for_fields(
+            "creation_date_utc", "name", str
+        )

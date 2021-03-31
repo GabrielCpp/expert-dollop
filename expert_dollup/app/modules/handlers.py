@@ -26,7 +26,10 @@ def bind_graphql_handlers(binder: Binder) -> None:
 
 
 def bind_http_handlers(binder: Binder) -> None:
-    handlers = [HttpPageHandler[DatasheetElementService, DatasheetElementDto]]
+    handlers = [
+        HttpPageHandler[DatasheetElementService, DatasheetElementDto],
+        HttpPageHandler[TranslationService, TranslationDto],
+    ]
 
     for handler in handlers:
         binder.bind(
