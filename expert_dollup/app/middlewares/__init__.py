@@ -1,4 +1,3 @@
-from .database_middleware import create_database_transaction_middleware
 from .logger_middleware import LoggerMiddleware
 from .container_middleware import create_container_middleware
 from .error_middleware import create_error_middleware, ExceptionHandlerDict

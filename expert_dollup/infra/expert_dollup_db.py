@@ -8,7 +8,6 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     Column,
-    Binary,
     Text,
     Integer,
 )

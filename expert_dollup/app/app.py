@@ -12,7 +12,6 @@ import expert_dollup.app.controllers as api_routers
 from .schemas import schema, GraphqlContext
 from .modules import build_container
 from .middlewares import (
-    create_database_transaction_middleware,
     create_container_middleware,
     LoggerMiddleware,
     create_error_middleware,
@@ -52,7 +51,6 @@ def creat_app(container: Injector = None):
     exception_handler = container.get(ExceptionHandlerDict)
 
     app = FastAPI()
-    app.add_middleware(create_database_transaction_middleware(ExpertDollupDatabase))
     app.add_middleware(
         create_container_middleware(container, lambda parent: Injector(parent=parent))
     )
@@ -69,7 +67,9 @@ def creat_app(container: Injector = None):
             schema,
             debug=True,
             introspection=True,
-            context_value=lambda request: GraphqlContext(container=container,request=request),
+            context_value=lambda request: GraphqlContext(
+                container=container, request=request
+            ),
         ),
         methods=["GET", "POST"],
     )
