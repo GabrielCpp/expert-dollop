@@ -8,18 +8,7 @@ from .mapping_helpers import (
 
 from .fake_db_helpers import FakeExpertDollupDb, DbSetupHelper, populate_db, truncate_db
 
-from .factories_dto import (
-    ProjectDefinitionDtoFactory,
-    ProjectDefinitionNodeDtoFactory,
-    TranslationDtoFactory,
-    ProjectDtoFactory,
-    FormulaDtoFactory,
-    DatasheetDefinitionDtoFactory,
-    DatasheetDefinitionElementDtoFactory,
-    LabelCollectionDtoFactory,
-    LabelDtoFactory,
-    DatasheetDtoFactory,
-)
+from .factories_dto import *
 
 from .object_dump_helpers import dump_to_file, set_dump_path, dump_snapshot, jsonify
 

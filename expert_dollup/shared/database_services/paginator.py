@@ -1,75 +1,69 @@
 import base64
 import json
 import dateutil.parser
-from typing import Awaitable, Optional, Tuple
-from datetime import datetime
+from typing import Awaitable, Optional, Tuple, Any
 from uuid import UUID
+from datetime import datetime
+from pydantic import BaseModel
 from sqlalchemy import desc, select, and_
-from urllib.parse import unquote, quote
 
 
 class IdStampedDateCursorEncoder:
     @staticmethod
-    def encode(date: datetime, id: UUID):
-        date_str = date.isoformat()
-        id_str = str(id)
-        cursor = json.dumps({"date": date_str, "id": id_str}, sort_keys=True)
-
-        return quote(base64.urlsafe_b64encode(cursor.encode("utf8")))
-
-    @staticmethod
-    def decode(cursor: str, build_id_field) -> Tuple[datetime, UUID]:
-        cursor_json_str = base64.urlsafe_b64decode(unquote(cursor).encode("utf8"))
-        cursor_dict = json.loads(cursor_json_str)
-        date = dateutil.parser.isoparse(cursor_dict["date"])
-        id = build_id_field(cursor_dict["id"])
-        return (date, id)
-
-    @staticmethod
-    def for_fields(date_field_name, id_field_name, build_id_field=UUID):
+    def for_fields(
+        id_field_name: str,
+        build_id_field=UUID,
+        extract_field_id=str,
+    ):
         return lambda table: IdStampedDateCursorEncoder(
-            table, date_field_name, id_field_name, build_id_field
+            table, id_field_name, build_id_field, extract_field_id
         )
 
-    def __init__(self, table, date_field_name, id_field_name, build_id_field):
+    def __init__(
+        self,
+        table,
+        id_field_name: str,
+        build_id_field: callable,
+        extract_field_id: callable,
+    ):
         self.table = table
-        self.date_field_name = date_field_name
         self.id_field_name = id_field_name
         self._build_id_field = build_id_field
+        self._extract_field_id = extract_field_id
 
-    def encode_dao(self, dao):
+    def encode_dao(self, dao: BaseModel):
         dao_id = getattr(dao, self.id_field_name)
-        dao_date = getattr(dao, self.date_field_name)
-        return IdStampedDateCursorEncoder.encode(dao_date, dao_id)
+        return self._encode(dao_id)
 
     def encode_record(self, record):
         record_id = record[self.id_field_name]
-        record_date = record[self.date_field_name]
-        return IdStampedDateCursorEncoder.encode(record_date, record_id)
+        return self._encode(record_id)
 
     def build_query(self, filter_condition, limit: int, next_page_token: Optional[str]):
-        date_column = getattr(self.table.c, self.date_field_name)
         id_column = getattr(self.table.c, self.id_field_name)
 
         if not next_page_token is None:
-            from_date, from_id = IdStampedDateCursorEncoder.decode(
-                next_page_token, self._build_id_field
-            )
-
+            from_id = self._decode(next_page_token)
             filter_condition = and_(
                 filter_condition,
-                date_column >= from_date,
-                id_column > from_id,
+                id_column < from_id,
             )
 
         query = (
             self.table.select()
             .where(filter_condition)
-            .order_by(
-                desc(date_column),
-                desc(id_column),
-            )
+            .order_by(desc(id_column))
             .limit(limit)
         )
 
         return query
+
+    def _encode(self, id: Any):
+        id_str = self._extract_field_id(id)
+        token = base64.urlsafe_b64encode(id_str.encode("ascii"))
+        return token
+
+    def _decode(self, cursor: str) -> Any:
+        id_field_str = base64.urlsafe_b64decode(cursor.encode("ascii"))
+        id_field = self._build_id_field(id_field_str.decode("ascii"))
+        return id_field

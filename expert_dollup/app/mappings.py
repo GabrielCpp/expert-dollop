@@ -290,8 +290,11 @@ def map_projec_container_tree_to_dto(
     )
 
 
-def map_translation_from_dto(src: TranslationDto, mapper: Mapper) -> Translation:
+def map_translation_input_from_dto(
+    src: TranslationInputDto, mapper: Mapper
+) -> Translation:
     return Translation(
+        id=src.id,
         ressource_id=src.ressource_id,
         locale=src.locale,
         name=src.name,
@@ -301,8 +304,21 @@ def map_translation_from_dto(src: TranslationDto, mapper: Mapper) -> Translation
     )
 
 
+def map_translation_from_dto(src: TranslationDto, mapper: Mapper) -> Translation:
+    return Translation(
+        id=src.id,
+        ressource_id=src.ressource_id,
+        locale=src.locale,
+        name=src.name,
+        scope=src.scope,
+        value=src.value,
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
 def map_translation_to_dto(src: Translation, mapper: Mapper) -> TranslationDto:
     return TranslationDto(
+        id=src.id,
         ressource_id=src.ressource_id,
         locale=src.locale,
         name=src.name,

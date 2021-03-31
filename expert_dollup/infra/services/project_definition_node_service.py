@@ -28,7 +28,7 @@ class ProjectDefinitionNodeService(BaseCrudTableService[ProjectDefinitionNode]):
         dao = ProjectDefinitionNodeDao
         domain = ProjectDefinitionNode
         table_filter_type = ProjectDefinitionNodeFilter
-        paginator = IdStampedDateCursorEncoder.for_fields("creation_date_utc", "name")
+        paginator = IdStampedDateCursorEncoder.for_fields("name")
 
     async def has_path(self, path: List[UUID]) -> Awaitable[bool]:
         if len(path) == 0:

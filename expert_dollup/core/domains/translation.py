@@ -5,6 +5,7 @@ from datetime import datetime
 
 @dataclass
 class Translation:
+    id: UUID
     ressource_id: UUID
     locale: str
     scope: UUID

@@ -37,12 +37,20 @@ def create_global_table():
 
     op.create_table(
         "translation",
+        Column("id", postgresql.UUID(), nullable=False),
         Column("ressource_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("scope", postgresql.UUID(), nullable=False, primary_key=True),
         Column("locale", String(5), nullable=False, primary_key=True),
         Column("name", String, nullable=False, primary_key=True),
         Column("value", String, nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
+    )
+
+    op.create_index(
+        op.f("ix_translation_id"),
+        "translation",
+        ["id"],
+        unique=True,
     )
 
     op.create_index(

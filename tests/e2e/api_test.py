@@ -71,31 +71,36 @@ async def test_given_project_definition_node_should_be_able_to_create_update_del
 
 
 @pytest.mark.asyncio
-async def test_given_translation_should_be_able_to_create_update_delete(ac):
+async def test_given_translation_should_be_able_to_create_update_delete(
+    ac, static_clock
+):
     project_definition = ProjectDefinitionDtoFactory()
-    translation = TranslationDtoFactory(ressource_id=project_definition.id)
+    translation_input = TranslationInputDtoFactory(ressource_id=project_definition.id)
 
     response = await ac.post("/api/project_definition", data=project_definition.json())
     assert response.status_code == 200, response.json()
 
-    response = await ac.post("/api/translation", data=translation.json())
+    response = await ac.post("/api/translation", data=translation_input.json())
     assert response.status_code == 200, response.json()
 
     response = await ac.get(
-        f"/api/translation/{translation.ressource_id}/{translation.scope}/{translation.locale}/{translation.name}"
+        f"/api/translation/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}"
     )
     assert response.status_code == 200, response.json()
 
+    expected_translation = TranslationDto(
+        **translation_input.dict(), creation_date_utc=static_clock.utcnow()
+    )
     actual = unwrap(response, TranslationDto)
-    assert actual == translation
+    assert actual == expected_translation
 
     response = await ac.delete(
-        f"/api/translation/{translation.ressource_id}/{translation.scope}/{translation.locale}/{translation.name}"
+        f"/api/translation/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}"
     )
     assert response.status_code == 200, response.json()
 
     response = await ac.get(
-        f"/api/translation/{translation.ressource_id}/{translation.scope}/{translation.locale}/{translation.name}"
+        f"/api/translation/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}"
     )
     assert response.status_code == 404, response.json()
 
@@ -107,6 +112,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
     ressource_id = uuid4()
     translations = dict(
         a_fr=TranslationDao(
+            id=UUID("96492b2d-49fa-4250-b655-ff8cf5030953"),
             ressource_id=ressource_id,
             scope=ressource_id,
             locale="fr",
@@ -115,6 +121,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             creation_date_utc=static_clock.utcnow(),
         ),
         a_en=TranslationDao(
+            id=UUID("96492b2d-49fa-4250-b655-ff8cf5030954"),
             ressource_id=ressource_id,
             scope=ressource_id,
             locale="en",
@@ -123,6 +130,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             creation_date_utc=static_clock.utcnow(),
         ),
         b_fr=TranslationDao(
+            id=UUID("96492b2d-49fa-4250-b655-ff8cf5030955"),
             ressource_id=ressource_id,
             scope=ressource_id,
             locale="fr",
@@ -137,7 +145,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
     )
 
     expected_translations = TranslationPageDto(
-        next_page_token="eyJkYXRlIjogIjIwMDAtMDQtMDNUMDE6MDE6MDEuMDAwMDA3KzAwOjAwIiwgImlkIjogImEifQ%3D%3D",
+        next_page_token="OTY0OTJiMmQtNDlmYS00MjUwLWI2NTUtZmY4Y2Y1MDMwOTUz",
         limit=10,
         results=[dto_translations["b_fr"], dto_translations["a_fr"]],
     )

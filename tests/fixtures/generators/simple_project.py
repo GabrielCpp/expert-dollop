@@ -1,4 +1,5 @@
 from uuid import uuid4, UUID
+from datetime import timezone
 from faker import Faker
 from typing import List
 from pydantic import BaseModel
@@ -44,7 +45,7 @@ class SimpleProject:
                     instanciate_by_default=True,
                     order_index=index,
                     config=config,
-                    creation_date_utc=self.fake.date_time(),
+                    creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                     default_value=value,
                 )
 
@@ -63,7 +64,7 @@ class SimpleProject:
             instanciate_by_default=True,
             order_index=0,
             config=NodeConfig(),
-            creation_date_utc=self.fake.date_time(),
+            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=self.value_type_factory.build_value("CONTAINER"),
         )
 
@@ -80,7 +81,7 @@ class SimpleProject:
             instanciate_by_default=False,
             order_index=1,
             config=NodeConfig(),
-            creation_date_utc=self.fake.date_time(),
+            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=self.value_type_factory.build_value("CONTAINER"),
         )
 
@@ -93,7 +94,7 @@ class SimpleProject:
             name="".join(self.fake.words()),
             default_datasheet_id=uuid4(),
             datasheet_def_id=uuid4(),
-            creation_date_utc=self.fake.date_time(),
+            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
         )
 
         self.project_definitions.append(project_definition)
@@ -103,45 +104,49 @@ class SimpleProject:
         for project_container_definition in self.project_definition_nodes:
             self.tanslations.append(
                 Translation(
+                    id=uuid4(),
                     ressource_id=self.project_definitions[0].id,
                     scope=project_container_definition.id,
                     locale="fr",
                     name=project_container_definition.name,
                     value=" ".join(self.fake.words()),
-                    creation_date_utc=self.fake.date_time(),
+                    creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
             )
 
             self.tanslations.append(
                 Translation(
+                    id=uuid4(),
                     ressource_id=self.project_definitions[0].id,
                     scope=project_container_definition.id,
                     locale="fr",
                     name=f"{project_container_definition.name}_helptext",
                     value=self.fake.sentence(nb_words=20),
-                    creation_date_utc=self.fake.date_time(),
+                    creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
             )
 
             self.tanslations.append(
                 Translation(
+                    id=uuid4(),
                     ressource_id=self.project_definitions[0].id,
                     scope=project_container_definition.id,
                     locale="en",
                     name=project_container_definition.name,
                     value=" ".join(self.fake.words()),
-                    creation_date_utc=self.fake.date_time(),
+                    creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
             )
 
             self.tanslations.append(
                 Translation(
+                    id=uuid4(),
                     ressource_id=self.project_definitions[0].id,
                     scope=project_container_definition.id,
                     locale="en",
                     name=f"{project_container_definition.name}_helptext",
                     value=self.fake.sentence(nb_words=20),
-                    creation_date_utc=self.fake.date_time(),
+                    creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
             )
 

@@ -5,7 +5,12 @@ from expert_dollup.shared.starlette_injection import Inject
 from expert_dollup.shared.handlers import RequestHandler, MappingChain, HttpPageHandler
 from expert_dollup.shared.database_services import Page
 from expert_dollup.infra.services import TranslationService
-from expert_dollup.app.dtos import TranslationDto, TranslationIdDto, TranslationPageDto
+from expert_dollup.app.dtos import (
+    TranslationDto,
+    TranslationIdDto,
+    TranslationPageDto,
+    TranslationInputDto,
+)
 from expert_dollup.core.usecases import TranslationUseCase
 from expert_dollup.core.domains import (
     Translation,
@@ -40,12 +45,14 @@ async def get_translation(
 
 @router.post("/translation")
 async def create_translation(
-    translation: TranslationDto,
+    translation: TranslationInputDto,
     usecase=Depends(Inject(TranslationUseCase)),
     handler=Depends(Inject(RequestHandler)),
 ):
     return await handler.handle(
-        usecase.add, translation, MappingChain(dto=TranslationDto, domain=Translation)
+        usecase.add,
+        translation,
+        MappingChain(dto=TranslationInputDto, domain=Translation),
     )
 
 

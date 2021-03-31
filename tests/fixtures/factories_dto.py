@@ -1,5 +1,6 @@
 import factory
 from uuid import uuid4, UUID
+from datetime import datetime, timezone
 from expert_dollup.app.dtos import *
 
 
@@ -37,6 +38,20 @@ class TranslationDtoFactory(factory.Factory):
     class Meta:
         model = TranslationDto
 
+    id = factory.LazyFunction(uuid4)
+    ressource_id = factory.LazyFunction(uuid4)
+    scope = factory.LazyFunction(uuid4)
+    locale = "fr"
+    name = factory.Sequence(lambda n: f"hello{n}")
+    value = factory.Sequence(lambda n: f"translation{n}")
+    creation_date_utc = factory.Sequence(lambda n: datetime.now(timezone.utc))
+
+
+class TranslationInputDtoFactory(factory.Factory):
+    class Meta:
+        model = TranslationInputDto
+
+    id = factory.LazyFunction(uuid4)
     ressource_id = factory.LazyFunction(uuid4)
     scope = factory.LazyFunction(uuid4)
     locale = "fr"

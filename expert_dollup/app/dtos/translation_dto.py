@@ -4,6 +4,17 @@ from datetime import datetime
 
 
 class TranslationDto(CamelModel):
+    id: UUID
+    ressource_id: UUID
+    locale: str
+    scope: UUID
+    name: str
+    value: str
+    creation_date_utc: datetime
+
+
+class TranslationInputDto(CamelModel):
+    id: UUID
     ressource_id: UUID
     locale: str
     scope: UUID

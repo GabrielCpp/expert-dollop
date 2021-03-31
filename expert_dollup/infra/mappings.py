@@ -187,6 +187,7 @@ def map_ressource_to_dao(src: Ressource, mapper: Mapper) -> RessourceDao:
 
 def map_translation_from_dao(src: TranslationDao, mapper: Mapper) -> Translation:
     return Translation(
+        id=src.id,
         ressource_id=src.ressource_id,
         locale=src.locale,
         scope=src.scope,
@@ -198,12 +199,13 @@ def map_translation_from_dao(src: TranslationDao, mapper: Mapper) -> Translation
 
 def map_translation_to_dao(src: Translation, mapper: Mapper) -> TranslationDao:
     return TranslationDao(
+        id=src.id,
         ressource_id=src.ressource_id,
         locale=src.locale,
         scope=src.scope,
         name=src.name,
         value=src.value,
-        creation_date_utc=mapper.get(Clock).utcnow(),
+        creation_date_utc=src.creation_date_utc,
     )
 
 

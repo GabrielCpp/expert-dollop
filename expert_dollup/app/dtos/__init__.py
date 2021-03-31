@@ -22,7 +22,7 @@ from .project_definition_node_tree_dto import (
     ProjectDefinitionNodeTreeDto,
 )
 from .project_dto import ProjectDto
-from .translation_dto import TranslationDto, TranslationIdDto
+from .translation_dto import TranslationDto, TranslationIdDto, TranslationInputDto
 from .translation_page_dto import TranslationPageDto
 from .project_container_dto import (
     ProjectContainerDto,

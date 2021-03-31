@@ -1,5 +1,6 @@
 from typing import Type, Optional, TypeVar, Generic
 from dataclasses import dataclass
+from urllib.parse import unquote
 from ..automapping import Mapper
 
 Service = TypeVar("Service")
@@ -16,7 +17,9 @@ class HttpPageHandler(Generic[Service, OutDto]):
         self, query_filter, limit: int, next_page_token: Optional[str] = None
     ):
         page = await self.service.find_by_paginated(
-            query_filter, limit, next_page_token
+            query_filter,
+            limit,
+            None if next_page_token is None else unquote(next_page_token),
         )
 
         return {

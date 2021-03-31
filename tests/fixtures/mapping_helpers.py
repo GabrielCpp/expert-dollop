@@ -28,18 +28,18 @@ def map_dao_to_dto(mapper):
     return apply_map
 
 
-def normalize_request_results(dto_cls, key: str):
+def normalize_request_results(dto_cls, key: callable):
     def parse_dto(data: list):
         return sorted(
             [dto_cls(**item).dict() for item in data],
-            key=lambda c: c[key],
+            key=key,
         )
 
     return parse_dto
 
 
-def normalize_dtos(dtos, key: str):
-    return sorted([dto.dict() for dto in dtos], key=lambda c: c[key])
+def normalize_dtos(dtos, key: callable):
+    return sorted([dto.dict() for dto in dtos], key=key)
 
 
 Dao = TypeVar("Dao")

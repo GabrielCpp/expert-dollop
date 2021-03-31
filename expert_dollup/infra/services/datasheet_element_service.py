@@ -23,9 +23,7 @@ class DatasheetElementService(BaseCompositeCrudTableService[DatasheetElement]):
         dao = DatasheetElementDao
         domain = DatasheetElement
         table_filter_type = DatasheetElementFilter
-        paginator = IdStampedDateCursorEncoder.for_fields(
-            "creation_date_utc", "child_element_reference"
-        )
+        paginator = IdStampedDateCursorEncoder.for_fields("child_element_reference")
 
     async def get_collection_size(self, datasheet_id, element_def_id):
         query = (
