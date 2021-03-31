@@ -94,4 +94,15 @@ async def resolve_form_content(
     return result
 
 
-types = [project_definition]
+@query.field("findProjectDefinitionNode")
+@inject_graphql_route(find_project_definition_node)
+@convert_kwargs_to_snake_case
+async def resolve_find_project_definition_node(
+    _: Any,
+    info: GraphQLResolveInfo,
+    project_def_id: UUID,
+    id: UUID,
+    find_project_definition_node: callable,
+):
+    result = await find_project_definition_node(info, project_def_id, id)
+    return result

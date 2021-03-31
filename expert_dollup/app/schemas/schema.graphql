@@ -300,6 +300,7 @@ type Query {
     findProjectDefinitionRootSections(projectDefId: ID!): ProjectDefinitionNodeTree!
     findProjectDefinitionRootSectionContainers(projectDefId: ID!, rootSectionId: ID!): ProjectDefinitionNodeTree!
     findProjectDefinitionFormContent(projectDefId: ID!, formId: ID!): ProjectDefinitionNodeTree!
+    findProjectDefinitionNode(projectDefId: ID!, id: ID!): ProjectDefinitionNode!
     findRessourceTranslation(ressourceId: ID!, language: String!): TranslationConnection!
 }
 

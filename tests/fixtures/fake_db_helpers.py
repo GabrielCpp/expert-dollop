@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 from enum import Enum
 from typing import List, Dict, Any
 from dataclasses import dataclass, field
-from databases import Database
 from os.path import join
 from injector import inject
 from sqlalchemy import MetaData, create_engine

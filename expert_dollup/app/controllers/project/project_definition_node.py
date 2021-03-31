@@ -20,8 +20,9 @@ from expert_dollup.infra.services import ProjectDefinitionNodeService
 router = APIRouter()
 
 
-@router.get("/project_definition_node/{id}")
-async def get_project_definition_node(
+@router.get("/project_definition/{project_def_id}/project_definition_node/{id}")
+async def find_project_definition_node(
+    project_def_id: UUID,
     id: UUID,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
