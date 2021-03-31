@@ -2,8 +2,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
 from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.handlers import RequestHandler, MappingChain
+from expert_dollup.shared.handlers import RequestHandler, MappingChain, HttpPageHandler
 from expert_dollup.shared.database_services import Page
+from expert_dollup.infra.services import TranslationService
 from expert_dollup.app.dtos import TranslationDto, TranslationIdDto, TranslationPageDto
 from expert_dollup.core.usecases import TranslationUseCase
 from expert_dollup.core.domains import (
@@ -79,14 +80,14 @@ async def get_all_translation_for_ressource(
     ressource_id: UUID,
     locale: str,
     usecase=Depends(Inject(TranslationUseCase)),
-    handler=Depends(Inject(RequestHandler)),
+    handler=Depends(Inject(HttpPageHandler[TranslationService, TranslationDto])),
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = 10,
 ):
     query = TranslationRessourceLocaleQuery(ressource_id=ressource_id, locale=locale)
 
-    return await handler.forward(
-        usecase.find_by_ressource_locale,
-        dict(next_page_token=next_page_token, limit=limit, query=query),
-        MappingChain(out_domain=Page[Translation], out_dto=TranslationPageDto),
+    return await handler.handle(
+        TranslationRessourceLocaleQuery(ressource_id=ressource_id, locale=locale),
+        limit,
+        next_page_token,
     )

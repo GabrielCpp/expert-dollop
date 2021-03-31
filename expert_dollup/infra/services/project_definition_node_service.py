@@ -130,6 +130,4 @@ class ProjectDefinitionNodeService(BaseCrudTableService[ProjectDefinitionNode]):
         records = await self._database.fetch_all(query=query)
         results = self.map_many_to(records, self._dao, self._domain)
 
-        form_node = await self.find_by_id(form_id)
-
-        return [*results, form_node]
+        return form_node

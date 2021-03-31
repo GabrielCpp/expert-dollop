@@ -75,7 +75,7 @@ def map_project_definition_node_from_dao(
 def map_project_definition_node_to_dao(
     src: ProjectDefinitionNode, mapper: Mapper
 ) -> ProjectDefinitionNodeDao:
-    display_query_internal_id = src.id
+    display_query_internal_id = src.project_def_id
     level = len(src.path)
 
     if level >= SECTION_LEVEL and level <= FORM_LEVEL:

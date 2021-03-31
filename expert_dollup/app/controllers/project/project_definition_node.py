@@ -99,11 +99,11 @@ async def get_project_definition_node_by_project(
 @router.get("/project_definition/{project_def_id}/root_sections")
 async def find_root_sections(
     project_def_id: UUID,
-    service=Depends(Inject(ProjectDefinitionNodeUseCase)),
+    usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
     return await request_handler.forward(
-        service.find_root_sections,
+        usecase.find_root_sections,
         dict(project_def_id=project_def_id),
         MappingChain(
             out_domain=ProjectDefinitionNodeTree,
@@ -118,11 +118,11 @@ async def find_root_sections(
 async def find_root_section_containers(
     project_def_id: UUID,
     root_section_id: UUID,
-    service=Depends(Inject(ProjectDefinitionNodeUseCase)),
+    usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
     return await request_handler.forward(
-        service.find_root_section_containers,
+        usecase.find_root_section_containers,
         dict(
             project_def_id=project_def_id,
             root_section_id=root_section_id,
@@ -138,11 +138,11 @@ async def find_root_section_containers(
 async def find_form_content(
     project_def_id: UUID,
     form_id: UUID,
-    service=Depends(Inject(ProjectDefinitionNodeUseCase)),
+    usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
     return await request_handler.forward(
-        service.find_form_content,
+        usecase.find_form_content,
         dict(project_def_id=project_def_id, form_id=form_id),
         MappingChain(
             out_domain=ProjectDefinitionNodeTree,

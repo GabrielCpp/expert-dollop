@@ -1,13 +1,7 @@
 import os
 import inspect
 import importlib
-from ariadne import (
-    make_executable_schema,
-    load_schema_from_path,
-    snake_case_fallback_resolvers,
-)
-from expert_dollup.shared.starlette_injection import GraphqlContext
-from .types import types
+from .types import build_schema, GraphqlContext
 
 
 def import_module_files():
@@ -19,5 +13,4 @@ def import_module_files():
 
 
 import_module_files()
-type_defs = load_schema_from_path("./expert_dollup/app/schemas/schema.graphql")
-schema = make_executable_schema(type_defs, *types, snake_case_fallback_resolvers)
+schema = build_schema()

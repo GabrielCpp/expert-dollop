@@ -1,3 +1,5 @@
+scalar JsonSchema
+
 type DatasheetDefinitionPropertySchemaDict {
     name: String!
     schema: String!
@@ -80,15 +82,6 @@ type ProjectDefinitionValueType {
     displayName: String!
 }
 
-type JsonSchema {
-    type: String
-    enum: [String!]
-    minLength: Int
-    maxLength: Int
-    minimum: Float
-    maximum: Float
-}
-
 type IntFieldConfig {
     validator: JsonSchema!
 }
@@ -146,31 +139,23 @@ type BoolFieldValue {
 
 union FieldValue = IntFieldValue | DecimalFieldValue | StringFieldValue | BoolFieldValue
 
-input JsonSchemaInput {
-    input: String
-    enum: [String!]
-    minLength: Int
-    maxLength: Int
-    minimum: Float
-    maximum: Float
-}
 
 input IntFieldConfigInput {
-    validator: JsonSchemaInput!
+    validator: JsonSchema!
 }
 
 input DecimalFieldConfigInput {
-    validator: JsonSchemaInput!
+    validator: JsonSchema!
     precision: Int!
 }
 
 input StringFieldConfigInput {
-    validator: JsonSchemaInput!
+    validator: JsonSchema!
     transforms: [String!]!
 }
 
 input BoolFieldConfigInput {
-    validator: JsonSchemaInput!
+    validator: JsonSchema!
 }
 
 input StaticChoiceOptionInput {
@@ -180,7 +165,7 @@ input StaticChoiceOptionInput {
 }
 
 input StaticChoiceFieldConfigInput {
-    validator: JsonSchemaInput!
+    validator: JsonSchema!
     options: [StaticChoiceOptionInput!]!
 }
 
@@ -255,7 +240,7 @@ type ProjectDefinitionNode {
 }
 
 type ProjectDefinitionTreeNode {
-    definition: ProjectDefinitionNode
+    definition: ProjectDefinitionNode!
     children: [ProjectDefinitionTreeNode!]!
 }
 
