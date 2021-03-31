@@ -91,17 +91,15 @@ async def test_query_project_definition_parts(ac, mapper, expert_dollup_simple_p
         tree = unwrap(response, ProjectDefinitionNodeTreeDto)
         flat_tree = [(node.name, trace) for (node, trace) in walk_tree(tree)]
         expected_flat_tree = [
-            ("root_a", [0]),
-            ("root_a_subsection_0", [0, 0]),
-            ("root_a_subsection_0_form_0", [0, 0, 0]),
-            ("root_a_subsection_0_form_1", [0, 0, 1]),
-            ("root_a_subsection_0_form_2", [0, 0, 2]),
-            ("root_a_subsection_1", [0, 1]),
-            ("root_a_subsection_1_form_0", [0, 1, 0]),
-            ("root_a_subsection_1_form_1", [0, 1, 1]),
-            ("root_a_subsection_1_form_2", [0, 1, 2]),
+            ("root_a_subsection_0", [0]),
+            ("root_a_subsection_0_form_0", [0, 0]),
+            ("root_a_subsection_0_form_1", [0, 1]),
+            ("root_a_subsection_0_form_2", [0, 2]),
+            ("root_a_subsection_1", [1]),
+            ("root_a_subsection_1_form_0", [1, 0]),
+            ("root_a_subsection_1_form_1", [1, 1]),
+            ("root_a_subsection_1_form_2", [1, 2]),
         ]
-
         assert flat_tree == expected_flat_tree
 
     @runner.step
@@ -115,33 +113,31 @@ async def test_query_project_definition_parts(ac, mapper, expert_dollup_simple_p
         tree = unwrap(response, ProjectDefinitionNodeTreeDto)
         flat_tree = [(node.name, trace) for (node, trace) in walk_tree(tree)]
         expected_flat_tree = [
-            ("root_a_subsection_0_form_0", [0]),
-            ("root_a_subsection_0_form_0_section_0", [0, 0]),
-            ("root_a_subsection_0_form_0_section_0_field_0", [0, 0, 0]),
-            ("root_a_subsection_0_form_0_section_0_field_1", [0, 0, 1]),
-            ("root_a_subsection_0_form_0_section_0_field_2", [0, 0, 2]),
-            ("root_a_subsection_0_form_0_section_0_field_3", [0, 0, 3]),
-            ("root_a_subsection_0_form_0_section_0_field_4", [0, 0, 4]),
-            ("root_a_subsection_0_form_0_section_1", [0, 1]),
-            ("root_a_subsection_0_form_0_section_1_field_0", [0, 1, 0]),
-            ("root_a_subsection_0_form_0_section_1_field_1", [0, 1, 1]),
-            ("root_a_subsection_0_form_0_section_1_field_2", [0, 1, 2]),
-            ("root_a_subsection_0_form_0_section_1_field_3", [0, 1, 3]),
-            ("root_a_subsection_0_form_0_section_1_field_4", [0, 1, 4]),
-            ("root_a_subsection_0_form_0_section_2", [0, 2]),
-            ("root_a_subsection_0_form_0_section_2_field_0", [0, 2, 0]),
-            ("root_a_subsection_0_form_0_section_2_field_1", [0, 2, 1]),
-            ("root_a_subsection_0_form_0_section_2_field_2", [0, 2, 2]),
-            ("root_a_subsection_0_form_0_section_2_field_3", [0, 2, 3]),
-            ("root_a_subsection_0_form_0_section_2_field_4", [0, 2, 4]),
-            ("root_a_subsection_0_form_0_section_3", [0, 3]),
-            ("root_a_subsection_0_form_0_section_3_field_0", [0, 3, 0]),
-            ("root_a_subsection_0_form_0_section_3_field_1", [0, 3, 1]),
-            ("root_a_subsection_0_form_0_section_3_field_2", [0, 3, 2]),
-            ("root_a_subsection_0_form_0_section_3_field_3", [0, 3, 3]),
-            ("root_a_subsection_0_form_0_section_3_field_4", [0, 3, 4]),
+            ("root_a_subsection_0_form_0_section_0", [0]),
+            ("root_a_subsection_0_form_0_section_0_field_0", [0, 0]),
+            ("root_a_subsection_0_form_0_section_0_field_1", [0, 1]),
+            ("root_a_subsection_0_form_0_section_0_field_2", [0, 2]),
+            ("root_a_subsection_0_form_0_section_0_field_3", [0, 3]),
+            ("root_a_subsection_0_form_0_section_0_field_4", [0, 4]),
+            ("root_a_subsection_0_form_0_section_1", [1]),
+            ("root_a_subsection_0_form_0_section_1_field_0", [1, 0]),
+            ("root_a_subsection_0_form_0_section_1_field_1", [1, 1]),
+            ("root_a_subsection_0_form_0_section_1_field_2", [1, 2]),
+            ("root_a_subsection_0_form_0_section_1_field_3", [1, 3]),
+            ("root_a_subsection_0_form_0_section_1_field_4", [1, 4]),
+            ("root_a_subsection_0_form_0_section_2", [2]),
+            ("root_a_subsection_0_form_0_section_2_field_0", [2, 0]),
+            ("root_a_subsection_0_form_0_section_2_field_1", [2, 1]),
+            ("root_a_subsection_0_form_0_section_2_field_2", [2, 2]),
+            ("root_a_subsection_0_form_0_section_2_field_3", [2, 3]),
+            ("root_a_subsection_0_form_0_section_2_field_4", [2, 4]),
+            ("root_a_subsection_0_form_0_section_3", [3]),
+            ("root_a_subsection_0_form_0_section_3_field_0", [3, 0]),
+            ("root_a_subsection_0_form_0_section_3_field_1", [3, 1]),
+            ("root_a_subsection_0_form_0_section_3_field_2", [3, 2]),
+            ("root_a_subsection_0_form_0_section_3_field_3", [3, 3]),
+            ("root_a_subsection_0_form_0_section_3_field_4", [3, 4]),
         ]
-
         assert flat_tree == expected_flat_tree
 
     await runner.run()

@@ -137,7 +137,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
     )
 
     expected_translations = TranslationPageDto(
-        next_page_token="eyJkYXRlIjogIjIwMDAtMDQtMDNUMDE6MDE6MDEuMDAwMDA3KzAwOjAwIiwgImlkIjogImEifQ==",
+        next_page_token="eyJkYXRlIjogIjIwMDAtMDQtMDNUMDE6MDE6MDEuMDAwMDA3KzAwOjAwIiwgImlkIjogImEifQ%3D%3D",
         limit=10,
         results=[dto_translations["b_fr"], dto_translations["a_fr"]],
     )

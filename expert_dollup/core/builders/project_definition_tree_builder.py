@@ -42,4 +42,9 @@ class ProjectDefinitionTreeBuilder:
         for nodes in node_map.values():
             roots.extend(nodes)
 
-        return ProjectDefinitionNodeTree(roots=roots)
+        return ProjectDefinitionNodeTree(
+            roots=sorted(
+                roots,
+                key=lambda child: child.definition.order_index,
+            )
+        )
