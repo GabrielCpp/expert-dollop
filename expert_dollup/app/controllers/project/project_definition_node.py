@@ -20,7 +20,7 @@ from expert_dollup.infra.services import ProjectDefinitionNodeService
 router = APIRouter()
 
 
-@router.get("/project_definition/{project_def_id}/project_definition_node/{id}")
+@router.get("/project_definition/{project_def_id}/node/{id}")
 async def find_project_definition_node(
     project_def_id: UUID,
     id: UUID,
@@ -66,7 +66,7 @@ async def replace_project_definition_node(
     )
 
 
-@router.delete("/project_definition_node/{id}")
+@router.delete("/project_definition/{project_def_id}/node/{id}")
 async def delete_project_definition_node(
     id: UUID,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),

@@ -52,7 +52,7 @@ async def test_given_project_definition_node_should_be_able_to_create_update_del
     assert response.status_code == 200, response.json()
 
     response = await ac.get(
-        f"/api/project_definition_node/{expected_project_definition_node.id}"
+        f"/api/project_definition/{project_definition.id}/node/{expected_project_definition_node.id}"
     )
     assert response.status_code == 200, response.json()
 
@@ -60,12 +60,12 @@ async def test_given_project_definition_node_should_be_able_to_create_update_del
     assert actual == expected_project_definition_node
 
     response = await ac.delete(
-        f"/api/project_definition_node/{expected_project_definition_node.id}"
+        f"/api/project_definition/{project_definition.id}/node/{expected_project_definition_node.id}"
     )
     assert response.status_code == 200, response.json()
 
     response = await ac.get(
-        f"/api/project_definition_node/{expected_project_definition_node.id}"
+        f"/api/project_definition/{project_definition.id}/node/{expected_project_definition_node.id}"
     )
     assert response.status_code == 404, response.json()
 

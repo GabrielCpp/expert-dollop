@@ -1,6 +1,6 @@
 import jsonpickle
 from sqlalchemy import select, join, and_, desc, or_, text
-from sqlalchemy.sql.expression import func, select, alias
+from sqlalchemy.sql.expression import func, select, alias, tuple_
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from typing import List, Optional, Awaitable, Dict
 from collections import defaultdict
@@ -27,23 +27,29 @@ class FormulaService(BaseCrudTableService[Formula]):
     async def get_formulas_by_name(
         self, names: List[str]
     ) -> Awaitable[Dict[str, UUID]]:
+        if len(names) == 0:
+            return {}
+
         query = select(
             [
                 project_definition_formula_table.c.id,
                 project_definition_formula_table.c.name,
             ]
-        ).where(project_definition_formula_table.c.name.in_(names))
+        ).where(project_definition_formula_table.c.name.in_(tuple_(*names)))
 
         records = await self._database.fetch_all(query=query)
         return {record.get("name"): record.get("id") for record in records}
 
     async def get_fields_by_name(self, names: List[str]) -> Awaitable[Dict[str, UUID]]:
+        if len(names) == 0:
+            return {}
+
         query = select(
             [
                 project_definition_node_table.c.id,
                 project_definition_node_table.c.name,
             ]
-        ).where(project_definition_node_table.c.name.in_(names))
+        ).where(project_definition_node_table.c.name.in_(tuple_(*names)))
 
         records = await self._database.fetch_all(query=query)
         return {record.get("name"): record.get("id") for record in records}
