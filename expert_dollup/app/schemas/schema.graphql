@@ -97,7 +97,7 @@ type StringFieldConfig {
 }
 
 type BoolFieldConfig {
-    validator: JsonSchema!
+    isCheckbox: Boolean!
 }
 
 type StaticChoiceOption {

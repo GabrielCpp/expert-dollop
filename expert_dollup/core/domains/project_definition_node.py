@@ -26,7 +26,7 @@ class StringFieldConfig:
 
 @dataclass
 class BoolFieldConfig:
-    validator: JsonSchema
+    is_checkbox: bool
 
 
 @dataclass

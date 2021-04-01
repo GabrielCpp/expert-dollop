@@ -97,7 +97,7 @@ class ValueTypeFactory:
         return self.fake.pybool()
 
     def _create_bool_custom_attr(self, label: str, index: int):
-        return NodeConfig(value_type=BoolFieldConfig(validator={"type": "boolean"}))
+        return NodeConfig(value_type=BoolFieldConfig(is_checkbox=True))
 
     def _create_static_choice_value(self):
         return str(self.fake.pyint(min_value=0, max_value=4))

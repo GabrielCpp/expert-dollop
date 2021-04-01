@@ -19,7 +19,7 @@ class StringFieldConfigDto(CamelModel):
 
 
 class BoolFieldConfigDto(CamelModel):
-    validator: dict
+    is_checkbox: bool
 
 
 class StaticChoiceOptionDto(CamelModel):
@@ -38,12 +38,12 @@ class CollapsibleContainerFieldConfigDto(CamelModel):
 
 
 NodeConfigValueType = Union[
-    IntFieldConfigDto,
-    DecimalFieldConfigDto,
-    StringFieldConfigDto,
     BoolFieldConfigDto,
-    StaticChoiceFieldConfigDto,
     CollapsibleContainerFieldConfigDto,
+    DecimalFieldConfigDto,
+    StaticChoiceFieldConfigDto,
+    StringFieldConfigDto,
+    IntFieldConfigDto,
     None,
 ]
 

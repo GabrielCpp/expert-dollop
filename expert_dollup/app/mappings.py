@@ -49,7 +49,7 @@ def map_node_config_from_dto(src: NodeConfigDto, mapper: Mapper) -> NodeConfig:
         )
     elif isinstance(src.value_type, BoolFieldConfigDto):
         value_type_dto: BoolFieldConfigDto = src.value_type
-        value_type = BoolFieldConfig(validator=value_type_dto.validator)
+        value_type = BoolFieldConfig(is_checkbox=value_type_dto.is_checkbox)
     elif isinstance(src.value_type, StaticChoiceFieldConfigDto):
         value_type_dto: StaticChoiceFieldConfigDto = src.value_type
         value_type = StaticChoiceFieldConfig(
@@ -70,7 +70,7 @@ def map_node_config_from_dto(src: NodeConfigDto, mapper: Mapper) -> NodeConfig:
     return NodeConfig(value_type=value_type)
 
 
-def map_node_config_from_to_dto(src: NodeConfig, mapper: Mapper) -> NodeConfigDto:
+def map_node_config_to_dto(src: NodeConfig, mapper: Mapper) -> NodeConfigDto:
     value_type = None
 
     if isinstance(src.value_type, IntFieldConfig):
@@ -88,7 +88,7 @@ def map_node_config_from_to_dto(src: NodeConfig, mapper: Mapper) -> NodeConfigDt
         )
     elif isinstance(src.value_type, BoolFieldConfig):
         value_type_dto: BoolFieldConfig = src.value_type
-        value_type = BoolFieldConfigDto(validator=value_type_dto.validator)
+        value_type = BoolFieldConfigDto(is_checkbox=value_type_dto.is_checkbox)
     elif isinstance(src.value_type, StaticChoiceFieldConfig):
         value_type_dto: StaticChoiceFieldConfig = src.value_type
         value_type = StaticChoiceFieldConfigDto(
@@ -106,7 +106,12 @@ def map_node_config_from_to_dto(src: NodeConfig, mapper: Mapper) -> NodeConfigDt
             is_collapsible=value_type_dto.is_collapsible
         )
 
-    return NodeConfigDto(value_type=value_type)
+    mapped_config = NodeConfigDto(value_type=value_type)
+    assert type(mapped_config.value_type) is type(
+        value_type
+    ), "Union has change type of config"
+
+    return mapped_config
 
 
 def map_project_definition_node_from_dto(
