@@ -1,6 +1,5 @@
 from .project_definition_service import ProjectDefinitionService
 from .project_definition_node_service import ProjectDefinitionNodeService
-from .project_definition_value_type_service import ProjectDefinitionValueTypeService
 from .project_service import ProjectService
 from .project_container_service import ProjectContainerService
 from .project_container_meta_service import ProjectContainerMetaService

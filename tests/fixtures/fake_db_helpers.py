@@ -38,9 +38,6 @@ def truncate_db():
     con = engine.connect()
     trans = con.begin()
     for table in meta.sorted_tables:
-        if table.name in ["project_definition_value_type"]:
-            continue
-
         con.execute(f'ALTER TABLE "{table.name}" DISABLE TRIGGER ALL;')
         con.execute(table.delete())
         con.execute(f'ALTER TABLE "{table.name}" ENABLE TRIGGER ALL;')

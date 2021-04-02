@@ -219,9 +219,19 @@ input ProjectDefinitionNodeInput {
     instanciateByDefault: Boolean!
     orderIndex: Int!
     config: NodeConfigInput
-    valueType: String!
+    valueType: ValueType!
     defaultValue: FieldValueInput
     path: [String!]!
+}
+
+enum ValueType {
+  STRING,
+  INT,
+  DECIMAL,
+  STATIC_CHOICE,
+  BOOLEAN,
+  CONTAINER,
+  
 }
 
 type ProjectDefinitionNode {
@@ -232,7 +242,7 @@ type ProjectDefinitionNode {
     instanciateByDefault: Boolean!
     orderIndex: Int!
     config: NodeConfig
-    valueType: String!
+    valueType: ValueType!
     valueTypeDetails: ProjectDefinitionValueType!
     defaultValue: FieldValue
     path: [String!]!

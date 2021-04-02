@@ -4,7 +4,7 @@ from inspect import isclass
 from injector import Binder, singleton, inject
 from expert_dollup.shared.starlette_injection import factory_of
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
-from expert_dollup.infra.validators import ProjectDefinitionValueTypeValidator
+from expert_dollup.infra.validators import SchemaValidator
 from expert_dollup.infra.providers import WordProvider
 
 
@@ -30,11 +30,8 @@ def bind_services(binder: Binder) -> None:
 
 def bind_validators(binder: Binder) -> None:
     binder.bind(
-        ProjectDefinitionValueTypeValidator,
-        factory_of(
-            ProjectDefinitionValueTypeValidator,
-            value_type_service=services.ProjectDefinitionValueTypeService,
-        ),
+        SchemaValidator,
+        inject(SchemaValidator),
     )
 
 

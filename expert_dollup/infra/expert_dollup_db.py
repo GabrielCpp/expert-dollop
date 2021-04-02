@@ -84,25 +84,6 @@ class ProjectDefinitionNodeDao(BaseModel):
     creation_date_utc: datetime
 
 
-project_definition_value_type_table = Table(
-    "project_definition_value_type",
-    metadata,
-    Column("id", String(32), nullable=False, primary_key=True),
-    Column("value_json_schema", postgresql.JSON(), nullable=False),
-    Column("attributes_json_schema", postgresql.JSON(), nullable=True),
-    Column("template_location", String, nullable=True),
-    Column("display_name", String, nullable=False),
-)
-
-
-class ProjectDefinitionValueTypeDao(BaseModel):
-    id: str
-    value_json_schema: dict
-    attributes_json_schema: dict
-    template_location: Optional[str]
-    display_name: str
-
-
 project_table = Table(
     "project",
     metadata,

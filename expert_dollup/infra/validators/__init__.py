@@ -1,1 +1,1 @@
-from .project_definition_value_type_validator import ProjectDefinitionValueTypeValidator
+from .schema_validator import SchemaValidator

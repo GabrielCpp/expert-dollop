@@ -18,17 +18,6 @@ from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.core.domains import *
 
 
-def map_project_definition_value_type_from_dao(
-    src: ProjectDefinitionValueTypeDao, mapper: Mapper
-) -> ProjectDefinitionValueType:
-    return ProjectDefinitionValueType(
-        id=src.id,
-        value_json_schema=src.value_json_schema,
-        attributes_json_schema=src.attributes_json_schema,
-        display_name=src.display_name,
-    )
-
-
 def map_project_definition_from_dao(
     src: ProjectDefinitionDao, mapper: Mapper
 ) -> ProjectDefinition:
