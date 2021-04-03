@@ -8,7 +8,7 @@ Create Date: 2020-11-25 22:14:43.244618
 import datetime
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy import String, Boolean, DateTime, Column, Binary, Text, Integer
+from sqlalchemy import String, Boolean, DateTime, Column, Text, Integer
 from alembic import op
 
 

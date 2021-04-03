@@ -21,5 +21,3 @@ async def resolve_find_project_definition(
     _: Any, info: GraphQLResolveInfo, id: UUID, find_project_definition: callable
 ):
     return await find_project_definition(info, id)
-
-

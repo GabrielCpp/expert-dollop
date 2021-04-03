@@ -23,9 +23,6 @@ async def resolve_find_datasheet(
     return await find_datasheet_by_id(info, id)
 
 
-
-
-
 @datasheet.field("elements")
 @inject_graphql_handler(
     GraphqlPageHandler[DatasheetElementService, DatasheetElementDto]
@@ -41,5 +38,3 @@ async def resolve_elements(
     return await handler.handle(
         DatasheetElementFilter(datasheet_id=parent.id), first, after
     )
-
-

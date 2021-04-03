@@ -1,10 +1,28 @@
 from dataclasses import dataclass
 from uuid import UUID
+from enum import Enum
 from typing import Optional, List, Union
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
 
 JsonSchema = dict
+
+
+class ValueType(Enum):
+    INT = "INT"
+    DECIMAL = "DECIMAL"
+    BOOLEAN = "BOOLEAN"
+    STRING = "STRING"
+    STATIC_CHOICE = "STATIC_CHOICE"
+    CONTAINER = "CONTAINER"
+    SECTION_CONTAINER = "SECTION_CONTAINER"
+
+
+@dataclass
+class ValueTypeSchema:
+    id: ValueType
+    validator: Optional[JsonSchema]
+    display_name: str
 
 
 @dataclass
@@ -75,7 +93,7 @@ class ProjectDefinitionNode:
     instanciate_by_default: bool
     order_index: int
     config: NodeConfig
-    value_type: str
+    value_type: ValueType
     default_value: ValueUnion
     path: List[UUID]
     creation_date_utc: datetime

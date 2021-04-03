@@ -1,7 +1,8 @@
-from expert_dollup.shared.modeling import CamelModel, BaseModel
 from uuid import UUID
+from enum import Enum
 from typing import Optional, List, Union
 from datetime import datetime
+from expert_dollup.shared.modeling import CamelModel, BaseModel
 
 
 class IntFieldConfigDto(CamelModel):

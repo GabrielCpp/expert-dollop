@@ -14,6 +14,6 @@ class AggregateFactory:
         self.injector = injector
 
     def create(
-        class_type: Type[Aggregate[Aggregation]], **kwargs
+        self, class_type: Type[Aggregate[Aggregation]], props: Aggregation
     ) -> Aggregate[Aggregation]:
-        return self.injector.get(class_type).create(**kwargs)
+        return self.injector.get(class_type)._create(props)

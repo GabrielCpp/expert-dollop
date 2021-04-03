@@ -16,9 +16,10 @@ from expert_dollup.infra.services import (
     ProjectDefinitionNodeService,
     ProjectDefinitionService,
 )
-from expert_dollup.infra.validators import ProjectDefinitionValueTypeValidator
+from expert_dollup.shared.automapping import AggregateFactory
 from expert_dollup.shared.database_services import Page
 from expert_dollup.core.builders import ProjectDefinitionTreeBuilder
+from expert_dollup.core.aggregates import NodeValueAggregate, ValueTypeAggregateProps
 
 logger = structlog.get_logger(__name__)
 
@@ -29,15 +30,13 @@ class ProjectDefinitionNodeUseCase:
         service: ProjectDefinitionNodeService,
         project_definition_service: ProjectDefinitionService,
         project_definition_node_service: ProjectDefinitionNodeService,
-        project_definition_value_type_validator: ProjectDefinitionValueTypeValidator,
+        aggregate_factory: AggregateFactory,
         project_definition_tree_builder: ProjectDefinitionTreeBuilder,
     ):
         self.service = service
         self.project_definition_service = project_definition_service
         self.project_definition_node_service = project_definition_node_service
-        self.project_definition_value_type_validator = (
-            project_definition_value_type_validator
-        )
+        self.aggregate_factory = aggregate_factory
         self.project_definition_tree_builder = project_definition_tree_builder
 
     async def add(
@@ -113,13 +112,9 @@ class ProjectDefinitionNodeUseCase:
         if not await self.service.has_path(domain.path):
             raise InvalidObject("bad_tree_path", "Tree path is invalid.")
 
-        try:
-            await self.project_definition_value_type_validator.validate_config(
-                domain.value_type, domain.config
-            )
+        node_value_aggregate = self.aggregate_factory.create(
+            NodeValueAggregate,
+            ValueTypeAggregateProps(value_type=domain.value_type, config=domain.config),
+        )
 
-            await self.project_definition_value_type_validator.validate_value(
-                domain.value_type, domain.config, domain.default_value
-            )
-        except FactorySeedMissing:
-            ValidationError.for_field("value_type", "Value type not found")
+        node_value_aggregate.validate_value(domain.default_value)

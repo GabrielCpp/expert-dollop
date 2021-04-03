@@ -15,8 +15,9 @@ from expert_dollup.infra.services import (
     ProjectContainerService,
     ProjectDefinitionNodeService,
 )
-from expert_dollup.infra.validators import ProjectDefinitionValueTypeValidator
+from expert_dollup.shared.automapping import AggregateFactory
 from expert_dollup.shared.database_services import Page
+from expert_dollup.core.aggregates import NodeValueAggregate, ValueTypeAggregateProps
 
 
 class ProjectContainerUseCase:
@@ -25,14 +26,12 @@ class ProjectContainerUseCase:
         project_service: ProjectService,
         project_container_service: ProjectContainerService,
         project_definition_node_service: ProjectDefinitionNodeService,
-        project_definition_value_type_validator: ProjectDefinitionValueTypeValidator,
+        aggregate_factory: AggregateFactory,
     ):
         self.project_service = project_service
         self.project_container_service = project_container_service
         self.project_definition_node_service = project_definition_node_service
-        self.project_definition_value_type_validator = (
-            project_definition_value_type_validator
-        )
+        self.aggregate_factory = aggregate_factory
 
     async def find_subtree(
         self, project_id: UUID, container_id: UUID
@@ -74,9 +73,15 @@ class ProjectContainerUseCase:
             container.type_id
         )
 
-        await self.project_definition_value_type_validator.validate_value(
-            definition_container.value_type, definition_container.config, value
+        node_value_aggregate = self.aggregate_factory.create(
+            NodeValueAggregate,
+            ValueTypeAggregateProps(
+                value_type=definition_container.value_type,
+                config=definition_container.config,
+            ),
         )
+
+        node_value_aggregate.validate_value(value)
 
         await self.project_container_service.update(
             ProjectContainerFilter(value=value),

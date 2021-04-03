@@ -5,7 +5,7 @@ from injector import Binder, singleton, inject
 from expert_dollup.shared.starlette_injection import factory_of
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 from expert_dollup.infra.validators import SchemaValidator
-from expert_dollup.infra.providers import WordProvider
+from expert_dollup.infra.providers import WordProvider, ValueTypeProvider
 
 
 def bind_database(binder: Binder) -> None:
@@ -39,4 +39,5 @@ def bind_providers(binder: Binder) -> None:
     with open("./assets/corncob_lowercase.txt") as f:
         words = [word for word in f.readlines() if word != ""]
 
-    binder.bind(WordProvider, to=lambda: WordProvider(words), scope=singleton)
+    binder.bind(WordProvider, to=WordProvider(words), scope=singleton)
+    binder.bind(ValueTypeProvider, to=ValueTypeProvider(), scope=singleton)
