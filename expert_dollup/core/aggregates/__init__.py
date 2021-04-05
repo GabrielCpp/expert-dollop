@@ -1,1 +1,1 @@
-from .node_value_aggregate import NodeValueAggregate, ValueTypeAggregateProps
+from .node_value_aggregate import NodeValueAggregate, NodeValue

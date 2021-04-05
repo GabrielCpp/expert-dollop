@@ -10,61 +10,69 @@ class TypeFactory:
     build_config: callable
 
 
-class ValueTypeFactory:
+class FieldConfigFactory:
     def __init__(self, fake: Faker):
         self.fake = fake
-        self.value_type_factories = {
-            "INT": TypeFactory(
+        self.node_factory = {
+            IntFieldConfig: TypeFactory(
                 build_value=self._create_int_value,
                 build_config=self._create_int_custom_attr,
             ),
-            "STRING": TypeFactory(
+            StringFieldConfig: TypeFactory(
                 build_value=self._create_string_value,
                 build_config=self._create_string_custom_attr,
             ),
-            "DECIMAL": TypeFactory(
+            DecimalFieldConfig: TypeFactory(
                 build_value=self._create_decimal_value,
                 build_config=self._create_decimal_custom_attr,
             ),
-            "BOOLEAN": TypeFactory(
+            BoolFieldConfig: TypeFactory(
                 build_value=self._create_bool_value,
                 build_config=self._create_bool_custom_attr,
             ),
-            "CONTAINER": TypeFactory(
+            CollapsibleContainerFieldConfig: TypeFactory(
                 build_value=self._create_container_value,
                 build_config=self._create_container_custom_attr,
             ),
-            "STATIC_CHOICE": TypeFactory(
+            StaticChoiceFieldConfig: TypeFactory(
                 build_value=self._create_static_choice_value,
                 build_config=self._create_static_choice_custom_attr,
             ),
+            None: TypeFactory(
+                build_value=lambda: None, build_config=lambda label, index: NodeConfig()
+            ),
         }
 
-        self.field_value_types = [
-            "INT",
-            "STRING",
-            "DECIMAL",
-            "BOOLEAN",
-            "STATIC_CHOICE",
+        self.field_config_types = [
+            IntFieldConfig,
+            DecimalFieldConfig,
+            StringFieldConfig,
+            BoolFieldConfig,
+            StaticChoiceFieldConfig,
         ]
 
-    def pick_value_type(self, label):
-        return "CONTAINER" if label != "field" else choice(self.field_value_types)
+    def pick_config_type(self, label) -> FieldDetailsUnion:
+        if label == "section":
+            return CollapsibleContainerFieldConfig
 
-    def build_value(self, value_type):
-        return self.value_type_factories[value_type].build_value()
+        if label == "field":
+            return choice(self.field_config_types)
 
-    def build_config(self, label: str, index: int, value_type):
-        return self.value_type_factories[value_type].build_config(label, index)
+        return None
+
+    def build_value(self, config_type):
+        return self.node_factory[config_type].build_value()
+
+    def build_config(self, label: str, index: int, config_type):
+        return self.node_factory[config_type].build_config(label, index)
 
     def _create_int_value(self):
         return self.fake.pyint(min_value=0, max_value=100000)
 
     def _create_int_custom_attr(self, label: str, index: int):
         return NodeConfig(
-            value_type=IntFieldConfig(
-                validator={"type": "integer", "minimum": 0, "maximum": 100000}
-            )
+            field_details=IntFieldConfig(unit="inch"),
+            value_validator={"type": "integer", "minimum": 0, "maximum": 100000},
         )
 
     def _create_decimal_value(self):
@@ -72,10 +80,11 @@ class ValueTypeFactory:
 
     def _create_decimal_custom_attr(self, label: str, index: int):
         return NodeConfig(
-            value_type=DecimalFieldConfig(
-                validator={"type": "number", "minimum": -100000, "maximum": 100000},
+            field_details=DecimalFieldConfig(
+                unit="pound",
                 precision=3,
-            )
+            ),
+            value_validator={"type": "number", "minimum": -100000, "maximum": 100000},
         )
 
     def _create_string_value(self):
@@ -83,21 +92,24 @@ class ValueTypeFactory:
 
     def _create_string_custom_attr(self, label: str, index: int):
         return NodeConfig(
-            value_type=StringFieldConfig(
-                validator={
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 200,
-                },
+            field_details=StringFieldConfig(
                 transforms=["trim"],
-            )
+            ),
+            value_validator={
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+            },
         )
 
     def _create_bool_value(self):
         return self.fake.pybool()
 
     def _create_bool_custom_attr(self, label: str, index: int):
-        return NodeConfig(value_type=BoolFieldConfig(is_checkbox=True))
+        return NodeConfig(
+            field_details=BoolFieldConfig(is_checkbox=True),
+            value_validator={"type": "boolean"},
+        )
 
     def _create_static_choice_value(self):
         return str(self.fake.pyint(min_value=0, max_value=4))
@@ -114,22 +126,20 @@ class ValueTypeFactory:
             )
 
         return NodeConfig(
-            value_type=StaticChoiceFieldConfig(
-                validator={
-                    "type": "string",
-                    "enum": [str(index) for index in range(0, 5)],
-                },
+            field_details=StaticChoiceFieldConfig(
                 options=options,
-            )
+            ),
+            value_validator={
+                "type": "string",
+                "enum": [str(index) for index in range(0, 5)],
+            },
         )
 
     def _create_container_custom_attr(self, label: str, index: int):
-        if label == "section":
-            return NodeConfig(
-                value_type=CollapsibleContainerFieldConfig(is_collapsible=index >= 3)
-            )
-
-        return NodeConfig(value_type=None)
+        return NodeConfig(
+            field_details=CollapsibleContainerFieldConfig(is_collapsible=index >= 3),
+            value_validator=None,
+        )
 
     def _create_container_value(self):
         return None

@@ -19,7 +19,7 @@ from expert_dollup.infra.services import (
 from expert_dollup.shared.automapping import AggregateFactory
 from expert_dollup.shared.database_services import Page
 from expert_dollup.core.builders import ProjectDefinitionTreeBuilder
-from expert_dollup.core.aggregates import NodeValueAggregate, ValueTypeAggregateProps
+from expert_dollup.core.aggregates import NodeValueAggregate, NodeValue
 
 logger = structlog.get_logger(__name__)
 
@@ -114,7 +114,5 @@ class ProjectDefinitionNodeUseCase:
 
         node_value_aggregate = self.aggregate_factory.create(
             NodeValueAggregate,
-            ValueTypeAggregateProps(value_type=domain.value_type, config=domain.config),
+            NodeValue(value=domain.default_value, config=domain.config),
         )
-
-        node_value_aggregate.validate_value(domain.default_value)

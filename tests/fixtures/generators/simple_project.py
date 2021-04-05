@@ -5,7 +5,7 @@ from typing import List
 from pydantic import BaseModel
 from expert_dollup.core.domains import *
 from ..fake_db_helpers import FakeExpertDollupDb as Tables
-from ..factories import ValueTypeFactory
+from ..factories import FieldConfigFactory
 
 
 class SimpleProject:
@@ -14,7 +14,7 @@ class SimpleProject:
         self.project_definitions: List[ProjectDefinition] = []
         self.tanslations: List[Translation] = []
         self.fake = Faker()
-        self.value_type_factory = ValueTypeFactory(self.fake)
+        self.field_config_factory = FieldConfigFactory(self.fake)
 
     def generate_project_container_definition(self, project_def_id: UUID) -> None:
         labels = ["root", "subsection", "form", "section", "field"]
@@ -30,9 +30,11 @@ class SimpleProject:
             label = labels[level]
 
             for index in range(0, level + 1):
-                value_type = self.value_type_factory.pick_value_type(label)
-                value = self.value_type_factory.build_value(value_type)
-                config = self.value_type_factory.build_config(label, index, value_type)
+                config_type = self.field_config_factory.pick_config_type(label)
+                value = self.field_config_factory.build_value(config_type)
+                config = self.field_config_factory.build_config(
+                    label, index, config_type
+                )
                 other_field = {}
 
                 sub_container = ProjectDefinitionNode(
@@ -40,7 +42,6 @@ class SimpleProject:
                     name=f"{direct_parent.name}_{label}_{index}",
                     project_def_id=project_def_id,
                     path=parents,
-                    value_type=value_type,
                     is_collection=index == 0,
                     instanciate_by_default=True,
                     order_index=index,
@@ -59,13 +60,12 @@ class SimpleProject:
             name="root_a",
             project_def_id=project_def_id,
             path=[],
-            value_type="CONTAINER",
             is_collection=False,
             instanciate_by_default=True,
             order_index=0,
             config=NodeConfig(),
             creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
-            default_value=self.value_type_factory.build_value("CONTAINER"),
+            default_value=None,
         )
 
         self.project_definition_nodes.append(root_a)
@@ -76,13 +76,12 @@ class SimpleProject:
             name="root_b",
             project_def_id=project_def_id,
             path=[],
-            value_type="CONTAINER",
             is_collection=True,
             instanciate_by_default=False,
             order_index=1,
             config=NodeConfig(),
             creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
-            default_value=self.value_type_factory.build_value("CONTAINER"),
+            default_value=None,
         )
 
         self.project_definition_nodes.append(root_b)

@@ -11,10 +11,9 @@ from .project_definition_node import (
     CollapsibleContainerFieldConfig,
     NodeConfig,
     ValueUnion,
-    ValueTypeSchema,
-    ValueType,
+    FieldDetailsUnion,
+    JsonSchema,
 )
-from .project_definition_value_type import ProjectDefinitionValueType
 from .project import Project
 from .project_container import ProjectContainer, ProjectContainerFilter
 from .project_definition_tree import (

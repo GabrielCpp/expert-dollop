@@ -59,7 +59,6 @@ project_definition_node_table = Table(
     Column("instanciate_by_default", Boolean, nullable=False),
     Column("order_index", Integer, nullable=False),
     Column("config", String, nullable=False),
-    Column("value_type", String, nullable=False),
     Column("default_value", String, nullable=True),
     Column("path", String, nullable=False),
     Column("display_query_internal_id", postgresql.UUID(), nullable=False),
@@ -76,7 +75,6 @@ class ProjectDefinitionNodeDao(BaseModel):
     instanciate_by_default: bool
     order_index: int
     config: str
-    value_type: str
     default_value: Optional[str]
     path: str
     level: int

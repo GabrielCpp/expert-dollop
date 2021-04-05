@@ -52,7 +52,6 @@ def map_project_definition_node_from_dao(
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
         config=jsonpickle.decode(src.config),
-        value_type=src.value_type,
         default_value=None
         if src.default_value is None
         else jsonpickle.decode(src.default_value),
@@ -80,7 +79,6 @@ def map_project_definition_node_to_dao(
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
         config=jsonpickle.encode(src.config),
-        value_type=src.value_type,
         path=join_uuid_path(src.path),
         display_query_internal_id=display_query_internal_id,
         level=len(src.path),
@@ -241,7 +239,6 @@ def map_project_definition_node_filter_to_dict(
             "instanciate_by_default": ("instanciate_by_default", None),
             "order_index": ("order_index", None),
             "config": ("config", jsonpickle.encode),
-            "value_type": ("value_type", None),
             "default_value": ("default_value", jsonpickle.encode),
             "path": ("default_value", join_uuid_path),
         },

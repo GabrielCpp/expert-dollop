@@ -16,7 +16,7 @@ datasheet_definition_element = ObjectType("DatasheetDefinitionElement")
 project_definition = ObjectType("ProjectDefinition")
 project_definition_node = ObjectType("ProjectDefinitionNode")
 field_value = UnionType("FieldValue")
-node_config_value_type = UnionType("NodeConfigValueType")
+field_details_union_type = UnionType("FieldDetailsUnion")
 datasheet = ObjectType("Datasheet")
 datasheet_element = ObjectType("DatasheetElement")
 json_schema_scalar = ScalarType("JsonSchema")
@@ -30,7 +30,7 @@ types = [
     datasheet_element,
     project_definition_node,
     field_value,
-    node_config_value_type,
+    field_details_union_type,
     json_schema_scalar,
 ]
 

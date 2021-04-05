@@ -1,12 +1,7 @@
 from expert_dollup.shared.modeling import CamelModel
 from typing import List, Optional, Union
 from uuid import UUID
-from .project_definition_node_dto import (
-    IntFieldValueDto,
-    DecimalFieldValueDto,
-    StringFieldValueDto,
-    BoolFieldValueDto,
-)
+from .project_definition_node_dto import ValueUnionDto
 
 
 class ProjectContainerDto(CamelModel):
@@ -14,13 +9,7 @@ class ProjectContainerDto(CamelModel):
     project_id: UUID
     type_id: UUID
     path: List[UUID]
-    value: Union[
-        IntFieldValueDto,
-        DecimalFieldValueDto,
-        StringFieldValueDto,
-        BoolFieldValueDto,
-        None,
-    ]
+    value: ValueUnionDto
 
 
 class ProjectContainerPageDto(CamelModel):

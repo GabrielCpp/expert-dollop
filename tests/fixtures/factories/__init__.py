@@ -1,1 +1,1 @@
-from .value_type_factory import ValueTypeFactory
+from .field_config_factory import FieldConfigFactory

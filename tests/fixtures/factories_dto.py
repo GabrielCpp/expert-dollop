@@ -25,11 +25,9 @@ class ProjectDefinitionNodeDtoFactory(factory.Factory):
     instanciate_by_default = True
     order_index = factory.Sequence(lambda n: n)
     config = NodeConfigDto(
-        value_type=IntFieldConfigDto(
-            validator={"type": "integer", "minimum": 0, "maximum": 100000}
-        )
+        field_details=IntFieldConfigDto(unit="Kg"),
+        value_validator={"type": "integer", "minimum": 0, "maximum": 100000},
     )
-    value_type = "INT"
     default_value = IntFieldValueDto(integer=0)
     path = []
 

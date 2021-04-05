@@ -96,7 +96,7 @@ async def test_mutate_project_field(ac, expert_dollup_simple_project, project):
         target_field = next(
             field
             for field in field_layer_tree.roots
-            if field.definition.value_type == "INT"
+            if isinstance(field.definition.config.field_details, IntFieldConfigDto)
         )
         assert isinstance(target_field.container.value.integer, int)
 

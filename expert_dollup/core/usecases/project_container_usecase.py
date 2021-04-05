@@ -17,7 +17,7 @@ from expert_dollup.infra.services import (
 )
 from expert_dollup.shared.automapping import AggregateFactory
 from expert_dollup.shared.database_services import Page
-from expert_dollup.core.aggregates import NodeValueAggregate, ValueTypeAggregateProps
+from expert_dollup.core.aggregates import NodeValueAggregate, NodeValue
 
 
 class ProjectContainerUseCase:
@@ -75,13 +75,11 @@ class ProjectContainerUseCase:
 
         node_value_aggregate = self.aggregate_factory.create(
             NodeValueAggregate,
-            ValueTypeAggregateProps(
-                value_type=definition_container.value_type,
+            NodeValue(
                 config=definition_container.config,
+                value=value
             ),
         )
-
-        node_value_aggregate.validate_value(value)
 
         await self.project_container_service.update(
             ProjectContainerFilter(value=value),

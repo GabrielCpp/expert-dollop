@@ -31,84 +31,116 @@ def map_project_definition_to_dto(
     )
 
 
+def map_int_field_config_from_dto(
+    src: IntFieldConfigDto, mapper: Mapper
+) -> IntFieldConfig:
+    return IntFieldConfig(unit=src.unit)
+
+
+def map_int_field_config_to_dto(
+    src: IntFieldConfig, mapper: Mapper
+) -> IntFieldConfigDto:
+    return IntFieldConfigDto(unit=src.unit)
+
+
+def map_decimal_field_config_from_dto(
+    src: DecimalFieldConfigDto, mapper: Mapper
+) -> DecimalFieldConfig:
+    return DecimalFieldConfig(unit=src.unit, precision=src.precision)
+
+
+def map_decimal_field_config_to_dto(
+    src: DecimalFieldConfig, mapper: Mapper
+) -> DecimalFieldConfigDto:
+    return DecimalFieldConfigDto(unit=src.unit, precision=src.precision)
+
+
+def map_string_field_config_from_dto(
+    src: StringFieldConfigDto, mapper: Mapper
+) -> StringFieldConfig:
+    return StringFieldConfig(transforms=src.transforms)
+
+
+def map_string_field_config_to_dto(
+    src: StringFieldConfig, mapper: Mapper
+) -> StringFieldConfigDto:
+    return StringFieldConfigDto(transforms=src.transforms)
+
+
+def map_bool_field_config_from_dto(
+    src: BoolFieldConfigDto, mapper: Mapper
+) -> BoolFieldConfig:
+    return BoolFieldConfig(is_checkbox=src.is_checkbox)
+
+
+def map_bool_field_config_to_dto(
+    src: BoolFieldConfig, mapper: Mapper
+) -> BoolFieldConfigDto:
+    return BoolFieldConfigDto(is_checkbox=src.is_checkbox)
+
+
+def map_static_choice_field_config_from_dto(
+    src: StaticChoiceFieldConfigDto, mapper: Mapper
+) -> StaticChoiceFieldConfig:
+    return StaticChoiceFieldConfig(
+        options=[
+            StaticChoiceOption(
+                id=option.id, label=option.label, help_text=option.help_text
+            )
+            for option in src.options
+        ]
+    )
+
+
+def map_static_choice_field_config_to_dto(
+    src: StaticChoiceFieldConfig, mapper: Mapper
+) -> StaticChoiceFieldConfigDto:
+    return StaticChoiceFieldConfigDto(
+        options=[
+            StaticChoiceOptionDto(
+                id=option.id, label=option.label, help_text=option.help_text
+            )
+            for option in src.options
+        ]
+    )
+
+
+def map_collapsible_container_field_config_from_dto(
+    src: CollapsibleContainerFieldConfigDto, mapper: Mapper
+) -> CollapsibleContainerFieldConfig:
+    return CollapsibleContainerFieldConfig(is_collapsible=src.is_collapsible)
+
+
+def map_collapsible_container_field_config_to_dto(
+    src: CollapsibleContainerFieldConfig, mapper: Mapper
+) -> CollapsibleContainerFieldConfigDto:
+    return CollapsibleContainerFieldConfigDto(is_collapsible=src.is_collapsible)
+
+
 def map_node_config_from_dto(src: NodeConfigDto, mapper: Mapper) -> NodeConfig:
-    value_type = None
-
-    if isinstance(src.value_type, IntFieldConfigDto):
-        value_type_dto: IntFieldConfigDto = src.value_type
-        value_type = IntFieldConfig(validator=value_type_dto.validator)
-    elif isinstance(src.value_type, DecimalFieldConfigDto):
-        value_type_dto: DecimalFieldConfigDto = src.value_type
-        value_type = DecimalFieldConfig(
-            validator=value_type_dto.validator, precision=value_type_dto.precision
-        )
-    elif isinstance(src.value_type, StringFieldConfigDto):
-        value_type_dto: StringFieldConfigDto = src.value_type
-        value_type = StringFieldConfig(
-            validator=value_type_dto.validator, transforms=value_type_dto.transforms
-        )
-    elif isinstance(src.value_type, BoolFieldConfigDto):
-        value_type_dto: BoolFieldConfigDto = src.value_type
-        value_type = BoolFieldConfig(is_checkbox=value_type_dto.is_checkbox)
-    elif isinstance(src.value_type, StaticChoiceFieldConfigDto):
-        value_type_dto: StaticChoiceFieldConfigDto = src.value_type
-        value_type = StaticChoiceFieldConfig(
-            validator=value_type_dto.validator,
-            options=[
-                StaticChoiceOption(
-                    id=option.id, label=option.label, help_text=option.help_text
-                )
-                for option in value_type_dto.options
-            ],
-        )
-    elif isinstance(src.value_type, CollapsibleContainerFieldConfigDto):
-        value_type_dto: CollapsibleContainerFieldConfigDto = src.value_type
-        value_type = CollapsibleContainerFieldConfig(
-            is_collapsible=value_type_dto.is_collapsible
-        )
-
-    return NodeConfig(value_type=value_type)
+    return NodeConfig(
+        field_details=None
+        if src.field_details is None
+        else mapper.map(
+            src.field_details, field_details_to_domain_map[type(src.field_details)]
+        ),
+        value_validator=src.value_validator,
+    )
 
 
 def map_node_config_to_dto(src: NodeConfig, mapper: Mapper) -> NodeConfigDto:
-    value_type = None
-
-    if isinstance(src.value_type, IntFieldConfig):
-        value_type_dto: IntFieldConfig = src.value_type
-        value_type = IntFieldConfigDto(validator=value_type_dto.validator)
-    elif isinstance(src.value_type, DecimalFieldConfig):
-        value_type_dto: DecimalFieldConfig = src.value_type
-        value_type = DecimalFieldConfigDto(
-            validator=value_type_dto.validator, precision=value_type_dto.precision
+    field_details_dto = (
+        None
+        if src.field_details is None
+        else mapper.map(
+            src.field_details, field_details_from_domain[type(src.field_details)]
         )
-    elif isinstance(src.value_type, StringFieldConfig):
-        value_type_dto: StringFieldConfig = src.value_type
-        value_type = StringFieldConfigDto(
-            validator=value_type_dto.validator, transforms=value_type_dto.transforms
-        )
-    elif isinstance(src.value_type, BoolFieldConfig):
-        value_type_dto: BoolFieldConfig = src.value_type
-        value_type = BoolFieldConfigDto(is_checkbox=value_type_dto.is_checkbox)
-    elif isinstance(src.value_type, StaticChoiceFieldConfig):
-        value_type_dto: StaticChoiceFieldConfig = src.value_type
-        value_type = StaticChoiceFieldConfigDto(
-            validator=value_type_dto.validator,
-            options=[
-                StaticChoiceOptionDto(
-                    id=option.id, label=option.label, help_text=option.help_text
-                )
-                for option in value_type_dto.options
-            ],
-        )
-    elif isinstance(src.value_type, CollapsibleContainerFieldConfig):
-        value_type_dto: CollapsibleContainerFieldConfig = src.value_type
-        value_type = CollapsibleContainerFieldConfigDto(
-            is_collapsible=value_type_dto.is_collapsible
-        )
-
-    mapped_config = NodeConfigDto(value_type=value_type)
-    assert type(mapped_config.value_type) is type(
-        value_type
+    )
+    mapped_config = NodeConfigDto(
+        field_details=field_details_dto, value_validator=src.value_validator
+    )
+    assert type(mapped_config.field_details) is type(
+        field_details_dto
     ), "Union has change type of config"
 
     return mapped_config
@@ -125,7 +157,6 @@ def map_project_definition_node_from_dto(
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
         config=mapper.map(src.config, NodeConfig),
-        value_type=src.value_type,
         default_value=mapper.map(src.default_value, ValueUnion, ValueUnionDto),
         path=src.path,
         creation_date_utc=mapper.get(Clock).utcnow(),
@@ -143,7 +174,6 @@ def map_project_definition_node_to_dto(
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
         config=mapper.map(src.config, NodeConfigDto),
-        value_type=src.value_type,
         path=src.path,
         default_value=mapper.map(src.default_value, ValueUnionDto, ValueUnion),
     )
@@ -201,16 +231,16 @@ def map_project_to_dto(src: Project, mapper: Mapper) -> ProjectDto:
 def map_value_union_from_dto(src: ValueUnionDto, mapper: Mapper) -> ValueUnion:
     value = None
 
-    if isinstance(src, IntFieldValueDto):
-        value = src.integer
-    elif isinstance(src, DecimalFieldValueDto):
-        value = src.numeric
-    elif isinstance(src, StringFieldValueDto):
+    if isinstance(src, StringFieldValueDto):
         value = src.text
     elif isinstance(src, BoolFieldValueDto):
         value = src.enabled
+    elif isinstance(src, IntFieldValueDto):
+        value = src.integer
+    elif isinstance(src, DecimalFieldValueDto):
+        value = src.numeric
     elif not src is None:
-        raise LookupError("Field type not found")
+        raise LookupError(f"Field type not found {type(src)}")
 
     return value
 
@@ -218,14 +248,14 @@ def map_value_union_from_dto(src: ValueUnionDto, mapper: Mapper) -> ValueUnion:
 def map_value_union_to_dto(src: ValueUnion, mapper: Mapper) -> ValueUnionDto:
     value = None
 
-    if isinstance(src, int):
+    if src is True or src is False:
+        value = BoolFieldValueDto(enabled=src)
+    elif isinstance(src, int):
         value = IntFieldValueDto(integer=src)
     elif isinstance(src, float):
         value = DecimalFieldValueDto(numeric=src)
     elif isinstance(src, str):
         value = StringFieldValueDto(text=src)
-    elif isinstance(src, bool):
-        value = BoolFieldValueDto(enabled=src)
     elif not src is None:
         raise LookupError("Field type not found")
 

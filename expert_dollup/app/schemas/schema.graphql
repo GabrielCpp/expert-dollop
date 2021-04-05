@@ -75,12 +75,6 @@ type Datasheet {
     elements(first: Int!, after: String): DatasheetElementConnection
 }
 
-type ProjectDefinitionValueType {
-    id: ID!
-    validator: JsonSchema
-    displayName: String!
-}
-
 type IntFieldConfig {
     validator: JsonSchema!
 }
@@ -114,10 +108,11 @@ type CollapsibleContainerFieldConfig {
     isCollapsible: Boolean!
 }
 
-union NodeConfigValueType = IntFieldConfig | DecimalFieldConfig | StringFieldConfig | BoolFieldConfig | StaticChoiceFieldConfig | CollapsibleContainerFieldConfig
+union FieldDetailsUnion = IntFieldConfig | DecimalFieldConfig | StringFieldConfig | BoolFieldConfig | StaticChoiceFieldConfig | CollapsibleContainerFieldConfig
 
 type NodeConfig {
-    valueType: NodeConfigValueType
+    fieldDetails: FieldDetailsUnion
+    value_validator: JsonSchema
 }
     
 type IntFieldValue {
@@ -172,7 +167,7 @@ input CollapsibleContainerFieldConfigInput {
     isCollapsible: Boolean!
 }
 
-input NodeConfigValueTypeInput {
+input FieldDetailsUnionInput {
     kind: String!
     int: IntFieldConfigInput 
     decimal: DecimalFieldConfigInput
@@ -183,7 +178,7 @@ input NodeConfigValueTypeInput {
 }
 
 input NodeConfigInput {
-    valueType: NodeConfigValueTypeInput!
+    valueType: FieldDetailsUnionInput!
 }
     
 input IntFieldValueInput {
@@ -218,19 +213,8 @@ input ProjectDefinitionNodeInput {
     instanciateByDefault: Boolean!
     orderIndex: Int!
     config: NodeConfigInput
-    valueType: ValueType!
     defaultValue: FieldValueInput
     path: [String!]!
-}
-
-enum ValueType {
-  STRING,
-  INT,
-  DECIMAL,
-  STATIC_CHOICE,
-  BOOLEAN,
-  CONTAINER,
-  
 }
 
 type ProjectDefinitionNode {
@@ -241,8 +225,6 @@ type ProjectDefinitionNode {
     instanciateByDefault: Boolean!
     orderIndex: Int!
     config: NodeConfig
-    valueType: ValueType!
-    valueTypeDetails: ProjectDefinitionValueType!
     defaultValue: FieldValue
     path: [String!]!
     children: [ProjectDefinitionNode!]!
@@ -311,7 +293,6 @@ type Query {
     findProjectDefinitionFormContent(projectDefId: ID!, formId: ID!): ProjectDefinitionNodeTree!
     findProjectDefinitionNode(projectDefId: ID!, id: ID!): ProjectDefinitionNode!
     findRessourceTranslation(ressourceId: ID!, language: String!): TranslationConnection!
-    findValueTypeDetails(valueTypeId: ID!): ProjectDefinitionValueType!
 }
 
 input TranslationInput {

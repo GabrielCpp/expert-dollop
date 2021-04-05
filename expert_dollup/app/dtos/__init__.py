@@ -15,7 +15,12 @@ from .project_definition_node_dto import (
     StringFieldValueDto,
     BoolFieldValueDto,
     ValueUnionDto,
-    NodeConfigValueType,
+    FieldDetailsUnion,
+    config_type_lookup_map,
+    value_type_lookup_map,
+    field_details_to_domain_map,
+    field_details_from_domain,
+    FieldDetailsUnionDto,
 )
 from .project_definition_node_tree_dto import (
     ProjectDefinitionTreeNodeDto,

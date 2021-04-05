@@ -81,7 +81,6 @@ def create_project_definition_tables():
         Column("instanciate_by_default", Boolean, nullable=False),
         Column("order_index", Integer, nullable=False),
         Column("config", String, nullable=False),
-        Column("value_type", String, nullable=False),
         Column("default_value", String, nullable=True),
         Column("path", String, nullable=False),
         Column("level", Integer, nullable=False),

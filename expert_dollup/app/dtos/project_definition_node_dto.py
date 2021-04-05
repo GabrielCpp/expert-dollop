@@ -3,19 +3,19 @@ from enum import Enum
 from typing import Optional, List, Union
 from datetime import datetime
 from expert_dollup.shared.modeling import CamelModel, BaseModel
+from expert_dollup.core.domains import *
 
 
 class IntFieldConfigDto(CamelModel):
-    validator: dict
+    unit: str
 
 
 class DecimalFieldConfigDto(CamelModel):
-    validator: dict
+    unit: str
     precision: int
 
 
 class StringFieldConfigDto(CamelModel):
-    validator: dict
     transforms: List[str]
 
 
@@ -30,7 +30,6 @@ class StaticChoiceOptionDto(CamelModel):
 
 
 class StaticChoiceFieldConfigDto(CamelModel):
-    validator: dict
     options: List[StaticChoiceOptionDto]
 
 
@@ -38,7 +37,7 @@ class CollapsibleContainerFieldConfigDto(CamelModel):
     is_collapsible: bool
 
 
-NodeConfigValueType = Union[
+FieldDetailsUnionDto = Union[
     BoolFieldConfigDto,
     CollapsibleContainerFieldConfigDto,
     DecimalFieldConfigDto,
@@ -49,8 +48,36 @@ NodeConfigValueType = Union[
 ]
 
 
+config_type_lookup_map = {
+    IntFieldConfigDto: "IntFieldConfig",
+    DecimalFieldConfigDto: "DecimalFieldConfig",
+    StringFieldConfigDto: "StringFieldConfig",
+    BoolFieldConfigDto: "BoolFieldConfig",
+    StaticChoiceFieldConfigDto: "StaticChoiceFieldConfig",
+    CollapsibleContainerFieldConfigDto: "CollapsibleContainerFieldConfig",
+    type(None): "null",
+}
+
+assert len(FieldDetailsUnionDto.__args__) == len(config_type_lookup_map)
+
+field_details_to_domain_map = {
+    IntFieldConfigDto: IntFieldConfig,
+    DecimalFieldConfigDto: DecimalFieldConfig,
+    StringFieldConfigDto: StringFieldConfig,
+    BoolFieldConfigDto: BoolFieldConfig,
+    StaticChoiceFieldConfigDto: StaticChoiceFieldConfig,
+    CollapsibleContainerFieldConfigDto: CollapsibleContainerFieldConfig,
+    type(None): type(None),
+}
+
+field_details_from_domain = {v: k for k, v in field_details_to_domain_map.items()}
+
+assert len(FieldDetailsUnionDto.__args__) == len(field_details_to_domain_map)
+
+
 class NodeConfigDto(CamelModel):
-    value_type: NodeConfigValueType
+    field_details: Optional[FieldDetailsUnionDto]
+    value_validator: Optional[JsonSchema]
 
 
 class IntFieldValueDto(CamelModel):
@@ -77,6 +104,14 @@ ValueUnionDto = Union[
     None,
 ]
 
+value_type_lookup_map = {
+    type(IntFieldValueDto): "IntFieldValue",
+    type(DecimalFieldValueDto): "DecimalFieldValue",
+    type(StringFieldValueDto): "StringFieldValue",
+    type(BoolFieldValueDto): "BoolFieldValue",
+    type(None): "null",
+}
+
 
 class ProjectDefinitionNodeDto(CamelModel):
     id: UUID
@@ -86,7 +121,6 @@ class ProjectDefinitionNodeDto(CamelModel):
     instanciate_by_default: bool
     order_index: int
     config: NodeConfigDto
-    value_type: str
     default_value: ValueUnionDto
     path: List[UUID]
 
