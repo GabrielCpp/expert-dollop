@@ -6,8 +6,6 @@ from expert_dollup.shared.starlette_injection import Inject
 from expert_dollup.app.dtos import ProjectDefinitionDto
 from expert_dollup.core.domains.project_definition import ProjectDefinition
 from expert_dollup.core.usecases import ProjectDefinitonUseCase
-from expert_dollup.infra.providers import ValueTypeProvider
-from expert_dollup.core.exceptions import RessourceNotFound
 
 router = APIRouter()
 
@@ -64,15 +62,3 @@ async def delete_project_definition(
     request_handler=Depends(Inject(RequestHandler)),
 ):
     await usecase.remove_by_id(id)
-
-
-@router.get("/value_type_schema/{value_type}")
-def get_value_type_schema_from_provider(
-    value_type: str, provider=Depends(Inject(ValueTypeProvider))
-):
-    schema_per_type = provider.get_schema_per_type()
-
-    if not value_type in schema_per_type:
-        raise RessourceNotFound()
-
-    return schema_per_type

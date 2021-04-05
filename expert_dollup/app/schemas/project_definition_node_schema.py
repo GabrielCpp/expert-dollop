@@ -11,7 +11,7 @@ from expert_dollup.app.controllers.project.project_definition_node import *
 from expert_dollup.app.dtos import *
 from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
-from .types import query, project_definition
+from .types import query, project_definition, project_definition_node
 
 
 @project_definition.field("rootSections")
@@ -105,4 +105,29 @@ async def resolve_find_project_definition_node(
     find_project_definition_node: callable,
 ):
     result = await find_project_definition_node(info, project_def_id, id)
+    return result
+
+
+@query.field("findValueTypeDetails")
+@inject_graphql_route(get_value_type_schema_from_provider)
+@convert_kwargs_to_snake_case
+def resolve_find_project_definition_node(
+    _: Any,
+    info: GraphQLResolveInfo,
+    value_type_id: str,
+    get_value_type_schema_from_provider: callable,
+):
+    result = get_value_type_schema_from_provider(info, value_type_id)
+    return result
+
+
+@project_definition_node.field("valueTypeDetails")
+@inject_graphql_route(get_value_type_schema_from_provider)
+@convert_kwargs_to_snake_case
+def resolve_project_definition_value_type_details(
+    parent: ProjectDefinitionNodeDto,
+    info: GraphQLResolveInfo,
+    get_value_type_schema_from_provider: callable,
+):
+    result = get_value_type_schema_from_provider(info, parent.value_type)
     return result

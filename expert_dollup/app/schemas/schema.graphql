@@ -77,8 +77,7 @@ type Datasheet {
 
 type ProjectDefinitionValueType {
     id: ID!
-    valueJsonSchema: String!
-    attributesJsonSchema: String!
+    validator: JsonSchema
     displayName: String!
 }
 
@@ -312,6 +311,7 @@ type Query {
     findProjectDefinitionFormContent(projectDefId: ID!, formId: ID!): ProjectDefinitionNodeTree!
     findProjectDefinitionNode(projectDefId: ID!, id: ID!): ProjectDefinitionNode!
     findRessourceTranslation(ressourceId: ID!, language: String!): TranslationConnection!
+    findValueTypeDetails(valueTypeId: ID!): ProjectDefinitionValueType!
 }
 
 input TranslationInput {

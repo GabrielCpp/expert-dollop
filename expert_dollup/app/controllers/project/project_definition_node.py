@@ -16,6 +16,8 @@ from expert_dollup.core.domains import (
 from expert_dollup.core.usecases import ProjectDefinitionNodeUseCase
 from expert_dollup.shared.database_services import Page
 from expert_dollup.infra.services import ProjectDefinitionNodeService
+from expert_dollup.infra.providers import ValueTypeProvider
+from expert_dollup.core.exceptions import RessourceNotFound
 
 router = APIRouter()
 
@@ -150,3 +152,15 @@ async def find_form_content(
             out_dto=ProjectDefinitionNodeTreeDto,
         ),
     )
+
+
+@router.get("/value_type_schema/{value_type}")
+def get_value_type_schema_from_provider(
+    value_type: str, provider=Depends(Inject(ValueTypeProvider))
+):
+    schema_per_type = provider.get_schema_per_type()
+
+    if not value_type in schema_per_type:
+        raise RessourceNotFound()
+
+    return schema_per_type[value_type]
