@@ -17,6 +17,7 @@ class ProjectDefinitionTreeBuilder:
     ) -> ProjectDefinitionNodeTree:
         node_map = defaultdict(list)
         tree_depth = None
+        used_paths = set()
 
         for definition in definitions:
             node = ProjectDefinitionTreeNode(definition=definition, children=[])
@@ -30,12 +31,15 @@ class ProjectDefinitionTreeBuilder:
                     [*node.definition.path, node.definition.id]
                 )
 
-                assert children_path in node_map
-                node.children = sorted(
-                    node_map[children_path],
-                    key=lambda child: child.definition.order_index,
-                )
-                del node_map[children_path]
+                assert not children_path in used_paths
+                used_paths.add(children_path)
+
+                if children_path in node_map:
+                    node.children = sorted(
+                        node_map[children_path],
+                        key=lambda child: child.definition.order_index,
+                    )
+                    del node_map[children_path]
 
         roots = []
 

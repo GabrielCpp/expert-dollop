@@ -21,3 +21,20 @@ async def resolve_find_project_definition(
     _: Any, info: GraphQLResolveInfo, id: UUID, find_project_definition: callable
 ):
     return await find_project_definition(info, id)
+
+
+@query.field("findProjectDefintions")
+@inject_graphql_handler(
+    GraphqlPageHandler[ProjectDefinitionService, ProjectDefinitionDto]
+)
+@convert_kwargs_to_snake_case
+async def resolve_find_project_defintions(
+    _: Any,
+    info: GraphQLResolveInfo,
+    query_filter: str,
+    first: int,
+    handler: GraphqlPageHandler[ProjectDefinitionService, ProjectDefinitionDto],
+    after: Optional[str] = None,
+):
+    result = await handler.find_all(first, after)
+    return result

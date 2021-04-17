@@ -13,6 +13,23 @@ class GraphqlPageHandler(Generic[Service, OutDto]):
         self.service = service
         self.out_dto = out_dto
 
+    async def find_all(self, limit: int, next_page_token: Optional[str] = None):
+        page = await self.service.find_all_paginated(limit, next_page_token)
+
+        return {
+            "edges": [
+                {
+                    "node": self.mapper.map(result, self.out_dto),
+                    "cursor": self.service.make_record_token(result),
+                }
+                for result in page.results
+            ],
+            "page_info": {
+                "has_next_page": len(page.results) == limit,
+                "end_cursor": page.next_page_token,
+            },
+        }
+
     async def handle(
         self, query_filter, limit: int, next_page_token: Optional[str] = None
     ):
@@ -28,8 +45,8 @@ class GraphqlPageHandler(Generic[Service, OutDto]):
                 }
                 for result in page.results
             ],
-            "pageInfo": {
-                "hasNextPage": len(page.results) < limit,
-                "endCursor": page.next_page_token,
+            "page_info": {
+                "has_next_page": len(page.results) == limit,
+                "end_cursor": page.next_page_token,
             },
         }

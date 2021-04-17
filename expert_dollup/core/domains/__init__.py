@@ -1,4 +1,4 @@
-from .project_definition import ProjectDefinition
+from .project_definition import ProjectDefinition, ProjectDefinitionFilter
 from .project_definition_node import (
     ProjectDefinitionNode,
     ProjectDefinitionNodeFilter,

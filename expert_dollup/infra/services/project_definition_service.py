@@ -4,7 +4,10 @@ from expert_dollup.infra.expert_dollup_db import (
     ProjectDefinitionDao,
 )
 from expert_dollup.core.domains import ProjectDefinition
-from expert_dollup.shared.database_services import BaseCrudTableService
+from expert_dollup.shared.database_services import (
+    BaseCrudTableService,
+    IdStampedDateCursorEncoder,
+)
 
 
 class ProjectDefinitionService(BaseCrudTableService[ProjectDefinition]):
@@ -13,3 +16,4 @@ class ProjectDefinitionService(BaseCrudTableService[ProjectDefinition]):
         dao = ProjectDefinitionDao
         domain = ProjectDefinition
         table_filter_type = None
+        paginator = IdStampedDateCursorEncoder.for_fields("name")

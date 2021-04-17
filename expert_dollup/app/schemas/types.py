@@ -2,6 +2,7 @@ import json
 from ariadne import (
     ObjectType,
     QueryType,
+    MutationType,
     UnionType,
     ScalarType,
     make_executable_schema,
@@ -10,6 +11,7 @@ from ariadne import (
 )
 from expert_dollup.shared.starlette_injection import GraphqlContext
 
+mutation = MutationType()
 query = QueryType()
 datasheet_definition = ObjectType("DatasheetDefinition")
 datasheet_definition_element = ObjectType("DatasheetDefinitionElement")
@@ -22,6 +24,7 @@ datasheet_element = ObjectType("DatasheetElement")
 json_schema_scalar = ScalarType("JsonSchema")
 
 types = [
+    mutation,
     query,
     datasheet_definition,
     datasheet_definition_element,

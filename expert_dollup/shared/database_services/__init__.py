@@ -10,6 +10,7 @@ from typing import (
     Tuple,
     Dict,
     Union,
+    Type,
 )
 from pydantic import BaseModel
 from sqlalchemy import and_, Table
@@ -85,6 +86,9 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         self._database = database
         self._mapper = mapper
         self._table = self.__class__.Meta.table
+        self._custom_filters: Dict[Type, callable] = getattr(
+            self.__class__.Meta, "custom_filters", dict()
+        )
         self._paginator = getattr(self.__class__.Meta, "paginator", lambda _: None)(
             self._table
         )
@@ -120,6 +124,22 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         results = self.map_many_to(records, self._dao, self._domain)
         return results
 
+    async def find_all_paginated(
+        self, limit: int = 1000, next_page_token: Optional[str] = None
+    ) -> Awaitable[List[Domain]]:
+        query = self._paginator.build_query(None, limit, next_page_token)
+        records = await self._database.fetch_all(query=query)
+        results = self.map_many_to(records, self._dao, self._domain)
+        new_next_page_token = (
+            None if len(records) == 0 else self._paginator.encode_record(records[-1])
+        )
+
+        return Page(
+            next_page_token=new_next_page_token,
+            limit=limit,
+            results=results,
+        )
+
     async def find_by(
         self,
         query_filter: QueryFilter,
@@ -127,8 +147,7 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         offset: Optional[int] = None,
     ) -> Awaitable[List[Domain]]:
         assert not self._table_filter_type is None
-        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
-        where_filter = build_and_column_filter(self._table, filter_fields)
+        where_filter = self._build_filter(query_filter)
         query = self._table.select().where(where_filter)
 
         if not limit is None:
@@ -149,8 +168,7 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         next_page_token: Optional[str] = None,
     ):
         assert not self._paginator is None, "Paginator required"
-        filter_fields = self._mapper.map(query_filter, dict)
-        where_filter = build_and_column_filter(self._table, filter_fields)
+        where_filter = self._build_filter(query_filter)
         query = self._paginator.build_query(where_filter, limit, next_page_token)
         records = await self._database.fetch_all(query=query)
         results = self.map_many_to(records, self._dao, self._domain)
@@ -271,6 +289,17 @@ class CoreCrudTableService(ABC, Generic[Domain]):
                 offset += len(table.c)
 
             yield domains, daos
+
+    def _build_filter(self, query_filter: QueryFilter):
+        query_type = type(query_filter)
+
+        if query_type in self._custom_filters:
+            return self._custom_filters[query_type](query_filter)
+
+        filter_fields = self._mapper.map(query_filter, dict)
+        where_filter = build_and_column_filter(self._table, filter_fields)
+
+        return where_filter
 
 
 class BaseCrudTableService(CoreCrudTableService[Domain]):

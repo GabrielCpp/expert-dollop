@@ -6,12 +6,13 @@ from expert_dollup.shared.handlers import GraphqlPageHandler
 from expert_dollup.shared.starlette_injection import (
     inject_graphql_route,
     inject_graphql_handler,
+    collapse_union,
 )
 from expert_dollup.app.controllers.project.project_definition_node import *
 from expert_dollup.app.dtos import *
 from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
-from .types import query, project_definition, project_definition_node
+from .types import query, mutation, project_definition, project_definition_node
 
 
 @project_definition.field("rootSections")
@@ -105,4 +106,32 @@ async def resolve_find_project_definition_node(
     find_project_definition_node: callable,
 ):
     result = await find_project_definition_node(info, project_def_id, id)
+    return result
+
+
+@mutation.field("addProjectDefinitionNode")
+@inject_graphql_route(create_project_definition_node)
+async def resolve_add_project_definition_node(
+    _: Any,
+    info: GraphQLResolveInfo,
+    node: dict,
+    create_project_definition_node: callable,
+):
+    node = collapse_union(
+        node,
+        ["config", "fieldDetails"],
+        {
+            "INT_FIELD_CONFIG": "int",
+            "DECIMAL_FIELD_CONFIG": "decimal",
+            "STRING_FIELD_CONFIG": "string",
+            "BOOL_FIELD_CONFIG": "bool",
+            "STATIC_CHOICE_FIELD_CONFIG": "staticChoice",
+            "COLLAPSIBLE_CONTAINER_FIELD_CONFIG": "collapsibleContainer",
+        },
+    )
+
+    result = await create_project_definition_node(
+        info, ProjectDefinitionNodeDto.parse_obj(node)
+    )
+
     return result

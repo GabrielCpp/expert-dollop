@@ -44,24 +44,31 @@ class IdStampedDateCursorEncoder:
 
         if not next_page_token is None:
             from_id = self._decode(next_page_token)
-            filter_condition = and_(
-                filter_condition,
-                id_column < from_id,
+            filter_condition = (
+                id_column < from_id
+                if filter_condition is None
+                else and_(
+                    filter_condition,
+                    id_column < from_id,
+                )
             )
 
-        query = (
-            self.table.select()
-            .where(filter_condition)
-            .order_by(desc(id_column))
-            .limit(limit)
-        )
+        if filter_condition is None:
+            query = self.table.select().order_by(desc(id_column)).limit(limit)
+        else:
+            query = (
+                self.table.select()
+                .where(filter_condition)
+                .order_by(desc(id_column))
+                .limit(limit)
+            )
 
         return query
 
     def _encode(self, id: Any):
         id_str = self._extract_field_id(id)
         token = base64.urlsafe_b64encode(id_str.encode("ascii"))
-        return token
+        return token.decode("utf8")
 
     def _decode(self, cursor: str) -> Any:
         id_field_str = base64.urlsafe_b64decode(cursor.encode("ascii"))

@@ -1,315 +1,364 @@
 scalar JsonSchema
 
 type DatasheetDefinitionPropertySchemaDict {
-    name: String!
-    schema: String!
+  name: String!
+  schema: String!
 }
 
 type DatasheetDefinition {
-    id: ID!
-    name: String!
-    elementPropertiesSchema: DatasheetDefinitionPropertySchemaDict
-    elementsDefinition(first: Int!, after: String): DatasheetDefinitionElementConnection
+  id: ID!
+  name: String!
+  elementPropertiesSchema: DatasheetDefinitionPropertySchemaDict
+  elementsDefinition(
+    first: Int!
+    after: String
+  ): DatasheetDefinitionElementConnection
 }
 
 type DatasheetDefinitionElementEdge {
-    node: DatasheetDefinitionElement!
-    cursor: String!
+  node: DatasheetDefinitionElement!
+  cursor: String!
 }
 
 type DatasheetDefinitionElementConnection {
-    edges: [DatasheetDefinitionElement!]!
-    pageInfo: PageInfo!
+  edges: [DatasheetDefinitionElement!]!
+  pageInfo: PageInfo!
 }
 
 type DatasheetDefinitionElementProperty {
-    is_readonly: Boolean!
-    value: String!
+  is_readonly: Boolean!
+  value: String!
 }
 
 type DatasheetDefinitionElementPropertyDict {
-    name: String!
-    property: DatasheetDefinitionElementProperty!
+  name: String!
+  property: DatasheetDefinitionElementProperty!
 }
 
 type DatasheetDefinitionElement {
-    id: ID!
-    unitId: String!
-    isCollection: Boolean!
-    datasheetDefId: String!
-    datasheetDefinition: DatasheetDefinition
-    orderIndex: Int!
-    name: String!
-    defaultProperties: DatasheetDefinitionElementPropertyDict
-    tags: [String!]!
-    creationDateUtc: String!
-
+  id: ID!
+  unitId: String!
+  isCollection: Boolean!
+  datasheetDefId: String!
+  datasheetDefinition: DatasheetDefinition
+  orderIndex: Int!
+  name: String!
+  defaultProperties: DatasheetDefinitionElementPropertyDict
+  tags: [String!]!
+  creationDateUtc: String!
 }
 
 type DatasheetElement {
-    datasheetId: String!
-    elementDefId: String!
-    elementDefinition: DatasheetDefinitionElement!
-    childElementReference: ID!
-    properties: String!
-    originalDatasheetId: String!
-    creationDateUtc: String!
-} 
+  datasheetId: String!
+  elementDefId: String!
+  elementDefinition: DatasheetDefinitionElement!
+  childElementReference: ID!
+  properties: String!
+  originalDatasheetId: String!
+  creationDateUtc: String!
+}
 
 type DatasheetElementEdge {
-    node: DatasheetElement!
-    cursor: String!
+  node: DatasheetElement!
+  cursor: String!
 }
 
 type DatasheetElementConnection {
-    edges: [DatasheetElementEdge!]!
-    pageInfo: PageInfo!
+  edges: [DatasheetElementEdge!]!
+  pageInfo: PageInfo!
 }
 
 type Datasheet {
-    id: ID!
-    name: String!
-    isStaged: Boolean!
-    datasheetDefId: ID!
-    fromDatasheetId: ID!
-    elements(first: Int!, after: String): DatasheetElementConnection
+  id: ID!
+  name: String!
+  isStaged: Boolean!
+  datasheetDefId: ID!
+  fromDatasheetId: ID!
+  elements(first: Int!, after: String): DatasheetElementConnection
 }
 
 type IntFieldConfig {
-    validator: JsonSchema!
+  unit: String!
 }
 
 type DecimalFieldConfig {
-    validator: JsonSchema!
-    precision: Int!
+  unit: String!
+  precision: Int!
 }
 
 type StringFieldConfig {
-    validator: JsonSchema!
-    transforms: [String!]!
+  transforms: [String!]!
 }
 
 type BoolFieldConfig {
-    isCheckbox: Boolean!
+  isCheckbox: Boolean!
 }
 
 type StaticChoiceOption {
-    id: String!
-    label: String!
-    help_text: String!
+  id: String!
+  label: String!
+  help_text: String!
 }
 
 type StaticChoiceFieldConfig {
-    validator: JsonSchema!
-    options: [StaticChoiceOption!]!
+  options: [StaticChoiceOption!]!
 }
 
 type CollapsibleContainerFieldConfig {
-    isCollapsible: Boolean!
+  isCollapsible: Boolean!
 }
 
-union FieldDetailsUnion = IntFieldConfig | DecimalFieldConfig | StringFieldConfig | BoolFieldConfig | StaticChoiceFieldConfig | CollapsibleContainerFieldConfig
+union FieldDetailsUnion =
+    IntFieldConfig
+  | DecimalFieldConfig
+  | StringFieldConfig
+  | BoolFieldConfig
+  | StaticChoiceFieldConfig
+  | CollapsibleContainerFieldConfig
 
 type NodeConfig {
-    fieldDetails: FieldDetailsUnion
-    value_validator: JsonSchema
+  fieldDetails: FieldDetailsUnion
+  valueValidator: JsonSchema
 }
-    
+
 type IntFieldValue {
-    integer: Int!
+  integer: Int!
 }
 
 type DecimalFieldValue {
-    numeric: Float!
+  numeric: Float!
 }
 
 type StringFieldValue {
-    text: String!
+  text: String!
 }
 
 type BoolFieldValue {
-    enabled: Boolean!
+  enabled: Boolean!
 }
 
-union FieldValue = IntFieldValue | DecimalFieldValue | StringFieldValue | BoolFieldValue
-
+union FieldValue =
+    IntFieldValue
+  | DecimalFieldValue
+  | StringFieldValue
+  | BoolFieldValue
 
 input IntFieldConfigInput {
-    validator: JsonSchema!
+  validator: JsonSchema!
 }
 
 input DecimalFieldConfigInput {
-    validator: JsonSchema!
-    precision: Int!
+  validator: JsonSchema!
+  precision: Int!
 }
 
 input StringFieldConfigInput {
-    validator: JsonSchema!
-    transforms: [String!]!
+  validator: JsonSchema!
+  transforms: [String!]!
 }
 
 input BoolFieldConfigInput {
-    validator: JsonSchema!
+  validator: JsonSchema!
 }
 
 input StaticChoiceOptionInput {
-    id: String!
-    label: String!
-    help_text: String!
+  id: String!
+  label: String!
+  help_text: String!
 }
 
 input StaticChoiceFieldConfigInput {
-    validator: JsonSchema!
-    options: [StaticChoiceOptionInput!]!
+  validator: JsonSchema!
+  options: [StaticChoiceOptionInput!]!
 }
 
 input CollapsibleContainerFieldConfigInput {
-    isCollapsible: Boolean!
+  isCollapsible: Boolean!
+}
+
+enum FieldDetailsType {
+  INT_FIELD_CONFIG
+  DECIMAL_FIELD_CONFIG
+  STRING_FIELD_CONFIG
+  BOOL_FIELD_CONFIG
+  STATIC_CHOICE_FIELD_CONFIG
+  COLLAPSIBLE_CONTAINER_FIELD_CONFIG
 }
 
 input FieldDetailsUnionInput {
-    kind: String!
-    int: IntFieldConfigInput 
-    decimal: DecimalFieldConfigInput
-    string: StringFieldConfigInput
-    bool: BoolFieldConfigInput
-    staticChoice: StaticChoiceFieldConfigInput
-    collapsibleContainer: CollapsibleContainerFieldConfigInput
+  kind: FieldDetailsType!
+  int: IntFieldConfigInput
+  decimal: DecimalFieldConfigInput
+  string: StringFieldConfigInput
+  bool: BoolFieldConfigInput
+  staticChoice: StaticChoiceFieldConfigInput
+  collapsibleContainer: CollapsibleContainerFieldConfigInput
 }
 
 input NodeConfigInput {
-    valueType: FieldDetailsUnionInput!
+  fieldDetails: FieldDetailsUnionInput
+  valueValidator: JsonSchema
 }
-    
+
 input IntFieldValueInput {
-    integer: Int!
+  integer: Int!
 }
 
 input DecimalFieldValueInput {
-    numeric: Float!
+  numeric: Float!
 }
 
 input StringFieldValueInput {
-    text: String!
+  text: String!
 }
 
 input BoolFieldValueInput {
-    enabled: Boolean!
+  enabled: Boolean!
 }
 
 input FieldValueInput {
-    kind: String!
-    int: IntFieldValueInput
-    decimal: DecimalFieldValueInput
-    string: StringFieldValueInput
-    bool: BoolFieldValueInput
+  kind: String!
+  int: IntFieldValueInput
+  decimal: DecimalFieldValueInput
+  string: StringFieldValueInput
+  bool: BoolFieldValueInput
 }
 
 input ProjectDefinitionNodeInput {
-    id: ID!
-    projectDefId: String!
-    name: String!
-    isCollection: Boolean!
-    instanciateByDefault: Boolean!
-    orderIndex: Int!
-    config: NodeConfigInput
-    defaultValue: FieldValueInput
-    path: [String!]!
+  id: ID!
+  projectDefId: String!
+  name: String!
+  isCollection: Boolean!
+  instanciateByDefault: Boolean!
+  orderIndex: Int!
+  config: NodeConfigInput!
+  defaultValue: FieldValueInput
+  path: [String!]!
 }
 
 type ProjectDefinitionNode {
-    id: ID!
-    projectDefId: String!
-    name: String!
-    isCollection: Boolean!
-    instanciateByDefault: Boolean!
-    orderIndex: Int!
-    config: NodeConfig
-    defaultValue: FieldValue
-    path: [String!]!
-    children: [ProjectDefinitionNode!]!
+  id: ID!
+  projectDefId: String!
+  name: String!
+  isCollection: Boolean!
+  instanciateByDefault: Boolean!
+  orderIndex: Int!
+  config: NodeConfig!
+  defaultValue: FieldValue
+  path: [String!]!
+  children: [ProjectDefinitionNode!]!
 }
 
 type ProjectDefinitionTreeNode {
-    definition: ProjectDefinitionNode!
-    children: [ProjectDefinitionTreeNode!]!
+  definition: ProjectDefinitionNode!
+  children: [ProjectDefinitionTreeNode!]!
 }
 
 type ProjectDefinitionNodeTree {
-    roots: [ProjectDefinitionTreeNode!]!
+  roots: [ProjectDefinitionTreeNode!]!
 }
 
 type ProjectDefinition {
-    id: ID!
-    name: String!
-    defaultDatasheetId: String!
-    defaultDatasheet: Datasheet!
-    datasheetDefId: String!
-    datasheetDefinition: DatasheetDefinition!
-    rootSections(projectDefId: ID!): ProjectDefinitionNodeTree!
-    rootSectionContainers(projectDefId: ID!, rootSectionId: ID!): ProjectDefinitionNodeTree!
-    formContent(projectDefId: ID!, formId: ID!): ProjectDefinitionNodeTree!
+  id: ID!
+  name: String!
+  defaultDatasheetId: String!
+  defaultDatasheet: Datasheet!
+  datasheetDefId: String!
+  datasheetDefinition: DatasheetDefinition!
+  rootSections(projectDefId: ID!): ProjectDefinitionNodeTree!
+  rootSectionContainers(
+    projectDefId: ID!
+    rootSectionId: ID!
+  ): ProjectDefinitionNodeTree!
+  formContent(projectDefId: ID!, formId: ID!): ProjectDefinitionNodeTree!
+}
+
+type ProjectDefinitionEdge {
+  node: ProjectDefinition!
+  cursor: String!
+}
+
+type ProjectDefinitionConnection {
+  edges: [ProjectDefinitionEdge!]!
+  pageInfo: PageInfo!
 }
 
 type Project {
-    id: ID!
-    name: String!
-    isStaged: Boolean
-    projectDefId: String!
-    projectDefinition: ProjectDefinition!
-    datasheetId: String!
-    datasheet: Datasheet!
+  id: ID!
+  name: String!
+  isStaged: Boolean
+  projectDefId: String!
+  projectDefinition: ProjectDefinition!
+  datasheetId: String!
+  datasheet: Datasheet!
 }
 
 type Translation {
-    id: ID!
-    ressourceId: String!
-    locale: String!
-    scope: String!
-    name: String!
-    value: String!
+  id: ID!
+  ressourceId: String!
+  locale: String!
+  scope: String!
+  name: String!
+  value: String!
 }
 
 type TranslationEdge {
-    node: Translation!
-    cursor: String!
+  node: Translation!
+  cursor: String!
 }
 
 type TranslationConnection {
-    edges: [TranslationEdge!]!
-    pageInfo: PageInfo!
+  edges: [TranslationEdge!]!
+  pageInfo: PageInfo!
 }
 
 type PageInfo {
-    hasNextPage: Boolean
-    endCursor: String!
+  hasNextPage: Boolean
+  endCursor: String!
 }
 
 type Query {
-    findDatasheet(id: ID!): Datasheet!
-    findProjectDefinition(id: ID!): ProjectDefinition!
-    findProjectDefinitionRootSections(projectDefId: ID!): ProjectDefinitionNodeTree!
-    findProjectDefinitionRootSectionContainers(projectDefId: ID!, rootSectionId: ID!): ProjectDefinitionNodeTree!
-    findProjectDefinitionFormContent(projectDefId: ID!, formId: ID!): ProjectDefinitionNodeTree!
-    findProjectDefinitionNode(projectDefId: ID!, id: ID!): ProjectDefinitionNode!
-    findRessourceTranslation(ressourceId: ID!, language: String!): TranslationConnection!
+  findDatasheet(id: ID!): Datasheet!
+  findProjectDefinition(id: ID!): ProjectDefinition!
+  findProjectDefinitionRootSections(
+    projectDefId: ID!
+  ): ProjectDefinitionNodeTree!
+  findProjectDefinitionRootSectionContainers(
+    projectDefId: ID!
+    rootSectionId: ID!
+  ): ProjectDefinitionNodeTree!
+  findProjectDefinitionFormContent(
+    projectDefId: ID!
+    formId: ID!
+  ): ProjectDefinitionNodeTree!
+  findProjectDefinitionNode(projectDefId: ID!, id: ID!): ProjectDefinitionNode!
+  findRessourceTranslation(
+    ressourceId: ID!
+    language: String!
+  ): TranslationConnection!
+  findProjectDefintions(
+    queryFilter: String!
+    first: Int!
+    after: String
+  ): ProjectDefinitionConnection!
 }
 
 input TranslationInput {
-    ressourceId: String!
-    locale: String!
-    scope: String!
-    name: String!
-    value: String!
+  ressourceId: String!
+  locale: String!
+  scope: String!
+  name: String!
+  value: String!
 }
 
 type Mutation {
-    addTranslations(translations: [TranslationInput!]!): [Translation!]!
-    addProjectDefinitionNode(node: ProjectDefinitionNodeInput!): ProjectDefinitionNode!
+  addTranslations(translations: [TranslationInput!]!): [Translation!]!
+  addProjectDefinitionNode(
+    node: ProjectDefinitionNodeInput!
+  ): ProjectDefinitionNode!
 }
 
 schema {
   query: Query
   mutation: Mutation
 }
-

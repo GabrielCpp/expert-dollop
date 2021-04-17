@@ -105,10 +105,10 @@ ValueUnionDto = Union[
 ]
 
 value_type_lookup_map = {
-    type(IntFieldValueDto): "IntFieldValue",
-    type(DecimalFieldValueDto): "DecimalFieldValue",
-    type(StringFieldValueDto): "StringFieldValue",
-    type(BoolFieldValueDto): "BoolFieldValue",
+    IntFieldValueDto: "IntFieldValue",
+    DecimalFieldValueDto: "DecimalFieldValue",
+    StringFieldValueDto: "StringFieldValue",
+    BoolFieldValueDto: "BoolFieldValue",
     type(None): "null",
 }
 

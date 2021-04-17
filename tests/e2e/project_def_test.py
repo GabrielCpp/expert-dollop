@@ -50,20 +50,6 @@ async def test_project_creation(ac, mapper):
     assert containers == expected_containers
 
 
-def walk_tree(
-    tree: ProjectDefinitionNodeTreeDto,
-) -> Generator[ProjectDefinitionNodeDto, None, None]:
-    def walk_node(
-        nodes: List[ProjectDefinitionTreeNodeDto], path_trace: List[int]
-    ) -> Generator[ProjectDefinitionNodeDto, None, None]:
-        for index, node in enumerate(nodes):
-            this_trace = [*path_trace, index]
-            yield (node.definition, this_trace)
-            yield from walk_node(node.children, this_trace)
-
-    yield from walk_node(tree.roots, [])
-
-
 @pytest.mark.asyncio
 async def test_query_project_definition_parts(ac, mapper, expert_dollup_simple_project):
     db = expert_dollup_simple_project

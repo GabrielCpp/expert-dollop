@@ -13,7 +13,7 @@ def resolve_field_value_type(
     target_type = type(target)
 
     if not target_type in value_type_lookup_map:
-        raise LookupError("Field type not found")
+        raise LookupError(f"Field type not found {target_type}")
 
     return value_type_lookup_map[target_type]
 

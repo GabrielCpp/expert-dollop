@@ -75,7 +75,9 @@ def dbUp(c):
 def fill_db_with_fixture(c, poetry=False):
     if poetry:
         from dev.init_db import fill_db
+        from tests.fixtures import truncate_db
 
+        truncate_db()
         fill_db()
     else:
         c.run("poetry run invoke db:fixture --poetry")

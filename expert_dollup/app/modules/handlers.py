@@ -11,7 +11,10 @@ from expert_dollup.app.dtos import *
 
 
 def bind_graphql_handlers(binder: Binder) -> None:
-    handlers = [GraphqlPageHandler[DatasheetElementService, DatasheetElementDto]]
+    handlers = [
+        GraphqlPageHandler[DatasheetElementService, DatasheetElementDto],
+        GraphqlPageHandler[ProjectDefinitionService, ProjectDefinitionDto],
+    ]
 
     for handler in handlers:
         binder.bind(
