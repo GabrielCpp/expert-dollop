@@ -6,7 +6,7 @@ from uuid import UUID
 from collections import defaultdict
 from expert_dollup.core.domains import (
     ProjectContainer,
-    ProjectContainerNode,
+    ProjectContainerTreeNode,
     ProjectContainerMeta,
     ProjectDefinitionNode,
     ProjectContainerTree,
@@ -171,7 +171,7 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
 
         if isinstance(level, int):
             roots = [
-                ProjectContainerNode(
+                ProjectContainerTreeNode(
                     container=container, definition=definition, meta=meta, children=[]
                 )
                 for (container, definition, meta), _ in results
@@ -199,7 +199,7 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
         tree_depth = None
 
         for ((container, definition, meta), (container_dao, _, __)) in results:
-            node = ProjectContainerNode(
+            node = ProjectContainerTreeNode(
                 container=container, definition=definition, meta=meta, children=[]
             )
 

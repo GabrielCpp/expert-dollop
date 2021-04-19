@@ -25,7 +25,11 @@ from .project_container_meta import (
     ProjectContainerMetaFilter,
     ProjectContainerMetaState,
 )
-from .project_container_tree import ProjectContainerTree, ProjectContainerNode
+from .project_container_tree import (
+    ProjectContainerTree,
+    ProjectContainerTreeNode,
+    ProjectContainerTypeGroup,
+)
 from .translation import Translation, TranslationId, TranslationRessourceLocaleQuery
 from .ressource import Ressource
 from .formula import (

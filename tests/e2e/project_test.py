@@ -157,8 +157,8 @@ async def test_instanciate_collection(ac, expert_dollup_simple_project, project)
 @pytest.mark.asyncio
 async def test_clone_collection(ac, expert_dollup_simple_project, project):
     def assert_clone_tree_is_equivalent(
-        lhs_nodes: List[ProjectContainerNodeDto],
-        rhs_nodes: List[ProjectContainerNodeDto],
+        lhs_nodes: List[ProjectContainerTreeNodeDto],
+        rhs_nodes: List[ProjectContainerTreeNodeDto],
     ):
         assert len(lhs_nodes) == len(rhs_nodes)
 

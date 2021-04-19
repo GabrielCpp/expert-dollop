@@ -152,7 +152,24 @@ def map_project_container_meta_from_dao(
     return ProjectContainerMeta(
         project_id=src.project_id,
         type_id=src.type_id,
-        state=ProjectContainerMetaState(**src.state),
+        state=ProjectContainerMetaState(src.state, ProjectContainerMetaStateDao),
+        definition=mapper.map(src.definition, ProjectDefinitionNodeDao),
+    )
+
+
+def map_project_container_meta_state_to_dao(
+    src: ProjectContainerMetaState, mapper: Mapper
+) -> ProjectContainerMetaStateDao:
+    return ProjectContainerMetaStateDao(
+        is_visible=src.is_visible, selected_child=src.selected_child
+    )
+
+
+def map_project_container_meta_state_from_dao(
+    src: ProjectContainerMetaStateDao, mapper: Mapper
+) -> ProjectContainerMetaState:
+    return ProjectContainerMetaState(
+        is_visible=src.is_visible, selected_child=src.selected_child
     )
 
 

@@ -135,11 +135,14 @@ project_container_meta_table = Table(
     Column("state", postgresql.JSON(), nullable=False),
 )
 
-
+class ProjectContainerMetaStateDao(BaseModel):
+    is_visible: bool
+    selected_child: Optional[UUID]
+    
 class ProjectContainerMetaDao(BaseModel):
     project_id: UUID
     type_id: UUID
-    state: dict
+    state: ProjectContainerMetaStateDao
 
 
 ressource_table = Table(

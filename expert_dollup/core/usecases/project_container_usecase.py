@@ -7,7 +7,7 @@ from expert_dollup.core.domains import (
     ProjectContainerTree,
     ProjectContainerFilter,
     ProjectDefinitionNodeFilter,
-    ProjectContainerNode,
+    ProjectContainerTreeNode,
     ValueUnion,
 )
 from expert_dollup.infra.services import (
@@ -75,10 +75,7 @@ class ProjectContainerUseCase:
 
         node_value_aggregate = self.aggregate_factory.create(
             NodeValueAggregate,
-            NodeValue(
-                config=definition_container.config,
-                value=value
-            ),
+            NodeValue(config=definition_container.config, value=value),
         )
 
         await self.project_container_service.update(

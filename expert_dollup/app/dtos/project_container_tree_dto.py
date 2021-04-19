@@ -3,18 +3,22 @@ from typing import List
 from uuid import UUID
 from .project_container_dto import ProjectContainerDto
 from .project_definition_node_dto import ProjectDefinitionNodeDto
-from .project_container_meta_dto import ProjectContainerMetaDto
+from .project_container_meta_dto import ProjectContainerMetaStateDto
 
 
-class ProjectContainerNodeDto(CamelModel):
+class ProjectContainerTypeGroupDto(CamelModel):
+    children: List["ProjectContainerTreeNodeDto"]
+
+
+class ProjectContainerTreeNodeDto(CamelModel):
     container: ProjectContainerDto
     definition: ProjectDefinitionNodeDto
-    meta: ProjectContainerMetaDto
-    children: List["ProjectContainerNodeDto"]
+    state: ProjectContainerMetaStateDto
+    types: List[ProjectContainerTypeGroupDto]
 
 
-ProjectContainerNodeDto.update_forward_refs()
+ProjectContainerTypeGroupDto.update_forward_refs()
 
 
 class ProjectContainerTreeDto(CamelModel):
-    roots: List[ProjectContainerNodeDto]
+    roots: List[ProjectContainerTreeNodeDto]

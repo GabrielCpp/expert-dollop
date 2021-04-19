@@ -97,6 +97,7 @@ class ProjectUseCase:
                 project_id=cloned_project.id,
                 type_id=container_meta.type_id,
                 state=container_meta.state,
+                definition=container_meta.definition,
             )
             for container_meta in container_metas
         ]
@@ -138,6 +139,7 @@ class ProjectUseCase:
                     is_visible=container_definition.instanciate_by_default,
                     selected_child=None,
                 ),
+                definition=container_definition,
             )
 
             project_container_metas.append(container_meta)

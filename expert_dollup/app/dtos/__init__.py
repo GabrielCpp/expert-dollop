@@ -34,7 +34,11 @@ from .project_container_dto import (
     ProjectContainerCollectionTargetDto,
     ProjectContainerPageDto,
 )
-from .project_container_tree_dto import ProjectContainerNodeDto, ProjectContainerTreeDto
+from .project_container_tree_dto import (
+    ProjectContainerTreeNodeDto,
+    ProjectContainerTreeDto,
+    ProjectContainerTypeGroupDto,
+)
 from .project_container_meta_dto import (
     ProjectContainerMetaDto,
     ProjectContainerMetaStateDto,

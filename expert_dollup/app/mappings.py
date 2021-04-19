@@ -303,17 +303,18 @@ def map_project_container_meta_to_dto(
         project_id=src.project_id,
         type_id=src.type_id,
         state=ProjectContainerMetaStateDto(**asdict(src.state)),
+        definition=mapper.map(src.definition, ProjectDefinitionNodeDto),
     )
 
 
 def map_project_container_node_to_dto(
-    src: ProjectContainerNode, mapper: Mapper
-) -> ProjectContainerNodeDto:
-    return ProjectContainerNodeDto(
+    src: ProjectContainerTreeNode, mapper: Mapper
+) -> ProjectContainerTreeNodeDto:
+    return ProjectContainerTreeNodeDto(
         container=mapper.map(src.container, ProjectContainerDto),
         definition=mapper.map(src.definition, ProjectDefinitionNodeDto),
         meta=mapper.map(src.meta, ProjectContainerMetaDto),
-        children=mapper.map_many(src.children, ProjectContainerNodeDto),
+        children=mapper.map_many(src.children, ProjectContainerTreeNodeDto),
     )
 
 
@@ -321,7 +322,7 @@ def map_projec_container_tree_to_dto(
     src: ProjectContainerTree, mapper: Mapper
 ) -> ProjectContainerTreeDto:
     return ProjectContainerTreeDto(
-        roots=mapper.map_many(src.roots, ProjectContainerNodeDto)
+        roots=mapper.map_many(src.roots, ProjectContainerTreeNodeDto)
     )
 
 
