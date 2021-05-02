@@ -283,7 +283,7 @@ type ProjectDefinitionConnection {
   pageInfo: PageInfo!
 }
 
-type Project {
+type ProjectDetails {
   id: ID!
   name: String!
   isStaged: Boolean

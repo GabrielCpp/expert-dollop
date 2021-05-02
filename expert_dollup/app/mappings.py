@@ -208,8 +208,8 @@ def map_project_definition_tree_to_dto(
     )
 
 
-def map_project_from_dto(src: ProjectDto, mapper: Mapper) -> Project:
-    return Project(
+def map_project_from_dto(src: ProjectDetailsDto, mapper: Mapper) -> ProjectDetails:
+    return ProjectDetails(
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
@@ -218,8 +218,8 @@ def map_project_from_dto(src: ProjectDto, mapper: Mapper) -> Project:
     )
 
 
-def map_project_to_dto(src: Project, mapper: Mapper) -> ProjectDto:
-    return ProjectDto(
+def map_project_to_dto(src: ProjectDetails, mapper: Mapper) -> ProjectDetailsDto:
+    return ProjectDetailsDto(
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
@@ -269,6 +269,7 @@ def map_project_container_from_dto(
         id=src.id,
         project_id=src.project_id,
         type_id=src.type_id,
+        type_path=src.type_path,
         path=src.path,
         value=mapper.map(src.value, ValueUnion, ValueUnionDto),
     )
@@ -281,18 +282,17 @@ def map_project_container_to_dto(
         id=src.id,
         project_id=src.project_id,
         type_id=src.type_id,
+        type_path=src.type_path,
         path=src.path,
         value=mapper.map(src.value, ValueUnionDto, ValueUnion),
     )
 
 
-def map_project_container_page_to_dto(
-    src: Page, mapper: Mapper
-) -> ProjectContainerPageDto:
-    return ProjectContainerPageDto(
-        next_page_token=src.next_page_token,
-        limit=src.limit,
-        results=mapper.map_many(src.results, ProjectContainerDto),
+def map_project_container_meta_state_to_dto(
+    src: ProjectContainerMetaState, mapper: Mapper
+) -> ProjectContainerMetaStateDto:
+    return ProjectContainerMetaStateDto(
+        is_visible=src.is_visible, selected_child=src.selected_child
     )
 
 
@@ -302,27 +302,35 @@ def map_project_container_meta_to_dto(
     return ProjectContainerMetaDto(
         project_id=src.project_id,
         type_id=src.type_id,
-        state=ProjectContainerMetaStateDto(**asdict(src.state)),
+        state=mapper.map(src.state, ProjectContainerMetaStateDto),
         definition=mapper.map(src.definition, ProjectDefinitionNodeDto),
     )
 
 
-def map_project_container_node_to_dto(
+def map_project_container_tree_node_to_dto(
     src: ProjectContainerTreeNode, mapper: Mapper
 ) -> ProjectContainerTreeNodeDto:
     return ProjectContainerTreeNodeDto(
-        container=mapper.map(src.container, ProjectContainerDto),
-        definition=mapper.map(src.definition, ProjectDefinitionNodeDto),
-        meta=mapper.map(src.meta, ProjectContainerMetaDto),
+        node=mapper.map(src.node, ProjectContainerDto),
         children=mapper.map_many(src.children, ProjectContainerTreeNodeDto),
     )
 
 
-def map_projec_container_tree_to_dto(
+def map_project_container_tree_type_node_to_dto(
+    src: ProjectContainerTreeTypeNode, mapper: Mapper
+) -> ProjectContainerTreeTypeNodeDto:
+    return ProjectContainerTreeTypeNodeDto(
+        definition=mapper.map(src.definition, ProjectDefinitionNodeDto),
+        state=mapper.map(src.state, ProjectContainerMetaStateDto),
+        nodes=mapper.map_many(src.nodes, ProjectContainerTreeNodeDto),
+    )
+
+
+def map_project_container_tree_to_dto(
     src: ProjectContainerTree, mapper: Mapper
 ) -> ProjectContainerTreeDto:
     return ProjectContainerTreeDto(
-        roots=mapper.map_many(src.roots, ProjectContainerTreeNodeDto)
+        roots=mapper.map_many(src.roots, ProjectContainerTreeTypeNodeDto)
     )
 
 

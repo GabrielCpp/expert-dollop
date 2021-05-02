@@ -9,15 +9,10 @@ class ProjectContainerDto(CamelModel):
     project_id: UUID
     type_id: UUID
     path: List[UUID]
+    type_path: List[UUID]
     value: ValueUnionDto
 
 
-class ProjectContainerPageDto(CamelModel):
-    next_page_token: Optional[str]
-    limit: int
-    results: List[ProjectContainerDto]
-
-
 class ProjectContainerCollectionTargetDto(CamelModel):
-    parent_container_id: Optional[UUID]
+    parent_node_id: Optional[UUID]
     collection_type_id: UUID

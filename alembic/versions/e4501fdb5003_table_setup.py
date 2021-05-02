@@ -164,33 +164,44 @@ def create_project_tables():
         Column("type_id", postgresql.UUID(), nullable=False),
         Column("path", String, nullable=False),
         Column("value", String, nullable=True),
+        Column("level", Integer, nullable=False),
+        Column("type_path", String, nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
-        Column("mixed_paths", ARRAY(String, dimensions=1), nullable=False),
-    )
-
-    op.execute(
-        "ALTER TABLE project_container ADD COLUMN level int GENERATED ALWAYS AS ((CASE WHEN LENGTH(path) > 0 THEN 1 ELSE 0 END) + (LENGTH(path) - LENGTH(REPLACE(path,'/','')))) STORED;"
+        Column("display_query_internal_id", postgresql.UUID(), nullable=False),
     )
 
     op.create_index(
-        op.f("ix_project_container_mixed_paths"),
+        op.f("ix_project_container_display_query_internal_id"),
         "project_container",
-        ["mixed_paths"],
-        postgresql_using="gin",
+        ["display_query_internal_id"],
+    )
+
+    op.create_index(
+        op.f("ix_project_container_project_id_path"),
+        "project_container",
+        ["project_id", "path"],
     )
 
     op.create_table(
         "project_container_metadata",
         Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("type_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("state", postgresql.JSON(), nullable=False),
+        Column("state", String, nullable=False),
+        Column("definition", String, nullable=False),
+        Column("display_query_internal_id", postgresql.UUID(), nullable=False),
+    )
+
+    op.create_index(
+        op.f("ix_project_container_metadata_display_query_internal_id"),
+        "project_container_metadata",
+        ["display_query_internal_id"],
     )
 
     op.create_table(
         "project_container_formula_cache",
         Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("container_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("node_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("generation_tag", postgresql.UUID(), nullable=False),
         Column("calculation_details", String, nullable=False),
         Column("result", postgresql.JSON(), nullable=False),

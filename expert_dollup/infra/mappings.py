@@ -9,13 +9,24 @@ from expert_dollup.core.utils.path_transform import (
     join_path,
     split_uuid_path,
     join_uuid_path,
-    build_path_steps,
     list_uuid_to_str,
     list_str_to_uuid,
 )
 
 from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.core.domains import *
+
+
+def get_display_query_id(global_id: UUID, path: List[UUID]) -> str:
+    display_query_internal_id = global_id
+    level = len(path)
+
+    if level >= SECTION_LEVEL and level <= FORM_LEVEL:
+        display_query_internal_id = path[ROOT_LEVEL]
+    elif level > FORM_LEVEL:
+        display_query_internal_id = path[FORM_LEVEL]
+
+    return display_query_internal_id
 
 
 def map_project_definition_from_dao(
@@ -63,13 +74,7 @@ def map_project_definition_node_from_dao(
 def map_project_definition_node_to_dao(
     src: ProjectDefinitionNode, mapper: Mapper
 ) -> ProjectDefinitionNodeDao:
-    display_query_internal_id = src.project_def_id
-    level = len(src.path)
-
-    if level >= SECTION_LEVEL and level <= FORM_LEVEL:
-        display_query_internal_id = src.path[ROOT_LEVEL]
-    elif level > FORM_LEVEL:
-        display_query_internal_id = src.path[FORM_LEVEL]
+    display_query_internal_id = get_display_query_id(src.project_def_id, src.path)
 
     return ProjectDefinitionNodeDao(
         id=src.id,
@@ -89,8 +94,8 @@ def map_project_definition_node_to_dao(
     )
 
 
-def map_project_from_dao(src: ProjectDao, mapper: Mapper) -> Project:
-    return Project(
+def map_project_from_dao(src: ProjectDao, mapper: Mapper) -> ProjectDetails:
+    return ProjectDetails(
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
@@ -99,7 +104,7 @@ def map_project_from_dao(src: ProjectDao, mapper: Mapper) -> Project:
     )
 
 
-def map_project_to_dao(src: Project, mapper: Mapper) -> ProjectDao:
+def map_project_to_dao(src: ProjectDetails, mapper: Mapper) -> ProjectDao:
     return ProjectDao(
         id=src.id,
         name=src.name,
@@ -113,13 +118,17 @@ def map_project_to_dao(src: Project, mapper: Mapper) -> ProjectDao:
 def map_project_container_to_dao(
     src: ProjectContainer, mapper: Mapper
 ) -> ProjectContainerDao:
+    display_query_internal_id = get_display_query_id(src.project_id, src.path)
+
     return ProjectContainerDao(
         id=src.id,
         project_id=src.project_id,
         type_id=src.type_id,
         path=join_uuid_path(src.path),
         value=None if src.value is None else jsonpickle.encode(src.value),
-        mixed_paths=build_path_steps(src.path),
+        type_path=join_uuid_path(src.type_path),
+        level=len(src.path),
+        display_query_internal_id=display_query_internal_id,
         creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
@@ -132,6 +141,7 @@ def map_project_container_from_dao(
         project_id=src.project_id,
         type_id=src.type_id,
         path=split_uuid_path(src.path),
+        type_path=split_uuid_path(src.type_path),
         value=None if src.value is None else jsonpickle.decode(src.value),
     )
 
@@ -142,7 +152,11 @@ def map_project_container_meta_to_dao(
     return ProjectContainerMetaDao(
         project_id=src.project_id,
         type_id=src.type_id,
-        state=asdict(src.state),
+        definition=mapper.map(src.definition, ProjectDefinitionNodeDao).json(),
+        state=mapper.map(src.state, ProjectContainerMetaStateDao).json(),
+        display_query_internal_id=get_display_query_id(
+            src.project_id, src.definition.path
+        ),
     )
 
 
@@ -152,8 +166,12 @@ def map_project_container_meta_from_dao(
     return ProjectContainerMeta(
         project_id=src.project_id,
         type_id=src.type_id,
-        state=ProjectContainerMetaState(src.state, ProjectContainerMetaStateDao),
-        definition=mapper.map(src.definition, ProjectDefinitionNodeDao),
+        state=mapper.map(
+            ProjectContainerMetaStateDao.parse_raw(src.state), ProjectContainerMetaState
+        ),
+        definition=mapper.map(
+            ProjectDefinitionNodeDao.parse_raw(src.definition), ProjectDefinitionNode
+        ),
     )
 
 
@@ -306,7 +324,7 @@ def map_formula_cache_result_to_dao(
     return ProjectFormulaCacheDao(
         project_id=src.project_id,
         formula_id=src.formula_id,
-        container_id=src.container_id,
+        node_id=src.node_id,
         generation_tag=src.generation_tag,
         calculation_details=src.calculation_details,
         result=src.result,
@@ -320,7 +338,7 @@ def map_formula_cache_result_from_dao(
     return FormulaCachedResult(
         project_id=src.project_id,
         formula_id=src.formula_id,
-        container_id=src.container_id,
+        node_id=src.node_id,
         generation_tag=src.generation_tag,
         calculation_details=src.calculation_details,
         result=src.result,

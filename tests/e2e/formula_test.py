@@ -28,11 +28,11 @@ async def test_create_get_delete_formula(ac, expert_dollup_mini_project):
     response = await ac.post("/api/formula", data=formula.json())
     assert response.status_code == 200, response.text
 
-    project = ProjectDtoFactory(project_def_id=project_definition.id)
+    project = ProjectDetailsDtoFactory(project_def_id=project_definition.id)
     response = await ac.post("/api/project", data=project.json())
     assert response.status_code == 200
 
-    project = unwrap(response, ProjectDto)
+    project = unwrap(response, ProjectDetailsDto)
     response = await ac.post(f"/api/project/{project.id}/formula_cache")
     assert response.status_code == 200, response.text
 

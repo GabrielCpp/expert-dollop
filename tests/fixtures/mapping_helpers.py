@@ -50,6 +50,6 @@ def unwrap(response: Response, obj_type: Type):
 
 
 def unwrap_many(
-    response: Response, dao: Type, sort_by_key: Callable[[Dao], Any]
+    response: Response, dao: Type, sort_by_key: Callable[[Dao], Any] = lambda x: x.id
 ) -> List[Dao]:
     return sorted([dao(**item) for item in response.json()], key=sort_by_key)

@@ -7,10 +7,10 @@ from ..fixtures import *
 @pytest.fixture
 async def project(ac, expert_dollup_simple_project):
     fake_db = expert_dollup_simple_project
-    project = ProjectDtoFactory(project_def_id=fake_db.project_definitions[0].id)
+    project = ProjectDetailsDtoFactory(project_def_id=fake_db.project_definitions[0].id)
     response = await ac.post("/api/project", data=project.json())
     assert response.status_code == 200
-    assert ProjectDto(**response.json()) == project
+    assert ProjectDetailsDto(**response.json()) == project
     yield project
 
 
@@ -25,7 +25,7 @@ def over_tree(tree: ProjectContainerTreeDto):
         bucket.extend(node.children)
 
 
-def assert_valid_tree_for_definition(tree, fake_db, predicate):
+def assert_valid_instance_list_for_definition(nodes, fake_db, predicate):
     expected_definition_ids = {
         definition.id
         for definition in sorted(
@@ -35,9 +35,8 @@ def assert_valid_tree_for_definition(tree, fake_db, predicate):
         if predicate(definition)
     }
 
-    for node in over_tree(tree):
-        assert node.definition.id == node.container.type_id
-        expected_definition_ids.remove(node.definition.id)
+    for node in nodes:
+        expected_definition_ids.remove(node.type_id)
 
     assert expected_definition_ids == set()
 
@@ -63,9 +62,9 @@ async def test_project_loading(ac, expert_dollup_simple_project, project):
     response = await ac.get(f"/api/project/{project.id}/children")
     assert response.status_code == 200
 
-    project_container_tree = unwrap(response, ProjectContainerTreeDto)
-    assert_valid_tree_for_definition(
-        project_container_tree, fake_db, IsDefinitionInstanciated()
+    nodes = unwrap_many(response, ProjectContainerDto, lambda d: d.type_id)
+    assert_valid_instance_list_for_definition(
+        nodes, fake_db, IsDefinitionInstanciated()
     )
 
 
@@ -75,40 +74,36 @@ async def test_mutate_project_field(ac, expert_dollup_simple_project, project):
 
     @runner.step
     async def get_root_level_containers():
-        response = await ac.get(f"/api/project/{project.id}/children?level=0")
+        response = await ac.get(f"/api/project/{project.id}/roots")
         assert response.status_code == 200, response.text
 
-        first_layer_tree = unwrap(response, ProjectContainerTreeDto)
-        assert len(first_layer_tree.roots) > 0
+        tree = unwrap(response, ProjectContainerTreeDto)
+        assert len(tree.roots) > 0
 
-        return (first_layer_tree,)
+        return (tree.roots,)
 
     @runner.step
-    async def extract_int_field_from_root_container_fields(first_layer_tree):
+    async def extract_int_field_from_root_container_fields(roots):
         response = await ac.get(
-            f"/api/project/{project.id}/children?level=4&path={first_layer_tree.roots[0].container.id}"
+            f"/api/project/{project.id}/children?level=4&path={roots[0].nodes[0].node.id}"
         )
         assert response.status_code == 200, response.text
 
-        field_layer_tree = unwrap(response, ProjectContainerTreeDto)
-        assert len(field_layer_tree.roots) > 0
+        fields = unwrap_many(response, ProjectContainerDto)
+        assert len(fields) > 0
 
         target_field = next(
-            field
-            for field in field_layer_tree.roots
-            if isinstance(field.definition.config.field_details, IntFieldConfigDto)
+            field for field in fields if hasattr(field.value, "integer")
         )
-        assert isinstance(target_field.container.value.integer, int)
+        assert isinstance(target_field.value.integer, int)
 
         return (target_field,)
 
     @runner.step
     async def mutate_target_field_by_value_increment(target_field):
-        expected_value = IntFieldValueDto(
-            integer=target_field.container.value.integer + 10
-        )
+        expected_value = IntFieldValueDto(integer=target_field.value.integer + 10)
         response = await ac.put(
-            f"/api/project/{project.id}/container/{target_field.container.id}/value",
+            f"/api/project/{project.id}/container/{target_field.id}/value",
             data=expected_value.json(),
         )
         assert response.status_code == 200, response.text
@@ -118,12 +113,12 @@ async def test_mutate_project_field(ac, expert_dollup_simple_project, project):
     @runner.step
     async def check_value_mutation_can_be_retrieved(target_field, expected_value):
         response = await ac.get(
-            f"/api/project/{project.id}/container/{target_field.container.id}"
+            f"/api/project/{project.id}/container/{target_field.id}"
         )
         assert response.status_code == 200, response.text
 
-        actual_container = unwrap(response, ProjectContainerDto)
-        assert actual_container.value == expected_value
+        actual_node = unwrap(response, ProjectContainerDto)
+        assert actual_node.value == expected_value
 
     await runner.run()
 
@@ -145,9 +140,9 @@ async def test_instanciate_collection(ac, expert_dollup_simple_project, project)
     )
     assert response.status_code == 200, response.text
 
-    collection_tree = unwrap(response, ProjectContainerTreeDto)
-    assert_valid_tree_for_definition(
-        collection_tree,
+    nodes = unwrap_many(response, ProjectContainerDto, lambda x: (len(x.path), x.path))
+    assert_valid_instance_list_for_definition(
+        nodes,
         fake_db,
         lambda definition: definition.id == root_collection_container_definition.id
         or str(root_collection_container_definition.id) in definition.path,
@@ -163,13 +158,11 @@ async def test_clone_collection(ac, expert_dollup_simple_project, project):
         assert len(lhs_nodes) == len(rhs_nodes)
 
         for lhs_node, rhs_node in zip(lhs_nodes, rhs_nodes):
-            assert lhs_node.definition == rhs_node.definition
-            assert lhs_node.meta == rhs_node.meta
-            assert lhs_node.container.id != rhs_node.container.id
-            assert lhs_node.container.project_id == rhs_node.container.project_id
-            assert lhs_node.container.type_id == rhs_node.container.type_id
-            assert lhs_node.container.value == rhs_node.container.value
-            assert_clone_tree_is_equivalent(lhs_node.children, rhs_node.children)
+            assert lhs_node.id != rhs_node.id
+            assert lhs_node.project_id == rhs_node.project_id
+            assert lhs_node.type_id == rhs_node.type_id
+            assert lhs_node.type_path == rhs_node.type_path
+            assert lhs_node.value == rhs_node.value
 
     fake_db = expert_dollup_simple_project
     runner = FlowRunner()
@@ -188,33 +181,33 @@ async def test_clone_collection(ac, expert_dollup_simple_project, project):
         )
         assert response.status_code == 200, response.text
 
-        containers_page = unwrap(response, ProjectContainerPageDto)
-        assert len(containers_page.results) == 1
+        nodes = unwrap_many(response, ProjectContainerDto, lambda x: x.id)
+        assert len(nodes) == 1
 
-        collection_container = containers_page.results[0]
+        collection_container = nodes[0]
         return (collection_container,)
 
     @runner.step
-    async def clone_container(collection_container):
-        response = await ac.post(
-            f"/api/project/{project.id}/container/{collection_container.id}/clone"
-        )
+    async def clone_container(node):
+        response = await ac.post(f"/api/project/{project.id}/container/{node.id}/clone")
         assert response.status_code == 200, response.text
 
-        collection_tree = unwrap(response, ProjectContainerTreeDto)
-        return (collection_container, collection_tree)
+        nodes = unwrap_many(
+            response, ProjectContainerDto, lambda x: (len(x.type_path), x.type_path)
+        )
+        return (node, nodes)
 
     @runner.step
-    async def ensure_original_container_subtree_is_equivalent_to_new_one(
-        collection_container, collection_tree
-    ):
+    async def ensure_original_container_subtree_is_equivalent_to_new_one(node, nodes):
         response = await ac.get(
-            f"/api/project/{project.id}/container/{collection_container.id}/subtree"
+            f"/api/project/{project.id}/subtree?{'&'.join('path=' + str(item) for item in [*node.path, node.id])}"
         )
         assert response.status_code == 200, response.text
-        original_tree = unwrap(response, ProjectContainerTreeDto)
 
-        assert_clone_tree_is_equivalent(collection_tree.roots, original_tree.roots)
+        original_nodes = unwrap_many(
+            response, ProjectContainerDto, lambda x: (len(x.type_path), x.type_path)
+        )
+        assert_clone_tree_is_equivalent(nodes, original_nodes)
 
     await runner.run()
 
@@ -238,10 +231,10 @@ async def test_remove_collection(ac, expert_dollup_simple_project, project):
         )
         assert response.status_code == 200, response.text
 
-        containers_page = unwrap(response, ProjectContainerPageDto)
-        assert len(containers_page.results) == 1
+        nodes = unwrap_many(response, ProjectContainerDto, lambda x: x.id)
+        assert len(nodes) == 1
 
-        collection_container = containers_page.results[0]
+        collection_container = nodes[0]
         return (collection_container,)
 
     @runner.step
@@ -269,8 +262,8 @@ async def test_remove_collection(ac, expert_dollup_simple_project, project):
         response = await ac.get(f"/api/project/{project.id}/children?{query_path}")
         assert response.status_code == 200, response.text
 
-        tree = unwrap(response, ProjectContainerTreeDto)
-        assert tree.roots == []
+        nodes = unwrap_many(response, ProjectContainerDto, lambda x: x.id)
+        assert nodes == []
 
     await runner.run()
 
@@ -289,7 +282,7 @@ async def test_clone_project(ac, project):
     response = await ac.post(f"/api/project/{project.id}/clone")
     assert response.status_code == 200, response.text
 
-    cloned_project = unwrap(response, ProjectDto)
+    cloned_project = unwrap(response, ProjectDetailsDto)
     assert cloned_project.id != project.id
 
     response = await ac.get(f"/api/project/{cloned_project.id}")

@@ -6,19 +6,19 @@ from .project_definition_node_dto import ProjectDefinitionNodeDto
 from .project_container_meta_dto import ProjectContainerMetaStateDto
 
 
-class ProjectContainerTypeGroupDto(CamelModel):
-    children: List["ProjectContainerTreeNodeDto"]
+class ProjectContainerTreeTypeNodeDto(CamelModel):
+    definition: ProjectDefinitionNodeDto
+    state: ProjectContainerMetaStateDto
+    nodes: List["ProjectContainerTreeNodeDto"]
 
 
 class ProjectContainerTreeNodeDto(CamelModel):
-    container: ProjectContainerDto
-    definition: ProjectDefinitionNodeDto
-    state: ProjectContainerMetaStateDto
-    types: List[ProjectContainerTypeGroupDto]
+    node: ProjectContainerDto
+    children: List[ProjectContainerTreeTypeNodeDto]
 
 
-ProjectContainerTypeGroupDto.update_forward_refs()
+ProjectContainerTreeTypeNodeDto.update_forward_refs()
 
 
 class ProjectContainerTreeDto(CamelModel):
-    roots: List[ProjectContainerTreeNodeDto]
+    roots: List[ProjectContainerTreeTypeNodeDto]

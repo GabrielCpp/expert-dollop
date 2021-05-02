@@ -26,18 +26,17 @@ from .project_definition_node_tree_dto import (
     ProjectDefinitionTreeNodeDto,
     ProjectDefinitionNodeTreeDto,
 )
-from .project_dto import ProjectDto
+from .project_dto import ProjectDetailsDto
 from .translation_dto import TranslationDto, TranslationIdDto, TranslationInputDto
 from .translation_page_dto import TranslationPageDto
 from .project_container_dto import (
     ProjectContainerDto,
     ProjectContainerCollectionTargetDto,
-    ProjectContainerPageDto,
 )
-from .project_container_tree_dto import (
+from .project_node_tree_dto import (
+    ProjectContainerTreeTypeNodeDto,
     ProjectContainerTreeNodeDto,
     ProjectContainerTreeDto,
-    ProjectContainerTypeGroupDto,
 )
 from .project_container_meta_dto import (
     ProjectContainerMetaDto,

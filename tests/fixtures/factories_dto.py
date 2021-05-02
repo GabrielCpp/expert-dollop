@@ -57,9 +57,9 @@ class TranslationInputDtoFactory(factory.Factory):
     value = factory.Sequence(lambda n: f"translation{n}")
 
 
-class ProjectDtoFactory(factory.Factory):
+class ProjectDetailsDtoFactory(factory.Factory):
     class Meta:
-        model = ProjectDto
+        model = ProjectDetailsDto
 
     id: UUID = factory.LazyFunction(uuid4)
     name: str = factory.Sequence(lambda n: f"project{n}")

@@ -16,10 +16,9 @@ from expert_dollup.infra.services import (
     ProjectDefinitionNodeService,
     ProjectDefinitionService,
 )
-from expert_dollup.shared.automapping import AggregateFactory
 from expert_dollup.shared.database_services import Page
 from expert_dollup.core.builders import ProjectDefinitionTreeBuilder
-from expert_dollup.core.aggregates import NodeValueAggregate, NodeValue
+from expert_dollup.core.units import NodeValueValidation
 
 logger = structlog.get_logger(__name__)
 
@@ -30,14 +29,14 @@ class ProjectDefinitionNodeUseCase:
         service: ProjectDefinitionNodeService,
         project_definition_service: ProjectDefinitionService,
         project_definition_node_service: ProjectDefinitionNodeService,
-        aggregate_factory: AggregateFactory,
         project_definition_tree_builder: ProjectDefinitionTreeBuilder,
+        node_value_validation: NodeValueValidation,
     ):
         self.service = service
         self.project_definition_service = project_definition_service
         self.project_definition_node_service = project_definition_node_service
-        self.aggregate_factory = aggregate_factory
         self.project_definition_tree_builder = project_definition_tree_builder
+        self.node_value_validation = node_value_validation
 
     async def add(
         self, domain: ProjectDefinitionNode
@@ -81,12 +80,10 @@ class ProjectDefinitionNodeUseCase:
     async def find_root_section_containers(
         self, project_def_id: UUID, root_section_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
-        containers = (
-            await self.project_definition_node_service.find_root_section_containers(
-                project_def_id, root_section_id
-            )
+        nodes = await self.project_definition_node_service.find_root_section_containers(
+            project_def_id, root_section_id
         )
-        tree = self.project_definition_tree_builder.build(containers)
+        tree = self.project_definition_tree_builder.build(nodes)
         return tree
 
     async def find_form_content(
@@ -112,7 +109,4 @@ class ProjectDefinitionNodeUseCase:
         if not await self.service.has_path(domain.path):
             raise InvalidObject("bad_tree_path", "Tree path is invalid.")
 
-        node_value_aggregate = self.aggregate_factory.create(
-            NodeValueAggregate,
-            NodeValue(value=domain.default_value, config=domain.config),
-        )
+        self.node_value_validation.validate_value(domain.config, domain.default_value)

@@ -111,8 +111,9 @@ project_container_table = Table(
     Column("type_id", postgresql.UUID(), nullable=False),
     Column("path", String, nullable=False),
     Column("value", String, nullable=True),
-    Column("level", Integer, nullable=False, server_default=FetchedValue()),
-    Column("mixed_paths", ARRAY(String, dimensions=1), nullable=False),
+    Column("level", Integer, nullable=False),
+    Column("type_path", String, nullable=False),
+    Column("display_query_internal_id", postgresql.UUID(), nullable=False),
     Column("creation_date_utc", DateTime(timezone=True), nullable=False),
 )
 
@@ -123,7 +124,9 @@ class ProjectContainerDao(BaseModel):
     type_id: UUID
     path: str
     value: Optional[str]
-    mixed_paths: List[str]
+    level: int
+    type_path: str
+    display_query_internal_id: UUID
     creation_date_utc: datetime
 
 
@@ -132,17 +135,23 @@ project_container_meta_table = Table(
     metadata,
     Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("type_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("state", postgresql.JSON(), nullable=False),
+    Column("state", String, nullable=False),
+    Column("definition", String, nullable=False),
+    Column("display_query_internal_id", postgresql.UUID(), nullable=False),
 )
+
 
 class ProjectContainerMetaStateDao(BaseModel):
     is_visible: bool
     selected_child: Optional[UUID]
-    
+
+
 class ProjectContainerMetaDao(BaseModel):
     project_id: UUID
     type_id: UUID
-    state: ProjectContainerMetaStateDao
+    state: str
+    definition: str
+    display_query_internal_id: UUID
 
 
 ressource_table = Table(
@@ -257,7 +266,7 @@ project_formula_cache_table = Table(
     metadata,
     Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("container_id", postgresql.UUID(), nullable=False, primary_key=True),
+    Column("node_id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("generation_tag", postgresql.UUID(), nullable=False),
     Column("calculation_details", String, nullable=False),
     Column("result", postgresql.JSON(), nullable=False),
@@ -268,7 +277,7 @@ project_formula_cache_table = Table(
 class ProjectFormulaCacheDao(BaseModel):
     project_id: UUID
     formula_id: UUID
-    container_id: UUID
+    node_id: UUID
     generation_tag: UUID
     calculation_details: str
     result: Any

@@ -14,7 +14,7 @@ from .project_definition_node import (
     FieldDetailsUnion,
     JsonSchema,
 )
-from .project import Project
+from .project import ProjectDetails, Project
 from .project_container import ProjectContainer, ProjectContainerFilter
 from .project_definition_tree import (
     ProjectDefinitionNodeTree,
@@ -25,10 +25,10 @@ from .project_container_meta import (
     ProjectContainerMetaFilter,
     ProjectContainerMetaState,
 )
-from .project_container_tree import (
+from .project_node_tree import (
     ProjectContainerTree,
+    ProjectContainerTreeTypeNode,
     ProjectContainerTreeNode,
-    ProjectContainerTypeGroup,
 )
 from .translation import Translation, TranslationId, TranslationRessourceLocaleQuery
 from .ressource import Ressource

@@ -332,7 +332,7 @@ class FormulaResolver:
             FormulaCachedResult(
                 project_id=project_id,
                 formula_id=unit.formula_id,
-                container_id=unit.id,
+                node_id=unit.id,
                 generation_tag=uuid4(),
                 result=unit.value,
                 calculation_details=unit.calculation_details,

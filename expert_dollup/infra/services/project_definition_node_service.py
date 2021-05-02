@@ -58,7 +58,7 @@ class ProjectDefinitionNodeService(BaseCrudTableService[ProjectDefinitionNode]):
 
         await self._database.execute(query)
 
-    async def find_children_tree(
+    async def find_children(
         self, project_def_id: UUID, path: List[UUID]
     ) -> Awaitable[List[ProjectDefinitionNode]]:
         path_filter = join_uuid_path(path)
@@ -85,7 +85,7 @@ class ProjectDefinitionNodeService(BaseCrudTableService[ProjectDefinitionNode]):
             .where(
                 and_(
                     self._table.c.project_def_id == project_def_id,
-                    self._table.c.path == "",
+                    self._table.c.display_query_internal_id == project_def_id,
                 )
             )
             .order_by(desc(self._table.c.level))

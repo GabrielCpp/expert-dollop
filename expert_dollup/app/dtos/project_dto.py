@@ -4,7 +4,7 @@ from uuid import UUID
 from datetime import datetime
 
 
-class ProjectDto(CamelModel):
+class ProjectDetailsDto(CamelModel):
     id: UUID
     name: str
     is_staged: bool
