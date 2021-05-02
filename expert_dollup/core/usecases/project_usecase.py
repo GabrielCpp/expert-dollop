@@ -4,16 +4,16 @@ from uuid import UUID
 from expert_dollup.core.domains import (
     Project,
     ProjectDetails,
-    ProjectContainer,
-    ProjectContainerMeta,
-    ProjectContainerFilter,
+    ProjectNode,
+    ProjectNodeMeta,
+    ProjectNodeFilter,
 )
 from expert_dollup.core.builders import ProjectBuilder
 from expert_dollup.infra.services import (
     ProjectService,
     RessourceService,
-    ProjectContainerService,
-    ProjectContainerMetaService,
+    ProjectNodeService,
+    ProjectNodeMetaService,
 )
 
 logger = structlog.get_logger(__name__)
@@ -23,14 +23,14 @@ class ProjectUseCase:
     def __init__(
         self,
         project_service: ProjectService,
-        project_container_service: ProjectContainerService,
-        project_container_meta_service: ProjectContainerMetaService,
+        project_node_service: ProjectNodeService,
+        project_node_meta_service: ProjectNodeMetaService,
         ressource_service: RessourceService,
         project_builder: ProjectBuilder,
     ):
         self.project_service = project_service
-        self.project_container_service = project_container_service
-        self.project_container_meta_service = project_container_meta_service
+        self.project_node_service = project_node_service
+        self.project_node_meta_service = project_node_meta_service
         self.ressource_service = ressource_service
         self.project_builder = project_builder
 
@@ -48,11 +48,11 @@ class ProjectUseCase:
         return cloned_project.details
 
     async def remove_by_id(self, project_id: UUID) -> Awaitable:
-        await self.project_container_service.remove_by(
-            ProjectContainerFilter(project_id=project_id)
+        await self.project_node_service.remove_by(
+            ProjectNodeFilter(project_id=project_id)
         )
-        await self.project_container_meta_service.remove_by(
-            ProjectContainerFilter(project_id=project_id)
+        await self.project_node_meta_service.remove_by(
+            ProjectNodeFilter(project_id=project_id)
         )
         await self.project_service.delete_by_id(project_id)
         await self.ressource_service.delete_by_id(project_id)
@@ -64,5 +64,5 @@ class ProjectUseCase:
     async def _insert_new_project(self, project: Project):
         await self.ressource_service.insert(project.ressource)
         await self.project_service.insert(project.details)
-        await self.project_container_meta_service.insert_many(project.metas)
-        await self.project_container_service.insert_many(project.nodes)
+        await self.project_node_meta_service.insert_many(project.metas)
+        await self.project_node_service.insert_many(project.nodes)

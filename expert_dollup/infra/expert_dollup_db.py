@@ -103,8 +103,8 @@ class ProjectDao(BaseModel):
     creation_date_utc: datetime
 
 
-project_container_table = Table(
-    "project_container",
+project_node_table = Table(
+    "project_node",
     metadata,
     Column("id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("project_id", postgresql.UUID(), nullable=False),
@@ -118,7 +118,7 @@ project_container_table = Table(
 )
 
 
-class ProjectContainerDao(BaseModel):
+class ProjectNodeDao(BaseModel):
     id: UUID
     project_id: UUID
     type_id: UUID
@@ -130,8 +130,8 @@ class ProjectContainerDao(BaseModel):
     creation_date_utc: datetime
 
 
-project_container_meta_table = Table(
-    "project_container_metadata",
+project_node_meta_table = Table(
+    "project_node_metadata",
     metadata,
     Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("type_id", postgresql.UUID(), nullable=False, primary_key=True),
@@ -141,12 +141,12 @@ project_container_meta_table = Table(
 )
 
 
-class ProjectContainerMetaStateDao(BaseModel):
+class ProjectNodeMetaStateDao(BaseModel):
     is_visible: bool
     selected_child: Optional[UUID]
 
 
-class ProjectContainerMetaDao(BaseModel):
+class ProjectNodeMetaDao(BaseModel):
     project_id: UUID
     type_id: UUID
     state: str
@@ -241,12 +241,12 @@ class ProjectDefinitionFormulaDependencyDao(BaseModel):
     project_def_id: UUID
 
 
-project_definition_formula_container_dependency_table = Table(
-    "project_definition_formula_container_dependencies",
+project_definition_formula_node_dependency_table = Table(
+    "project_definition_formula_node_dependencies",
     metadata,
     Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
     Column(
-        "depend_on_container_id",
+        "depend_on_node_id",
         postgresql.UUID(),
         nullable=False,
         primary_key=True,
@@ -257,12 +257,12 @@ project_definition_formula_container_dependency_table = Table(
 
 class ProjectDefinitionFormulaContainerDependencyDao(BaseModel):
     formula_id: UUID
-    depend_on_container_id: UUID
+    depend_on_node_id: UUID
     project_def_id: UUID
 
 
 project_formula_cache_table = Table(
-    "project_container_formula_cache",
+    "project_node_formula_cache",
     metadata,
     Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),

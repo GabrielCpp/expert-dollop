@@ -15,20 +15,20 @@ from .project_definition_node import (
     JsonSchema,
 )
 from .project import ProjectDetails, Project
-from .project_container import ProjectContainer, ProjectContainerFilter
+from .project_node import ProjectNode, ProjectNodeFilter
 from .project_definition_tree import (
     ProjectDefinitionNodeTree,
     ProjectDefinitionTreeNode,
 )
-from .project_container_meta import (
-    ProjectContainerMeta,
-    ProjectContainerMetaFilter,
-    ProjectContainerMetaState,
+from .project_node_meta import (
+    ProjectNodeMeta,
+    ProjectNodeMetaFilter,
+    ProjectNodeMetaState,
 )
 from .project_node_tree import (
-    ProjectContainerTree,
-    ProjectContainerTreeTypeNode,
-    ProjectContainerTreeNode,
+    ProjectNodeTree,
+    ProjectNodeTreeTypeNode,
+    ProjectNodeTreeNode,
 )
 from .translation import Translation, TranslationId, TranslationRessourceLocaleQuery
 from .ressource import Ressource

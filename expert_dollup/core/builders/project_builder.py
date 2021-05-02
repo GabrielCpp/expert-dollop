@@ -5,16 +5,16 @@ from expert_dollup.core.builders import RessourceBuilder
 from expert_dollup.core.domains import (
     Project,
     ProjectDetails,
-    ProjectContainer,
-    ProjectContainerMeta,
+    ProjectNode,
+    ProjectNodeMeta,
     ProjectDefinitionNodeFilter,
-    ProjectContainerFilter,
-    ProjectContainerMetaFilter,
-    ProjectContainerMetaState,
+    ProjectNodeFilter,
+    ProjectNodeMetaFilter,
+    ProjectNodeMetaState,
 )
 from expert_dollup.infra.services import (
-    ProjectContainerService,
-    ProjectContainerMetaService,
+    ProjectNodeService,
+    ProjectNodeMetaService,
     ProjectDefinitionNodeService,
 )
 
@@ -22,8 +22,8 @@ from expert_dollup.infra.services import (
 class ProjectBuilder:
     def __init__(
         self,
-        project_node_service: ProjectContainerService,
-        project_node_meta_service: ProjectContainerMetaService,
+        project_node_service: ProjectNodeService,
+        project_node_meta_service: ProjectNodeMetaService,
         project_definition_node_service: ProjectDefinitionNodeService,
         ressource_builder: RessourceBuilder,
     ):
@@ -43,10 +43,10 @@ class ProjectBuilder:
         type_to_instance_id = defaultdict(uuid4)
 
         for node_definition in sorted(node_definitions, key=lambda d: d.path):
-            node_meta = ProjectContainerMeta(
+            node_meta = ProjectNodeMeta(
                 project_id=project_details.id,
                 type_id=node_definition.id,
-                state=ProjectContainerMetaState(
+                state=ProjectNodeMetaState(
                     is_visible=node_definition.instanciate_by_default,
                     selected_child=None,
                 ),
@@ -63,7 +63,7 @@ class ProjectBuilder:
                 continue
 
             node_id = type_to_instance_id[node_definition.id]
-            node = ProjectContainer(
+            node = ProjectNode(
                 id=node_id,
                 project_id=project_details.id,
                 type_id=node_definition.id,
@@ -111,14 +111,14 @@ class ProjectBuilder:
 
     async def _clone_project_nodes(
         self, project_id: UUID, cloned_project: ProjectDetails
-    ) -> Awaitable[List[ProjectContainer]]:
+    ) -> Awaitable[List[ProjectNode]]:
         original_nodes = await self.project_node_service.find_by(
-            ProjectContainerFilter(project_id=project_id)
+            ProjectNodeFilter(project_id=project_id)
         )
 
         id_mapping = defaultdict(uuid4)
         cloned_nodes = [
-            ProjectContainer(
+            ProjectNode(
                 id=id_mapping[node.id],
                 project_id=cloned_project.id,
                 type_id=node.type_id,
@@ -133,13 +133,13 @@ class ProjectBuilder:
 
     async def _clone_metas(
         self, project_id: UUID, cloned_project: ProjectDetails
-    ) -> Awaitable[List[ProjectContainerMeta]]:
+    ) -> Awaitable[List[ProjectNodeMeta]]:
         node_metas = await self.project_node_meta_service.find_by(
-            ProjectContainerMetaFilter(project_id=project_id)
+            ProjectNodeMetaFilter(project_id=project_id)
         )
 
         node_type_metas = [
-            ProjectContainerMeta(
+            ProjectNodeMeta(
                 project_id=cloned_project.id,
                 type_id=meta.type_id,
                 state=meta.state,

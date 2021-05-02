@@ -3,11 +3,11 @@ from uuid import UUID
 from collections import defaultdict
 from expert_dollup.core.utils.path_transform import join_uuid_path
 from expert_dollup.core.domains import (
-    ProjectContainerMeta,
-    ProjectContainer,
-    ProjectContainerTree,
-    ProjectContainerTreeNode,
-    ProjectContainerTreeTypeNode,
+    ProjectNodeMeta,
+    ProjectNode,
+    ProjectNodeTree,
+    ProjectNodeTreeNode,
+    ProjectNodeTreeTypeNode,
 )
 
 
@@ -16,14 +16,14 @@ class ProjectTreeBuilder:
         pass
 
     def build(
-        self, nodes: List[ProjectContainer], metas: List[ProjectContainerMeta]
-    ) -> ProjectContainerTree:
+        self, nodes: List[ProjectNode], metas: List[ProjectNodeMeta]
+    ) -> ProjectNodeTree:
         tree_depth = None
         tree_node_map = defaultdict(list)
         meta_map = {meta.type_id: meta for meta in metas}
 
         for node in nodes:
-            tree_node = ProjectContainerTreeNode(node=node, children=[])
+            tree_node = ProjectNodeTreeNode(node=node, children=[])
             tree_node_map[join_uuid_path(node.path)].append(tree_node)
 
             if tree_depth is None:
@@ -44,15 +44,15 @@ class ProjectTreeBuilder:
         for nodes in tree_node_map.values():
             roots.extend(nodes)
 
-        return ProjectContainerTree(
+        return ProjectNodeTree(
             roots=self._build_tree_node_list_by_type(roots, meta_map)
         )
 
     def _build_tree_node_list_by_type(
         self,
-        tree_nodes: List[ProjectContainerTreeNode],
-        meta_map: Dict[UUID, ProjectContainerMeta],
-    ) -> List[ProjectContainerTreeTypeNode]:
+        tree_nodes: List[ProjectNodeTreeNode],
+        meta_map: Dict[UUID, ProjectNodeMeta],
+    ) -> List[ProjectNodeTreeTypeNode]:
         tree_node_by_type = {}
 
         for tree_node in tree_nodes:
@@ -62,7 +62,7 @@ class ProjectTreeBuilder:
                 tree_node_by_type[type_id].nodes.append(tree_node)
             else:
                 meta = meta_map[type_id]
-                tree_node_by_type[type_id] = ProjectContainerTreeTypeNode(
+                tree_node_by_type[type_id] = ProjectNodeTreeTypeNode(
                     definition=meta.definition,
                     state=meta.state,
                     nodes=[tree_node],

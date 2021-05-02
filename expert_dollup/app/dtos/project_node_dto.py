@@ -4,7 +4,7 @@ from uuid import UUID
 from .project_definition_node_dto import ValueUnionDto
 
 
-class ProjectContainerDto(CamelModel):
+class ProjectNodeDto(CamelModel):
     id: UUID
     project_id: UUID
     type_id: UUID
@@ -13,6 +13,6 @@ class ProjectContainerDto(CamelModel):
     value: ValueUnionDto
 
 
-class ProjectContainerCollectionTargetDto(CamelModel):
+class ProjectNodeCollectionTargetDto(CamelModel):
     parent_node_id: Optional[UUID]
     collection_type_id: UUID

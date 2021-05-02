@@ -6,19 +6,19 @@ from .project_definition_node import ProjectDefinitionNode
 
 
 @dataclass
-class ProjectContainerMetaState:
+class ProjectNodeMetaState:
     is_visible: bool
     selected_child: Optional[UUID]
 
 
 @dataclass
-class ProjectContainerMeta:
+class ProjectNodeMeta:
     project_id: UUID
     type_id: UUID
-    state: ProjectContainerMetaState
+    state: ProjectNodeMetaState
     definition: ProjectDefinitionNode
 
 
-class ProjectContainerMetaFilter(QueryFilter):
+class ProjectNodeMetaFilter(QueryFilter):
     project_id: Optional[UUID]
     type_id: Optional[UUID]

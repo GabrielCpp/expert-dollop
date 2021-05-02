@@ -1,4 +1,4 @@
-from expert_dollup.app.modules import build_container
+from expert_dollup.app.modules import build_node
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 from tests.fixtures import *
@@ -39,7 +39,7 @@ def generate_json(generate_layer, output_path=None):
     model = fixture.model
 
     if generate_layer == "dto":
-        injector = build_container()
+        injector = build_node()
         mapper = injector.get(Mapper)
         model = to_dto(model, mapper)
     elif generate_layer != "dao":
@@ -60,7 +60,7 @@ def fill_db():
     from dotenv import load_dotenv
 
     load_dotenv()
-    injector = build_container()
+    injector = build_node()
     db_setup_helper = injector.get(DbSetupHelper)
 
     fixture = SimpleProject()

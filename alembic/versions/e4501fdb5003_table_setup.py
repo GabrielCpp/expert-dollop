@@ -134,10 +134,10 @@ def create_project_definition_tables():
     )
 
     op.create_table(
-        "project_definition_formula_container_dependencies",
+        "project_definition_formula_node_dependencies",
         Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column(
-            "depend_on_container_id",
+            "depend_on_node_id",
             postgresql.UUID(),
             nullable=False,
             primary_key=True,
@@ -158,7 +158,7 @@ def create_project_tables():
     )
 
     op.create_table(
-        "project_container",
+        "project_node",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("project_id", postgresql.UUID(), nullable=False),
         Column("type_id", postgresql.UUID(), nullable=False),
@@ -171,19 +171,19 @@ def create_project_tables():
     )
 
     op.create_index(
-        op.f("ix_project_container_display_query_internal_id"),
-        "project_container",
+        op.f("ix_project_node_display_query_internal_id"),
+        "project_node",
         ["display_query_internal_id"],
     )
 
     op.create_index(
-        op.f("ix_project_container_project_id_path"),
-        "project_container",
+        op.f("ix_project_node_project_id_path"),
+        "project_node",
         ["project_id", "path"],
     )
 
     op.create_table(
-        "project_container_metadata",
+        "project_node_metadata",
         Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("type_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("state", String, nullable=False),
@@ -192,13 +192,13 @@ def create_project_tables():
     )
 
     op.create_index(
-        op.f("ix_project_container_metadata_display_query_internal_id"),
-        "project_container_metadata",
+        op.f("ix_project_node_metadata_display_query_internal_id"),
+        "project_node_metadata",
         ["display_query_internal_id"],
     )
 
     op.create_table(
-        "project_container_formula_cache",
+        "project_node_formula_cache",
         Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("node_id", postgresql.UUID(), nullable=False, primary_key=True),

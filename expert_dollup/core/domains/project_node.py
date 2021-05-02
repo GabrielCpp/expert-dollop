@@ -3,11 +3,11 @@ from typing import List, Optional, Union
 from uuid import UUID
 from expert_dollup.shared.database_services import QueryFilter
 from .project_definition_node import ValueUnion
-from .project_container_meta import ProjectContainerMeta
+from .project_node_meta import ProjectNodeMeta
 
 
 @dataclass
-class ProjectContainer:
+class ProjectNode:
     id: UUID
     project_id: UUID
     type_path: List[UUID]
@@ -24,7 +24,7 @@ class ProjectContainer:
         return [*self.type_path, self.type_id]
 
 
-class ProjectContainerFilter(QueryFilter):
+class ProjectNodeFilter(QueryFilter):
     id: Optional[UUID]
     project_id: Optional[UUID]
     type_id: Optional[UUID]

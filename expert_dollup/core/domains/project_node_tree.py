@@ -1,24 +1,24 @@
 from dataclasses import dataclass
 from typing import List, Optional, Dict
 from uuid import UUID
-from .project_container import ProjectContainer
+from .project_node import ProjectNode
 from .project_definition_node import ProjectDefinitionNode
-from .project_container_meta import ProjectContainerMetaState
+from .project_node_meta import ProjectNodeMetaState
 
 
 @dataclass
-class ProjectContainerTreeTypeNode:
+class ProjectNodeTreeTypeNode:
     definition: ProjectDefinitionNode
-    state: ProjectContainerMetaState
-    nodes: List["ProjectContainerTreeNode"]
+    state: ProjectNodeMetaState
+    nodes: List["ProjectNodeTreeNode"]
 
 
 @dataclass
-class ProjectContainerTreeNode:
-    node: ProjectContainer
-    children: List[ProjectContainerTreeTypeNode]
+class ProjectNodeTreeNode:
+    node: ProjectNode
+    children: List[ProjectNodeTreeTypeNode]
 
 
 @dataclass
-class ProjectContainerTree:
-    roots: List[ProjectContainerTreeTypeNode]
+class ProjectNodeTree:
+    roots: List[ProjectNodeTreeTypeNode]

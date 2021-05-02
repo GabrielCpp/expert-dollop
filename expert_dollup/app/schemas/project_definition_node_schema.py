@@ -28,15 +28,15 @@ async def resolve_project_definition_root_sections(
 
 
 @project_definition.field("rootSectionContainers")
-@inject_graphql_route(find_root_section_containers)
+@inject_graphql_route(find_root_section_nodes)
 @convert_kwargs_to_snake_case
-async def resolve_project_definition_root_section_containers(
+async def resolve_project_definition_root_section_nodes(
     parent: ProjectDefinitionDto,
     info: GraphQLResolveInfo,
     root_section_id: UUID,
-    find_root_section_containers: callable,
+    find_root_section_nodes: callable,
 ):
-    result = await find_root_section_containers(info, parent.id, root_section_id)
+    result = await find_root_section_nodes(info, parent.id, root_section_id)
     return result
 
 
@@ -68,16 +68,16 @@ async def resolve_root_sections(
 
 
 @query.field("findProjectDefinitionRootSectionContainers")
-@inject_graphql_route(find_root_section_containers)
+@inject_graphql_route(find_root_section_nodes)
 @convert_kwargs_to_snake_case
-async def resolve_root_section_containers(
+async def resolve_root_section_nodes(
     _: Any,
     info: GraphQLResolveInfo,
     project_def_id: UUID,
     root_section_id: UUID,
-    find_root_section_containers: callable,
+    find_root_section_nodes: callable,
 ):
-    result = await find_root_section_containers(info, project_def_id, root_section_id)
+    result = await find_root_section_nodes(info, project_def_id, root_section_id)
     return result
 
 

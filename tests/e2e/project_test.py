@@ -14,7 +14,7 @@ async def project(ac, expert_dollup_simple_project):
     yield project
 
 
-def over_tree(tree: ProjectContainerTreeDto):
+def over_tree(tree: ProjectNodeTreeDto):
     from collections import deque
 
     bucket = deque(iter(tree.roots))
@@ -62,7 +62,7 @@ async def test_project_loading(ac, expert_dollup_simple_project, project):
     response = await ac.get(f"/api/project/{project.id}/children")
     assert response.status_code == 200
 
-    nodes = unwrap_many(response, ProjectContainerDto, lambda d: d.type_id)
+    nodes = unwrap_many(response, ProjectNodeDto, lambda d: d.type_id)
     assert_valid_instance_list_for_definition(
         nodes, fake_db, IsDefinitionInstanciated()
     )
@@ -73,23 +73,23 @@ async def test_mutate_project_field(ac, expert_dollup_simple_project, project):
     runner = FlowRunner()
 
     @runner.step
-    async def get_root_level_containers():
+    async def get_root_level_nodes():
         response = await ac.get(f"/api/project/{project.id}/roots")
         assert response.status_code == 200, response.text
 
-        tree = unwrap(response, ProjectContainerTreeDto)
+        tree = unwrap(response, ProjectNodeTreeDto)
         assert len(tree.roots) > 0
 
         return (tree.roots,)
 
     @runner.step
-    async def extract_int_field_from_root_container_fields(roots):
+    async def extract_int_field_from_root_node_fields(roots):
         response = await ac.get(
             f"/api/project/{project.id}/children?level=4&path={roots[0].nodes[0].node.id}"
         )
         assert response.status_code == 200, response.text
 
-        fields = unwrap_many(response, ProjectContainerDto)
+        fields = unwrap_many(response, ProjectNodeDto)
         assert len(fields) > 0
 
         target_field = next(
@@ -117,7 +117,7 @@ async def test_mutate_project_field(ac, expert_dollup_simple_project, project):
         )
         assert response.status_code == 200, response.text
 
-        actual_node = unwrap(response, ProjectContainerDto)
+        actual_node = unwrap(response, ProjectNodeDto)
         assert actual_node.value == expected_value
 
     await runner.run()
@@ -126,7 +126,7 @@ async def test_mutate_project_field(ac, expert_dollup_simple_project, project):
 @pytest.mark.asyncio
 async def test_instanciate_collection(ac, expert_dollup_simple_project, project):
     fake_db = expert_dollup_simple_project
-    root_collection_container_definition = next(
+    root_collection_node_definition = next(
         container_definition
         for container_definition in fake_db.project_definition_nodes
         if container_definition.is_collection and len(container_definition.path) == 0
@@ -134,26 +134,26 @@ async def test_instanciate_collection(ac, expert_dollup_simple_project, project)
 
     response = await ac.post(
         f"/api/project/{project.id}/container/collection",
-        data=ProjectContainerCollectionTargetDto(
-            collection_type_id=root_collection_container_definition.id,
+        data=ProjectNodeCollectionTargetDto(
+            collection_type_id=root_collection_node_definition.id,
         ).json(),
     )
     assert response.status_code == 200, response.text
 
-    nodes = unwrap_many(response, ProjectContainerDto, lambda x: (len(x.path), x.path))
+    nodes = unwrap_many(response, ProjectNodeDto, lambda x: (len(x.path), x.path))
     assert_valid_instance_list_for_definition(
         nodes,
         fake_db,
-        lambda definition: definition.id == root_collection_container_definition.id
-        or str(root_collection_container_definition.id) in definition.path,
+        lambda definition: definition.id == root_collection_node_definition.id
+        or str(root_collection_node_definition.id) in definition.path,
     )
 
 
 @pytest.mark.asyncio
 async def test_clone_collection(ac, expert_dollup_simple_project, project):
     def assert_clone_tree_is_equivalent(
-        lhs_nodes: List[ProjectContainerTreeNodeDto],
-        rhs_nodes: List[ProjectContainerTreeNodeDto],
+        lhs_nodes: List[ProjectNodeTreeNodeDto],
+        rhs_nodes: List[ProjectNodeTreeNodeDto],
     ):
         assert len(lhs_nodes) == len(rhs_nodes)
 
@@ -166,7 +166,7 @@ async def test_clone_collection(ac, expert_dollup_simple_project, project):
 
     fake_db = expert_dollup_simple_project
     runner = FlowRunner()
-    collection_container_definition = next(
+    collection_node_definition = next(
         container_definition
         for container_definition in fake_db.project_definition_nodes
         if container_definition.is_collection
@@ -175,37 +175,37 @@ async def test_clone_collection(ac, expert_dollup_simple_project, project):
     )
 
     @runner.step
-    async def find_container_to_clone():
+    async def find_node_to_clone():
         response = await ac.get(
-            f"/api/project/{project.id}/containers?typeId={collection_container_definition.id}"
+            f"/api/project/{project.id}/containers?typeId={collection_node_definition.id}"
         )
         assert response.status_code == 200, response.text
 
-        nodes = unwrap_many(response, ProjectContainerDto, lambda x: x.id)
+        nodes = unwrap_many(response, ProjectNodeDto, lambda x: x.id)
         assert len(nodes) == 1
 
-        collection_container = nodes[0]
-        return (collection_container,)
+        collection_node = nodes[0]
+        return (collection_node,)
 
     @runner.step
-    async def clone_container(node):
+    async def clone_node(node):
         response = await ac.post(f"/api/project/{project.id}/container/{node.id}/clone")
         assert response.status_code == 200, response.text
 
         nodes = unwrap_many(
-            response, ProjectContainerDto, lambda x: (len(x.type_path), x.type_path)
+            response, ProjectNodeDto, lambda x: (len(x.type_path), x.type_path)
         )
         return (node, nodes)
 
     @runner.step
-    async def ensure_original_container_subtree_is_equivalent_to_new_one(node, nodes):
+    async def ensure_original_node_subtree_is_equivalent_to_new_one(node, nodes):
         response = await ac.get(
             f"/api/project/{project.id}/subtree?{'&'.join('path=' + str(item) for item in [*node.path, node.id])}"
         )
         assert response.status_code == 200, response.text
 
         original_nodes = unwrap_many(
-            response, ProjectContainerDto, lambda x: (len(x.type_path), x.type_path)
+            response, ProjectNodeDto, lambda x: (len(x.type_path), x.type_path)
         )
         assert_clone_tree_is_equivalent(nodes, original_nodes)
 
@@ -216,7 +216,7 @@ async def test_clone_collection(ac, expert_dollup_simple_project, project):
 async def test_remove_collection(ac, expert_dollup_simple_project, project):
     fake_db = expert_dollup_simple_project
     runner = FlowRunner()
-    collection_container_definition = next(
+    collection_node_definition = next(
         container_definition
         for container_definition in fake_db.project_definition_nodes
         if container_definition.is_collection
@@ -225,44 +225,44 @@ async def test_remove_collection(ac, expert_dollup_simple_project, project):
     )
 
     @runner.step
-    async def find_container_to_clone():
+    async def find_node_to_clone():
         response = await ac.get(
-            f"/api/project/{project.id}/containers?typeId={collection_container_definition.id}"
+            f"/api/project/{project.id}/containers?typeId={collection_node_definition.id}"
         )
         assert response.status_code == 200, response.text
 
-        nodes = unwrap_many(response, ProjectContainerDto, lambda x: x.id)
+        nodes = unwrap_many(response, ProjectNodeDto, lambda x: x.id)
         assert len(nodes) == 1
 
-        collection_container = nodes[0]
-        return (collection_container,)
+        collection_node = nodes[0]
+        return (collection_node,)
 
     @runner.step
-    async def delete_collection_instance(collection_container):
+    async def delete_collection_instance(collection_node):
         response = await ac.delete(
-            f"/api/project/{project.id}/container/{collection_container.id}"
+            f"/api/project/{project.id}/container/{collection_node.id}"
         )
         assert response.status_code == 200, response.text
 
-        return (collection_container,)
+        return (collection_node,)
 
     @runner.step
-    async def check_that_collection_was_effectively_deleted(collection_container):
+    async def check_that_collection_was_effectively_deleted(collection_node):
         response = await ac.get(
-            f"/api/project/{project.id}/container/{collection_container.id}"
+            f"/api/project/{project.id}/container/{collection_node.id}"
         )
         assert response.status_code == 404, response.text
 
         query_path = "&".join(
             [
                 "path=" + str(item)
-                for item in [*collection_container.path, collection_container.id]
+                for item in [*collection_node.path, collection_node.id]
             ]
         )
         response = await ac.get(f"/api/project/{project.id}/children?{query_path}")
         assert response.status_code == 200, response.text
 
-        nodes = unwrap_many(response, ProjectContainerDto, lambda x: x.id)
+        nodes = unwrap_many(response, ProjectNodeDto, lambda x: x.id)
         assert nodes == []
 
     await runner.run()

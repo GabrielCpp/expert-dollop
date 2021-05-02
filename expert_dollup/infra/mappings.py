@@ -115,12 +115,12 @@ def map_project_to_dao(src: ProjectDetails, mapper: Mapper) -> ProjectDao:
     )
 
 
-def map_project_container_to_dao(
-    src: ProjectContainer, mapper: Mapper
-) -> ProjectContainerDao:
+def map_project_node_to_dao(
+    src: ProjectNode, mapper: Mapper
+) -> ProjectNodeDao:
     display_query_internal_id = get_display_query_id(src.project_id, src.path)
 
-    return ProjectContainerDao(
+    return ProjectNodeDao(
         id=src.id,
         project_id=src.project_id,
         type_id=src.type_id,
@@ -133,10 +133,10 @@ def map_project_container_to_dao(
     )
 
 
-def map_project_container_from_dao(
-    src: ProjectContainerDao, mapper: Mapper
-) -> ProjectContainer:
-    return ProjectContainer(
+def map_project_node_from_dao(
+    src: ProjectNodeDao, mapper: Mapper
+) -> ProjectNode:
+    return ProjectNode(
         id=src.id,
         project_id=src.project_id,
         type_id=src.type_id,
@@ -146,28 +146,28 @@ def map_project_container_from_dao(
     )
 
 
-def map_project_container_meta_to_dao(
-    src: ProjectContainerMeta, mapper: Mapper
-) -> ProjectContainerMetaDao:
-    return ProjectContainerMetaDao(
+def map_project_node_meta_to_dao(
+    src: ProjectNodeMeta, mapper: Mapper
+) -> ProjectNodeMetaDao:
+    return ProjectNodeMetaDao(
         project_id=src.project_id,
         type_id=src.type_id,
         definition=mapper.map(src.definition, ProjectDefinitionNodeDao).json(),
-        state=mapper.map(src.state, ProjectContainerMetaStateDao).json(),
+        state=mapper.map(src.state, ProjectNodeMetaStateDao).json(),
         display_query_internal_id=get_display_query_id(
             src.project_id, src.definition.path
         ),
     )
 
 
-def map_project_container_meta_from_dao(
-    src: ProjectContainerMetaDao, mapper: Mapper
-) -> ProjectContainerMeta:
-    return ProjectContainerMeta(
+def map_project_node_meta_from_dao(
+    src: ProjectNodeMetaDao, mapper: Mapper
+) -> ProjectNodeMeta:
+    return ProjectNodeMeta(
         project_id=src.project_id,
         type_id=src.type_id,
         state=mapper.map(
-            ProjectContainerMetaStateDao.parse_raw(src.state), ProjectContainerMetaState
+            ProjectNodeMetaStateDao.parse_raw(src.state), ProjectNodeMetaState
         ),
         definition=mapper.map(
             ProjectDefinitionNodeDao.parse_raw(src.definition), ProjectDefinitionNode
@@ -175,18 +175,18 @@ def map_project_container_meta_from_dao(
     )
 
 
-def map_project_container_meta_state_to_dao(
-    src: ProjectContainerMetaState, mapper: Mapper
-) -> ProjectContainerMetaStateDao:
-    return ProjectContainerMetaStateDao(
+def map_project_node_meta_state_to_dao(
+    src: ProjectNodeMetaState, mapper: Mapper
+) -> ProjectNodeMetaStateDao:
+    return ProjectNodeMetaStateDao(
         is_visible=src.is_visible, selected_child=src.selected_child
     )
 
 
-def map_project_container_meta_state_from_dao(
-    src: ProjectContainerMetaStateDao, mapper: Mapper
-) -> ProjectContainerMetaState:
-    return ProjectContainerMetaState(
+def map_project_node_meta_state_from_dao(
+    src: ProjectNodeMetaStateDao, mapper: Mapper
+) -> ProjectNodeMetaState:
+    return ProjectNodeMetaState(
         is_visible=src.is_visible, selected_child=src.selected_child
     )
 
@@ -280,8 +280,8 @@ def map_project_definition_node_filter_to_dict(
     )
 
 
-def map_project_container_filter_to_dict(
-    src: ProjectContainerFilter, mapper: Mapper
+def map_project_node_filter_to_dict(
+    src: ProjectNodeFilter, mapper: Mapper
 ) -> dict:
     return map_dict_keys(
         src.args,
@@ -295,8 +295,8 @@ def map_project_container_filter_to_dict(
     )
 
 
-def map_project_container_meta_filter_to_dict(
-    src: ProjectContainerMetaFilter, mapper: Mapper
+def map_project_node_meta_filter_to_dict(
+    src: ProjectNodeMetaFilter, mapper: Mapper
 ) -> dict:
     return map_dict_keys(
         src.args,

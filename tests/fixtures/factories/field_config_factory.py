@@ -31,8 +31,8 @@ class FieldConfigFactory:
                 build_config=self._create_bool_custom_attr,
             ),
             CollapsibleContainerFieldConfig: TypeFactory(
-                build_value=self._create_container_value,
-                build_config=self._create_container_custom_attr,
+                build_value=self._create_node_value,
+                build_config=self._create_node_custom_attr,
             ),
             StaticChoiceFieldConfig: TypeFactory(
                 build_value=self._create_static_choice_value,
@@ -135,11 +135,11 @@ class FieldConfigFactory:
             },
         )
 
-    def _create_container_custom_attr(self, label: str, index: int):
+    def _create_node_custom_attr(self, label: str, index: int):
         return NodeConfig(
             field_details=CollapsibleContainerFieldConfig(is_collapsible=index >= 3),
             value_validator=None,
         )
 
-    def _create_container_value(self):
+    def _create_node_value(self):
         return None

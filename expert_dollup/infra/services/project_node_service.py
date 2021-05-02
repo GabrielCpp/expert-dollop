@@ -3,37 +3,37 @@ from typing import List, Optional, Awaitable, Any, Dict
 from uuid import UUID
 from sqlalchemy import select, join, and_, desc, or_
 from expert_dollup.core.domains import (
-    ProjectContainer,
-    ProjectContainerTreeNode,
-    ProjectContainerMeta,
+    ProjectNode,
+    ProjectNodeTreeNode,
+    ProjectNodeMeta,
     ProjectDefinitionNode,
-    ProjectContainerTree,
-    ProjectContainerFilter,
+    ProjectNodeTree,
+    ProjectNodeFilter,
     FieldNode,
 )
 from expert_dollup.shared.database_services import BaseCrudTableService
 from expert_dollup.core.utils.path_transform import join_uuid_path, split_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
-    project_container_table,
-    ProjectContainerDao,
+    project_node_table,
+    ProjectNodeDao,
     project_definition_node_table,
     ProjectDefinitionNodeDao,
-    project_container_meta_table,
-    ProjectContainerMetaDao,
+    project_node_meta_table,
+    ProjectNodeMetaDao,
 )
 
 
-class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
+class ProjectNodeService(BaseCrudTableService[ProjectNode]):
     class Meta:
-        table = project_container_table
-        dao = ProjectContainerDao
-        domain = ProjectContainer
-        table_filter_type = ProjectContainerFilter
+        table = project_node_table
+        dao = ProjectNodeDao
+        domain = ProjectNode
+        table_filter_type = ProjectNodeFilter
 
     async def find_children(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None
-    ) -> Awaitable[ProjectContainer]:
+    ) -> Awaitable[ProjectNode]:
         path_filter = join_uuid_path(path)
         other_filters = []
 
@@ -56,7 +56,7 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
         results = self.map_many_to(records, self._dao, self._domain)
         return results
 
-    async def remove_collection(self, container: ProjectContainer) -> Awaitable:
+    async def remove_collection(self, container: ProjectNode) -> Awaitable:
         path_to_delete = join_uuid_path(container.subpath)
         query = self._table.delete().where(
             and_(
@@ -84,7 +84,7 @@ class ProjectContainerService(BaseCrudTableService[ProjectContainer]):
         results = self.map_many_to(records, self._dao, self._domain)
         return results
 
-    async def find_root_section_containers(
+    async def find_root_section_nodes(
         self, project_id: UUID, root_section_def_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
         query = (

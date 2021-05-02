@@ -16,10 +16,10 @@ class SimpleProject:
         self.fake = Faker()
         self.field_config_factory = FieldConfigFactory(self.fake)
 
-    def generate_project_container_definition(self, project_def_id: UUID) -> None:
+    def generate_project_node_definition(self, project_def_id: UUID) -> None:
         labels = ["root", "subsection", "form", "section", "field"]
 
-        def generate_child_container(
+        def generate_child_node(
             direct_parent: ProjectDefinitionNode, parents: List[str]
         ) -> None:
             level = len(parents)
@@ -37,7 +37,7 @@ class SimpleProject:
                 )
                 other_field = {}
 
-                sub_container = ProjectDefinitionNode(
+                sub_node = ProjectDefinitionNode(
                     id=uuid4(),
                     name=f"{direct_parent.name}_{label}_{index}",
                     project_def_id=project_def_id,
@@ -50,9 +50,9 @@ class SimpleProject:
                     default_value=value,
                 )
 
-                self.project_definition_nodes.append(sub_container)
-                generate_child_container(
-                    sub_container, [*parents, str(sub_container.id)]
+                self.project_definition_nodes.append(sub_node)
+                generate_child_node(
+                    sub_node, [*parents, str(sub_node.id)]
                 )
 
         root_a = ProjectDefinitionNode(
@@ -69,7 +69,7 @@ class SimpleProject:
         )
 
         self.project_definition_nodes.append(root_a)
-        generate_child_container(root_a, [str(root_a.id)])
+        generate_child_node(root_a, [str(root_a.id)])
 
         root_b = ProjectDefinitionNode(
             id=uuid4(),
@@ -85,7 +85,7 @@ class SimpleProject:
         )
 
         self.project_definition_nodes.append(root_b)
-        generate_child_container(root_b, [str(root_b.id)])
+        generate_child_node(root_b, [str(root_b.id)])
 
     def generate_project_definition(self):
         project_definition = ProjectDefinition(
@@ -97,17 +97,17 @@ class SimpleProject:
         )
 
         self.project_definitions.append(project_definition)
-        self.generate_project_container_definition(project_definition.id)
+        self.generate_project_node_definition(project_definition.id)
 
     def generate_translations(self):
-        for project_container_definition in self.project_definition_nodes:
+        for project_node_definition in self.project_definition_nodes:
             self.tanslations.append(
                 Translation(
                     id=uuid4(),
                     ressource_id=self.project_definitions[0].id,
-                    scope=project_container_definition.id,
+                    scope=project_node_definition.id,
                     locale="fr",
-                    name=project_container_definition.name,
+                    name=project_node_definition.name,
                     value=" ".join(self.fake.words()),
                     creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
@@ -117,9 +117,9 @@ class SimpleProject:
                 Translation(
                     id=uuid4(),
                     ressource_id=self.project_definitions[0].id,
-                    scope=project_container_definition.id,
+                    scope=project_node_definition.id,
                     locale="fr",
-                    name=f"{project_container_definition.name}_helptext",
+                    name=f"{project_node_definition.name}_helptext",
                     value=self.fake.sentence(nb_words=20),
                     creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
@@ -129,9 +129,9 @@ class SimpleProject:
                 Translation(
                     id=uuid4(),
                     ressource_id=self.project_definitions[0].id,
-                    scope=project_container_definition.id,
+                    scope=project_node_definition.id,
                     locale="en",
-                    name=project_container_definition.name,
+                    name=project_node_definition.name,
                     value=" ".join(self.fake.words()),
                     creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
@@ -141,9 +141,9 @@ class SimpleProject:
                 Translation(
                     id=uuid4(),
                     ressource_id=self.project_definitions[0].id,
-                    scope=project_container_definition.id,
+                    scope=project_node_definition.id,
                     locale="en",
-                    name=f"{project_container_definition.name}_helptext",
+                    name=f"{project_node_definition.name}_helptext",
                     value=self.fake.sentence(nb_words=20),
                     creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )

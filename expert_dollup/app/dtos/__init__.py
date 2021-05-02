@@ -29,18 +29,18 @@ from .project_definition_node_tree_dto import (
 from .project_dto import ProjectDetailsDto
 from .translation_dto import TranslationDto, TranslationIdDto, TranslationInputDto
 from .translation_page_dto import TranslationPageDto
-from .project_container_dto import (
-    ProjectContainerDto,
-    ProjectContainerCollectionTargetDto,
+from .project_node_dto import (
+    ProjectNodeDto,
+    ProjectNodeCollectionTargetDto,
 )
 from .project_node_tree_dto import (
-    ProjectContainerTreeTypeNodeDto,
-    ProjectContainerTreeNodeDto,
-    ProjectContainerTreeDto,
+    ProjectNodeTreeTypeNodeDto,
+    ProjectNodeTreeNodeDto,
+    ProjectNodeTreeDto,
 )
-from .project_container_meta_dto import (
-    ProjectContainerMetaDto,
-    ProjectContainerMetaStateDto,
+from .project_node_meta_dto import (
+    ProjectNodeMetaDto,
+    ProjectNodeMetaStateDto,
 )
 from .formula_dto import FormulaDto
 from .datasheet_definition_dto import DatasheetDefinitionDto

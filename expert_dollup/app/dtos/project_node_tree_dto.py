@@ -1,24 +1,24 @@
 from expert_dollup.shared.modeling import CamelModel
 from typing import List
 from uuid import UUID
-from .project_container_dto import ProjectContainerDto
+from .project_node_dto import ProjectNodeDto
 from .project_definition_node_dto import ProjectDefinitionNodeDto
-from .project_container_meta_dto import ProjectContainerMetaStateDto
+from .project_node_meta_dto import ProjectNodeMetaStateDto
 
 
-class ProjectContainerTreeTypeNodeDto(CamelModel):
+class ProjectNodeTreeTypeNodeDto(CamelModel):
     definition: ProjectDefinitionNodeDto
-    state: ProjectContainerMetaStateDto
-    nodes: List["ProjectContainerTreeNodeDto"]
+    state: ProjectNodeMetaStateDto
+    nodes: List["ProjectNodeTreeNodeDto"]
 
 
-class ProjectContainerTreeNodeDto(CamelModel):
-    node: ProjectContainerDto
-    children: List[ProjectContainerTreeTypeNodeDto]
+class ProjectNodeTreeNodeDto(CamelModel):
+    node: ProjectNodeDto
+    children: List[ProjectNodeTreeTypeNodeDto]
 
 
-ProjectContainerTreeTypeNodeDto.update_forward_refs()
+ProjectNodeTreeTypeNodeDto.update_forward_refs()
 
 
-class ProjectContainerTreeDto(CamelModel):
-    roots: List[ProjectContainerTreeTypeNodeDto]
+class ProjectNodeTreeDto(CamelModel):
+    roots: List[ProjectNodeTreeTypeNodeDto]

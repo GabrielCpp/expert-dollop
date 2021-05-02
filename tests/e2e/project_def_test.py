@@ -25,13 +25,13 @@ async def test_project_creation(ac, mapper):
         ProjectDefinitionNode,
     )
 
-    for project_definiton_container_dto in project_definition_nodes_dto:
+    for project_definiton_node_dto in project_definition_nodes_dto:
         response = await ac.post(
             "/api/project_definition_node",
-            data=project_definiton_container_dto.json(),
+            data=project_definiton_node_dto.json(),
         )
         node = find_name(
-            db.project_definition_nodes, project_definiton_container_dto.name
+            db.project_definition_nodes, project_definiton_node_dto.name
         )
 
         assert response.status_code == 200, response.json()
@@ -42,12 +42,12 @@ async def test_project_creation(ac, mapper):
         after=normalize_request_results(ProjectDefinitionNodeDto, lambda c: c["id"]),
     )
 
-    expected_containers = normalize_dtos(
+    expected_nodes = normalize_dtos(
         project_definition_nodes_dto, lambda c: c["id"]
     )
 
     assert len(containers) == len(project_definition_nodes_dto)
-    assert containers == expected_containers
+    assert containers == expected_nodes
 
 
 @pytest.mark.asyncio
@@ -71,12 +71,12 @@ async def test_query_project_definition_parts(ac, mapper, expert_dollup_simple_p
         return (root_sections.roots,)
 
     @runner.step
-    async def find_first_root_section_containers(
+    async def find_first_root_section_nodes(
         root_sections: List[ProjectDefinitionTreeNode],
     ):
         first_root_section = root_sections[0].definition
         response = await ac.get(
-            f"/api/project_definition/{project_definition.id}/root_section_containers/{first_root_section.id}"
+            f"/api/project_definition/{project_definition.id}/root_section_nodes/{first_root_section.id}"
         )
         assert response.status_code == 200, response.json()
 

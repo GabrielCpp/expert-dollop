@@ -85,7 +85,7 @@ async def get_project_definition_node_by_project(
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
 ):
     return await request_handler.forward(
-        usecase.find_project_containers,
+        usecase.find_project_nodes,
         dict(
             next_page_token=next_page_token,
             limit=limit,
@@ -115,16 +115,16 @@ async def find_root_sections(
 
 
 @router.get(
-    "/project_definition/{project_def_id}/root_section_containers/{root_section_id}"
+    "/project_definition/{project_def_id}/root_section_nodes/{root_section_id}"
 )
-async def find_root_section_containers(
+async def find_root_section_nodes(
     project_def_id: UUID,
     root_section_id: UUID,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
     return await request_handler.forward(
-        usecase.find_root_section_containers,
+        usecase.find_root_section_nodes,
         dict(
             project_def_id=project_def_id,
             root_section_id=root_section_id,

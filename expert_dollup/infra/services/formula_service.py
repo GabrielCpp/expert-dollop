@@ -12,7 +12,7 @@ from expert_dollup.infra.expert_dollup_db import (
     ProjectDefinitionFormulaDao,
     project_definition_formula_table,
     project_definition_formula_dependency_table,
-    project_definition_formula_container_dependency_table,
+    project_definition_formula_node_dependency_table,
     project_definition_node_table,
 )
 
@@ -77,19 +77,19 @@ class FormulaService(BaseCrudTableService[Formula]):
         if len(formula_details.formula_dependencies) > 0:
             await self._database.execute(query=query)
 
-        query = project_definition_formula_container_dependency_table.delete().where(
-            project_definition_formula_container_dependency_table.c.formula_id
+        query = project_definition_formula_node_dependency_table.delete().where(
+            project_definition_formula_node_dependency_table.c.formula_id
             == formula_details.formula.id
         )
 
         await self._database.execute(query=query)
 
         query = pg_insert(
-            project_definition_formula_container_dependency_table,
+            project_definition_formula_node_dependency_table,
             [
                 {
                     "formula_id": formula_details.formula.id,
-                    "depend_on_container_id": field_dependency,
+                    "depend_on_node_id": field_dependency,
                     "project_def_id": formula_details.formula.project_def_id,
                 }
                 for field_dependency in formula_details.field_dependencies.values()
@@ -149,9 +149,9 @@ class FormulaService(BaseCrudTableService[Formula]):
         )
 
         query_field_dependencies = select(
-            [project_definition_formula_container_dependency_table]
+            [project_definition_formula_node_dependency_table]
         ).where(
-            project_definition_formula_container_dependency_table.c.project_def_id
+            project_definition_formula_node_dependency_table.c.project_def_id
             == project_definition_id
         )
 
@@ -162,7 +162,7 @@ class FormulaService(BaseCrudTableService[Formula]):
         dependencies = defaultdict(list)
         for element in field_dependency_records:
             dependencies[element.get("formula_id")].append(
-                element.get("depend_on_container_id")
+                element.get("depend_on_node_id")
             )
 
         for element in query_formula_dependency_records:

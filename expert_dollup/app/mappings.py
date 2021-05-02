@@ -105,13 +105,13 @@ def map_static_choice_field_config_to_dto(
     )
 
 
-def map_collapsible_container_field_config_from_dto(
+def map_collapsible_node_field_config_from_dto(
     src: CollapsibleContainerFieldConfigDto, mapper: Mapper
 ) -> CollapsibleContainerFieldConfig:
     return CollapsibleContainerFieldConfig(is_collapsible=src.is_collapsible)
 
 
-def map_collapsible_container_field_config_to_dto(
+def map_collapsible_node_field_config_to_dto(
     src: CollapsibleContainerFieldConfig, mapper: Mapper
 ) -> CollapsibleContainerFieldConfigDto:
     return CollapsibleContainerFieldConfigDto(is_collapsible=src.is_collapsible)
@@ -262,10 +262,10 @@ def map_value_union_to_dto(src: ValueUnion, mapper: Mapper) -> ValueUnionDto:
     return value
 
 
-def map_project_container_from_dto(
-    src: ProjectContainerDto, mapper: Mapper
-) -> ProjectContainer:
-    return ProjectContainer(
+def map_project_node_from_dto(
+    src: ProjectNodeDto, mapper: Mapper
+) -> ProjectNode:
+    return ProjectNode(
         id=src.id,
         project_id=src.project_id,
         type_id=src.type_id,
@@ -275,10 +275,10 @@ def map_project_container_from_dto(
     )
 
 
-def map_project_container_to_dto(
-    src: ProjectContainer, mapper: Mapper
-) -> ProjectContainerDto:
-    return ProjectContainerDto(
+def map_project_node_to_dto(
+    src: ProjectNode, mapper: Mapper
+) -> ProjectNodeDto:
+    return ProjectNodeDto(
         id=src.id,
         project_id=src.project_id,
         type_id=src.type_id,
@@ -288,49 +288,49 @@ def map_project_container_to_dto(
     )
 
 
-def map_project_container_meta_state_to_dto(
-    src: ProjectContainerMetaState, mapper: Mapper
-) -> ProjectContainerMetaStateDto:
-    return ProjectContainerMetaStateDto(
+def map_project_node_meta_state_to_dto(
+    src: ProjectNodeMetaState, mapper: Mapper
+) -> ProjectNodeMetaStateDto:
+    return ProjectNodeMetaStateDto(
         is_visible=src.is_visible, selected_child=src.selected_child
     )
 
 
-def map_project_container_meta_to_dto(
-    src: ProjectContainerMeta, mapper: Mapper
-) -> ProjectContainerMetaDto:
-    return ProjectContainerMetaDto(
+def map_project_node_meta_to_dto(
+    src: ProjectNodeMeta, mapper: Mapper
+) -> ProjectNodeMetaDto:
+    return ProjectNodeMetaDto(
         project_id=src.project_id,
         type_id=src.type_id,
-        state=mapper.map(src.state, ProjectContainerMetaStateDto),
+        state=mapper.map(src.state, ProjectNodeMetaStateDto),
         definition=mapper.map(src.definition, ProjectDefinitionNodeDto),
     )
 
 
-def map_project_container_tree_node_to_dto(
-    src: ProjectContainerTreeNode, mapper: Mapper
-) -> ProjectContainerTreeNodeDto:
-    return ProjectContainerTreeNodeDto(
-        node=mapper.map(src.node, ProjectContainerDto),
-        children=mapper.map_many(src.children, ProjectContainerTreeNodeDto),
+def map_project_node_tree_node_to_dto(
+    src: ProjectNodeTreeNode, mapper: Mapper
+) -> ProjectNodeTreeNodeDto:
+    return ProjectNodeTreeNodeDto(
+        node=mapper.map(src.node, ProjectNodeDto),
+        children=mapper.map_many(src.children, ProjectNodeTreeNodeDto),
     )
 
 
-def map_project_container_tree_type_node_to_dto(
-    src: ProjectContainerTreeTypeNode, mapper: Mapper
-) -> ProjectContainerTreeTypeNodeDto:
-    return ProjectContainerTreeTypeNodeDto(
+def map_project_node_tree_type_node_to_dto(
+    src: ProjectNodeTreeTypeNode, mapper: Mapper
+) -> ProjectNodeTreeTypeNodeDto:
+    return ProjectNodeTreeTypeNodeDto(
         definition=mapper.map(src.definition, ProjectDefinitionNodeDto),
-        state=mapper.map(src.state, ProjectContainerMetaStateDto),
-        nodes=mapper.map_many(src.nodes, ProjectContainerTreeNodeDto),
+        state=mapper.map(src.state, ProjectNodeMetaStateDto),
+        nodes=mapper.map_many(src.nodes, ProjectNodeTreeNodeDto),
     )
 
 
-def map_project_container_tree_to_dto(
-    src: ProjectContainerTree, mapper: Mapper
-) -> ProjectContainerTreeDto:
-    return ProjectContainerTreeDto(
-        roots=mapper.map_many(src.roots, ProjectContainerTreeTypeNodeDto)
+def map_project_node_tree_to_dto(
+    src: ProjectNodeTree, mapper: Mapper
+) -> ProjectNodeTreeDto:
+    return ProjectNodeTreeDto(
+        roots=mapper.map_many(src.roots, ProjectNodeTreeTypeNodeDto)
     )
 
 

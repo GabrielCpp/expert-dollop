@@ -41,7 +41,7 @@ class ProjectDefinitionNodeUseCase:
     async def add(
         self, domain: ProjectDefinitionNode
     ) -> Awaitable[ProjectDefinitionNode]:
-        await self._ensure_container_is_valid(domain)
+        await self._ensure_node_is_valid(domain)
         await self.service.insert(domain)
         return await self.find_by_id(domain.id)
 
@@ -50,7 +50,7 @@ class ProjectDefinitionNodeUseCase:
         await self.service.delete_by_id(id)
 
     async def update(self, domain: ProjectDefinitionNode) -> Awaitable:
-        await self._ensure_container_is_valid(domain)
+        await self._ensure_node_is_valid(domain)
         await self.service.update(domain)
         return await self.find_by_id(domain.id)
 
@@ -58,7 +58,7 @@ class ProjectDefinitionNodeUseCase:
         result = await self.service.find_by_id(id)
         return result
 
-    async def find_project_containers(
+    async def find_project_nodes(
         self, project_def_id: UUID, limit: int, next_page_token: Optional[str] = None
     ) -> Awaitable[Page[ProjectDefinitionNode]]:
         results = await self.service.find_by_paginated(
@@ -77,10 +77,10 @@ class ProjectDefinitionNodeUseCase:
         tree = self.project_definition_tree_builder.build(root_sections)
         return tree
 
-    async def find_root_section_containers(
+    async def find_root_section_nodes(
         self, project_def_id: UUID, root_section_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
-        nodes = await self.project_definition_node_service.find_root_section_containers(
+        nodes = await self.project_definition_node_service.find_root_section_nodes(
             project_def_id, root_section_id
         )
         tree = self.project_definition_tree_builder.build(nodes)
@@ -95,7 +95,7 @@ class ProjectDefinitionNodeUseCase:
         tree = self.project_definition_tree_builder.build(form_definitions)
         return tree
 
-    async def _ensure_container_is_valid(self, domain: ProjectDefinitionNode):
+    async def _ensure_node_is_valid(self, domain: ProjectDefinitionNode):
         has_project_def = await self.project_definition_service.has(
             domain.project_def_id
         )

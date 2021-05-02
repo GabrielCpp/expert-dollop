@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from uuid import UUID
 from datetime import datetime
 from typing import List
-from .project_container import ProjectContainer
-from .project_container_meta import ProjectContainerMeta
+from .project_node import ProjectNode
+from .project_node_meta import ProjectNodeMeta
 from .ressource import Ressource
 
 
@@ -20,5 +20,5 @@ class ProjectDetails:
 class Project:
     ressource: Ressource
     details: ProjectDetails
-    nodes: List[ProjectContainer]
-    metas: List[ProjectContainerMeta]
+    nodes: List[ProjectNode]
+    metas: List[ProjectNodeMeta]

@@ -4,13 +4,13 @@ from typing import Optional
 from .project_definition_node_dto import ProjectDefinitionNodeDto
 
 
-class ProjectContainerMetaStateDto(CamelModel):
+class ProjectNodeMetaStateDto(CamelModel):
     is_visible: bool
     selected_child: Optional[UUID]
 
 
-class ProjectContainerMetaDto(CamelModel):
+class ProjectNodeMetaDto(CamelModel):
     project_id: UUID
     type_id: UUID
-    state: ProjectContainerMetaStateDto
+    state: ProjectNodeMetaStateDto
     definition: ProjectDefinitionNodeDto

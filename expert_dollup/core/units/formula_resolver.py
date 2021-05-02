@@ -10,7 +10,7 @@ from expert_dollup.core.domains import Formula, FormulaDetails, FormulaCachedRes
 from dataclasses import dataclass
 from expert_dollup.infra.services import (
     FormulaService,
-    ProjectContainerService,
+    ProjectNodeService,
     FormulaCacheService,
 )
 
@@ -246,11 +246,11 @@ class FormulaResolver:
     def __init__(
         self,
         formula_service: FormulaService,
-        project_container_service: ProjectContainerService,
+        project_node_service: ProjectNodeService,
         formula_cache_service: FormulaCacheService,
     ):
         self.formula_service = formula_service
-        self.project_container_service = project_container_service
+        self.project_node_service = project_node_service
         self.formula_cache_service = formula_cache_service
 
     async def parse(self, formula: Formula) -> FormulaDetails:
@@ -294,7 +294,7 @@ class FormulaResolver:
         self, project_id, project_definition_id
     ) -> Awaitable[List[FormulaCachedResult]]:
         injector = FormulaInjector()
-        fields = await self.project_container_service.get_all_fields(project_id)
+        fields = await self.project_node_service.get_all_fields(project_id)
 
         for node in fields:
             injector.add_unit(node.path, node.name, FieldUnit(node.id, node.expression))

@@ -10,9 +10,9 @@ from structlog.contextvars import merge_contextvars
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 import expert_dollup.app.controllers as api_routers
 from .schemas import schema, GraphqlContext
-from .modules import build_container
+from .modules import build_node
 from .middlewares import (
-    create_container_middleware,
+    create_node_middleware,
     LoggerMiddleware,
     create_error_middleware,
     ExceptionHandlerDict,
@@ -47,12 +47,12 @@ load_dotenv()
 
 
 def creat_app(container: Injector = None):
-    container = container or build_container()
+    container = container or build_node()
     exception_handler = container.get(ExceptionHandlerDict)
 
     app = FastAPI()
     app.add_middleware(
-        create_container_middleware(container, lambda parent: Injector(parent=parent))
+        create_node_middleware(container, lambda parent: Injector(parent=parent))
     )
     app.add_middleware(LoggerMiddleware)
     app.add_middleware(create_error_middleware(exception_handler))

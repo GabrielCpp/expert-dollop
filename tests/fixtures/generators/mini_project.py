@@ -54,7 +54,7 @@ class MiniProject:
         ):
             value = self.field_config_factory.build_value(config_type)
             config = self.field_config_factory.build_config(None, index, config_type)
-            definition_container = ProjectDefinitionNode(
+            definition_node = ProjectDefinitionNode(
                 id=uuid4(),
                 name=name_map[config_type],
                 project_def_id=project_definition.id,
@@ -67,13 +67,13 @@ class MiniProject:
                 default_value=value,
             )
 
-            self.tables.project_definition_nodes.append(definition_container)
+            self.tables.project_definition_nodes.append(definition_node)
 
         value = self.field_config_factory.build_value(DecimalFieldConfig)
         index = len(name_map)
         label = "taxes"
         config = self.field_config_factory.build_config(label, index, config_type)
-        definition_container = ProjectDefinitionNode(
+        definition_node = ProjectDefinitionNode(
             id=uuid4(),
             name=label,
             project_def_id=project_definition.id,
@@ -86,7 +86,7 @@ class MiniProject:
             default_value=value,
         )
 
-        self.tables.project_definition_nodes.append(definition_container)
+        self.tables.project_definition_nodes.append(definition_node)
 
         return self
 

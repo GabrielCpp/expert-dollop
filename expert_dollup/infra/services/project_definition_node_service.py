@@ -95,7 +95,7 @@ class ProjectDefinitionNodeService(BaseCrudTableService[ProjectDefinitionNode]):
         results = self.map_many_to(records, self._dao, self._domain)
         return results
 
-    async def find_root_section_containers(
+    async def find_root_section_nodes(
         self, project_def_id: UUID, root_section_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
         query = (
