@@ -52,7 +52,9 @@ class ProjectNodeUseCase:
     async def find_by_path(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None
     ) -> Awaitable[List[ProjectNode]]:
-        children = await self.project_node_service.find_children(project_id, path, level)
+        children = await self.project_node_service.find_children(
+            project_id, path, level
+        )
         return children
 
     async def find_subtree(self, project_id: UUID, path: List[UUID]):
@@ -60,31 +62,31 @@ class ProjectNodeUseCase:
         children = await self.project_node_service.find_children(project_id, path)
         return [node, *children]
 
-    async def find_root_sections(
-        self, project_id: UUID
-    ) -> Awaitable[ProjectNodeTree]:
+    async def find_root_sections(self, project_id: UUID) -> Awaitable[ProjectNodeTree]:
         roots = await self.project_node_service.find_root_sections(project_id)
         metas = await self.project_node_meta.find_root_sections(project_id)
         tree = self.project_tree_builder.build(roots, metas)
         return tree
 
     async def find_root_section_nodes(
-        self, project_id: UUID
+        self, project_id: UUID, root_section_id: UUID
     ) -> Awaitable[ProjectNodeTree]:
+        root_section = await self.project_node_service.find_by_id(root_section_id)
         roots = await self.project_node_service.find_root_section_nodes(
-            project_id
+            project_id, root_section_id
         )
         metas = await self.project_node_meta.find_root_section_nodes(
-            project_id
+            project_id, root_section.type_id
         )
         tree = self.project_tree_builder.build(roots, metas)
         return tree
 
-    async def find_root_section_nodes(
-        self, project_id: UUID
+    async def find_form_content(
+        self, project_id: UUID, form_id: UUID
     ) -> Awaitable[ProjectNodeTree]:
-        roots = await self.project_node_service.find_form_content(project_id)
-        metas = await self.project_node_meta.find_form_content(project_id)
+        form = await self.project_node_service.find_by_id(form_id)
+        roots = await self.project_node_service.find_form_content(project_id, form_id)
+        metas = await self.project_node_meta.find_form_content(project_id, form.type_id)
         tree = self.project_tree_builder.build(roots, metas)
         return tree
 

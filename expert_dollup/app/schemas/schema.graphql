@@ -283,6 +283,15 @@ type ProjectDefinitionConnection {
   pageInfo: PageInfo!
 }
 
+type ProjectNode {
+  id: ID!
+  project_id: String!
+  type_path: [String!]!
+  type_id: String!
+  path: [String!]!
+  value: FieldValue
+}
+
 type ProjectDetails {
   id: ID!
   name: String!
@@ -291,6 +300,26 @@ type ProjectDetails {
   projectDefinition: ProjectDefinition!
   datasheetId: String!
   datasheet: Datasheet!
+}
+
+type ProjectNodeMetaState {
+  isVisible: Boolean
+  selectedChild: String
+}
+
+type ProjectNodeTreeNode {
+  node: ProjectNode!
+  children: [ProjectNodeTreeTypeNode!]!
+}
+
+type ProjectNodeTreeTypeNode {
+  definition: ProjectDefinitionNode!
+  state: ProjectNodeMetaState!
+  nodes: [ProjectNodeTreeNode!]!
+}
+
+type ProjectNodeTree {
+  roots: [ProjectNodeTreeTypeNode!]!
 }
 
 type Translation {
@@ -341,6 +370,12 @@ type Query {
     first: Int!
     after: String
   ): ProjectDefinitionConnection!
+  findProjectRootSections(projectId: ID!): ProjectNodeTree!
+  findProjectRootSectionContainers(
+    projectId: ID!
+    rootSectionId: ID!
+  ): ProjectNodeTree!
+  findProjectFormContent(projectId: ID!, formId: ID!): ProjectNodeTree!
 }
 
 input TranslationInput {

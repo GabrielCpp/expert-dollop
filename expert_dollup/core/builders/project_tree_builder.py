@@ -34,10 +34,10 @@ class ProjectTreeBuilder:
 
                 if children_path in tree_node_map:
                     tree_nodes = tree_node_map[children_path]
-                    node.children = self._build_tree_node_list_by_type(
+                    tree_node.children = self._build_tree_node_list_by_type(
                         tree_nodes, meta_map
                     )
-                    del node_map[children_path]
+                    del tree_node_map[children_path]
 
         roots = []
 

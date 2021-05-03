@@ -262,9 +262,7 @@ def map_value_union_to_dto(src: ValueUnion, mapper: Mapper) -> ValueUnionDto:
     return value
 
 
-def map_project_node_from_dto(
-    src: ProjectNodeDto, mapper: Mapper
-) -> ProjectNode:
+def map_project_node_from_dto(src: ProjectNodeDto, mapper: Mapper) -> ProjectNode:
     return ProjectNode(
         id=src.id,
         project_id=src.project_id,
@@ -275,9 +273,7 @@ def map_project_node_from_dto(
     )
 
 
-def map_project_node_to_dto(
-    src: ProjectNode, mapper: Mapper
-) -> ProjectNodeDto:
+def map_project_node_to_dto(src: ProjectNode, mapper: Mapper) -> ProjectNodeDto:
     return ProjectNodeDto(
         id=src.id,
         project_id=src.project_id,
@@ -312,7 +308,7 @@ def map_project_node_tree_node_to_dto(
 ) -> ProjectNodeTreeNodeDto:
     return ProjectNodeTreeNodeDto(
         node=mapper.map(src.node, ProjectNodeDto),
-        children=mapper.map_many(src.children, ProjectNodeTreeNodeDto),
+        children=mapper.map_many(src.children, ProjectNodeTreeTypeNodeDto),
     )
 
 

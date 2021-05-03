@@ -85,14 +85,14 @@ class ProjectNodeService(BaseCrudTableService[ProjectNode]):
         return results
 
     async def find_root_section_nodes(
-        self, project_id: UUID, root_section_def_id: UUID
+        self, project_id: UUID, root_section_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
         query = (
             select([self._table])
             .where(
                 and_(
                     self._table.c.project_id == project_id,
-                    self._table.c.display_query_internal_id == root_section_def_id,
+                    self._table.c.display_query_internal_id == root_section_id,
                 )
             )
             .order_by(desc(self._table.c.level))
@@ -103,14 +103,14 @@ class ProjectNodeService(BaseCrudTableService[ProjectNode]):
         return results
 
     async def find_form_content(
-        self, project_id: UUID, form_def_id: UUID
+        self, project_id: UUID, form_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
         query = (
             select([self._table])
             .where(
                 and_(
                     self._table.c.project_id == project_id,
-                    self._table.c.display_query_internal_id == form_def_id,
+                    self._table.c.display_query_internal_id == form_id,
                 )
             )
             .order_by(desc(self._table.c.level))
