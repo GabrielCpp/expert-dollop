@@ -67,7 +67,7 @@ def deleteDb(c):
 @task(name="db:up")
 def dbUp(c):
     c.run(
-        "docker-compose up --force-recreate --abort-on-container-exit --attach-dependencies adminer postgres"
+        "docker-compose up --force-recreate adminer postgres"
     )
 
 
@@ -101,3 +101,14 @@ def truncate_db(c, poetry=False):
         truncate_db()
     else:
         c.run("poetry run invoke db:truncate --poetry")
+
+@task
+def generate_env(c):
+    with open(".env", 'w') as f:
+        f.write('POSTGRES_USERNAME=predyktuser\n')
+        f.write('POSTGRES_PASSWORD=predyktpassword\n')
+        f.write('POSTGRES_HOST=127.0.0.1\n')
+        f.write('POSTGRES_DB=predykt\n')
+
+        
+

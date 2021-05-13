@@ -131,7 +131,9 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         records = await self._database.fetch_all(query=query)
         results = self.map_many_to(records, self._dao, self._domain)
         new_next_page_token = (
-            None if len(records) == 0 else self._paginator.encode_record(records[-1])
+            self._paginator.default_token
+            if len(records) == 0
+            else self._paginator.encode_record(records[-1])
         )
 
         return Page(

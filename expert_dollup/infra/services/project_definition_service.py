@@ -16,4 +16,4 @@ class ProjectDefinitionService(BaseCrudTableService[ProjectDefinition]):
         dao = ProjectDefinitionDao
         domain = ProjectDefinition
         table_filter_type = None
-        paginator = IdStampedDateCursorEncoder.for_fields("name")
+        paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")

@@ -7,7 +7,7 @@ from pathlib import Path
 from async_asgi_testclient import TestClient
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 from expert_dollup.app.app import creat_app
-from expert_dollup.app.modules import build_node
+from expert_dollup.app.modules import build_container
 from expert_dollup.shared.automapping import Mapper
 from .fixtures import *
 
@@ -37,7 +37,7 @@ async def dal():
 
 @pytest.fixture
 def container(dal, request) -> Injector:
-    container = build_node()
+    container = build_container()
     container.binder.bind(ExpertDollupDatabase, dal)
 
     other_bindings = get_overrides_for(request.function)

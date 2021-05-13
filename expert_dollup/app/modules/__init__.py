@@ -4,7 +4,7 @@ import importlib
 from injector import Injector, singleton, InstanceProvider
 
 
-def build_node(root_binded=[]) -> Injector:
+def build_container(root_binded=[]) -> Injector:
     binders = []
 
     for module in os.listdir(os.path.dirname(__file__)):

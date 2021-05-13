@@ -23,6 +23,8 @@ services:
     - 5432:5432
     volumes:
     - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
 
   adminer:
     container_name: adminer
@@ -32,9 +34,13 @@ services:
       - postgres
     ports:
       - 8080:8080
+    networks:
+      - backend
 
 volumes:
   mongodb_data:
   postgres_data:
     name: postgres_data
 
+networks:
+  backend:
