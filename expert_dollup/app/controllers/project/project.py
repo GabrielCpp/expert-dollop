@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from uuid import UUID, uuid4
 from expert_dollup.shared.starlette_injection import Inject
 from expert_dollup.shared.handlers import RequestHandler, MappingChain

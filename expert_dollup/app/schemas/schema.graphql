@@ -216,8 +216,15 @@ input BoolFieldValueInput {
   enabled: Boolean!
 }
 
+enum FieldValueType {
+  INT_FIELD_VALUE
+  DECIMAL_FIELD_VALUE
+  STRING_FIELD_VALUE
+  BOOL_FIELD_VALUE
+}
+
 input FieldValueInput {
-  kind: String!
+  kind: FieldValueType!
   int: IntFieldValueInput
   decimal: DecimalFieldValueInput
   string: StringFieldValueInput
@@ -280,6 +287,16 @@ type ProjectDefinitionEdge {
 
 type ProjectDefinitionConnection {
   edges: [ProjectDefinitionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ProjectEdge {
+  node: ProjectDetails!
+  cursor: String!
+}
+
+type ProjectConnection {
+  edges: [ProjectEdge!]!
   pageInfo: PageInfo!
 }
 
@@ -366,7 +383,7 @@ type Query {
     language: String!
   ): TranslationConnection!
   findProjectDefintions(
-    queryFilter: String!
+    query: String!
     first: Int!
     after: String
   ): ProjectDefinitionConnection!
@@ -376,6 +393,7 @@ type Query {
     rootSectionId: ID!
   ): ProjectNodeTree!
   findProjectFormContent(projectId: ID!, formId: ID!): ProjectNodeTree!
+  findProjects(query: String!, first: Int!, after: String): ProjectConnection!
 }
 
 input TranslationInput {
@@ -391,6 +409,11 @@ type Mutation {
   addProjectDefinitionNode(
     node: ProjectDefinitionNodeInput!
   ): ProjectDefinitionNode!
+  updateProjectField(
+    project_id: ID!
+    node_id: ID!
+    value: FieldValueInput!
+  ): ProjectNode!
 }
 
 schema {

@@ -92,7 +92,7 @@ class ProjectNodeUseCase:
 
     async def update_node_value(
         self, project_id: UUID, node_id: UUID, value: ValueUnion
-    ):
+    ) -> Awaitable[ProjectNode]:
         node = await self.project_node_service.find_one_by(
             ProjectNodeFilter(project_id=project_id, id=node_id)
         )
@@ -107,6 +107,8 @@ class ProjectNodeUseCase:
             ProjectNodeFilter(value=value),
             ProjectNodeFilter(project_id=project_id, id=node_id),
         )
+
+        return await self.project_node_service.find_by_id(node_id)
 
     async def add_collection(
         self,

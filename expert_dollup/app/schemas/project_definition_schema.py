@@ -31,7 +31,7 @@ async def resolve_find_project_definition(
 async def resolve_find_project_defintions(
     _: Any,
     info: GraphQLResolveInfo,
-    query_filter: str,
+    query: str,
     first: int,
     handler: GraphqlPageHandler[ProjectDefinitionService, ProjectDefinitionDto],
     after: Optional[str] = None,
