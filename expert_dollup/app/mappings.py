@@ -208,6 +208,18 @@ def map_project_definition_tree_to_dto(
     )
 
 
+def map_project_input_from_dto(
+    src: ProjectDetailsInputDto, mapper: Mapper
+) -> ProjectDetails:
+    return ProjectDetails(
+        id=src.id,
+        name=src.name,
+        is_staged=False,
+        project_def_id=src.project_def_id,
+        datasheet_id=src.datasheet_id,
+    )
+
+
 def map_project_from_dto(src: ProjectDetailsDto, mapper: Mapper) -> ProjectDetails:
     return ProjectDetails(
         id=src.id,

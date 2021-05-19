@@ -319,6 +319,13 @@ type ProjectDetails {
   datasheet: Datasheet!
 }
 
+input ProjectDetailsInput {
+  id: ID!
+  name: String!
+  projectDefId: String!
+  datasheetId: String!
+}
+
 type ProjectNodeMetaState {
   isVisible: Boolean
   selectedChild: String
@@ -414,6 +421,7 @@ type Mutation {
     node_id: ID!
     value: FieldValueInput!
   ): ProjectNode!
+  createProject(projectDetails: ProjectDetailsInput): ProjectDetails!
 }
 
 schema {

@@ -28,3 +28,18 @@ async def resolve_find_projects(
 ):
     result = await handler.find_all(first, after)
     return result
+
+
+@mutation.field("createProject")
+@inject_graphql_route(create_project)
+@convert_kwargs_to_snake_case
+async def resolve_create_project(
+    _: Any,
+    info: GraphQLResolveInfo,
+    project_details: dict,
+    create_project: callable,
+):
+    result = await create_project(
+        info, ProjectDetailsInputDto.parse_obj(project_details)
+    )
+    return result
