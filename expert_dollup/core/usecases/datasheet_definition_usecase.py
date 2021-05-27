@@ -40,8 +40,6 @@ class DatasheetDefinitionUseCase:
         await self.datasheet_definition_service.delete_by_id(id)
 
     def validate_datasheet(self, datasheet_definition: DatasheetDefinition):
-        for name, schema in datasheet_definition.element_properties_schema.items():
-            if not self.schema_validator.is_valid_schema(schema):
-                raise ValidationError.for_field(
-                    f"element_properties_schema.{name}", "Invalid schema"
-                )
+        for name, schema in datasheet_definition.properties.items():
+            if not self.schema_validator.is_valid_schema(schema.value_validator):
+                raise ValidationError.for_field(f"properties.{name}", "Invalid schema")

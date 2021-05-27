@@ -8,7 +8,7 @@ from starlette.types import ASGIApp
 
 ExceptionHandler = Dict[Type, Callable[[Exception, Request], Response]]
 InteralErrorHandler = Callable[[], Response]
-ExceptionHandlerDict = TypeVar("ExceptionHandler")
+ExceptionHandlerDict = TypeVar("ExceptionHandlerDict")
 
 logger = structlog.get_logger(__name__)
 

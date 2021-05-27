@@ -137,8 +137,8 @@ class DatasheetElementUseCase:
                 if default_property.is_readonly is True:
                     raise ValidationError.for_field(name, "Field is readonly")
 
-                assert name in datasheet_definition.element_properties_schema
-                property_schema = datasheet_definition.element_properties_schema[name]
+                assert name in datasheet_definition.properties
+                property_schema = datasheet_definition.properties[name].value_validator
                 self.schema_validator.validate_instance_of(
                     property_schema, properties[name]
                 )
@@ -147,5 +147,5 @@ class DatasheetElementUseCase:
                 raise ValidationError.for_field(name, "Field is missing")
 
         for name in properties.keys():
-            if not name in datasheet_definition.element_properties_schema:
+            if not name in datasheet_definition.properties:
                 raise ValidationError.for_field(name, "Field does not exist")

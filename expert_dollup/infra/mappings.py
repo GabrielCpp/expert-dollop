@@ -1,8 +1,9 @@
 import jsonpickle
 from typing import List
-from expert_dollup.shared.starlette_injection import Clock
 from uuid import UUID
 from dataclasses import asdict
+from pydantic import parse_raw_as
+from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import map_dict_keys
 from expert_dollup.core.utils.path_transform import (
@@ -115,9 +116,7 @@ def map_project_to_dao(src: ProjectDetails, mapper: Mapper) -> ProjectDao:
     )
 
 
-def map_project_node_to_dao(
-    src: ProjectNode, mapper: Mapper
-) -> ProjectNodeDao:
+def map_project_node_to_dao(src: ProjectNode, mapper: Mapper) -> ProjectNodeDao:
     display_query_internal_id = get_display_query_id(src.project_id, src.path)
 
     return ProjectNodeDao(
@@ -133,9 +132,7 @@ def map_project_node_to_dao(
     )
 
 
-def map_project_node_from_dao(
-    src: ProjectNodeDao, mapper: Mapper
-) -> ProjectNode:
+def map_project_node_from_dao(src: ProjectNodeDao, mapper: Mapper) -> ProjectNode:
     return ProjectNode(
         id=src.id,
         project_id=src.project_id,
@@ -280,9 +277,7 @@ def map_project_definition_node_filter_to_dict(
     )
 
 
-def map_project_node_filter_to_dict(
-    src: ProjectNodeFilter, mapper: Mapper
-) -> dict:
+def map_project_node_filter_to_dict(src: ProjectNodeFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
         {
@@ -351,7 +346,7 @@ def map_datasheet_definition_to_dao(
     return DatasheetDefinitionDao(
         id=src.id,
         name=src.name,
-        element_properties_schema=src.element_properties_schema,
+        properties=jsonpickle.dumps(src.properties, unpicklable=False),
     )
 
 
@@ -361,7 +356,7 @@ def map_datasheet_definition_from_dao(
     return DatasheetDefinition(
         id=src.id,
         name=src.name,
-        element_properties_schema=src.element_properties_schema,
+        properties=parse_raw_as(Dict[str, ElementPropertySchema], src.properties),
     )
 
 
@@ -400,6 +395,23 @@ def map_datasheet_definition_element_from_dao(
         },
         tags=list_str_to_uuid(src.tags),
         creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_datasheet_definition_element_filter(
+    src: DatasheetDefinitionElementFilter, mapper: Mapper
+) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "id": ("id", None),
+            "unit_id": ("unit_id", None),
+            "is_collection": ("is_collection", None),
+            "datasheet_def_id": ("datasheet_def_id", None),
+            "order_index": ("order_index", None),
+            "tags": ("tags", None),
+            "creation_date_utc": ("creation_date_utc", None),
+        },
     )
 
 

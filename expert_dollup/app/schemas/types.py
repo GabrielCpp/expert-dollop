@@ -14,6 +14,9 @@ from expert_dollup.shared.starlette_injection import GraphqlContext
 mutation = MutationType()
 query = QueryType()
 datasheet_definition = ObjectType("DatasheetDefinition")
+datasheet_definition_property_schema_dict = ObjectType(
+    "DatasheetDefinitionPropertySchemaDict"
+)
 datasheet_definition_element = ObjectType("DatasheetDefinitionElement")
 project_definition = ObjectType("ProjectDefinition")
 project_definition_node = ObjectType("ProjectDefinitionNode")

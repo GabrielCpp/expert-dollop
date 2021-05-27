@@ -11,7 +11,7 @@ class DatasheetDefinitionElementPropertyDto(CamelModel):
 
 class DatasheetDefinitionElementDto(CamelModel):
     id: UUID
-    unit_id: UUID
+    unit_id: str
     is_collection: bool
     datasheet_def_id: UUID
     order_index: int

@@ -86,9 +86,11 @@ class DatasheetDefinitionDtoFactory(factory.Factory):
 
     id = factory.LazyFunction(uuid4)
     name = factory.Sequence(lambda n: f"datasheet_definition{n}")
-    element_properties_schema = {
-        "conversion_factor": {"type": "number"},
-        "lost": {"type": "number"},
+    properties = {
+        "conversion_factor": ElementPropertySchemaDto(
+            value_validator={"type": "number"}
+        ),
+        "lost": ElementPropertySchemaDto(value_validator={"type": "number"}),
     }
 
 
@@ -97,7 +99,7 @@ class DatasheetDefinitionElementDtoFactory(factory.Factory):
         model = DatasheetDefinitionElementDto
 
     id = factory.LazyFunction(uuid4)
-    unit_id = factory.LazyFunction(uuid4)
+    unit_id = "inch"
     is_collection = False
     datasheet_def_id = factory.LazyFunction(uuid4)
     order_index = factory.Sequence(lambda n: n)

@@ -5,12 +5,10 @@ from sqlalchemy import desc, select, and_
 from sqlalchemy import func
 from expert_dollup.shared.database_services import (
     BaseCompositeCrudTableService,
-    Page,
     IdStampedDateCursorEncoder,
 )
 from expert_dollup.core.domains import DatasheetElement
 from expert_dollup.infra.expert_dollup_db import (
-    ExpertDollupDatabase,
     datasheet_element_table,
     DatasheetElementDao,
 )

@@ -13,7 +13,7 @@ from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.controllers.datasheet.datasheet_definition_element_controller import *
 from expert_dollup.app.controllers.datasheet.datasheet_definition_controller import *
-from .types import datasheet_definition_element
+from .types import datasheet_definition_element, query
 
 
 @datasheet_definition_element.field("defaultProperties")
@@ -23,6 +23,46 @@ def resolve_default_properties(
     info: GraphQLResolveInfo,
 ):
     return [
-        {"name": name, "property": str(property_value)}
+        {"name": name, "property": property_value}
         for name, property_value in parent.default_properties.items()
     ]
+
+
+@query.field("findDatasheetDefinitionElements")
+@inject_graphql_handler(
+    GraphqlPageHandler[DatasheetDefinitionElementService, DatasheetDefinitionElementDto]
+)
+@convert_kwargs_to_snake_case
+async def resolve_find_datasheet_definition_elements(
+    _: Any,
+    info: GraphQLResolveInfo,
+    datasheet_definition_id: UUID,
+    first: int,
+    handler: GraphqlPageHandler[DatasheetDefinitionService, DatasheetDefinitionDto],
+    after: Optional[str] = None,
+):
+    return await handler.handle(
+        DatasheetDefinitionElementFilter(datasheet_def_id=datasheet_definition_id),
+        first,
+        after,
+    )
+
+
+@query.field("queryDatasheetDefinitionElements")
+@inject_graphql_handler(
+    GraphqlPageHandler[DatasheetDefinitionElementService, DatasheetDefinitionElementDto]
+)
+@convert_kwargs_to_snake_case
+async def resolve_query_datasheet_definition_elements(
+    _: Any,
+    info: GraphQLResolveInfo,
+    query: str,
+    first: int,
+    handler: GraphqlPageHandler[DatasheetDefinitionService, DatasheetDefinitionDto],
+    after: Optional[str] = None,
+):
+
+    return await handler.find_all(
+        first,
+        after,
+    )

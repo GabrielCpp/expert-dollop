@@ -6,7 +6,13 @@ from .mapping_helpers import (
     unwrap_many,
 )
 
-from .fake_db_helpers import FakeExpertDollupDb, DbSetupHelper, populate_db, truncate_db
+from .fake_db_helpers import (
+    FakeExpertDollupDb,
+    DbSetupHelper,
+    populate_db,
+    truncate_db,
+    drop_db,
+)
 from .factories_domain import *
 from .factories_dto import *
 from .object_dump_helpers import dump_to_file, set_dump_path, dump_snapshot, jsonify

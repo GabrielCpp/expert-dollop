@@ -1,18 +1,32 @@
 scalar JsonSchema
 
+type DatasheetDefinitionPropertySchema {
+  valueValidator: JsonSchema!
+}
+
 type DatasheetDefinitionPropertySchemaDict {
   name: String!
-  schema: String!
+  schema: DatasheetDefinitionPropertySchema!
 }
 
 type DatasheetDefinition {
   id: ID!
   name: String!
-  elementPropertiesSchema: DatasheetDefinitionPropertySchemaDict
+  properties: [DatasheetDefinitionPropertySchemaDict!]!
   elementsDefinition(
     first: Int!
     after: String
   ): DatasheetDefinitionElementConnection
+}
+
+type DatasheetDefinitionEdge {
+  node: DatasheetDefinition!
+  cursor: String!
+}
+
+type DatasheetDefinitionConnection {
+  edges: [DatasheetDefinitionEdge!]!
+  pageInfo: PageInfo!
 }
 
 type DatasheetDefinitionElementEdge {
@@ -21,7 +35,7 @@ type DatasheetDefinitionElementEdge {
 }
 
 type DatasheetDefinitionElementConnection {
-  edges: [DatasheetDefinitionElement!]!
+  edges: [DatasheetDefinitionElementEdge!]!
   pageInfo: PageInfo!
 }
 
@@ -43,7 +57,7 @@ type DatasheetDefinitionElement {
   datasheetDefinition: DatasheetDefinition
   orderIndex: Int!
   name: String!
-  defaultProperties: DatasheetDefinitionElementPropertyDict
+  defaultProperties: [DatasheetDefinitionElementPropertyDict!]!
   tags: [String!]!
   creationDateUtc: String!
 }
@@ -372,6 +386,22 @@ type PageInfo {
 
 type Query {
   findDatasheet(id: ID!): Datasheet!
+  findDatasheetDefinitions(
+    query: String!
+    first: Int!
+    after: String
+  ): DatasheetDefinitionConnection!
+  findDatasheetDefinition(datasheetDefinitionId: ID!): DatasheetDefinition!
+  findDatasheetDefinitionElements(
+    datasheetDefinitionId: ID!
+    first: Int!
+    after: String
+  ): DatasheetDefinitionElementConnection!
+  queryDatasheetDefinitionElements(
+    query: String!
+    first: Int!
+    after: String
+  ): DatasheetDefinitionElementConnection!
   findProjectDefinition(id: ID!): ProjectDefinition!
   findProjectDefinitionRootSections(
     projectDefId: ID!

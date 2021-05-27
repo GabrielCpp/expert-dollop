@@ -15,5 +15,6 @@ class LoggerMiddleware(BaseHTTPMiddleware):
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
 
-        return await call_next(request)
+        response = await call_next(request)
         clear_contextvars()
+        return response

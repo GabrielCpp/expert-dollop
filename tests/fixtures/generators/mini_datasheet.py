@@ -14,9 +14,11 @@ class MiniDatasheet:
         datasheet_definition = DatasheetDefinition(
             id=uuid4(),
             name=f"datasheet_definition_a",
-            element_properties_schema={
-                "conversion_factor": {"type": "number"},
-                "lost": {"type": "number"},
+            properties={
+                "conversion_factor": ElementPropertySchema(
+                    value_validator={"type": "number"}
+                ),
+                "lost": ElementPropertySchema(value_validator={"type": "number"}),
             },
         )
         self.tables.datasheet_definitions.append(datasheet_definition)
@@ -40,7 +42,7 @@ class MiniDatasheet:
 
         datasheet_definition_element_single = DatasheetDefinitionElement(
             id=uuid4(),
-            unit_id=uuid4(),
+            unit_id="inch",
             is_collection=False,
             datasheet_def_id=datasheet_definition.id,
             order_index=0,
@@ -60,7 +62,7 @@ class MiniDatasheet:
 
         datasheet_definition_element_collection = DatasheetDefinitionElement(
             id=uuid4(),
-            unit_id=uuid4(),
+            unit_id="inch",
             is_collection=True,
             datasheet_def_id=datasheet_definition.id,
             order_index=0,

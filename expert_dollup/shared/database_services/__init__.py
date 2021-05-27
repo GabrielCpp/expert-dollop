@@ -127,6 +127,7 @@ class CoreCrudTableService(ABC, Generic[Domain]):
     async def find_all_paginated(
         self, limit: int = 1000, next_page_token: Optional[str] = None
     ) -> Awaitable[List[Domain]]:
+        assert not self._paginator is None, "Paginator required"
         query = self._paginator.build_query(None, limit, next_page_token)
         records = await self._database.fetch_all(query=query)
         results = self.map_many_to(records, self._dao, self._domain)

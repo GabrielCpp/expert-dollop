@@ -14,7 +14,7 @@ class DatasheetDefinitionElementProperty:
 @dataclass
 class DatasheetDefinitionElement:
     id: UUID
-    unit_id: UUID
+    unit_id: str
     is_collection: bool
     datasheet_def_id: UUID
     order_index: int
@@ -26,7 +26,7 @@ class DatasheetDefinitionElement:
 
 class DatasheetDefinitionElementFilter(QueryFilter):
     id: Optional[UUID]
-    unit_id: Optional[UUID]
+    unit_id: Optional[str]
     is_collection: Optional[bool]
     datasheet_def_id: Optional[UUID]
     order_index: Optional[int]

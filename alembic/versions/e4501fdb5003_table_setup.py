@@ -219,7 +219,7 @@ def create_datasheet_tables():
         "datasheet_definition",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("name", String, nullable=False),
-        Column("element_properties_schema", postgresql.JSON(), nullable=False),
+        Column("properties", String, nullable=False),
     )
 
     op.create_table(
@@ -249,7 +249,7 @@ def create_datasheet_tables():
     op.create_table(
         "datasheet_definition_element",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("unit_id", postgresql.UUID(), nullable=False),
+        Column("unit_id", String, nullable=False),
         Column("is_collection", Boolean, nullable=False),
         Column("name", String(64), nullable=False),
         Column("datasheet_def_id", postgresql.UUID(), nullable=False),

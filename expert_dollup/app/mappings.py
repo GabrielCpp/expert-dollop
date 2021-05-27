@@ -436,7 +436,10 @@ def map_datasheet_definition_to_dto(
     return DatasheetDefinitionDto(
         id=src.id,
         name=src.name,
-        element_properties_schema=src.element_properties_schema,
+        properties={
+            key: ElementPropertySchemaDto(value_validator=value.value_validator)
+            for key, value in src.properties.items()
+        },
     )
 
 
@@ -446,7 +449,10 @@ def map_datasheet_definition_from_dto(
     return DatasheetDefinition(
         id=src.id,
         name=src.name,
-        element_properties_schema=src.element_properties_schema,
+        properties={
+            key: ElementPropertySchema(value_validator=value.value_validator)
+            for key, value in src.properties.items()
+        },
     )
 
 

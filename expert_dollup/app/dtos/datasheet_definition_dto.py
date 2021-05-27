@@ -3,7 +3,11 @@ from typing import Dict
 from expert_dollup.shared.modeling import CamelModel
 
 
+class ElementPropertySchemaDto(CamelModel):
+    value_validator: dict
+
+
 class DatasheetDefinitionDto(CamelModel):
     id: UUID
     name: str
-    element_properties_schema: Dict[str, dict]
+    properties: Dict[str, ElementPropertySchemaDto]

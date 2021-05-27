@@ -300,14 +300,20 @@ datasheet_definition_table = Table(
     metadata,
     Column("id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("name", String, nullable=False),
-    Column("element_properties_schema", postgresql.JSON(), nullable=False),
+    Column("properties", String(), nullable=False),
 )
+
+JsonSchemaDao = dict
+
+
+class ElementPropertySchemaDao:
+    value_validator: JsonSchemaDao
 
 
 class DatasheetDefinitionDao(BaseModel):
     id: UUID
     name: str
-    element_properties_schema: Dict[str, dict]
+    properties: str
 
 
 datasheet_definition_label_collection_table = Table(
@@ -361,7 +367,7 @@ datasheet_definition_element_table = Table(
 
 class DatasheetDefinitionElementDao(BaseModel):
     id: UUID
-    unit_id: UUID
+    unit_id: str
     is_collection: bool
     name: str
     datasheet_def_id: UUID

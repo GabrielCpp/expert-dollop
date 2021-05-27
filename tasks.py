@@ -66,21 +66,48 @@ def deleteDb(c):
 
 @task(name="db:up")
 def dbUp(c):
-    c.run(
-        "docker-compose up --force-recreate adminer postgres"
-    )
+    c.run("docker-compose up --force-recreate adminer postgres")
 
 
 @task(name="db:fixture")
-def fill_db_with_fixture(c, poetry=False):
+def fill_db_with_fixture(c, name, truncate=False, poetry=False):
     if poetry:
-        from dev.init_db import fill_db
+        from dev.init_db import load_simple_project, load_simple_datasheet_def
+        from tests.fixtures import truncate_db
+
+        if truncate is True:
+            truncate_db()
+
+        if name == "simple_project":
+            load_simple_project()
+        elif name == "simple_datasheet_def":
+            load_simple_datasheet_def()
+        else:
+            print(f"Unkown fixture {name}")
+    else:
+        c.run(
+            f"poetry run invoke db:fixture --poetry --name={name} {'--truncate' if truncate else ''}"
+        )
+
+
+@task(name="db:truncate")
+def truncate_db(c, poetry=False):
+    if poetry:
         from tests.fixtures import truncate_db
 
         truncate_db()
-        fill_db()
     else:
-        c.run("poetry run invoke db:fixture --poetry")
+        c.run("poetry run invoke db:truncate --poetry")
+
+
+@task(name="db:drop")
+def drop_db(c, poetry=False):
+    if poetry:
+        from tests.fixtures import drop_db
+
+        drop_db()
+    else:
+        c.run("poetry run invoke db:drop --poetry")
 
 
 @task
@@ -93,22 +120,10 @@ def fixture(c, layer="dao", poetry=False):
         c.run(f"poetry run invoke fixture --poetry --layer {layer}")
 
 
-@task(name="db:truncate")
-def truncate_db(c, poetry=False):
-    if poetry:
-        from tests.fixtures import truncate_db
-
-        truncate_db()
-    else:
-        c.run("poetry run invoke db:truncate --poetry")
-
 @task
 def generate_env(c):
-    with open(".env", 'w') as f:
-        f.write('POSTGRES_USERNAME=predyktuser\n')
-        f.write('POSTGRES_PASSWORD=predyktpassword\n')
-        f.write('POSTGRES_HOST=127.0.0.1\n')
-        f.write('POSTGRES_DB=predykt\n')
-
-        
-
+    with open(".env", "w") as f:
+        f.write("POSTGRES_USERNAME=predyktuser\n")
+        f.write("POSTGRES_PASSWORD=predyktpassword\n")
+        f.write("POSTGRES_HOST=127.0.0.1\n")
+        f.write("POSTGRES_DB=predykt\n")

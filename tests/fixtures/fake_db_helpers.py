@@ -44,6 +44,22 @@ def truncate_db():
     trans.commit()
 
 
+def drop_db():
+    load_dotenv()
+    DATABASE_URL = "postgresql://{}:{}@{}/{}".format(
+        os.environ["POSTGRES_USERNAME"],
+        os.environ["POSTGRES_PASSWORD"],
+        os.environ["POSTGRES_HOST"],
+        os.environ["POSTGRES_DB"],
+    )
+
+    engine = create_engine(DATABASE_URL)
+    meta = MetaData()
+    meta.reflect(bind=engine)
+    for tbl in reversed(meta.sorted_tables):
+        tbl.drop(engine)
+
+
 async def populate_db(db, table, daos: Dict[str, Any]):
     await db.execute_many(table.insert(), [dao.dict() for dao in daos.values()])
 

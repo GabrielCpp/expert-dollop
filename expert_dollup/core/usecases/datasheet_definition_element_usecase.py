@@ -56,7 +56,7 @@ class DatasheetDefinitionElementUseCase:
             datasheet_definition_element.datasheet_def_id
         )
 
-        properties_schema = datasheet_definition.element_properties_schema
+        properties_schema = datasheet_definition.properties
 
         for name, schema in properties_schema.items():
             property_instance = datasheet_definition_element.default_properties.get(
@@ -68,4 +68,6 @@ class DatasheetDefinitionElementUseCase:
                     f"default_properties.{name}", "Field not set"
                 )
 
-            self.schema_validator.validate_instance_of(schema, property_instance.value)
+            self.schema_validator.validate_instance_of(
+                schema.value_validator, property_instance.value
+            )

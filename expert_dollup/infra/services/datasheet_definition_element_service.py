@@ -1,4 +1,7 @@
-from expert_dollup.shared.database_services import BaseCrudTableService
+from expert_dollup.shared.database_services import (
+    BaseCrudTableService,
+    IdStampedDateCursorEncoder,
+)
 from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
     datasheet_definition_element_table,
@@ -15,3 +18,4 @@ class DatasheetDefinitionElementService(
         dao = DatasheetDefinitionElementDao
         domain = DatasheetDefinitionElement
         table_filter_type = None
+        paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")
