@@ -8,6 +8,7 @@ from expert_dollup.shared.starlette_injection import (
     inject_graphql_handler,
     collapse_union,
 )
+from expert_dollup.app.controllers.translation import *
 from expert_dollup.app.controllers.project.project_definition_node import *
 from expert_dollup.app.dtos import *
 from expert_dollup.infra.services import *
@@ -135,3 +136,13 @@ async def resolve_add_project_definition_node(
     )
 
     return result
+
+
+@project_definition_node.field("translations")
+@inject_graphql_route(find_translation_in_scope)
+async def resolve_project_definition_node_translations(
+    parent: ProjectDefinitionNodeDto,
+    info: GraphQLResolveInfo,
+    find_translation_in_scope: callable,
+):
+    return await find_translation_in_scope(info, parent.project_def_id, parent.id)

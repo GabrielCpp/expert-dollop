@@ -536,3 +536,18 @@ def map_translation_ressource_locale_query_to_dict(
     src: TranslationRessourceLocaleQuery, mapper: Mapper
 ) -> dict:
     return asdict(src)
+
+
+def map_translation_filter(src: TranslationFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "id": ("id", None),
+            "ressource_id": ("ressource_id", None),
+            "locale": ("locale", None),
+            "scope": ("scope", None),
+            "name": ("name", None),
+            "value": ("value", None),
+            "creation_date_utc": ("creation_date_utc", None),
+        },
+    )

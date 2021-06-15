@@ -398,16 +398,6 @@ def map_translation_id_to_dto(src: TranslationId, mapper: Mapper) -> Translation
     )
 
 
-def map_page_translation_to_dto(
-    src: Page[Translation], mapper: Mapper
-) -> TranslationPageDto:
-    return Page(
-        next_page_token=src.next_page_token,
-        limit=src.limit,
-        results=mapper.map_many(src.results, TranslationDto, Translation),
-    )
-
-
 def map_formula_from_dto(src: FormulaDto, mapper: Mapper) -> Formula:
     return Formula(
         id=src.id,

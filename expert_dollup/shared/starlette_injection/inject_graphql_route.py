@@ -18,13 +18,14 @@ def collapse_union(node: dict, path: List[str], kind_map: Dict[str, str]):
         last_target_node = target_node
         target_node = target_node.get(property_name)
 
-    if target_node["kind"] in kind_map:
-        target_property_name = kind_map[target_node["kind"]]
-        union_value = target_node[target_property_name]
-        last_target_node[path[-1]] = union_value
-    else:
-        kind = target_node["kind"]
-        raise KeyError(f"Missing type {kind}")
+    if isinstance(target_node, dict):
+        if target_node["kind"] in kind_map:
+            target_property_name = kind_map[target_node["kind"]]
+            union_value = target_node[target_property_name]
+            last_target_node[path[-1]] = union_value
+        else:
+            kind = target_node["kind"]
+            raise KeyError(f"Missing type {kind}")
 
     return node
 

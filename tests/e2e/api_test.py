@@ -1,12 +1,9 @@
 import pytest
-from datetime import datetime, timezone
-from typing import Dict, Type, List, Callable, Any, TypeVar
-from pydantic import BaseModel
 from uuid import uuid4
-from starlette.responses import Response
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_db import *
+from expert_dollup.shared.database_services import Page
 from ..fixtures import *
 
 
@@ -144,7 +141,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
         translations, TranslationDto, Translation, TranslationDto
     )
 
-    expected_translations = TranslationPageDto(
+    expected_translations = Page(
         next_page_token="OTY0OTJiMmQtNDlmYS00MjUwLWI2NTUtZmY4Y2Y1MDMwOTUz",
         limit=10,
         results=[dto_translations["b_fr"], dto_translations["a_fr"]],
@@ -155,5 +152,5 @@ async def test_given_translation_should_be_able_to_retrieve_it(
     response = await ac.get(f"/api/translation/{ressource_id}/fr")
     assert response.status_code == 200
 
-    actual = unwrap(response, TranslationPageDto)
+    actual = unwrap(response, Page)
     assert actual == expected_translations

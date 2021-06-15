@@ -30,7 +30,12 @@ from .project_node_tree import (
     ProjectNodeTreeTypeNode,
     ProjectNodeTreeNode,
 )
-from .translation import Translation, TranslationId, TranslationRessourceLocaleQuery
+from .translation import (
+    Translation,
+    TranslationId,
+    TranslationRessourceLocaleQuery,
+    TranslationFilter,
+)
 from .ressource import Ressource
 from .formula import (
     Formula,

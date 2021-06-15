@@ -32,6 +32,23 @@ class RequestHandler:
 
         return result
 
+    async def handle_many(self, usecase, query_dto, mapping_chain: MappingChain):
+        query_domain = query_dto
+
+        if not mapping_chain.dto is None:
+            query_domain = self.mapper.map(
+                query_dto, mapping_chain.domain, mapping_chain.dto
+            )
+
+        result = await usecase(query_domain)
+
+        if not mapping_chain.out_dto is None:
+            result = self.mapper.map_many(
+                result, mapping_chain.out_dto, mapping_chain.out_domain
+            )
+
+        return result
+
     async def forward(self, usecase, params, mapping_chain: MappingChain):
         result = await usecase(**params)
 

@@ -268,6 +268,7 @@ type ProjectDefinitionNode {
   defaultValue: FieldValue
   path: [String!]!
   children: [ProjectDefinitionNode!]!
+  translations: [Translation!]!
 }
 
 type ProjectDefinitionTreeNode {
@@ -380,7 +381,7 @@ type TranslationConnection {
 }
 
 type PageInfo {
-  hasNextPage: Boolean
+  hasNextPage: Boolean!
   endCursor: String!
 }
 
