@@ -1,9 +1,11 @@
 from invoke import task
-
+from pathlib import Path
+import base64
+import os
 
 @task
 def start(c):
-    c.run("poetry run uvicorn expert_dollup.main:app --reload")
+    c.run("poetry run uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000 --ssl-keyfile .local/predykt.dev.key --ssl-certfile .local/predykt.dev.crt")
 
 
 @task
@@ -120,10 +122,58 @@ def fixture(c, layer="dao", poetry=False):
         c.run(f"poetry run invoke fixture --poetry --layer {layer}")
 
 
-@task
-def generate_env(c):
+def generate_cert(c, folder: Path, domain_name: str, ca_name: str="myCA"):   
+    folder.mkdir(parents=True, exist_ok=True) 
+
+    ######################
+    # Become a Certificate Authority
+    ######################
+
+    c.run(f"openssl genrsa -out {folder / ca_name}.key 2048")
+    c.run(f"openssl req -x509 -new -nodes -key {folder / ca_name}.key -sha256 -days 825 -out {folder / ca_name}.pem -subj '/C=US/ST=Denial/L=Springfield/O=Dis/CN={domain_name}'")
+
+    ######################
+    # Create CA-signed certs
+    ######################
+
+    c.run(f"openssl genrsa -out {folder / domain_name}.key 2048")
+    c.run(f"openssl req -new -key {folder / domain_name}.key -out {folder / domain_name}.csr -subj '/C=US/ST=Denial/L=Springfield/O=Dis/CN={domain_name}'")
+
+    with open(f"{folder / domain_name}.ext", 'w') as f:
+        f.write("authorityKeyIdentifier=keyid,issuer\n")
+        f.write("basicConstraints=CA:FALSE\n")
+        f.write("keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment\n")
+        f.write("subjectAltName = @alt_names\n")
+        f.write("[alt_names]\n")
+        f.write(f"DNS.1 = {domain_name}\n")
+
+    c.run(f"openssl x509 -req -in {folder / domain_name}.csr -CA {folder / ca_name}.pem -CAkey {folder / ca_name}.key -CAcreateserial -out {folder / domain_name}.crt -days 825 -sha256 -extfile {folder / domain_name}.ext")
+
+    cert_path = folder / f"{domain_name}.crt"
+    key_path = folder / f"{domain_name}.key"
+
+    return cert_path, key_path
+
+
+@task(name="init")
+def generate_env(c, hostname="predykt.dev"):
+    cert_path, key_path = generate_cert(c, Path(".local"), hostname)
+
+    with open(cert_path, 'rb') as key_file:
+        key = key_file.read()
+        key_base64 = base64.b64encode(key).decode('ascii')
+
+    with open(key_path, 'rb') as key_file:
+        private_key = key_file.read()
+        private_key_base64 = base64.b64encode(private_key).decode('ascii')
+
     with open(".env", "w") as f:
         f.write("POSTGRES_USERNAME=predyktuser\n")
         f.write("POSTGRES_PASSWORD=predyktpassword\n")
         f.write("POSTGRES_HOST=127.0.0.1\n")
         f.write("POSTGRES_DB=predykt\n")
+        f.write(f"JWT_PUBLIC_KEY={key_base64}\n")
+        f.write(f"JWT_PRIVATE_KEY={private_key_base64}\n")
+        f.write(f"HOSTNAME={hostname}\n")
+
+
