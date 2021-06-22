@@ -38,12 +38,7 @@ def runMigration(c):
 
 @task(name="db:upgrade")
 def migrate(c, migration):
-    c.run("poetry run alembic upgrade {} --sql".format(message))
-
-
-@task(name="db:init")
-def initDb(c):
-    c.run("poetry run python dev/init_db.py")
+    c.run("poetry run alembic upgrade {} --sql".format(migration))
 
 
 @task(name="db:delete")
