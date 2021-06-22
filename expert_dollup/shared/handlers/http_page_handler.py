@@ -1,10 +1,21 @@
-from typing import Type, Optional, TypeVar, Generic
-from dataclasses import dataclass
+from typing import Optional, TypeVar, Generic, Type, List
 from urllib.parse import unquote
+from ..modeling import CamelModel
 from ..automapping import Mapper
 
 Service = TypeVar("Service")
 OutDto = TypeVar("OutDto")
+
+def make_page_model(results_type: Type) -> CamelModel:
+    Result = TypeVar('Result', bound=results_type)
+
+    class PageDto(CamelModel):
+        next_page_token: str
+        limit: int
+        has_next_page: bool
+        results: List[Result]
+
+    return PageDto
 
 
 class HttpPageHandler(Generic[Service, OutDto]):

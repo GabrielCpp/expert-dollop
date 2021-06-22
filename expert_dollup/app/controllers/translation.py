@@ -89,8 +89,6 @@ async def get_all_translation_for_ressource(
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = 10,
 ):
-    query = TranslationRessourceLocaleQuery(ressource_id=ressource_id, locale=locale)
-
     return await handler.handle(
         TranslationRessourceLocaleQuery(ressource_id=ressource_id, locale=locale),
         limit,
