@@ -1,3 +1,4 @@
+from expert_dollup.core.domains.formula import FormulaFilter
 import jsonpickle
 from sqlalchemy import select, join, and_, desc, or_, text
 from sqlalchemy.sql.expression import func, select, alias, tuple_
@@ -5,7 +6,10 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from typing import List, Optional, Awaitable, Dict
 from collections import defaultdict
 from uuid import UUID
-from expert_dollup.shared.database_services import BaseCrudTableService
+from expert_dollup.shared.database_services import (
+    BaseCrudTableService,
+    IdStampedDateCursorEncoder,
+)
 from expert_dollup.core.domains import Formula, FormulaDetails, FormulaNode
 from expert_dollup.core.utils.path_transform import split_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
@@ -22,7 +26,8 @@ class FormulaService(BaseCrudTableService[Formula]):
         table = project_definition_formula_table
         dao = ProjectDefinitionFormulaDao
         domain = Formula
-        table_filter_type = None
+        table_filter_type = FormulaFilter
+        paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")
 
     async def get_formulas_by_name(
         self, names: List[str]

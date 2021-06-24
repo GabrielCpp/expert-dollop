@@ -6,8 +6,9 @@ from ..automapping import Mapper
 Service = TypeVar("Service")
 OutDto = TypeVar("OutDto")
 
+
 def make_page_model(results_type: Type) -> CamelModel:
-    Result = TypeVar('Result', bound=results_type)
+    Result = TypeVar("Result", bound=results_type)
 
     class PageDto(CamelModel):
         next_page_token: str

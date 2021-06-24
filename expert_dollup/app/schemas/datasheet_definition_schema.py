@@ -83,7 +83,7 @@ async def resolve_find_datasheet_definitions(
 @query.field("findDatasheetDefinition")
 @inject_graphql_route(find_datasheet_definition_by_id)
 @convert_kwargs_to_snake_case
-async def resolve_find_datasheet_definitions(
+async def resolve_find_datasheet_definition(
     _: Any,
     info: GraphQLResolveInfo,
     datasheet_definition_id: UUID,

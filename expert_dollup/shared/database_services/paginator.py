@@ -14,10 +14,10 @@ class IdStampedDateCursorEncoder:
         id_field_name: str,
         build_id_field=UUID,
         extract_field_id=str,
-        default_id=UUID('00000000-0000-0000-0000-000000000000'),
+        default_id=UUID("00000000-0000-0000-0000-000000000000"),
     ):
         return lambda table: IdStampedDateCursorEncoder(
-            table, id_field_name, build_id_field, extract_field_id,default_id
+            table, id_field_name, build_id_field, extract_field_id, default_id
         )
 
     def __init__(
@@ -26,7 +26,7 @@ class IdStampedDateCursorEncoder:
         id_field_name: str,
         build_id_field: callable,
         extract_field_id: callable,
-        default_id: str
+        default_id: str,
     ):
         self.table = table
         self.id_field_name = id_field_name

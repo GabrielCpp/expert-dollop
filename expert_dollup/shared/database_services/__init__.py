@@ -13,7 +13,7 @@ from typing import (
     Type,
 )
 from pydantic import BaseModel
-from sqlalchemy import and_, Table
+from sqlalchemy import and_, func
 from sqlalchemy.schema import FetchedValue
 from sqlalchemy.sql import select
 from databases import Database
@@ -177,7 +177,9 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         results = self.map_many_to(records, self._dao, self._domain)
 
         new_next_page_token = (
-            None if len(records) == 0 else self._paginator.encode_record(records[-1])
+            self._paginator.default_token
+            if len(records) == 0
+            else self._paginator.encode_record(records[-1])
         )
 
         return Page(
@@ -212,6 +214,16 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         where_filter = build_and_column_filter(self._table, filter_fields)
         query = self._table.delete().where(where_filter)
         await self._database.execute(query)
+
+    async def count(self, query_filter: Optional[QueryFilter] = None) -> Awaitable[int]:
+        if query_filter is None:
+            query = select([func.count()]).select_from(self._table)
+        else:
+            where_filter = self._build_filter(query_filter)
+            query = select([func.count()]).select_from(self._table).where(where_filter)
+
+        count = await self._database.fetch_val(query=query)
+        return count
 
     @abstractmethod
     async def delete_by_id(self, pk_id: Id) -> Awaitable:
@@ -264,7 +276,7 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         self, iterator: AsyncGenerator[Any, Any]
     ) -> AsyncGenerator[Domain, None]:
         async for record in iterator:
-            dao = dao_type(**record)
+            dao = self.dao(**record)
             result = self._mapper.map(dao, self._domain)
             yield result
 

@@ -1,7 +1,8 @@
 from uuid import UUID
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Dict, Optional, Union
 from ast import AST
+from expert_dollup.shared.database_services import QueryFilter
 
 
 @dataclass
@@ -48,3 +49,11 @@ class FormulaNode:
     expression: AST
     formula_id: UUID
     dependencies: List[str]
+
+
+class FormulaFilter(QueryFilter):
+    id: Optional[UUID]
+    project_def_id: Optional[UUID]
+    attached_to_type_id: Optional[UUID]
+    name: Optional[str]
+    expression: Optional[str]

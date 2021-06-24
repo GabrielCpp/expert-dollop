@@ -305,6 +305,25 @@ type ProjectDefinitionConnection {
   pageInfo: PageInfo!
 }
 
+type Formula {
+    id: ID!
+    project_def_id: String!
+    attached_to_type_id: String!
+    name: String!
+    expression: String!
+    generated_ast: String!
+}
+
+type FormulaEdge {
+  node: Formula!
+  cursor: String!
+}
+
+type FormulaConnection {
+  edges: [FormulaEdge!]!
+  pageInfo: PageInfo!
+}
+
 type ProjectEdge {
   node: ProjectDetails!
   cursor: String!
@@ -383,6 +402,7 @@ type TranslationConnection {
 type PageInfo {
   hasNextPage: Boolean!
   endCursor: String!
+  totalCount: Int!
 }
 
 type Query {
@@ -432,6 +452,12 @@ type Query {
   ): ProjectNodeTree!
   findProjectFormContent(projectId: ID!, formId: ID!): ProjectNodeTree!
   findProjects(query: String!, first: Int!, after: String): ProjectConnection!
+  findProjectDefinitionFormulas(
+    projectDefId: ID!
+    query: String!
+    first: Int!
+    after: String
+  ): FormulaConnection!
 }
 
 input TranslationInput {

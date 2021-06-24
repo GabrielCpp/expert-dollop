@@ -27,6 +27,7 @@ class GraphqlPageHandler(Generic[Service, OutDto]):
             "page_info": {
                 "has_next_page": len(page.results) == limit,
                 "end_cursor": page.next_page_token,
+                "total_count": self.service.count(),
             },
         }
 
@@ -48,5 +49,6 @@ class GraphqlPageHandler(Generic[Service, OutDto]):
             "page_info": {
                 "has_next_page": len(page.results) == limit,
                 "end_cursor": page.next_page_token,
+                "total_count": self.service.count(query_filter),
             },
         }

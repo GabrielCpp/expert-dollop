@@ -51,9 +51,7 @@ class SimpleProject:
                 )
 
                 self.project_definition_nodes.append(sub_node)
-                generate_child_node(
-                    sub_node, [*parents, str(sub_node.id)]
-                )
+                generate_child_node(sub_node, [*parents, str(sub_node.id)])
 
         root_a = ProjectDefinitionNode(
             id=uuid4(),

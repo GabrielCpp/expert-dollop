@@ -114,9 +114,7 @@ async def find_root_sections(
     )
 
 
-@router.get(
-    "/project_definition/{project_def_id}/root_section_nodes/{root_section_id}"
-)
+@router.get("/project_definition/{project_def_id}/root_section_nodes/{root_section_id}")
 async def find_root_section_nodes(
     project_def_id: UUID,
     root_section_id: UUID,

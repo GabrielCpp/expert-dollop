@@ -551,3 +551,16 @@ def map_translation_filter(src: TranslationFilter, mapper: Mapper) -> dict:
             "creation_date_utc": ("creation_date_utc", None),
         },
     )
+
+
+def map_formula_filter(src: FormulaFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "id": ("id", None),
+            "project_def_id": ("project_def_id", None),
+            "attached_to_type_id": ("attached_to_type_id", None),
+            "name": ("name", None),
+            "expression": ("expression", None),
+        },
+    )

@@ -43,6 +43,7 @@ from .formula import (
     FormulaCachedResult,
     FormulaNode,
     FieldNode,
+    FormulaFilter,
 )
 
 from .datasheet_definition import DatasheetDefinition, ElementPropertySchema

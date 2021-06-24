@@ -30,9 +30,7 @@ async def test_project_creation(ac, mapper):
             "/api/project_definition_node",
             data=project_definiton_node_dto.json(),
         )
-        node = find_name(
-            db.project_definition_nodes, project_definiton_node_dto.name
-        )
+        node = find_name(db.project_definition_nodes, project_definiton_node_dto.name)
 
         assert response.status_code == 200, response.json()
 
@@ -42,9 +40,7 @@ async def test_project_creation(ac, mapper):
         after=normalize_request_results(ProjectDefinitionNodeDto, lambda c: c["id"]),
     )
 
-    expected_nodes = normalize_dtos(
-        project_definition_nodes_dto, lambda c: c["id"]
-    )
+    expected_nodes = normalize_dtos(project_definition_nodes_dto, lambda c: c["id"])
 
     assert len(containers) == len(project_definition_nodes_dto)
     assert containers == expected_nodes
