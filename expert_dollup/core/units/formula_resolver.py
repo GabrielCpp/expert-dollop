@@ -1,13 +1,16 @@
-import humps
 import ast
 from ast import *
-from typing import Awaitable, List
+from expert_dollup.core.domains.formula import FieldNode
+from typing import Awaitable, List, Union
 from math import sqrt
-from itertools import chain
-from uuid import UUID, uuid4
+from uuid import UUID
 from collections import defaultdict
-from expert_dollup.core.domains import Formula, FormulaDetails, FormulaCachedResult
-from dataclasses import dataclass
+from expert_dollup.core.domains import (
+    Formula,
+    FormulaDetails,
+    FormulaCachedResult,
+    FormulaNode,
+)
 from expert_dollup.infra.services import (
     FormulaService,
     ProjectNodeService,
@@ -24,47 +27,53 @@ def safe_div(a, b):
 
 class FormulaInjector:
     def __init__(self):
-        self.unit_map = defaultdict(list)
+        self.unit_map: Dict[str, Union["FormulaUnit", "FieldUnit"]] = defaultdict(list)
+        self.units: List["FormulaUnit"] = []
 
-    def add_unit(self, path: List[UUID], name: str, unit):
+    def add_unit(
+        self, path: List[UUID], name: str, unit: Union["FormulaUnit", "FieldUnit"]
+    ):
         for item in path:
             self.unit_map[f"{item}.{name}"].append(unit)
 
-        self.unit_map[f"{unit.id}.{name}"].append(unit)
+        self.unit_map[name].append(unit)
+        self.unit_map[f"{unit.node.id}.{name}"].append(unit)
 
-    def each_unit(self):
-        for units in self.unit_map.values():
-            for unit in units:
-                yield unit
+        if isinstance(unit, FormulaUnit):
+            self.units.append(unit)
 
-    def get_unit(self, id, name):
-        unit_id = f"{id}.{name}"
+    def get_unit(self, path: List[UUID], name: str):
+        for id in reversed(path):
+            unit_id = f"{id}.{name}"
 
-        if not unit_id in self.unit_map:
-            raise Exception(f"Unit {unit_id} not found.")
+            if unit_id in self.unit_map:
+                return self.unit_map[unit_id]
 
-        return self.unit_map[unit_id]
+        if name in self.unit_map:
+            return self.unit_map[name]
+
+        return []
 
 
 class FormulaUnit:
     def __init__(
-        self, id, name, dependencies, formula_ast, formula_id, formula_injector
+        self,
+        node: FormulaNode,
+        dependencies: List[str],
+        formula_injector: FormulaInjector,
     ):
-        self.id = id
-        self.name = name
+        self.node = node
         self.formula_injector = formula_injector
         self._dependencies = dependencies
-        self.formula_id = formula_id
-        self._formula_ast = formula_ast
 
     @property
     def value(self):
         self.units = {
-            name: self.formula_injector.get_unit(self.id, name)
+            name: self.formula_injector.get_unit(self.node.path, name)
             for name in self._dependencies
         }
 
-        result, calculation_details = self._compute(self._formula_ast.body[0])
+        result, calculation_details = self._compute(self.node.expression.body[0])
         self.calculation_details = calculation_details
 
         return result
@@ -118,6 +127,12 @@ class FormulaUnit:
 
             if isinstance(node.op, ast.Mult):
                 return left * right, f"{left_details} * {right_details}"
+
+            if isinstance(node.op, ast.Div):
+                return (
+                    safe_div(left, right),
+                    f"safe_div({left_details}, {right_details})",
+                )
 
             raise Exception("Unsupported binary op")
 
@@ -185,8 +200,8 @@ class FormulaUnit:
 
 
 class FieldUnit:
-    def __init__(self, id, value):
-        self.id = id
+    def __init__(self, node: FieldNode, value: Union[bool, str, int, float]):
+        self.node = node
         self.value = value
 
 
@@ -291,22 +306,24 @@ class FormulaResolver:
         return SafeguardDivision().visit(formula_details.formula_ast)
 
     async def compute_all_project_formula(
-        self, project_id, project_definition_id
+        self, project_id: UUID, project_definition_id: UUID
     ) -> Awaitable[List[FormulaCachedResult]]:
         injector = FormulaInjector()
         fields = await self.project_node_service.get_all_fields(project_id)
 
         for node in fields:
-            injector.add_unit(node.path, node.name, FieldUnit(node.id, node.expression))
+            injector.add_unit(node.path, node.name, FieldUnit(node, node.expression))
 
-        formulas = await self.formula_service.get_all_project_formula_ast(
-            project_definition_id
+        formulas: List[
+            FormulaNode
+        ] = await self.formula_service.get_all_project_formula_ast(
+            project_id, project_definition_id
         )
 
         formula_id_to_name_map = {}
 
         for node in fields:
-            formula_id_to_name_map[node.id] = node.name
+            formula_id_to_name_map[node.type_id] = node.name
 
         for node in formulas:
             formula_id_to_name_map[node.formula_id] = node.name
@@ -316,14 +333,11 @@ class FormulaResolver:
                 node.path,
                 node.name,
                 FormulaUnit(
-                    node.id,
-                    node.name,
+                    node,
                     [
                         formula_id_to_name_map[dependency_id]
                         for dependency_id in node.dependencies
                     ],
-                    node.expression,
-                    node.formula_id,
                     injector,
                 ),
             )
@@ -331,14 +345,12 @@ class FormulaResolver:
         cached_results = [
             FormulaCachedResult(
                 project_id=project_id,
-                formula_id=unit.formula_id,
-                node_id=unit.id,
-                generation_tag=uuid4(),
+                formula_id=unit.node.formula_id,
+                node_id=unit.node.id,
                 result=unit.value,
                 calculation_details=unit.calculation_details,
             )
-            for unit in injector.each_unit()
-            if isinstance(unit, FormulaUnit)
+            for unit in injector.units
         ]
 
         await self.formula_cache_service.repopulate(project_id, cached_results)

@@ -24,9 +24,15 @@ class ProjectDefinitionNodeDtoFactory(factory.Factory):
     is_collection = False
     instanciate_by_default = True
     order_index = factory.Sequence(lambda n: n)
-    config = NodeConfigDto(
-        field_details=IntFieldConfigDto(unit="Kg"),
-        value_validator={"type": "integer", "minimum": 0, "maximum": 100000},
+    config = factory.LazyAttribute(
+        lambda o: NodeConfigDto(
+            field_details=IntFieldConfigDto(unit="Kg"),
+            value_validator={"type": "integer", "minimum": 0, "maximum": 100000},
+            triggers=[],
+            translation=TranslationConfigDto(
+                help_text_name=f"{o.name}_help_text", label=o.name
+            ),
+        )
     )
     default_value = IntFieldValueDto(integer=0)
     path = []

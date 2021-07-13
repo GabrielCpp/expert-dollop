@@ -130,9 +130,27 @@ union FieldDetailsUnion =
   | StaticChoiceFieldConfig
   | CollapsibleContainerFieldConfig
 
+type TranslationConfig {
+  helpTextName: String!
+  label: String
+}
+
+type TriggerParam {
+  name: String!
+  value: String!
+}
+
+type Trigger {
+  triggerName: String!
+  targetName: String!
+  params: [TriggerParam!]!
+}
+
 type NodeConfig {
   fieldDetails: FieldDetailsUnion
   valueValidator: JsonSchema
+  triggers: [Trigger]!
+  translations: TranslationConfig!
 }
 
 type IntFieldValue {
@@ -462,14 +480,24 @@ type Query {
 
 input TranslationInput {
   ressourceId: String!
-  locale: String!
   scope: String!
+  locale: String!
+  name: String!
+  value: String!
+}
+
+input TranslationUpdateInput {
+  id: ID!
+  ressourceId: String!
+  scope: String!
+  locale: String!
   name: String!
   value: String!
 }
 
 type Mutation {
   addTranslations(translations: [TranslationInput!]!): [Translation!]!
+  updateTranslations(translations: [TranslationUpdateInput!]!): [Translation!]!
   addProjectDefinitionNode(
     node: ProjectDefinitionNodeInput!
   ): ProjectDefinitionNode!

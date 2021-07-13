@@ -1,8 +1,6 @@
 from uuid import UUID
-from enum import Enum
-from typing import Optional, List, Union
-from datetime import datetime
-from expert_dollup.shared.modeling import CamelModel, BaseModel
+from typing import Optional, List, Union, Dict
+from expert_dollup.shared.modeling import CamelModel
 from expert_dollup.core.domains import *
 
 
@@ -75,7 +73,20 @@ field_details_from_domain = {v: k for k, v in field_details_to_domain_map.items(
 assert len(FieldDetailsUnionDto.__args__) == len(field_details_to_domain_map)
 
 
+class TranslationConfigDto(CamelModel):
+    help_text_name: str
+    label: str
+
+
+class TriggerDto(CamelModel):
+    trigger_name: str
+    target_name: str
+    params: Dict[str, str]
+
+
 class NodeConfigDto(CamelModel):
+    translation: TranslationConfigDto
+    triggers: List[TriggerDto]
     field_details: Optional[FieldDetailsUnionDto]
     value_validator: Optional[JsonSchema]
 

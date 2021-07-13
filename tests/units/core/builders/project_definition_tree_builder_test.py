@@ -41,7 +41,14 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             is_collection=False,
             instanciate_by_default=True,
             order_index=2,
-            config=NodeConfig(field_details=None, value_validator=None),
+            config=NodeConfig(
+                field_details=None,
+                value_validator=None,
+                translation=TranslationConfig(
+                    help_text_name="root_a_subsection_1_form_2_help_text",
+                    label="root_a_subsection_1_form_2",
+                ),
+            ),
             default_value=None,
             path=[
                 UUID("df4b4f8c-1e96-4442-a90d-c076acd72163"),
@@ -58,7 +65,14 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             is_collection=True,
             instanciate_by_default=True,
             order_index=0,
-            config=NodeConfig(field_details=None, value_validator=None),
+            config=NodeConfig(
+                field_details=None,
+                value_validator=None,
+                translation=TranslationConfig(
+                    help_text_name="root_a_subsection_0_form_0_help_text",
+                    label="root_a_subsection_0_form_0",
+                ),
+            ),
             default_value=None,
             path=[
                 UUID("df4b4f8c-1e96-4442-a90d-c076acd72163"),
@@ -75,7 +89,14 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             is_collection=False,
             instanciate_by_default=True,
             order_index=2,
-            config=NodeConfig(field_details=None, value_validator=None),
+            config=NodeConfig(
+                field_details=None,
+                value_validator=None,
+                translation=TranslationConfig(
+                    help_text_name="root_a_subsection_0_form_2_help_text",
+                    label="root_a_subsection_0_form_2",
+                ),
+            ),
             default_value=None,
             path=[
                 UUID("df4b4f8c-1e96-4442-a90d-c076acd72163"),
@@ -92,7 +113,14 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             is_collection=True,
             instanciate_by_default=True,
             order_index=0,
-            config=NodeConfig(field_details=None, value_validator=None),
+            config=NodeConfig(
+                field_details=None,
+                value_validator=None,
+                translation=TranslationConfig(
+                    help_text_name="root_a_subsection_1_form_0_help_text",
+                    label="root_a_subsection_1_form_0",
+                ),
+            ),
             default_value=None,
             path=[
                 UUID("df4b4f8c-1e96-4442-a90d-c076acd72163"),
@@ -109,7 +137,14 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             is_collection=False,
             instanciate_by_default=True,
             order_index=1,
-            config=NodeConfig(field_details=None, value_validator=None),
+            config=NodeConfig(
+                field_details=None,
+                value_validator=None,
+                translation=TranslationConfig(
+                    help_text_name="root_a_subsection_1_form_1_help_text",
+                    label="root_a_subsection_1_form_1",
+                ),
+            ),
             default_value=None,
             path=[
                 UUID("df4b4f8c-1e96-4442-a90d-c076acd72163"),
@@ -126,7 +161,14 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             is_collection=False,
             instanciate_by_default=True,
             order_index=1,
-            config=NodeConfig(field_details=None, value_validator=None),
+            config=NodeConfig(
+                field_details=None,
+                value_validator=None,
+                translation=TranslationConfig(
+                    help_text_name="root_a_subsection_0_form_1_help_text",
+                    label="root_a_subsection_0_form_1",
+                ),
+            ),
             default_value=None,
             path=[
                 UUID("df4b4f8c-1e96-4442-a90d-c076acd72163"),
@@ -146,6 +188,10 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             config=NodeConfig(
                 field_details=CollapsibleContainerFieldConfig(is_collapsible=True),
                 value_validator=None,
+                translation=TranslationConfig(
+                    help_text_name="a_help_text",
+                    label="a",
+                ),
             ),
             default_value=None,
             path=[UUID("df4b4f8c-1e96-4442-a90d-c076acd72163")],
@@ -160,7 +206,14 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             is_collection=False,
             instanciate_by_default=True,
             order_index=1,
-            config=NodeConfig(field_details=None, value_validator=None),
+            config=NodeConfig(
+                field_details=None,
+                value_validator=None,
+                translation=TranslationConfig(
+                    help_text_name="root_a_subsection_1_help_text",
+                    label="root_a_subsection_1",
+                ),
+            ),
             default_value=None,
             path=[UUID("df4b4f8c-1e96-4442-a90d-c076acd72163")],
             creation_date_utc=datetime.datetime(
@@ -174,7 +227,14 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             is_collection=True,
             instanciate_by_default=True,
             order_index=0,
-            config=NodeConfig(field_details=None, value_validator=None),
+            config=NodeConfig(
+                field_details=None,
+                value_validator=None,
+                translation=TranslationConfig(
+                    help_text_name="root_a_subsection_0_help_text",
+                    label="root_a_subsection_0",
+                ),
+            ),
             default_value=None,
             path=[UUID("df4b4f8c-1e96-4442-a90d-c076acd72163")],
             creation_date_utc=datetime.datetime(

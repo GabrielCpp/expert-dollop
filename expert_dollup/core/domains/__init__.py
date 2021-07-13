@@ -13,6 +13,8 @@ from .project_definition_node import (
     ValueUnion,
     FieldDetailsUnion,
     JsonSchema,
+    TranslationConfig,
+    Trigger,
 )
 from .project import ProjectDetails, Project
 from .project_node import ProjectNode, ProjectNodeFilter

@@ -267,7 +267,6 @@ project_formula_cache_table = Table(
     Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("node_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("generation_tag", postgresql.UUID(), nullable=False),
     Column("calculation_details", String, nullable=False),
     Column("result", postgresql.JSON(), nullable=False),
     Column("last_modified_date_utc", DateTime(timezone=True), nullable=False),
@@ -278,7 +277,6 @@ class ProjectFormulaCacheDao(BaseModel):
     project_id: UUID
     formula_id: UUID
     node_id: UUID
-    generation_tag: UUID
     calculation_details: str
     result: Any
     last_modified_date_utc: datetime

@@ -14,6 +14,7 @@ class ProjectNode:
     type_id: UUID
     path: List[UUID]
     value: ValueUnion
+    label: Optional[str] = None
 
     @property
     def subpath(self):

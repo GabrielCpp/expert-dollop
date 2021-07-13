@@ -1,7 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID
-from enum import Enum
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
 
@@ -46,6 +45,19 @@ class CollapsibleContainerFieldConfig:
     is_collapsible: bool
 
 
+@dataclass
+class Trigger:
+    trigger_name: str
+    target_name: str
+    params: Dict[str, str]
+
+
+@dataclass
+class TranslationConfig:
+    help_text_name: str
+    label: str
+
+
 FieldDetailsUnion = Union[
     IntFieldConfig,
     DecimalFieldConfig,
@@ -59,6 +71,8 @@ FieldDetailsUnion = Union[
 
 @dataclass
 class NodeConfig:
+    translation: TranslationConfig
+    triggers: List[Trigger] = field(default_factory=list)
     field_details: Optional[FieldDetailsUnion] = None
     value_validator: Optional[JsonSchema] = None
 

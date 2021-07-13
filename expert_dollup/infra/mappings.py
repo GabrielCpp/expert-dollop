@@ -320,7 +320,6 @@ def map_formula_cache_result_to_dao(
         project_id=src.project_id,
         formula_id=src.formula_id,
         node_id=src.node_id,
-        generation_tag=src.generation_tag,
         calculation_details=src.calculation_details,
         result=src.result,
         last_modified_date_utc=mapper.get(Clock).utcnow(),
@@ -334,7 +333,6 @@ def map_formula_cache_result_from_dao(
         project_id=src.project_id,
         formula_id=src.formula_id,
         node_id=src.node_id,
-        generation_tag=src.generation_tag,
         calculation_details=src.calculation_details,
         result=src.result,
     )

@@ -1,3 +1,4 @@
+from ast import parse
 import astor
 from dataclasses import asdict
 from expert_dollup.shared.starlette_injection import Clock
@@ -116,6 +117,31 @@ def map_collapsible_node_field_config_to_dto(
 ) -> CollapsibleContainerFieldConfigDto:
     return CollapsibleContainerFieldConfigDto(is_collapsible=src.is_collapsible)
 
+def map_translation_config_from_dto(src: TranslationConfigDto, mapper: Mapper) -> TranslationConfig:
+    return TranslationConfig(
+        help_text_name=src.help_text_name,
+        label=src.label
+    )
+
+def map_translation_config_to_dto(src: TranslationConfig, mapper: Mapper) -> TranslationConfigDto:
+    return TranslationConfigDto(
+        help_text_name=src.help_text_name,
+        label=src.label
+    )
+
+def map_trigger_from_dto(src: TriggerDto, mapper: Mapper) -> Trigger:
+    return Trigger(
+        trigger_name=src.trigger_name,
+        target_name=src.target_name,
+        params=dict(src.params)
+    )
+
+def map_trigger_to_dto(src: Trigger, mapper: Mapper) -> TriggerDto:
+    return TriggerDto(
+        trigger_name=src.trigger_name,
+        target_name=src.target_name,
+        params=dict(src.params)
+    )
 
 def map_node_config_from_dto(src: NodeConfigDto, mapper: Mapper) -> NodeConfig:
     return NodeConfig(
@@ -124,6 +150,8 @@ def map_node_config_from_dto(src: NodeConfigDto, mapper: Mapper) -> NodeConfig:
         else mapper.map(
             src.field_details, field_details_to_domain_map[type(src.field_details)]
         ),
+        translation=mapper.map(src.translation, TranslationConfig),
+        triggers=mapper.map_many(src.triggers, Trigger),
         value_validator=src.value_validator,
     )
 
@@ -137,7 +165,10 @@ def map_node_config_to_dto(src: NodeConfig, mapper: Mapper) -> NodeConfigDto:
         )
     )
     mapped_config = NodeConfigDto(
-        field_details=field_details_dto, value_validator=src.value_validator
+        field_details=field_details_dto,
+        value_validator=src.value_validator,
+        translation=mapper.map(src.translation, TranslationConfigDto),
+        triggers=mapper.map_many(src.triggers, TriggerDto),
     )
     assert type(mapped_config.field_details) is type(
         field_details_dto

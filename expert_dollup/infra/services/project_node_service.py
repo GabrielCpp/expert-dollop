@@ -131,9 +131,11 @@ class ProjectNodeService(BaseCrudTableService[ProjectNode]):
             select(
                 [
                     project_definition_node_table.c.name,
-                    project_definition_node_table.c.id,
-                    project_definition_node_table.c.path,
                     self._table.c.value,
+                    self._table.c.id,
+                    self._table.c.path,
+                    self._table.c.type_id,
+                    self._table.c.type_path,
                 ]
             )
             .select_from(join_definition)
@@ -152,6 +154,8 @@ class ProjectNodeService(BaseCrudTableService[ProjectNode]):
                 id=record.get("id"),
                 name=record.get("name"),
                 path=split_uuid_path(record.get("path")),
+                type_id=record.get("type_id"),
+                type_path=split_uuid_path(record.get("type_path")),
                 expression=jsonpickle.decode(record.get("value")),
             )
             for record in records

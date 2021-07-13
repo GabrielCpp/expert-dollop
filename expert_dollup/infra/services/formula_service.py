@@ -18,6 +18,7 @@ from expert_dollup.infra.expert_dollup_db import (
     project_definition_formula_dependency_table,
     project_definition_formula_node_dependency_table,
     project_definition_node_table,
+    project_node_table,
 )
 
 
@@ -115,13 +116,13 @@ class FormulaService(BaseCrudTableService[Formula]):
         await self._database.execute(query=query)
 
     async def get_all_project_formula_ast(
-        self, project_definition_id: UUID
+        self, project_id: UUID, project_definition_id: UUID
     ) -> Awaitable[List[FormulaNode]]:
         join_definition = self._table.join(
-            project_definition_node_table,
+            project_node_table,
             and_(
-                project_definition_node_table.c.id == self._table.c.attached_to_type_id,
-                project_definition_node_table.c.project_def_id == project_definition_id,
+                project_node_table.c.type_id == self._table.c.attached_to_type_id,
+                project_node_table.c.project_id == project_id,
             ),
         )
 
@@ -131,8 +132,10 @@ class FormulaService(BaseCrudTableService[Formula]):
                     self._table.c.name,
                     self._table.c.generated_ast,
                     self._table.c.id.label("formula_id"),
-                    project_definition_node_table.c.path,
-                    project_definition_node_table.c.id,
+                    project_node_table.c.path,
+                    project_node_table.c.id,
+                    project_node_table.c.type_id,
+                    project_node_table.c.type_path,
                 ]
             )
             .select_from(join_definition)
@@ -182,6 +185,8 @@ class FormulaService(BaseCrudTableService[Formula]):
                 id=record.get("id"),
                 name=record.get("name"),
                 path=split_uuid_path(record.get("path")),
+                type_id=record.get("type_id"),
+                type_path=split_uuid_path(record.get("type_path")),
                 expression=jsonpickle.decode(record.get("generated_ast")),
                 dependencies=dependencies[record.get("formula_id")],
                 formula_id=record.get("formula_id"),

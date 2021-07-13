@@ -28,7 +28,6 @@ class FormulaCachedResult:
     project_id: UUID
     formula_id: UUID
     node_id: UUID
-    generation_tag: UUID
     calculation_details: str
     result: Union[str, bool, int, float]
 
@@ -38,6 +37,8 @@ class FieldNode:
     id: UUID
     name: str
     path: List[UUID]
+    type_id: UUID
+    type_path: List[UUID]
     expression: Union[str, int, float, bool]
 
 
@@ -46,6 +47,8 @@ class FormulaNode:
     id: UUID
     name: str
     path: List[UUID]
+    type_id: UUID
+    type_path: List[UUID]
     expression: AST
     formula_id: UUID
     dependencies: List[str]

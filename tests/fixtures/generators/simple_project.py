@@ -32,14 +32,15 @@ class SimpleProject:
             for index in range(0, level + 1):
                 config_type = self.field_config_factory.pick_config_type(label)
                 value = self.field_config_factory.build_value(config_type)
+                name = f"{direct_parent.name}_{label}_{index}"
                 config = self.field_config_factory.build_config(
-                    label, index, config_type
+                    name, index, config_type
                 )
                 other_field = {}
 
                 sub_node = ProjectDefinitionNode(
                     id=uuid4(),
-                    name=f"{direct_parent.name}_{label}_{index}",
+                    name=name,
                     project_def_id=project_def_id,
                     path=parents,
                     is_collection=index == 0,
@@ -61,7 +62,11 @@ class SimpleProject:
             is_collection=False,
             instanciate_by_default=True,
             order_index=0,
-            config=NodeConfig(),
+            config=NodeConfig(
+                translation=TranslationConfig(
+                    help_text_name="root_a_text", label="root_a"
+                ),
+            ),
             creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=None,
         )
@@ -77,7 +82,11 @@ class SimpleProject:
             is_collection=True,
             instanciate_by_default=False,
             order_index=1,
-            config=NodeConfig(),
+            config=NodeConfig(
+                translation=TranslationConfig(
+                    help_text_name="root_b_text", label="root_b"
+                ),
+            ),
             creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=None,
         )

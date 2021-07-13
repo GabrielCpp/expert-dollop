@@ -21,6 +21,8 @@ from .project_definition_node_dto import (
     field_details_to_domain_map,
     field_details_from_domain,
     FieldDetailsUnionDto,
+    TriggerDto,
+    TranslationConfigDto,
 )
 from .project_definition_node_tree_dto import (
     ProjectDefinitionTreeNodeDto,
