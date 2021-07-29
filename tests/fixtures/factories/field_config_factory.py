@@ -53,11 +53,11 @@ class FieldConfigFactory:
             StaticChoiceFieldConfig,
         ]
 
-    def pick_config_type(self, label) -> FieldDetailsUnion:
-        if label == "section":
+    def pick_config_type(self, level_label: str) -> FieldDetailsUnion:
+        if level_label == "section":
             return CollapsibleContainerFieldConfig
 
-        if label == "field":
+        if level_label == "field":
             return choice(self.field_config_types)
 
         return None
@@ -65,8 +65,8 @@ class FieldConfigFactory:
     def build_value(self, config_type):
         return self.node_factory[config_type].build_value()
 
-    def build_config(self, label: str, index: int, config_type):
-        return self.node_factory[config_type].build_config(label, index)
+    def build_config(self, name: str, index: int, config_type=None):
+        return self.node_factory[config_type].build_config(name, index)
 
     def _create_int_value(self):
         return self.fake.pyint(min_value=0, max_value=100000)

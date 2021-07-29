@@ -31,6 +31,12 @@ class StaticChoiceFieldConfigDto(CamelModel):
     options: List[StaticChoiceOptionDto]
 
 
+class StaticNumberFieldConfigDto(CamelModel):
+    pass_to_translation: bool
+    precision: int
+    unit: str
+
+
 class CollapsibleContainerFieldConfigDto(CamelModel):
     is_collapsible: bool
 
@@ -42,6 +48,7 @@ FieldDetailsUnionDto = Union[
     StaticChoiceFieldConfigDto,
     StringFieldConfigDto,
     IntFieldConfigDto,
+    StaticNumberFieldConfigDto,
     None,
 ]
 
@@ -79,8 +86,8 @@ class TranslationConfigDto(CamelModel):
 
 
 class TriggerDto(CamelModel):
-    trigger_name: str
-    target_name: str
+    action: str
+    target_type_id: UUID
     params: Dict[str, str]
 
 

@@ -3,6 +3,7 @@ from uuid import UUID
 from typing import Optional, List, Union, Dict
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
+from enum import Enum
 
 JsonSchema = dict
 
@@ -45,10 +46,15 @@ class CollapsibleContainerFieldConfig:
     is_collapsible: bool
 
 
+class TriggerAction(Enum):
+    CHANGE_NAME = "CHANGE_NAME"
+    SET_VISIBILITY = "SET_VISIBILITY"
+
+
 @dataclass
 class Trigger:
-    trigger_name: str
-    target_name: str
+    action: TriggerAction
+    target_type_id: UUID
     params: Dict[str, str]
 
 

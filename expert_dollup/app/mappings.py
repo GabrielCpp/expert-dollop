@@ -117,31 +117,32 @@ def map_collapsible_node_field_config_to_dto(
 ) -> CollapsibleContainerFieldConfigDto:
     return CollapsibleContainerFieldConfigDto(is_collapsible=src.is_collapsible)
 
-def map_translation_config_from_dto(src: TranslationConfigDto, mapper: Mapper) -> TranslationConfig:
-    return TranslationConfig(
-        help_text_name=src.help_text_name,
-        label=src.label
-    )
 
-def map_translation_config_to_dto(src: TranslationConfig, mapper: Mapper) -> TranslationConfigDto:
-    return TranslationConfigDto(
-        help_text_name=src.help_text_name,
-        label=src.label
-    )
+def map_translation_config_from_dto(
+    src: TranslationConfigDto, mapper: Mapper
+) -> TranslationConfig:
+    return TranslationConfig(help_text_name=src.help_text_name, label=src.label)
+
+
+def map_translation_config_to_dto(
+    src: TranslationConfig, mapper: Mapper
+) -> TranslationConfigDto:
+    return TranslationConfigDto(help_text_name=src.help_text_name, label=src.label)
+
 
 def map_trigger_from_dto(src: TriggerDto, mapper: Mapper) -> Trigger:
     return Trigger(
-        trigger_name=src.trigger_name,
-        target_name=src.target_name,
-        params=dict(src.params)
+        action=src.action, target_type_id=src.target_type_id, params=dict(src.params)
     )
+
 
 def map_trigger_to_dto(src: Trigger, mapper: Mapper) -> TriggerDto:
     return TriggerDto(
-        trigger_name=src.trigger_name,
-        target_name=src.target_name,
-        params=dict(src.params)
+        action=str(src.action),
+        target_type_id=src.target_type_id,
+        params=dict(src.params),
     )
+
 
 def map_node_config_from_dto(src: NodeConfigDto, mapper: Mapper) -> NodeConfig:
     return NodeConfig(
@@ -313,6 +314,7 @@ def map_project_node_from_dto(src: ProjectNodeDto, mapper: Mapper) -> ProjectNod
         type_path=src.type_path,
         path=src.path,
         value=mapper.map(src.value, ValueUnion, ValueUnionDto),
+        label=src.label,
     )
 
 
@@ -324,6 +326,7 @@ def map_project_node_to_dto(src: ProjectNode, mapper: Mapper) -> ProjectNodeDto:
         type_path=src.type_path,
         path=src.path,
         value=mapper.map(src.value, ValueUnionDto, ValueUnion),
+        label=src.label,
     )
 
 

@@ -111,6 +111,7 @@ project_node_table = Table(
     Column("type_id", postgresql.UUID(), nullable=False),
     Column("path", String, nullable=False),
     Column("value", String, nullable=True),
+    Column("label", String, nullable=True),
     Column("level", Integer, nullable=False),
     Column("type_path", String, nullable=False),
     Column("display_query_internal_id", postgresql.UUID(), nullable=False),
@@ -124,6 +125,7 @@ class ProjectNodeDao(BaseModel):
     type_id: UUID
     path: str
     value: Optional[str]
+    label: Optional[str]
     level: int
     type_path: str
     display_query_internal_id: UUID

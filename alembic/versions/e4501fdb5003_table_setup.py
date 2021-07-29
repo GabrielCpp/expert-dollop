@@ -164,6 +164,7 @@ def create_project_tables():
         Column("type_id", postgresql.UUID(), nullable=False),
         Column("path", String, nullable=False),
         Column("value", String, nullable=True),
+        Column("label", String, nullable=True),
         Column("level", Integer, nullable=False),
         Column("type_path", String, nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),

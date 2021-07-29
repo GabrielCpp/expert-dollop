@@ -30,4 +30,5 @@ class ProjectNodeFilter(QueryFilter):
     project_id: Optional[UUID]
     type_id: Optional[UUID]
     path: Optional[List[UUID]]
+    label: Optional[str]
     value: ValueUnion

@@ -88,3 +88,11 @@ async def mini_datasheet(container: Injector):
     fixture = MiniDatasheet().generate().model
     await db_helper.init_db(fixture)
     yield fixture
+
+
+@pytest.fixture
+async def project_with_trigger(container: Injector):
+    db_helper = container.get(DbSetupHelper)
+    fixture = ProjectWithTrigger().generate().model
+    await db_helper.init_db(fixture)
+    yield fixture

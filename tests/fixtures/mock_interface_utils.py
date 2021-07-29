@@ -89,7 +89,6 @@ def compare_call_strict(lhs: call, rhs: call):
 def compare_loose(lhs: call, rhs: call):
     arg_diff = DeepDiff(rhs[1], lhs[1])
     kwarg_diff = DeepDiff(rhs[2], lhs[2])
-    print(arg_diff)
     return len(arg_diff) == 0 and len(kwarg_diff) == 0
 
 

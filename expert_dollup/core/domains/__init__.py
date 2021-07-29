@@ -15,6 +15,7 @@ from .project_definition_node import (
     JsonSchema,
     TranslationConfig,
     Trigger,
+    TriggerAction,
 )
 from .project import ProjectDetails, Project
 from .project_node import ProjectNode, ProjectNodeFilter
@@ -62,3 +63,4 @@ from .datasheet_element import (
     DatasheetElementFilter,
     DatasheetElementId,
 )
+from .bounded_node import BoundedNode

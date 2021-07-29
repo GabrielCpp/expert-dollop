@@ -114,7 +114,7 @@ class SimpleProject:
                     ressource_id=self.project_definitions[0].id,
                     scope=project_node_definition.id,
                     locale="fr",
-                    name=project_node_definition.name,
+                    name=project_node_definition.config.translation.label,
                     value=" ".join(self.fake.words()),
                     creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
@@ -126,7 +126,7 @@ class SimpleProject:
                     ressource_id=self.project_definitions[0].id,
                     scope=project_node_definition.id,
                     locale="fr",
-                    name=f"{project_node_definition.name}_helptext",
+                    name=project_node_definition.config.translation.help_text_name,
                     value=self.fake.sentence(nb_words=20),
                     creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
@@ -138,7 +138,7 @@ class SimpleProject:
                     ressource_id=self.project_definitions[0].id,
                     scope=project_node_definition.id,
                     locale="en",
-                    name=project_node_definition.name,
+                    name=project_node_definition.config.translation.label,
                     value=" ".join(self.fake.words()),
                     creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
@@ -150,11 +150,39 @@ class SimpleProject:
                     ressource_id=self.project_definitions[0].id,
                     scope=project_node_definition.id,
                     locale="en",
-                    name=f"{project_node_definition.name}_helptext",
+                    name=project_node_definition.config.translation.help_text_name,
                     value=self.fake.sentence(nb_words=20),
                     creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
             )
+
+            if isinstance(
+                project_node_definition.config.field_details, StaticChoiceFieldConfig
+            ):
+                for option in project_node_definition.config.field_details.options:
+                    self.tanslations.append(
+                        Translation(
+                            id=uuid4(),
+                            ressource_id=self.project_definitions[0].id,
+                            scope=project_node_definition.id,
+                            locale="en",
+                            name=option.label,
+                            value=self.fake.sentence(nb_words=20),
+                            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
+                        )
+                    )
+
+                    self.tanslations.append(
+                        Translation(
+                            id=uuid4(),
+                            ressource_id=self.project_definitions[0].id,
+                            scope=project_node_definition.id,
+                            locale="en",
+                            name=option.help_text,
+                            value=self.fake.sentence(nb_words=20),
+                            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
+                        )
+                    )
 
     def generate(self):
         self.generate_project_definition()

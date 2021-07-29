@@ -160,3 +160,23 @@ class ProjectNodeService(BaseCrudTableService[ProjectNode]):
             )
             for record in records
         ]
+
+    async def find_node_on_path_by_type(
+        self, project_id: UUID, start_with_path: List[UUID], type_id: UUID
+    ) -> Awaitable[List[ProjectNode]]:
+        assert len(start_with_path) >= 1, "Cannot start with an path"
+        start_with_path_filter = join_uuid_path(start_with_path)
+        query = select([self._table]).where(
+            and_(
+                self._table.c.project_id == project_id,
+                self._table.c.type_id == type_id,
+                or_(
+                    self._table.c.path.like(f"{start_with_path_filter}%"),
+                    self._table.c.id == start_with_path[-1],
+                ),
+            )
+        )
+
+        records = await self._database.fetch_all(query=query)
+        results = self.map_many_to(records, self._dao, self._domain)
+        return results

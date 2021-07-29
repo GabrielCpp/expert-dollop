@@ -6,6 +6,7 @@ from expert_dollup.core.domains import (
     ProjectNode,
     ProjectNodeFilter,
     ProjectDefinitionNodeFilter,
+    BoundedNode,
 )
 from expert_dollup.infra.services import (
     ProjectNodeService,
@@ -27,7 +28,7 @@ class ProjectNodeSliceBuilder:
         project_details: ProjectDetails,
         collection_type_id: UUID,
         parent_node_id: Optional[UUID],
-    ):
+    ) -> Awaitable[List[BoundedNode]]:
         if parent_node_id is None:
             parent_node = ProjectNode(
                 id=project_details.id,
@@ -60,14 +61,19 @@ class ProjectNodeSliceBuilder:
             ),
         )
 
-        nodes = [
-            ProjectNode(
-                id=type_to_instance_id[definition_node.id],
-                project_id=project_details.id,
-                type_id=definition_node.id,
-                type_path=definition_node.path,
-                path=[type_to_instance_id[def_id] for def_id in definition_node.path],
-                value=definition_node.default_value,
+        bounded_nodes = [
+            BoundedNode(
+                node=ProjectNode(
+                    id=type_to_instance_id[definition_node.id],
+                    project_id=project_details.id,
+                    type_id=definition_node.id,
+                    type_path=definition_node.path,
+                    path=[
+                        type_to_instance_id[def_id] for def_id in definition_node.path
+                    ],
+                    value=definition_node.default_value,
+                ),
+                definition=definition_node,
             )
             for definition_node in [
                 root_def_node,
@@ -75,7 +81,7 @@ class ProjectNodeSliceBuilder:
             ]
         ]
 
-        return nodes
+        return bounded_nodes
 
     async def clone(self, project_id: UUID, node_id: UUID):
         parent_node = await self.project_node_service.find_one_by(

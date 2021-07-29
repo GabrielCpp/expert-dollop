@@ -70,7 +70,7 @@ def map_dict_keys(
             (mapped_key, map_value) = mapping[key]
             mapped_args[mapped_key] = value if map_value is None else map_value(value)
         else:
-            mapped_args[mapped_key] = value
+            raise KeyError(f"Key '{key}' not in mapping")
 
     return mapped_args
 

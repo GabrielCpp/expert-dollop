@@ -125,6 +125,7 @@ def map_project_node_to_dao(src: ProjectNode, mapper: Mapper) -> ProjectNodeDao:
         type_id=src.type_id,
         path=join_uuid_path(src.path),
         value=None if src.value is None else jsonpickle.encode(src.value),
+        label=src.label,
         type_path=join_uuid_path(src.type_path),
         level=len(src.path),
         display_query_internal_id=display_query_internal_id,
@@ -140,6 +141,7 @@ def map_project_node_from_dao(src: ProjectNodeDao, mapper: Mapper) -> ProjectNod
         path=split_uuid_path(src.path),
         type_path=split_uuid_path(src.type_path),
         value=None if src.value is None else jsonpickle.decode(src.value),
+        label=src.label,
     )
 
 
@@ -286,6 +288,7 @@ def map_project_node_filter_to_dict(src: ProjectNodeFilter, mapper: Mapper) -> d
             "type_id": ("type_id", None),
             "path": ("path", None),
             "value": ("value", jsonpickle.encode),
+            "label": ("label", None),
         },
     )
 
@@ -298,6 +301,10 @@ def map_project_node_meta_filter_to_dict(
         {
             "project_id": ("project_id", None),
             "type_id": ("type_id", None),
+            "state": (
+                "state",
+                lambda state: map_project_node_meta_state_to_dao(state, mapper).json(),
+            ),
         },
     )
 

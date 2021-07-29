@@ -1,7 +1,7 @@
 from typing import Awaitable, List, Optional
 from uuid import UUID
 from sqlalchemy import select, join, and_, desc, or_
-from expert_dollup.core.units import NodeValueValidation
+from expert_dollup.core.units import NodeValueValidation, NodeEventDispatcher
 from expert_dollup.core.builders import ProjectNodeSliceBuilder, ProjectTreeBuilder
 from expert_dollup.core.domains import (
     ProjectNode,
@@ -22,7 +22,7 @@ class ProjectNodeUseCase:
         self,
         project_service: ProjectService,
         project_node_service: ProjectNodeService,
-        project_definition_node_service: ProjectDefinitionNodeService,
+        node_event_dispatcher: NodeEventDispatcher,
         node_value_validation: NodeValueValidation,
         project_node_slice_builder: ProjectNodeSliceBuilder,
         project_tree_builder: ProjectTreeBuilder,
@@ -30,7 +30,7 @@ class ProjectNodeUseCase:
     ):
         self.project_service = project_service
         self.project_node_service = project_node_service
-        self.project_definition_node_service = project_definition_node_service
+        self.node_event_dispatcher = node_event_dispatcher
         self.node_value_validation = node_value_validation
         self.project_node_slice_builder = project_node_slice_builder
         self.project_tree_builder = project_tree_builder
@@ -93,22 +93,9 @@ class ProjectNodeUseCase:
     async def update_node_value(
         self, project_id: UUID, node_id: UUID, value: ValueUnion
     ) -> Awaitable[ProjectNode]:
-        node = await self.project_node_service.find_one_by(
-            ProjectNodeFilter(project_id=project_id, id=node_id)
+        return await self.node_event_dispatcher.update_node_value(
+            project_id, node_id, value
         )
-
-        definition_node = await self.project_definition_node_service.find_by_id(
-            node.type_id
-        )
-
-        self.node_value_validation.validate_value(definition_node.config, value)
-
-        await self.project_node_service.update(
-            ProjectNodeFilter(value=value),
-            ProjectNodeFilter(project_id=project_id, id=node_id),
-        )
-
-        return await self.project_node_service.find_by_id(node_id)
 
     async def add_collection(
         self,
@@ -117,10 +104,15 @@ class ProjectNodeUseCase:
         parent_node_id: Optional[UUID],
     ) -> Awaitable[List[ProjectNode]]:
         project_details = await self.project_service.find_by_id(project_id)
-        nodes = await self.project_node_slice_builder.build_collection(
+        bounded_nodes = await self.project_node_slice_builder.build_collection(
             project_details, collection_type_id, parent_node_id
         )
+        nodes = [bounded_node.node for bounded_node in bounded_nodes]
         await self.project_node_service.insert_many(nodes)
+
+        for bounded_node in bounded_nodes:
+            await self.node_event_dispatcher.execute_node_trigger(bounded_node)
+
         return nodes
 
     async def clone_collection(
