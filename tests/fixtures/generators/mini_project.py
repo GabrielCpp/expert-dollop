@@ -34,7 +34,7 @@ class MiniProject:
             instanciate_by_default=True,
             order_index=0,
             config=NodeConfig(
-                translation=TranslationConfig(
+                translations=TranslationConfig(
                     help_text_name="root_help_text", label="root"
                 ),
             ),

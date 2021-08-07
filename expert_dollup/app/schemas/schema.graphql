@@ -141,8 +141,8 @@ type TriggerParam {
 }
 
 type Trigger {
-  triggerName: String!
-  targetName: String!
+  action: String!
+  targetTypeId: String!
   params: [TriggerParam!]!
 }
 
@@ -324,12 +324,12 @@ type ProjectDefinitionConnection {
 }
 
 type Formula {
-    id: ID!
-    project_def_id: String!
-    attached_to_type_id: String!
-    name: String!
-    expression: String!
-    generated_ast: String!
+  id: ID!
+  project_def_id: String!
+  attached_to_type_id: String!
+  name: String!
+  expression: String!
+  generated_ast: String!
 }
 
 type FormulaEdge {
@@ -359,6 +359,7 @@ type ProjectNode {
   type_id: String!
   path: [String!]!
   value: FieldValue
+  label: String
 }
 
 type ProjectDetails {

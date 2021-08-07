@@ -44,7 +44,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             config=NodeConfig(
                 field_details=None,
                 value_validator=None,
-                translation=TranslationConfig(
+                translations=TranslationConfig(
                     help_text_name="root_a_subsection_1_form_2_help_text",
                     label="root_a_subsection_1_form_2",
                 ),
@@ -68,7 +68,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             config=NodeConfig(
                 field_details=None,
                 value_validator=None,
-                translation=TranslationConfig(
+                translations=TranslationConfig(
                     help_text_name="root_a_subsection_0_form_0_help_text",
                     label="root_a_subsection_0_form_0",
                 ),
@@ -92,7 +92,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             config=NodeConfig(
                 field_details=None,
                 value_validator=None,
-                translation=TranslationConfig(
+                translations=TranslationConfig(
                     help_text_name="root_a_subsection_0_form_2_help_text",
                     label="root_a_subsection_0_form_2",
                 ),
@@ -116,7 +116,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             config=NodeConfig(
                 field_details=None,
                 value_validator=None,
-                translation=TranslationConfig(
+                translations=TranslationConfig(
                     help_text_name="root_a_subsection_1_form_0_help_text",
                     label="root_a_subsection_1_form_0",
                 ),
@@ -140,7 +140,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             config=NodeConfig(
                 field_details=None,
                 value_validator=None,
-                translation=TranslationConfig(
+                translations=TranslationConfig(
                     help_text_name="root_a_subsection_1_form_1_help_text",
                     label="root_a_subsection_1_form_1",
                 ),
@@ -164,7 +164,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             config=NodeConfig(
                 field_details=None,
                 value_validator=None,
-                translation=TranslationConfig(
+                translations=TranslationConfig(
                     help_text_name="root_a_subsection_0_form_1_help_text",
                     label="root_a_subsection_0_form_1",
                 ),
@@ -188,7 +188,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             config=NodeConfig(
                 field_details=CollapsibleContainerFieldConfig(is_collapsible=True),
                 value_validator=None,
-                translation=TranslationConfig(
+                translations=TranslationConfig(
                     help_text_name="a_help_text",
                     label="a",
                 ),
@@ -209,7 +209,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             config=NodeConfig(
                 field_details=None,
                 value_validator=None,
-                translation=TranslationConfig(
+                translations=TranslationConfig(
                     help_text_name="root_a_subsection_1_help_text",
                     label="root_a_subsection_1",
                 ),
@@ -230,7 +230,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             config=NodeConfig(
                 field_details=None,
                 value_validator=None,
-                translation=TranslationConfig(
+                translations=TranslationConfig(
                     help_text_name="root_a_subsection_0_help_text",
                     label="root_a_subsection_0",
                 ),

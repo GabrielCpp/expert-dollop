@@ -151,7 +151,7 @@ def map_node_config_from_dto(src: NodeConfigDto, mapper: Mapper) -> NodeConfig:
         else mapper.map(
             src.field_details, field_details_to_domain_map[type(src.field_details)]
         ),
-        translation=mapper.map(src.translation, TranslationConfig),
+        translations=mapper.map(src.translations, TranslationConfig),
         triggers=mapper.map_many(src.triggers, Trigger),
         value_validator=src.value_validator,
     )
@@ -168,7 +168,7 @@ def map_node_config_to_dto(src: NodeConfig, mapper: Mapper) -> NodeConfigDto:
     mapped_config = NodeConfigDto(
         field_details=field_details_dto,
         value_validator=src.value_validator,
-        translation=mapper.map(src.translation, TranslationConfigDto),
+        translations=mapper.map(src.translations, TranslationConfigDto),
         triggers=mapper.map_many(src.triggers, TriggerDto),
     )
     assert type(mapped_config.field_details) is type(

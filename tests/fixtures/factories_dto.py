@@ -29,7 +29,7 @@ class ProjectDefinitionNodeDtoFactory(factory.Factory):
             field_details=IntFieldConfigDto(unit="Kg"),
             value_validator={"type": "integer", "minimum": 0, "maximum": 100000},
             triggers=[],
-            translation=TranslationConfigDto(
+            translations=TranslationConfigDto(
                 help_text_name=f"{o.name}_help_text", label=o.name
             ),
         )

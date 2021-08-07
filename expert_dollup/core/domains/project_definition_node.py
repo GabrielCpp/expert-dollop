@@ -46,6 +46,13 @@ class CollapsibleContainerFieldConfig:
     is_collapsible: bool
 
 
+@dataclass
+class StaticNumberFieldConfig:
+    pass_to_translation: bool
+    precision: int
+    unit: str
+
+
 class TriggerAction(Enum):
     CHANGE_NAME = "CHANGE_NAME"
     SET_VISIBILITY = "SET_VISIBILITY"
@@ -77,7 +84,7 @@ FieldDetailsUnion = Union[
 
 @dataclass
 class NodeConfig:
-    translation: TranslationConfig
+    translations: TranslationConfig
     triggers: List[Trigger] = field(default_factory=list)
     field_details: Optional[FieldDetailsUnion] = None
     value_validator: Optional[JsonSchema] = None

@@ -75,7 +75,7 @@ class FieldConfigFactory:
         return NodeConfig(
             field_details=IntFieldConfig(unit="inch"),
             value_validator={"type": "integer", "minimum": 0, "maximum": 100000},
-            translation=TranslationConfig(
+            translations=TranslationConfig(
                 help_text_name=f"{name}_help_text", label=name
             ),
         )
@@ -90,7 +90,7 @@ class FieldConfigFactory:
                 precision=3,
             ),
             value_validator={"type": "number", "minimum": -100000, "maximum": 100000},
-            translation=TranslationConfig(
+            translations=TranslationConfig(
                 help_text_name=f"{name}_help_text", label=name
             ),
         )
@@ -108,7 +108,7 @@ class FieldConfigFactory:
                 "minLength": 1,
                 "maxLength": 200,
             },
-            translation=TranslationConfig(
+            translations=TranslationConfig(
                 help_text_name=f"{name}_help_text", label=name
             ),
         )
@@ -120,7 +120,7 @@ class FieldConfigFactory:
         return NodeConfig(
             field_details=BoolFieldConfig(is_checkbox=True),
             value_validator={"type": "boolean"},
-            translation=TranslationConfig(
+            translations=TranslationConfig(
                 help_text_name=f"{name}_help_text", label=name
             ),
         )
@@ -149,7 +149,7 @@ class FieldConfigFactory:
                 "type": "string",
                 "enum": [str(index) for index in range(0, 5)],
             },
-            translation=TranslationConfig(
+            translations=TranslationConfig(
                 help_text_name=f"{name}_help_text", label=name
             ),
         )
@@ -158,7 +158,7 @@ class FieldConfigFactory:
         return NodeConfig(
             field_details=CollapsibleContainerFieldConfig(is_collapsible=index >= 3),
             value_validator=None,
-            translation=TranslationConfig(
+            translations=TranslationConfig(
                 help_text_name=f"{name}_help_text", label=name
             ),
         )
@@ -168,7 +168,7 @@ class FieldConfigFactory:
 
     def _create_build_config(self, name: str, index: int):
         return NodeConfig(
-            translation=TranslationConfig(
+            translations=TranslationConfig(
                 help_text_name=f"{name}_help_text", label=name
             )
         )

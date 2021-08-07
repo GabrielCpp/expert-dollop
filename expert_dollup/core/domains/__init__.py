@@ -16,6 +16,7 @@ from .project_definition_node import (
     TranslationConfig,
     Trigger,
     TriggerAction,
+    StaticNumberFieldConfig,
 )
 from .project import ProjectDetails, Project
 from .project_node import ProjectNode, ProjectNodeFilter

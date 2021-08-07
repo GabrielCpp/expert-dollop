@@ -60,6 +60,7 @@ config_type_lookup_map = {
     BoolFieldConfigDto: "BoolFieldConfig",
     StaticChoiceFieldConfigDto: "StaticChoiceFieldConfig",
     CollapsibleContainerFieldConfigDto: "CollapsibleContainerFieldConfig",
+    StaticNumberFieldConfigDto: "StaticNumberFieldConfig",
     type(None): "null",
 }
 
@@ -72,6 +73,7 @@ field_details_to_domain_map = {
     BoolFieldConfigDto: BoolFieldConfig,
     StaticChoiceFieldConfigDto: StaticChoiceFieldConfig,
     CollapsibleContainerFieldConfigDto: CollapsibleContainerFieldConfig,
+    StaticNumberFieldConfigDto: StaticNumberFieldConfig,
     type(None): type(None),
 }
 
@@ -92,7 +94,7 @@ class TriggerDto(CamelModel):
 
 
 class NodeConfigDto(CamelModel):
-    translation: TranslationConfigDto
+    translations: TranslationConfigDto
     triggers: List[TriggerDto]
     field_details: Optional[FieldDetailsUnionDto]
     value_validator: Optional[JsonSchema]

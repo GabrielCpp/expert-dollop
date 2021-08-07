@@ -63,7 +63,7 @@ class SimpleProject:
             instanciate_by_default=True,
             order_index=0,
             config=NodeConfig(
-                translation=TranslationConfig(
+                translations=TranslationConfig(
                     help_text_name="root_a_text", label="root_a"
                 ),
             ),
@@ -83,7 +83,7 @@ class SimpleProject:
             instanciate_by_default=False,
             order_index=1,
             config=NodeConfig(
-                translation=TranslationConfig(
+                translations=TranslationConfig(
                     help_text_name="root_b_text", label="root_b"
                 ),
             ),
@@ -114,7 +114,7 @@ class SimpleProject:
                     ressource_id=self.project_definitions[0].id,
                     scope=project_node_definition.id,
                     locale="fr",
-                    name=project_node_definition.config.translation.label,
+                    name=project_node_definition.config.translations.label,
                     value=" ".join(self.fake.words()),
                     creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
@@ -126,7 +126,7 @@ class SimpleProject:
                     ressource_id=self.project_definitions[0].id,
                     scope=project_node_definition.id,
                     locale="fr",
-                    name=project_node_definition.config.translation.help_text_name,
+                    name=project_node_definition.config.translations.help_text_name,
                     value=self.fake.sentence(nb_words=20),
                     creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
@@ -138,7 +138,7 @@ class SimpleProject:
                     ressource_id=self.project_definitions[0].id,
                     scope=project_node_definition.id,
                     locale="en",
-                    name=project_node_definition.config.translation.label,
+                    name=project_node_definition.config.translations.label,
                     value=" ".join(self.fake.words()),
                     creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
@@ -150,7 +150,7 @@ class SimpleProject:
                     ressource_id=self.project_definitions[0].id,
                     scope=project_node_definition.id,
                     locale="en",
-                    name=project_node_definition.config.translation.help_text_name,
+                    name=project_node_definition.config.translations.help_text_name,
                     value=self.fake.sentence(nb_words=20),
                     creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
