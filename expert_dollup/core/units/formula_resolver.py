@@ -274,11 +274,13 @@ class FormulaResolver:
         visitor.visit(formula_ast)
 
         if formula.name in visitor.var_names:
-            raise Exception()
+            all_formulas = ",".join(visitor.var_names)
+            raise Exception(f"Formua {formula.name} not found in [{all_formulas}]")
 
         for name in visitor.fn_names:
             if not name in FormulaVisitor.whithelisted_fn_names:
-                raise Exception()
+                fn_names = ",".join(FormulaVisitor.whithelisted_fn_name)
+                raise Exception(f"Function {name} not found in [{fn_names}]")
 
         formulas = await self.formula_service.get_formulas_by_name(visitor.var_names)
         fields = await self.formula_service.get_fields_by_name(visitor.var_names)
@@ -287,7 +289,10 @@ class FormulaResolver:
         )
 
         if len(unkowns_names) > 0:
-            raise Exception()
+            unkowns_names_joined = ",".join(unkowns_names)
+            raise Exception(
+                f"There unknown name in expression [{unkowns_names_joined}] in {formula.name}"
+            )
 
         formula_details = FormulaDetails(
             formula=formula,

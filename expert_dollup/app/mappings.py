@@ -432,14 +432,14 @@ def map_translation_id_to_dto(src: TranslationId, mapper: Mapper) -> Translation
     )
 
 
-def map_formula_from_dto(src: FormulaDto, mapper: Mapper) -> Formula:
+def map_input_formula_from_dto(src: InputFormulaDto, mapper: Mapper) -> Formula:
     return Formula(
         id=src.id,
         project_def_id=src.project_def_id,
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
-        generated_ast=None,
+        generated_ast="",
     )
 
 
@@ -450,7 +450,6 @@ def map_formula_to_dto(src: Formula, mapper: Mapper) -> FormulaDto:
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
-        generated_ast=astor.to_source(src.generated_ast),
     )
 
 

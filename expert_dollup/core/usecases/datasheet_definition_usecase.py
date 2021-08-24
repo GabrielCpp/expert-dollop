@@ -1,9 +1,10 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 from typing import Awaitable
 from expert_dollup.core.exceptions import ValidationError
-from expert_dollup.core.domains import DatasheetDefinition
-from expert_dollup.infra.services import DatasheetDefinitionService
+from expert_dollup.core.domains import DatasheetDefinition, Ressource
+from expert_dollup.infra.services import DatasheetDefinitionService, RessourceService
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
+from expert_dollup.infra.providers import WordProvider
 
 
 class DatasheetDefinitionUseCase:
@@ -11,21 +12,26 @@ class DatasheetDefinitionUseCase:
         self,
         datasheet_definition_service: DatasheetDefinitionService,
         schema_validator: SchemaValidator,
+        ressource_service: RessourceService,
+        word_provider: WordProvider,
     ):
         self.datasheet_definition_service = datasheet_definition_service
         self.schema_validator = schema_validator
+        self.ressource_service = ressource_service
+        self.word_provider = word_provider
 
     async def find_by_id(self, id: UUID):
         return await self.datasheet_definition_service.find_by_id(id)
 
-    async def add(
-        self, datasheet_definition: DatasheetDefinition
-    ) -> Awaitable[DatasheetDefinition]:
-        self.validate_datasheet(datasheet_definition)
-        await self.datasheet_definition_service.insert(datasheet_definition)
-        return await self.datasheet_definition_service.find_by_id(
-            datasheet_definition.id
-        )
+    async def add(self, domain: DatasheetDefinition) -> Awaitable[DatasheetDefinition]:
+        suffix_name = self.word_provider.pick_joined(3)
+        name = "datasheet_definition_" + suffix_name + domain.id.hex
+        ressource = Ressource(id=domain.id, name=name, owner_id=uuid4())
+
+        self.validate_datasheet(domain)
+        await self.ressource_service.insert(ressource)
+        await self.datasheet_definition_service.insert(domain)
+        return domain
 
     async def update(
         self, datasheet_definition: DatasheetDefinition

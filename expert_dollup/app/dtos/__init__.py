@@ -43,7 +43,7 @@ from .project_node_meta_dto import (
     ProjectNodeMetaDto,
     ProjectNodeMetaStateDto,
 )
-from .formula_dto import FormulaDto
+from .formula_dto import FormulaDto, InputFormulaDto
 from .datasheet_definition_dto import DatasheetDefinitionDto, ElementPropertySchemaDto
 from .datasheet_definition_label_collection_dto import (
     LabelCollectionDto,

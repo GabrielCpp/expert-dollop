@@ -30,9 +30,7 @@ class DatasheetDefinitionElementUseCase:
         await self.datasheet_definition_element_service.insert(
             datasheet_definition_element
         )
-        return await self.datasheet_definition_element_service.find_by_id(
-            datasheet_definition_element.id
-        )
+        return datasheet_definition_element
 
     async def update(
         self, datasheet_definition_element: DatasheetDefinitionElement

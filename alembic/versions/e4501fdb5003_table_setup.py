@@ -114,7 +114,6 @@ def create_project_definition_tables():
         Column("attached_to_type_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
         Column("expression", String, nullable=False),
-        Column("generated_ast", String, nullable=False),
     )
 
     op.create_index(

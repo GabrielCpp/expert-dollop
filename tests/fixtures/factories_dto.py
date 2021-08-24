@@ -83,7 +83,6 @@ class FormulaDtoFactory(factory.Factory):
     attached_to_type_id = factory.LazyFunction(uuid4)
     name = factory.Sequence(lambda n: f"formula{n}")
     expression = "a+b*c/2"
-    generated_ast = ""
 
 
 class DatasheetDefinitionDtoFactory(factory.Factory):

@@ -5,7 +5,7 @@ from expert_dollup.shared.handlers import HttpPageHandler
 from expert_dollup.shared.starlette_injection import Inject
 from expert_dollup.shared.handlers import RequestHandler, MappingChain
 from expert_dollup.core.domains import Formula, FormulaFilter
-from expert_dollup.app.dtos import FormulaDto
+from expert_dollup.app.dtos import FormulaDto, InputFormulaDto
 from expert_dollup.core.usecases import FormulaUseCase
 from expert_dollup.infra.services import FormulaService
 
@@ -52,14 +52,14 @@ async def get_formula(
 
 @router.post("/formula")
 async def add_formula(
-    formula: FormulaDto,
+    formula: InputFormulaDto,
     usecase=Depends(Inject(FormulaUseCase)),
     handler=Depends(Inject(RequestHandler)),
 ):
     return await handler.handle(
         usecase.add,
         formula,
-        MappingChain(dto=FormulaDto, domain=Formula, out_dto=FormulaDto),
+        MappingChain(dto=InputFormulaDto, domain=Formula, out_dto=FormulaDto),
     )
 
 

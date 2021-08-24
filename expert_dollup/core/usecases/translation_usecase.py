@@ -24,14 +24,7 @@ class TranslationUseCase:
             )
 
         await self.service.insert(domain)
-        return await self.find_by_id(
-            TranslationId(
-                ressource_id=domain.ressource_id,
-                scope=domain.scope,
-                locale=domain.locale,
-                name=domain.name,
-            )
-        )
+        return domain
 
     async def remove_by_id(self, id: TranslationId) -> Awaitable:
         await self.service.delete_by_id(id)

@@ -8,7 +8,7 @@ from expert_dollup.shared.database_services import QueryFilter
 @dataclass
 class DatasheetDefinitionElementProperty:
     is_readonly: bool
-    value: Union[float, str, bool]
+    value: Union[float, str, bool, int]
 
 
 @dataclass

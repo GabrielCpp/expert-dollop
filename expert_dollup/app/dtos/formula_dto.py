@@ -8,4 +8,11 @@ class FormulaDto(CamelModel):
     attached_to_type_id: UUID
     name: str
     expression: str
-    generated_ast: str
+
+
+class InputFormulaDto(CamelModel):
+    id: UUID
+    project_def_id: UUID
+    attached_to_type_id: UUID
+    name: str
+    expression: str

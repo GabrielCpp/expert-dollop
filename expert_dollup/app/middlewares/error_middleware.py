@@ -36,7 +36,8 @@ def create_error_middleware(
 
                 if exception_type not in handlers:
                     logger.exception(
-                        f"Unexpected error arrive out of controller ({exception_type})"
+                        f"Unexpected error arrive out of controller ({exception_type})",
+                        message=str(e),
                     )
                     return internal_error()
 
@@ -49,7 +50,9 @@ def create_error_middleware(
             try:
                 return handler(e, request)
             except Exception as e:
-                logger.exception("Unexpected error arrive out of handler")
+                logger.exception(
+                    "Unexpected error arrive out of handler", message=str(e)
+                )
                 return internal_error()
 
     return ErrorMiddleware

@@ -11,7 +11,7 @@ class NewDatasheetDto(CamelModel):
     name: str
     is_staged: bool
     datasheet_def_id: UUID
-    from_datasheet_id: UUID
+    from_datasheet_id: Optional[UUID]
 
 
 class DatasheetUpdatableProperties(CamelModel):
