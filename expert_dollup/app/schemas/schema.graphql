@@ -122,6 +122,12 @@ type CollapsibleContainerFieldConfig {
   isCollapsible: Boolean!
 }
 
+type StaticNumberFieldConfig {
+  passToTranslation: Boolean!
+  precision: Int!
+  unit: String!
+}
+
 union FieldDetailsUnion =
     IntFieldConfig
   | DecimalFieldConfig
@@ -129,6 +135,7 @@ union FieldDetailsUnion =
   | BoolFieldConfig
   | StaticChoiceFieldConfig
   | CollapsibleContainerFieldConfig
+  | StaticNumberFieldConfig
 
 type TranslationConfig {
   helpTextName: String!
@@ -208,6 +215,12 @@ input CollapsibleContainerFieldConfigInput {
   isCollapsible: Boolean!
 }
 
+input StaticNumberFieldConfigInput {
+  passToTranslation: Boolean!
+  precision: Int!
+  unit: String!
+}
+
 enum FieldDetailsType {
   INT_FIELD_CONFIG
   DECIMAL_FIELD_CONFIG
@@ -215,6 +228,7 @@ enum FieldDetailsType {
   BOOL_FIELD_CONFIG
   STATIC_CHOICE_FIELD_CONFIG
   COLLAPSIBLE_CONTAINER_FIELD_CONFIG
+  STATIC_NUMBER_FIELD_CONFIG
 }
 
 input FieldDetailsUnionInput {
@@ -225,6 +239,7 @@ input FieldDetailsUnionInput {
   bool: BoolFieldConfigInput
   staticChoice: StaticChoiceFieldConfigInput
   collapsibleContainer: CollapsibleContainerFieldConfigInput
+  staticNumberFieldConfig: StaticNumberFieldConfigInput
 }
 
 input NodeConfigInput {

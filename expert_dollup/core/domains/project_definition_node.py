@@ -30,6 +30,13 @@ class BoolFieldConfig:
 
 
 @dataclass
+class StaticNumberFieldConfig:
+    pass_to_translation: bool
+    precision: int
+    unit: str
+
+
+@dataclass
 class StaticChoiceOption:
     id: str
     label: str
@@ -78,6 +85,7 @@ FieldDetailsUnion = Union[
     BoolFieldConfig,
     StaticChoiceFieldConfig,
     CollapsibleContainerFieldConfig,
+    StaticNumberFieldConfig,
     None,
 ]
 

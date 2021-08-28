@@ -128,6 +128,7 @@ async def resolve_add_project_definition_node(
             "BOOL_FIELD_CONFIG": "bool",
             "STATIC_CHOICE_FIELD_CONFIG": "staticChoice",
             "COLLAPSIBLE_CONTAINER_FIELD_CONFIG": "collapsibleContainer",
+            "STATIC_NUMBER_FIELD_CONFIG": "staticNumberFieldConfig",
         },
     )
 
