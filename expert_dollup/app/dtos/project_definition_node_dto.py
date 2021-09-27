@@ -93,8 +93,13 @@ class TriggerDto(CamelModel):
     params: Dict[str, str]
 
 
+class NodeMetaConfigDto(CamelModel):
+    is_visible: bool
+
+
 class NodeConfigDto(CamelModel):
     translations: TranslationConfigDto
+    meta: NodeMetaConfigDto
     triggers: List[TriggerDto]
     field_details: Optional[FieldDetailsUnionDto]
     value_validator: Optional[JsonSchema]

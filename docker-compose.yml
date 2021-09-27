@@ -1,16 +1,5 @@
 version: '3.7'
 services:
-  mongodb:
-    image: mongo:latest
-    container_name: mongo
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: rootpassword
-    ports:
-    - 27017:27017
-    volumes:
-    - mongodb_data:/data/db
-
   postgres:
     image: postgres
     restart: always
@@ -38,7 +27,6 @@ services:
       - backend
 
 volumes:
-  mongodb_data:
   postgres_data:
     name: postgres_data
 

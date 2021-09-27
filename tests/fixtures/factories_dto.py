@@ -32,6 +32,7 @@ class ProjectDefinitionNodeDtoFactory(factory.Factory):
             translations=TranslationConfigDto(
                 help_text_name=f"{o.name}_help_text", label=o.name
             ),
+            meta=NodeMetaConfigDto(is_visible=True),
         )
     )
     default_value = IntFieldValueDto(integer=0)

@@ -91,9 +91,15 @@ FieldDetailsUnion = Union[
 
 
 @dataclass
+class NodeMetaConfig:
+    is_visible: bool = True
+
+
+@dataclass
 class NodeConfig:
     translations: TranslationConfig
     triggers: List[Trigger] = field(default_factory=list)
+    meta: NodeMetaConfig = field(default_factory=lambda: NodeMetaConfig())
     field_details: Optional[FieldDetailsUnion] = None
     value_validator: Optional[JsonSchema] = None
 

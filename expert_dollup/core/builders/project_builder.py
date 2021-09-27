@@ -47,7 +47,7 @@ class ProjectBuilder:
                 project_id=project_details.id,
                 type_id=node_definition.id,
                 state=ProjectNodeMetaState(
-                    is_visible=node_definition.instanciate_by_default,
+                    is_visible=node_definition.config.meta.is_visible,
                     selected_child=None,
                 ),
                 definition=node_definition,

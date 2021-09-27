@@ -1,4 +1,4 @@
-from ast import parse
+import ast
 import astor
 from dataclasses import asdict
 from expert_dollup.shared.starlette_injection import Clock
@@ -154,6 +154,7 @@ def map_node_config_from_dto(src: NodeConfigDto, mapper: Mapper) -> NodeConfig:
         translations=mapper.map(src.translations, TranslationConfig),
         triggers=mapper.map_many(src.triggers, Trigger),
         value_validator=src.value_validator,
+        meta=mapper.map(src.meta, NodeMetaConfig, NodeMetaConfigDto),
     )
 
 
@@ -170,12 +171,25 @@ def map_node_config_to_dto(src: NodeConfig, mapper: Mapper) -> NodeConfigDto:
         value_validator=src.value_validator,
         translations=mapper.map(src.translations, TranslationConfigDto),
         triggers=mapper.map_many(src.triggers, TriggerDto),
+        meta=mapper.map(src.meta, NodeMetaConfigDto, NodeMetaConfig),
     )
     assert type(mapped_config.field_details) is type(
         field_details_dto
     ), "Union has change type of config"
 
     return mapped_config
+
+
+def map_node_meta_config_from_dto(
+    src: NodeMetaConfigDto, mapper: Mapper
+) -> NodeMetaConfig:
+    return NodeMetaConfig(is_visible=src.is_visible)
+
+
+def map_node_meta_config_to_dto(
+    src: NodeMetaConfig, mapper: Mapper
+) -> NodeMetaConfigDto:
+    return NodeMetaConfigDto(is_visible=src.is_visible)
 
 
 def map_project_definition_node_from_dto(
@@ -439,7 +453,7 @@ def map_input_formula_from_dto(src: InputFormulaDto, mapper: Mapper) -> Formula:
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
-        generated_ast="",
+        generated_ast=ast.parse(src.expression),
     )
 
 

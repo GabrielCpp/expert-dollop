@@ -9,6 +9,7 @@ from .project_definition_node import (
     StaticChoiceOption,
     StaticChoiceFieldConfig,
     CollapsibleContainerFieldConfig,
+    NodeMetaConfig,
     NodeConfig,
     ValueUnion,
     FieldDetailsUnion,

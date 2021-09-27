@@ -10,6 +10,7 @@ from .project_definition_node_dto import (
     StaticChoiceFieldConfigDto,
     CollapsibleContainerFieldConfigDto,
     NodeConfigDto,
+    NodeMetaConfigDto,
     IntFieldValueDto,
     DecimalFieldValueDto,
     StringFieldValueDto,

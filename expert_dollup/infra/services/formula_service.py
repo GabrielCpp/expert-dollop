@@ -187,7 +187,7 @@ class FormulaService(BaseCrudTableService[Formula]):
                 path=split_uuid_path(record.get("path")),
                 type_id=record.get("type_id"),
                 type_path=split_uuid_path(record.get("type_path")),
-                expression=record.get("expression"),
+                expression=jsonpickle.decode(record.get("generated_ast")),
                 dependencies=dependencies[record.get("formula_id")],
                 formula_id=record.get("formula_id"),
             )

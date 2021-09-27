@@ -18,6 +18,15 @@ class ProjectTreeBuilder:
     def build(
         self, nodes: List[ProjectNode], metas: List[ProjectNodeMeta]
     ) -> ProjectNodeTree:
+        if len(nodes) == 0:
+            return ProjectNodeTree(roots=[])
+
+        import jsonpickle
+        from dataclasses import asdict
+
+        with open("out.json", "w") as f:
+            f.write(jsonpickle.dumps([asdict(x) for x in nodes]))
+            f.write(jsonpickle.dumps([asdict(x) for x in metas]))
         tree_depth = None
         tree_node_map = defaultdict(list)
         meta_map = {meta.type_id: meta for meta in metas}

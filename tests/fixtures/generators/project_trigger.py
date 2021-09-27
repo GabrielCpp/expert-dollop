@@ -39,6 +39,7 @@ class ProjectWithTrigger:
                 translations=TranslationConfig(
                     help_text_name="root_a_text", label="root_a"
                 ),
+                meta=NodeMetaConfig(is_visible=True),
             ),
             creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=None,
@@ -64,6 +65,7 @@ class ProjectWithTrigger:
                 translations=TranslationConfig(
                     help_text_name="root_b_text", label="root_b"
                 ),
+                meta=NodeMetaConfig(is_visible=False),
             ),
             creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=None,

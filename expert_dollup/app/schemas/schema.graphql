@@ -147,10 +147,19 @@ type TriggerParam {
   value: String!
 }
 
+enum TriggerAction {
+  CHANGE_NAME
+  SET_VISIBILITY
+}
+
 type Trigger {
-  action: String!
+  action: TriggerAction!
   targetTypeId: String!
   params: [TriggerParam!]!
+}
+
+type NodeMetaConfig {
+  isVisible: Boolean
 }
 
 type NodeConfig {
@@ -158,6 +167,7 @@ type NodeConfig {
   valueValidator: JsonSchema
   triggers: [Trigger]!
   translations: TranslationConfig!
+  meta: NodeMetaConfig
 }
 
 type IntFieldValue {
