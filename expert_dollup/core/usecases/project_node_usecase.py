@@ -8,6 +8,7 @@ from expert_dollup.core.domains import (
     ProjectNodeTree,
     ProjectNodeFilter,
     ValueUnion,
+    FieldUpdate,
 )
 from expert_dollup.infra.services import (
     ProjectService,
@@ -94,6 +95,13 @@ class ProjectNodeUseCase:
         self, project_id: UUID, node_id: UUID, value: ValueUnion
     ) -> Awaitable[ProjectNode]:
         return await self.node_event_dispatcher.update_node_value(
+            project_id, node_id, value
+        )
+
+    async def update_nodes_value(
+        self, project_id: UUID, updates: List[FieldUpdate]
+    ) -> Awaitable[List[ProjectNode]]:
+        return await self.node_event_dispatcher.update_nodes_value(
             project_id, node_id, value
         )
 

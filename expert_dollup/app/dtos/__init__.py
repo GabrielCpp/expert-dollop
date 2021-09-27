@@ -2,6 +2,7 @@ from .project_definition_dto import ProjectDefinitionDto
 from .project_definition_node_dto import (
     ProjectDefinitionNodeDto,
     ProjectDefinitionNodePageDto,
+    FieldUpdateInputDto,
     IntFieldConfigDto,
     DecimalFieldConfigDto,
     StringFieldConfigDto,

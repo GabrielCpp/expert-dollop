@@ -43,3 +43,16 @@ async def resolve_create_project(
         info, ProjectDetailsInputDto.parse_obj(project_details)
     )
     return result
+
+
+@query.field("findProjectDetails")
+@inject_graphql_route(find_project_details)
+@convert_kwargs_to_snake_case
+async def resolve_create_project(
+    _: Any,
+    info: GraphQLResolveInfo,
+    id: str,
+    find_project_details: callable,
+):
+    result = await find_project_details(info, id)
+    return result

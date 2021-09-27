@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 @router.get("/project/{id}")
-async def get_project(
+async def find_project_details(
     id: UUID,
     usecase=Depends(Inject(ProjectUseCase)),
     handler=Depends(Inject(RequestHandler)),

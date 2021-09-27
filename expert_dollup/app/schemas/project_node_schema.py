@@ -53,7 +53,7 @@ async def resolve_find_root_section_nodes(
 @mutation.field("updateProjectField")
 @inject_graphql_route(mutate_project_field)
 @convert_kwargs_to_snake_case
-async def resolve_find_root_section_nodes(
+async def resolve_update_project_field(
     _: Any,
     info: GraphQLResolveInfo,
     project_id: UUID,
@@ -73,3 +73,28 @@ async def resolve_find_root_section_nodes(
     )
 
     return await mutate_project_field(info, project_id, node_id, value)
+
+
+@mutation.field("updateProjectFields")
+@inject_graphql_route(mutate_project_fields)
+@convert_kwargs_to_snake_case
+async def resolve_update_project_fields(
+    _: Any,
+    info: GraphQLResolveInfo,
+    project_id: UUID,
+    updates: FieldUpdateInputDto,
+    mutate_project_fields: callable,
+):
+    for update in updates:
+        update.value = collapse_union(
+            update.value,
+            [],
+            {
+                "INT_FIELD_VALUE": "int",
+                "DECIMAL_FIELD_VALUE": "decimal",
+                "STRING_FIELD_VALUE": "string",
+                "BOOL_FIELD_VALUE": "bool",
+            },
+        )
+
+    return await mutate_project_fields(info, project_id, node_id, value)

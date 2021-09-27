@@ -379,9 +379,9 @@ type ProjectConnection {
 
 type ProjectNode {
   id: ID!
-  project_id: String!
-  type_path: [String!]!
-  type_id: String!
+  projectId: String!
+  typePath: [String!]!
+  typeId: String!
   path: [String!]!
   value: FieldValue
   label: String
@@ -496,6 +496,7 @@ type Query {
   ): ProjectNodeTree!
   findProjectFormContent(projectId: ID!, formId: ID!): ProjectNodeTree!
   findProjects(query: String!, first: Int!, after: String): ProjectConnection!
+  findProjectDetails(id: ID!): ProjectDetails!
   findProjectDefinitionFormulas(
     projectDefId: ID!
     query: String!
@@ -521,6 +522,11 @@ input TranslationUpdateInput {
   value: String!
 }
 
+input FieldUpdateInput {
+    nodeId: ID!
+    value: FieldValueInput!
+}
+
 type Mutation {
   addTranslations(translations: [TranslationInput!]!): [Translation!]!
   updateTranslations(translations: [TranslationUpdateInput!]!): [Translation!]!
@@ -528,10 +534,14 @@ type Mutation {
     node: ProjectDefinitionNodeInput!
   ): ProjectDefinitionNode!
   updateProjectField(
-    project_id: ID!
+    projectId: ID!
     node_id: ID!
     value: FieldValueInput!
   ): ProjectNode!
+  updateProjectFields(
+    projectId: ID!
+    updates: [FieldUpdateInput!]!
+  ): [ProjectNode]!
   createProject(projectDetails: ProjectDetailsInput): ProjectDetails!
 }
 

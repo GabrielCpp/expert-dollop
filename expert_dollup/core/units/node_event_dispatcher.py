@@ -13,6 +13,7 @@ from expert_dollup.core.domains import (
     Trigger,
     ProjectNodeMetaFilter,
     BoundedNode,
+    FieldUpdate,
 )
 from expert_dollup.infra.services import (
     ProjectService,
@@ -51,6 +52,19 @@ class NodeEventDispatcher:
         )
 
         return await self.project_node_service.find_by_id(node_id)
+
+    async def update_nodes_value(
+        self, project_id: UUID, updates: List[FieldUpdate]
+    ) -> Awaitable[List[ProjectNode]]:
+        nodes: List[ProjectNode] = []
+
+        for update in updates:
+            node = await self.update_node_value(
+                project_id, update.node_id, update.value
+            )
+            nodes.append(node)
+
+        return nodes
 
     async def _get_bounded_node(
         self, project_id: UUID, node_id: UUID

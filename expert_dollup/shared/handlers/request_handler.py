@@ -1,4 +1,4 @@
-from typing import Type, Optional
+from typing import Type, Optional, List
 from dataclasses import dataclass
 from ..automapping import Mapper
 
@@ -73,15 +73,29 @@ class RequestHandler:
         self, usecase, params, mapping_chain: MappingChain, map_keys={}
     ):
         for key, mapping_chain in map_keys.items():
-            params[key] = self.mapper.map(
-                params[key], mapping_chain.domain, mapping_chain.dto
-            )
+            if getattr(mapping_chain.domain, "__origin__", None) is list:
+                params[key] = self.mapper.map_many(
+                    params[key],
+                    mapping_chain.domain.__args__[0],
+                    mapping_chain.dto and mapping_chain.dto.__args__[0],
+                )
+            else:
+                params[key] = self.mapper.map(
+                    params[key], mapping_chain.domain, mapping_chain.dto
+                )
 
         result = await usecase(**params)
 
         if not mapping_chain.out_dto is None:
-            result = self.mapper.map(
-                result, mapping_chain.out_dto, mapping_chain.out_domain
-            )
+            if getattr(mapping_chain.out_dto, "__origin__", None) is list:
+                result = self.mapper.map_many(
+                    result,
+                    mapping_chain.out_dto.__args__[0],
+                    mapping_chain.out_domain and mapping_chain.out_domain.__args__[0],
+                )
+            else:
+                result = self.mapper.map(
+                    result, mapping_chain.out_dto, mapping_chain.out_domain
+                )
 
         return result

@@ -20,7 +20,7 @@ from .project_definition_node import (
     StaticNumberFieldConfig,
 )
 from .project import ProjectDetails, Project
-from .project_node import ProjectNode, ProjectNodeFilter
+from .project_node import ProjectNode, ProjectNodeFilter, FieldUpdate
 from .project_definition_tree import (
     ProjectDefinitionNodeTree,
     ProjectDefinitionTreeNode,

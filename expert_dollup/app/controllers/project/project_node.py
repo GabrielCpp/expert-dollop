@@ -4,18 +4,8 @@ from uuid import UUID
 from expert_dollup.shared.starlette_injection import Inject
 from expert_dollup.shared.handlers import RequestHandler, MappingChain
 from expert_dollup.core.usecases import ProjectNodeUseCase
-from expert_dollup.core.domains import (
-    ProjectNodeFilter,
-    ValueUnion,
-    ProjectNodeTree,
-)
-from expert_dollup.app.dtos import (
-    ProjectNodeDto,
-    ProjectNodeTreeDto,
-    ProjectNodeCollectionTargetDto,
-    ValueUnionDto,
-    ProjectNodeTreeDto,
-)
+from expert_dollup.core.domains import *
+from expert_dollup.app.dtos import *
 
 router = APIRouter()
 
@@ -137,10 +127,29 @@ async def mutate_project_field(
     handler=Depends(Inject(RequestHandler)),
 ):
     return await handler.forward_mapped(
-        usecase.update_node_value,
+        usecase.update_nodes_value,
         dict(project_id=project_id, node_id=node_id, value=value),
         MappingChain(out_dto=ProjectNodeTreeDto),
         map_keys=dict(value=MappingChain(dto=ValueUnionDto, domain=ValueUnion)),
+    )
+
+
+@router.patch("/project/{project_id}/containers/value")
+async def mutate_project_fields(
+    project_id: UUID,
+    updates: List[FieldUpdateInputDto],
+    usecase=Depends(Inject(ProjectNodeUseCase)),
+    handler=Depends(Inject(RequestHandler)),
+):
+    return await handler.forward_mapped(
+        usecase.update_node_value,
+        dict(project_id=project_id, updates=updates),
+        MappingChain(out_dto=List[ProjectNodeTreeDto]),
+        map_keys=dict(
+            updates=MappingChain(
+                dto=List[FieldUpdateInputDto], domain=List[FieldUpdate]
+            )
+        ),
     )
 
 

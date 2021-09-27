@@ -154,3 +154,8 @@ class ProjectDefinitionNodePageDto(CamelModel):
     next_page_token: str
     limit: int
     results: List[ProjectDefinitionNodeDto]
+
+
+class FieldUpdateInputDto(CamelModel):
+    node_id: str
+    value: ValueUnionDto

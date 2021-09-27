@@ -32,3 +32,9 @@ class ProjectNodeFilter(QueryFilter):
     path: Optional[List[UUID]]
     label: Optional[str]
     value: ValueUnion
+
+
+@dataclass
+class FieldUpdate:
+    node_id: UUID
+    value: ValueUnion
