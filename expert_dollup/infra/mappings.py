@@ -316,7 +316,7 @@ def map_formula_to_dao(src: Formula, mapper: Mapper) -> ProjectDefinitionFormula
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
-        generated_ast=jsonpickle.encode(src.generated_ast),
+        generated_ast="",
     )
 
 
@@ -327,7 +327,7 @@ def map_formula_from_dao(src: ProjectDefinitionFormulaDao, mapper: Mapper) -> Fo
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
-        generated_ast=jsonpickle.decode(src.generated_ast),
+        generated_ast="",
     )
 
 

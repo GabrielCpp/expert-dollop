@@ -1,5 +1,3 @@
-import ast
-import astor
 from dataclasses import asdict
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import Mapper
@@ -453,7 +451,7 @@ def map_input_formula_from_dto(src: InputFormulaDto, mapper: Mapper) -> Formula:
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
-        generated_ast=ast.parse(src.expression),
+        generated_ast="",
     )
 
 
