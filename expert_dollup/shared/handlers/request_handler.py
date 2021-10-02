@@ -72,19 +72,21 @@ class RequestHandler:
     async def forward_mapped(
         self, usecase, params, mapping_chain: MappingChain, map_keys={}
     ):
-        for key, mapping_chain in map_keys.items():
-            if getattr(mapping_chain.domain, "__origin__", None) is list:
+        for key, mapping in map_keys.items():
+            if getattr(mapping.domain, "__origin__", None) is list:
                 params[key] = self.mapper.map_many(
                     params[key],
-                    mapping_chain.domain.__args__[0],
-                    mapping_chain.dto and mapping_chain.dto.__args__[0],
+                    mapping.domain.__args__[0],
+                    mapping.dto and mapping.dto.__args__[0],
                 )
             else:
-                params[key] = self.mapper.map(
-                    params[key], mapping_chain.domain, mapping_chain.dto
-                )
+                params[key] = self.mapper.map(params[key], mapping.domain, mapping.dto)
 
         result = await usecase(**params)
+        import jsonpickle
+
+        with open("test.json", "w") as f:
+            f.write(jsonpickle.encode(result))
 
         if not mapping_chain.out_dto is None:
             if getattr(mapping_chain.out_dto, "__origin__", None) is list:

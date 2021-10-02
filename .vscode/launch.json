@@ -10,7 +10,8 @@
             "request": "launch",
             "module": "uvicorn",
             "args": [
-                "expert_dollup.main:app"
+                "expert_dollup.main:app",
+                "--host=0.0.0.0"
             ],
             "jinja": true
         }

@@ -116,6 +116,24 @@ def map_collapsible_node_field_config_to_dto(
     return CollapsibleContainerFieldConfigDto(is_collapsible=src.is_collapsible)
 
 
+def map_field_update_input_from_dto(
+    src: FieldUpdateInputDto, mapper: Mapper
+) -> FieldUpdate:
+    return FieldUpdate(
+        node_id=src.node_id,
+        value=mapper.map(src.value, ValueUnion, ValueUnionDto),
+    )
+
+
+def map_field_update_input_to_dto(
+    src: FieldUpdate, mapper: Mapper
+) -> FieldUpdateInputDto:
+    return FieldUpdateInputDto(
+        node_id=src.node_id,
+        value=mapper.map(src.value, ValueUnionDto, ValueUnion),
+    )
+
+
 def map_translation_config_from_dto(
     src: TranslationConfigDto, mapper: Mapper
 ) -> TranslationConfig:
@@ -331,15 +349,19 @@ def map_project_node_from_dto(src: ProjectNodeDto, mapper: Mapper) -> ProjectNod
 
 
 def map_project_node_to_dto(src: ProjectNode, mapper: Mapper) -> ProjectNodeDto:
-    return ProjectNodeDto(
+    value = mapper.map(src.value, ValueUnionDto, ValueUnion)
+    result = ProjectNodeDto(
         id=src.id,
         project_id=src.project_id,
         type_id=src.type_id,
         type_path=src.type_path,
         path=src.path,
-        value=mapper.map(src.value, ValueUnionDto, ValueUnion),
+        value=value,
         label=src.label,
     )
+
+    assert type(result.value) is type(value), "Union has change type of config"
+    return result
 
 
 def map_project_node_meta_state_to_dto(

@@ -94,9 +94,9 @@ class NodeEventDispatcher:
         project_id = bounded_node.node.project_id
 
         for trigger in bounded_node.definition.config.triggers:
-            if trigger.action == TriggerAction.SET_VISIBILITY:
+            if trigger.action == TriggerAction.SET_VISIBILITY.value:
                 await self._trigger_toogle_visibility(trigger, project_id, value)
-            elif trigger.action == TriggerAction.CHANGE_NAME:
+            elif trigger.action == TriggerAction.CHANGE_NAME.value:
                 await self._trigger_change_name(trigger, bounded_node, value)
 
     async def _trigger_toogle_visibility(

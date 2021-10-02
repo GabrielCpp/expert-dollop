@@ -13,6 +13,7 @@ from expert_dollup.app.dtos import *
 from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
 from .types import query, mutation
+from pydantic import parse_obj_as
 
 
 @query.field("findProjectRootSections")
@@ -82,13 +83,13 @@ async def resolve_update_project_fields(
     _: Any,
     info: GraphQLResolveInfo,
     project_id: UUID,
-    updates: FieldUpdateInputDto,
+    updates: list,
     mutate_project_fields: callable,
 ):
-    for update in updates:
-        update.value = collapse_union(
-            update.value,
-            [],
+    updates = [
+        collapse_union(
+            update,
+            ["value"],
             {
                 "INT_FIELD_VALUE": "int",
                 "DECIMAL_FIELD_VALUE": "decimal",
@@ -96,5 +97,9 @@ async def resolve_update_project_fields(
                 "BOOL_FIELD_VALUE": "bool",
             },
         )
+        for update in updates
+    ]
 
-    return await mutate_project_fields(info, project_id, node_id, value)
+    return await mutate_project_fields(
+        info, project_id, parse_obj_as(List[FieldUpdateInputDto], updates)
+    )

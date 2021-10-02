@@ -142,9 +142,9 @@ async def mutate_project_fields(
     handler=Depends(Inject(RequestHandler)),
 ):
     return await handler.forward_mapped(
-        usecase.update_node_value,
+        usecase.update_nodes_value,
         dict(project_id=project_id, updates=updates),
-        MappingChain(out_dto=List[ProjectNodeTreeDto]),
+        MappingChain(out_dto=List[ProjectNodeDto]),
         map_keys=dict(
             updates=MappingChain(
                 dto=List[FieldUpdateInputDto], domain=List[FieldUpdate]

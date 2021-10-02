@@ -101,9 +101,10 @@ class ProjectNodeUseCase:
     async def update_nodes_value(
         self, project_id: UUID, updates: List[FieldUpdate]
     ) -> Awaitable[List[ProjectNode]]:
-        return await self.node_event_dispatcher.update_nodes_value(
-            project_id, node_id, value
+        results = await self.node_event_dispatcher.update_nodes_value(
+            project_id, updates
         )
+        return results
 
     async def add_collection(
         self,
