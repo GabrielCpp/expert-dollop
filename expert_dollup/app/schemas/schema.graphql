@@ -40,7 +40,7 @@ type DatasheetDefinitionElementConnection {
 }
 
 type DatasheetDefinitionElementProperty {
-  is_readonly: Boolean!
+  isReadonly: Boolean!
   value: String!
 }
 
@@ -111,7 +111,7 @@ type BoolFieldConfig {
 type StaticChoiceOption {
   id: String!
   label: String!
-  help_text: String!
+  helpText: String!
 }
 
 type StaticChoiceFieldConfig {
@@ -213,7 +213,7 @@ input BoolFieldConfigInput {
 input StaticChoiceOptionInput {
   id: String!
   label: String!
-  help_text: String!
+  helpText: String!
 }
 
 input StaticChoiceFieldConfigInput {
@@ -350,11 +350,11 @@ type ProjectDefinitionConnection {
 
 type Formula {
   id: ID!
-  project_def_id: String!
-  attached_to_type_id: String!
+  projectDefId: String!
+  attachedToTypeId: String!
   name: String!
   expression: String!
-  generated_ast: String!
+  generatedAst: String!
 }
 
 type FormulaEdge {
@@ -527,6 +527,11 @@ input FieldUpdateInput {
     value: FieldValueInput!
 }
 
+input ProjectNodeCollectionTarget {
+    parentNodeId: String
+    collectionTypeId: String!
+}
+
 type Mutation {
   addTranslations(translations: [TranslationInput!]!): [Translation!]!
   updateTranslations(translations: [TranslationUpdateInput!]!): [Translation!]!
@@ -535,13 +540,14 @@ type Mutation {
   ): ProjectDefinitionNode!
   updateProjectField(
     projectId: ID!
-    node_id: ID!
+    nodeId: ID!
     value: FieldValueInput!
   ): ProjectNode!
   updateProjectFields(
     projectId: ID!
     updates: [FieldUpdateInput!]!
   ): [ProjectNode]!
+  addProjectCollectionItem(projectId: ID!, collectionTarget: ProjectNodeCollectionTarget!): [ProjectNode]!
   createProject(projectDetails: ProjectDetailsInput): ProjectDetails!
 }
 

@@ -103,3 +103,20 @@ async def resolve_update_project_fields(
     return await mutate_project_fields(
         info, project_id, parse_obj_as(List[FieldUpdateInputDto], updates)
     )
+
+
+@mutation.field("addProjectCollectionItem")
+@inject_graphql_route(add_project_collection)
+@convert_kwargs_to_snake_case
+async def resolve_add_project_collection_item(
+    _: Any,
+    info: GraphQLResolveInfo,
+    project_id: UUID,
+    collection_target: dict,
+    add_project_collection: callable,
+):
+    return await add_project_collection(
+        info,
+        project_id,
+        parse_obj_as(ProjectNodeCollectionTargetDto, collection_target),
+    )

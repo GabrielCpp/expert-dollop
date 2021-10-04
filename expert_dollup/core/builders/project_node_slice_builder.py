@@ -40,7 +40,7 @@ class ProjectNodeSliceBuilder:
             )
         else:
             parent_node = await self.project_node_service.find_one_by(
-                ProjectNodeFilter(project_id=project_id, id=parent_node_id)
+                ProjectNodeFilter(project_id=project_details.id, id=parent_node_id)
             )
 
         root_def_node = await self.project_definition_node_service.find_one_by(
