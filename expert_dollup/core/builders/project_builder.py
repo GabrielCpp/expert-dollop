@@ -1,6 +1,6 @@
 from typing import List, Awaitable
 from uuid import UUID, uuid4
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from expert_dollup.core.builders import RessourceBuilder
 from expert_dollup.core.domains import (
     Project,
@@ -11,12 +11,36 @@ from expert_dollup.core.domains import (
     ProjectNodeFilter,
     ProjectNodeMetaFilter,
     ProjectNodeMetaState,
+    BoundedNode,
+    ValueUnion,
+    Trigger,
+    TriggerAction,
 )
 from expert_dollup.infra.services import (
     ProjectNodeService,
     ProjectNodeMetaService,
     ProjectDefinitionNodeService,
 )
+
+
+class TriggerHandler:
+    def __init__(self, nodes_by_id: OrderedDict):
+        self.nodes_by_id = nodes_by_id
+
+    def run(self, bounded_node: BoundedNode) -> Awaitable:
+        project_id = bounded_node.node.project_id
+
+        for trigger in bounded_node.definition.config.triggers:
+            if trigger.action == TriggerAction.CHANGE_NAME.value:
+                self._trigger_change_name(trigger, bounded_node)
+
+    def _trigger_change_name(
+        self, trigger: Trigger, bounded_node: BoundedNode
+    ) -> Awaitable:
+        index = bounded_node.node.type_path.index(trigger.target_type_id)
+        path = bounded_node.node.path[0 : index + 1]
+        node = self.nodes_by_id[path[-1]]
+        node.node.label = str(bounded_node.node.value)
 
 
 class ProjectBuilder:
@@ -38,7 +62,7 @@ class ProjectBuilder:
         )
 
         children_to_skip = set()
-        nodes = []
+        nodes_by_id = OrderedDict()
         node_metas = []
         type_to_instance_id = defaultdict(uuid4)
 
@@ -72,11 +96,16 @@ class ProjectBuilder:
                 value=node_definition.default_value,
             )
 
-            nodes.append(node)
+            nodes_by_id[node.id] = BoundedNode(node, node_definition)
+
+        trigger_handler = TriggerHandler(nodes_by_id)
+
+        for node in nodes_by_id.values():
+            trigger_handler.run(node)
 
         return Project(
             details=project_details,
-            nodes=nodes,
+            nodes=[bounded_node.node for bounded_node in nodes_by_id.values()],
             metas=node_metas,
             ressource=self.ressource_builder.build(
                 project_details.id, project_details.id, "project"
@@ -125,6 +154,7 @@ class ProjectBuilder:
                 type_path=node.type_path,
                 path=[id_mapping[node_id] for node_id in node.path],
                 value=node.value,
+                label=node.label,
             )
             for node in original_nodes
         ]
