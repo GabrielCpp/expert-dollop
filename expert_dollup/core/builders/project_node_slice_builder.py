@@ -102,6 +102,7 @@ class ProjectNodeSliceBuilder:
                 type_path=node.type_path,
                 path=[id_mapping[node_id] for node_id in node.path],
                 value=node.value,
+                label=node.label,
             )
             for node in [
                 parent_node,

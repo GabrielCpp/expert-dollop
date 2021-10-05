@@ -120,3 +120,20 @@ async def resolve_add_project_collection_item(
         project_id,
         parse_obj_as(ProjectNodeCollectionTargetDto, collection_target),
     )
+
+
+@mutation.field("cloneProjectCollection")
+@inject_graphql_route(clone_project_collection)
+@convert_kwargs_to_snake_case
+async def resolve_clone_project_collection(
+    _: Any,
+    info: GraphQLResolveInfo,
+    project_id: UUID,
+    collection_node_id: UUID,
+    clone_project_collection: callable,
+):
+    return await clone_project_collection(
+        info,
+        project_id,
+        collection_node_id,
+    )
