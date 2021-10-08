@@ -463,6 +463,7 @@ type Query {
     after: String
   ): DatasheetDefinitionElementConnection!
   queryDatasheetDefinitionElements(
+    datasheetDefinitionId: ID!
     query: String!
     first: Int!
     after: String

@@ -56,6 +56,7 @@ async def resolve_find_datasheet_definition_elements(
 async def resolve_query_datasheet_definition_elements(
     _: Any,
     info: GraphQLResolveInfo,
+    datasheet_definition_id: UUID,
     query: str,
     first: int,
     handler: GraphqlPageHandler[DatasheetDefinitionService, DatasheetDefinitionDto],
