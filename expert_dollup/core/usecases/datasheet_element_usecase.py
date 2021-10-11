@@ -117,8 +117,11 @@ class DatasheetElementUseCase:
         if not element_definition.is_collection:
             raise InvalidUsageError("Non collection element cannot be instanciated.")
 
-        collection_size = await self.datasheet_element_service.get_collection_size(
-            element_id.datasheet_id, element_id.element_def_id
+        collection_size = await self.datasheet_element_service.count(
+            DatasheetElementFilter(
+                datasheet_id=element_id.datasheet_id,
+                element_def_id=element_id.element_def_id,
+            )
         )
 
         if collection_size <= 1:

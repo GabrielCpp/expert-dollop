@@ -28,18 +28,3 @@ class DatasheetElementService(PostgresTableService[DatasheetElement]):
         table_filter_type = DatasheetElementFilter
         paginator = IdStampedDateCursorEncoder.for_fields("child_element_reference")
         custom_filters = {DatasheetElementId: ExactMatchFilter(datasheet_element_table)}
-
-    async def get_collection_size(self, datasheet_id, element_def_id):
-        query = (
-            select([func.count()])
-            .select_from(self._table)
-            .where(
-                and_(
-                    self._table.c.datasheet_id == datasheet_id,
-                    self._table.c.element_def_id == element_def_id,
-                )
-            )
-        )
-
-        count = await self._database.fetch_val(query)
-        return count

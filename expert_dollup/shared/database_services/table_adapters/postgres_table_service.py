@@ -1,22 +1,12 @@
-from typing import (
-    List,
-    TypeVar,
-    Optional,
-    Generic,
-    Awaitable,
-    AsyncGenerator,
-    Any,
-    Dict,
-    Type,
-)
+from typing import List, TypeVar, Optional, Awaitable, Any, Dict, Type, Tuple
 from pydantic import BaseModel
 from sqlalchemy import and_, func
 from sqlalchemy.schema import FetchedValue
-from sqlalchemy.sql import select
+from sqlalchemy.sql import select, tuple_
 from databases import Database
 from dataclasses import dataclass
 from sqlalchemy.dialects import postgresql
-from expert_dollup.shared.automapping import Mapper
+from expert_dollup.shared.automapping import Mapper, mapper
 from ..filters import ExactMatchFilter
 from ..page import Page
 from ..query_filter import QueryFilter
@@ -195,9 +185,9 @@ class PostgresTableService(TableService[Domain]):
         query = self._table.update().where(where_filter).values(update_fields)
         await self._database.execute(query=query)
 
-    async def pluck(self, ids: List[Id]) -> Awaitable[List[Domain]]:
-        assert len(self.table_ids) == 1, "Pluck only work with one primary key."
-        query = self._table.select().where(self.table_ids[0]._in(ids))
+    async def pluck(self, pluck_filter: QueryFilter) -> Awaitable[List[Domain]]:
+        name, ids = self._mapper.map(pluck_filter, Tuple[str, List[Any]])
+        query = self._table.select().where(getattr(self._table, name)._in(tuple_(*ids)))
         records = await self._database.fetch_all(query=query)
         results = self.map_many_to(records, self._dao, self._domain)
 

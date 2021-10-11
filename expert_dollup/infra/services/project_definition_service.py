@@ -1,5 +1,4 @@
 from expert_dollup.infra.expert_dollup_db import (
-    ExpertDollupDatabase,
     project_definition_table,
     ProjectDefinitionDao,
 )
