@@ -1,16 +1,14 @@
 import jsonpickle
 from typing import List, Optional, Awaitable
 from uuid import UUID
-from sqlalchemy import select, and_, or_
 from expert_dollup.core.domains import (
     ProjectNode,
     ProjectDefinitionNode,
     ProjectNodeFilter,
     FieldNode,
 )
-
 from expert_dollup.shared.database_services import PostgresTableService
-from expert_dollup.core.utils.path_transform import join_uuid_path, split_uuid_path
+from expert_dollup.core.utils.path_transform import split_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
     project_node_table,
     ProjectNodeDao,
@@ -123,18 +121,17 @@ class ProjectNodeService(PostgresTableService[ProjectNode]):
         self, project_id: UUID, start_with_path: List[UUID], type_id: UUID
     ) -> Awaitable[List[ProjectNode]]:
         assert len(start_with_path) >= 1, "Cannot start with an path"
-        start_with_path_filter = join_uuid_path(start_with_path)
-        query = select([self._table]).where(
-            and_(
-                self._table.c.project_id == project_id,
-                self._table.c.type_id == type_id,
-                or_(
-                    self._table.c.path.like(f"{start_with_path_filter}%"),
-                    self._table.c.id == start_with_path[-1],
-                ),
-            )
+        builder = (
+            self.get_builder()
+            .find_by(ProjectNodeFilter(project_id=project_id, type_id=type_id))
+            .save("find_node_of_type_in_project")
+            .find_by(ProjectNodeFilter(id=start_with_path[-1]))
+            .startwiths(ProjectNodeFilter(path=start_with_path))
+            .any_of()
+            .save("find_instances_by_path")
+            .all_of("find_node_of_type_in_project", "find_instances_by_path")
+            .finalize()
         )
 
-        records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
+        results = await self.find_by(builder)
         return results

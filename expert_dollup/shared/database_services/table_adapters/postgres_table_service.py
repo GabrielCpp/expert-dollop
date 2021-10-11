@@ -62,6 +62,7 @@ class PostgresQueryBuilder(QueryBuilder):
 
     def order_by(self, name: str, direction: str) -> "QueryBuilder":
         self.order = PostgresQueryBuilder.order_by_clause(self._table, name, direction)
+        return self
 
     def find_by(self, query_filter: QueryFilter) -> "QueryBuilder":
         where_filter = self._build_filter(query_filter)
@@ -105,14 +106,26 @@ class PostgresQueryBuilder(QueryBuilder):
             self._conditions = [or_(*self._conditions)]
 
         if len(names) > 0:
-            self._conditions.append(or_(*[self._saved[name] for name in names]))
+            merged_conditions = []
+            for name in names:
+                merged_conditions.extend(self._saved[name])
+
+            self._conditions.append(or_(*names))
+
+        return self
 
     def all_of(self, *names: List[str]) -> "QueryBuilder":
         if len(names) == 0 and len(self._conditions) > 0:
             self._conditions = [and_(*self._conditions)]
 
         if len(names) > 0:
-            self._conditions.append(and_(*[self._saved[name] for name in names]))
+            merged_conditions = []
+            for name in names:
+                merged_conditions.extend(self._saved[name])
+
+            self._conditions.append(and_(*merged_conditions))
+
+        return self
 
     def finalize(self) -> "QueryBuilder":
         assert (
