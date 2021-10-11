@@ -279,6 +279,17 @@ def map_project_definition_node_filter_to_dict(
     )
 
 
+def map_project_definition_node_pluck_filter_to_dict(
+    src: ProjectDefinitionNodePluckFilter, mapper: Mapper
+) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "names": ("name", None),
+        },
+    )
+
+
 def map_project_node_filter_to_dict(src: ProjectNodeFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,

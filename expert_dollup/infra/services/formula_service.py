@@ -22,7 +22,6 @@ from expert_dollup.infra.expert_dollup_db import (
     project_definition_formula_table,
     project_definition_formula_dependency_table,
     project_definition_formula_node_dependency_table,
-    project_definition_node_table,
     project_node_table,
 )
 
@@ -36,7 +35,7 @@ class FormulaService(PostgresTableService[Formula]):
         paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")
 
     async def get_formulas_by_name(
-        self, names: List[str]
+        self, project_def_id: UUID, names: List[str]
     ) -> Awaitable[Dict[str, UUID]]:
         if len(names) == 0:
             return {}
@@ -44,25 +43,12 @@ class FormulaService(PostgresTableService[Formula]):
         query = (
             self.get_builder()
             .select_fields("id", "name")
+            .find_by(FormulaFilter(project_def_id=project_def_id))
             .pluck(FormulaPluckFilter(names=names))
             .finalize()
         )
         records = await self.fetch_all_records(query)
 
-        return {record.get("name"): record.get("id") for record in records}
-
-    async def get_fields_by_name(self, names: List[str]) -> Awaitable[Dict[str, UUID]]:
-        if len(names) == 0:
-            return {}
-
-        query = select(
-            [
-                project_definition_node_table.c.id,
-                project_definition_node_table.c.name,
-            ]
-        ).where(project_definition_node_table.c.name.in_(tuple_(*names)))
-
-        records = await self._database.fetch_all(query=query)
         return {record.get("name"): record.get("id") for record in records}
 
     async def patch_formula_graph(self, formula_details: FormulaDetails) -> Awaitable:

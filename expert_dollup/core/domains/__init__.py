@@ -2,6 +2,7 @@ from .project_definition import ProjectDefinition, ProjectDefinitionFilter
 from .project_definition_node import (
     ProjectDefinitionNode,
     ProjectDefinitionNodeFilter,
+    ProjectDefinitionNodePluckFilter,
     IntFieldConfig,
     DecimalFieldConfig,
     StringFieldConfig,

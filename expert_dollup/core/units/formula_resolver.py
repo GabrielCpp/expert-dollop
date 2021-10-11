@@ -15,6 +15,7 @@ from expert_dollup.infra.services import (
     FormulaService,
     ProjectNodeService,
     FormulaCacheService,
+    ProjectDefinitionNodeService,
 )
 
 
@@ -262,10 +263,12 @@ class FormulaResolver:
         self,
         formula_service: FormulaService,
         project_node_service: ProjectNodeService,
+        project_definition_node_service: ProjectDefinitionNodeService,
         formula_cache_service: FormulaCacheService,
     ):
         self.formula_service = formula_service
         self.project_node_service = project_node_service
+        self.project_definition_node_service = project_definition_node_service
         self.formula_cache_service = formula_cache_service
 
     async def parse(self, formula: Formula) -> FormulaDetails:
@@ -282,8 +285,12 @@ class FormulaResolver:
                 fn_names = ",".join(FormulaVisitor.whithelisted_fn_name)
                 raise Exception(f"Function {name} not found in [{fn_names}]")
 
-        formulas = await self.formula_service.get_formulas_by_name(visitor.var_names)
-        fields = await self.formula_service.get_fields_by_name(visitor.var_names)
+        formulas = await self.formula_service.get_formulas_by_name(
+            formula.project_def_id, visitor.var_names
+        )
+        fields = await self.project_definition_node_service.get_fields_by_name(
+            formula.project_def_id, visitor.var_names
+        )
         unkowns_names = (
             set(visitor.var_names) - set(formulas.keys()) - set(fields.keys())
         )

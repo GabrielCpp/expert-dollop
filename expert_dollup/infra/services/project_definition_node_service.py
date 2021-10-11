@@ -1,4 +1,4 @@
-from typing import Awaitable, List
+from typing import Awaitable, List, Dict
 from uuid import UUID
 from sqlalchemy import select, and_, desc
 from sqlalchemy.dialects import postgresql
@@ -10,6 +10,7 @@ from expert_dollup.shared.database_services import (
 from expert_dollup.core.domains import (
     ProjectDefinitionNode,
     ProjectDefinitionNodeFilter,
+    ProjectDefinitionNodePluckFilter,
 )
 from expert_dollup.core.utils.path_transform import join_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
@@ -25,6 +26,23 @@ class ProjectDefinitionNodeService(PostgresTableService[ProjectDefinitionNode]):
         domain = ProjectDefinitionNode
         table_filter_type = ProjectDefinitionNodeFilter
         paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")
+
+    async def get_fields_by_name(
+        self, project_def_id: UUID, names: List[str]
+    ) -> Awaitable[Dict[str, UUID]]:
+        if len(names) == 0:
+            return {}
+
+        query = (
+            self.get_builder()
+            .select_fields("id", "name")
+            .find_by(ProjectDefinitionNodeFilter(project_def_id=project_def_id))
+            .pluck(ProjectDefinitionNodePluckFilter(names=names))
+            .finalize()
+        )
+        records = await self.fetch_all_records(query)
+
+        return {record.get("name"): record.get("id") for record in records}
 
     async def has_path(self, path: List[UUID]) -> Awaitable[bool]:
         if len(path) == 0:
