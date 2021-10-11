@@ -31,7 +31,7 @@ class TriggerHandler:
         project_id = bounded_node.node.project_id
 
         for trigger in bounded_node.definition.config.triggers:
-            if trigger.action == TriggerAction.CHANGE_NAME.value:
+            if trigger.action == TriggerAction.CHANGE_NAME:
                 self._trigger_change_name(trigger, bounded_node)
 
     def _trigger_change_name(

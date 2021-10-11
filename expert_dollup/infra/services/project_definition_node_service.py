@@ -5,7 +5,7 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects import postgresql
 from expert_dollup.shared.database_services import (
-    BaseCrudTableService,
+    TableService,
     Page,
     IdStampedDateCursorEncoder,
 )
@@ -22,7 +22,7 @@ from expert_dollup.infra.expert_dollup_db import (
 from expert_dollup.shared.automapping import Mapper
 
 
-class ProjectDefinitionNodeService(BaseCrudTableService[ProjectDefinitionNode]):
+class ProjectDefinitionNodeService(TableService[ProjectDefinitionNode]):
     class Meta:
         table = project_definition_node_table
         dao = ProjectDefinitionNodeDao
@@ -36,7 +36,7 @@ class ProjectDefinitionNodeService(BaseCrudTableService[ProjectDefinitionNode]):
 
         parent_id = path[-1]
         parent_path = join_uuid_path(path[0:-1])
-        query = select([self.table_id]).where(
+        query = select(self.table_ids).where(
             and_(
                 self._table.c.path == parent_path,
                 self._table.c.id == parent_id,

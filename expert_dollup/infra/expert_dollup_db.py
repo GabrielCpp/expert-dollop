@@ -125,7 +125,7 @@ class ProjectNodeDao(BaseModel):
     type_id: UUID
     path: str
     value: Optional[str]
-    label: Optional[str]
+    label: str
     level: int
     type_path: str
     display_query_internal_id: UUID
@@ -215,7 +215,6 @@ project_definition_formula_table = Table(
     Column("attached_to_type_id", postgresql.UUID(), nullable=False),
     Column("name", String, nullable=False),
     Column("expression", String, nullable=False),
-    Column("generated_ast", String, nullable=False),
 )
 
 
@@ -225,7 +224,6 @@ class ProjectDefinitionFormulaDao(BaseModel):
     attached_to_type_id: UUID
     name: str
     expression: str
-    generated_ast: str
 
 
 project_definition_formula_dependency_table = Table(

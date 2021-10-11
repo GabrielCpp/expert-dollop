@@ -1,5 +1,5 @@
 from expert_dollup.shared.database_services import (
-    BaseCrudTableService,
+    TableService,
     IdStampedDateCursorEncoder,
 )
 from expert_dollup.infra.expert_dollup_db import (
@@ -10,7 +10,7 @@ from expert_dollup.infra.expert_dollup_db import (
 from expert_dollup.core.domains import Datasheet, DatasheetFilter
 
 
-class DatasheetService(BaseCrudTableService[Datasheet]):
+class DatasheetService(TableService[Datasheet]):
     class Meta:
         table = datasheet_table
         dao = DatasheetDao

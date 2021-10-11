@@ -1,3 +1,4 @@
+from pydantic.tools import parse_obj_as
 import pytest
 from collections import defaultdict
 from ..fixtures import *
@@ -80,11 +81,13 @@ async def test_datasheet(ac, mini_datasheet: MiniDatasheet):
     @runner.step
     async def create_datasheet():
         ctx.datasheet_definition = mini_datasheet.datasheet_definitions[0]
-        ctx.datasheet = DatasheetDtoFactory(
-            datasheet_def_id=ctx.datasheet_definition.id
+        datasheet = DatasheetDtoFactory(
+            datasheet_definition_id=ctx.datasheet_definition.id
         )
-        response = await ac.post("/api/datasheet", data=ctx.datasheet.json())
+        response = await ac.post("/api/datasheet", data=datasheet.json())
         assert response.status_code == 200, response.json()
+
+        ctx.datasheet = parse_obj_as(DatasheetDto, response.json())
 
     @runner.step
     async def get_all_datasheet_elements():
@@ -177,11 +180,11 @@ async def test_datasheet_crud(ac, mini_datasheet: MiniDatasheet):
     @runner.step
     async def create_datasheet():
         ctx.datasheet_definition = mini_datasheet.datasheet_definitions[0]
-        ctx.datasheet = DatasheetDtoFactory(
-            datasheet_def_id=ctx.datasheet_definition.id
-        )
-        response = await ac.post("/api/datasheet", data=ctx.datasheet.json())
+        datasheet = DatasheetDtoFactory(datasheet_def_id=ctx.datasheet_definition.id)
+        response = await ac.post("/api/datasheet", data=datasheet.json())
         assert response.status_code == 200, response.json()
+
+        ctx.datasheet = parse_obj_as(DatasheetDto, response.json())
 
     @runner.step
     async def clone_datasheet():

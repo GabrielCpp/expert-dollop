@@ -301,6 +301,7 @@ class FormulaResolver:
             formula_ast=formula_ast,
         )
 
+        # TODO: Check that
         formula_details.formula.generated_ast = self.generate_formula_unit(
             formula_details
         )

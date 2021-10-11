@@ -1,4 +1,5 @@
 from dataclasses import asdict
+from uuid import uuid4
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import Page
@@ -148,7 +149,9 @@ def map_translation_config_to_dto(
 
 def map_trigger_from_dto(src: TriggerDto, mapper: Mapper) -> Trigger:
     return Trigger(
-        action=src.action, target_type_id=src.target_type_id, params=dict(src.params)
+        action=TriggerAction(src.action),
+        target_type_id=src.target_type_id,
+        params=dict(src.params),
     )
 
 
@@ -473,7 +476,6 @@ def map_input_formula_from_dto(src: InputFormulaDto, mapper: Mapper) -> Formula:
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
-        generated_ast="",
     )
 
 
@@ -594,12 +596,15 @@ def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> La
 
 
 def map_new_datasheet_from_dto(src: NewDatasheetDto, mapper: Mapper) -> Datasheet:
+    datasheet_id = uuid4()
     return Datasheet(
-        id=src.id,
+        id=datasheet_id,
         name=src.name,
         is_staged=src.is_staged,
         datasheet_def_id=src.datasheet_definition_id,
-        from_datasheet_id=src.from_datasheet_id,
+        from_datasheet_id=datasheet_id
+        if src.from_datasheet_id is None
+        else src.from_datasheet_id,
         creation_date_utc=mapper.get(Clock).utcnow(),
     )
 

@@ -4,10 +4,10 @@ from expert_dollup.infra.expert_dollup_db import (
     RessourceDao,
 )
 from expert_dollup.core.domains import Ressource
-from expert_dollup.shared.database_services import BaseCrudTableService
+from expert_dollup.shared.database_services import TableService
 
 
-class RessourceService(BaseCrudTableService[Ressource]):
+class RessourceService(TableService[Ressource]):
     class Meta:
         table = ressource_table
         dao = RessourceDao

@@ -29,22 +29,26 @@ Id = TypeVar("Id")
 Query = TypeVar("Query")
 
 
-class AbstractFilterBuilder(ABC):
-    @abstractmethod
-    def build(self, filter: Query):
-        pass
+class ExactMatchFilter:
+    def __init__(self, table):
+        self.table = table
 
+    def __call__(self, query, mapper):
+        fields = mapper.map(query, dict)
+        where_filter = ExactMatchFilter.build_and_column_filter(self.table, fields)
+        return where_filter
 
-def build_and_column_filter(table, fields: dict):
-    condition = None
+    @staticmethod
+    def build_and_column_filter(table, fields: dict):
+        condition = None
 
-    for column_name, value in fields.items():
-        if condition is None:
-            condition = getattr(table.c, column_name) == value
-        else:
-            condition = and_(condition, getattr(table.c, column_name) == value)
+        for column_name, value in fields.items():
+            if condition is None:
+                condition = getattr(table.c, column_name) == value
+            else:
+                condition = and_(condition, getattr(table.c, column_name) == value)
 
-    return condition
+        return condition
 
 
 class QueryFilter(BaseModel):
@@ -81,7 +85,7 @@ class TableColumnProcessor:
     processor: callable
 
 
-class CoreCrudTableService(ABC, Generic[Domain]):
+class TableService(ABC, Generic[Domain]):
     def __init__(self, database: Database, mapper: Mapper):
         self._database = database
         self._mapper = mapper
@@ -95,18 +99,14 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         self._dao = self.__class__.Meta.dao
         self._domain = self.__class__.Meta.domain
         self._table_filter_type = self.__class__.Meta.table_filter_type
-        self._column_processors = self.build_table_raw_processors()
+        self._column_processors = self._build_table_raw_processors()
 
-    def build_table_raw_processors(self) -> List[TableColumnProcessor]:
-        noop = lambda x: x
-        dialect = postgresql.dialect()
-
-        return [
-            TableColumnProcessor(
-                name=column.name, processor=column.type.bind_processor(dialect) or noop
-            )
-            for column in self._table.c
-            if not isinstance(column.server_default, FetchedValue)
+        self.table_id_names = [
+            pk.name for pk in self._table.primary_key.columns.values()
+        ]
+        self.table_ids = [
+            getattr(self._table.c, table_id_name)
+            for table_id_name in self.table_id_names
         ]
 
     async def insert(self, domain: Domain) -> Awaitable:
@@ -116,7 +116,7 @@ class CoreCrudTableService(ABC, Generic[Domain]):
 
     async def insert_many(self, domains: List[Domain]) -> Awaitable:
         daos = self._mapper.map_many(domains, self._dao)
-        await self.insert_many_raw(daos)
+        await self._insert_many_raw(daos)
 
     async def find_all(self, limit: int = 1000) -> Awaitable[List[Domain]]:
         query = self._table.select().limit(limit)
@@ -149,7 +149,6 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
     ) -> Awaitable[List[Domain]]:
-        assert not self._table_filter_type is None
         where_filter = self._build_filter(query_filter)
         query = self._table.select().where(where_filter)
 
@@ -188,16 +187,8 @@ class CoreCrudTableService(ABC, Generic[Domain]):
             results=results,
         )
 
-    def make_record_token(self, domain: Domain) -> str:
-        assert not self._paginator is None, "Paginator required"
-        dao = self._mapper.map(domain, self._dao)
-        next_page_token = self._paginator.encode_dao(dao)
-        return next_page_token
-
     async def find_one_by(self, query_filter: QueryFilter) -> Awaitable[List[Domain]]:
-        assert not self._table_filter_type is None
-        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
-        where_filter = build_and_column_filter(self._table, filter_fields)
+        where_filter = self._build_filter(query_filter)
         query = self._table.select().where(where_filter)
         record = await self._database.fetch_one(query=query)
 
@@ -209,9 +200,7 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         return result
 
     async def remove_by(self, query_filter: QueryFilter) -> Awaitable:
-        assert not self._table_filter_type is None
-        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
-        where_filter = build_and_column_filter(self._table, filter_fields)
+        where_filter = self._build_filter(query_filter)
         query = self._table.delete().where(where_filter)
         await self._database.execute(query)
 
@@ -225,49 +214,52 @@ class CoreCrudTableService(ABC, Generic[Domain]):
         count = await self._database.fetch_val(query=query)
         return count
 
-    @abstractmethod
     async def delete_by_id(self, pk_id: Id) -> Awaitable:
-        pass
+        where_filter = self._build_id_filter(pk_id)
+        query = self._table.delete().where(where_filter)
+        await self._database.execute(query=query)
 
-    @abstractmethod
     async def has(self, pk_id: Id) -> Awaitable[bool]:
-        pass
+        where_filter = self._build_id_filter(pk_id)
+        query = select(self.table_ids).where(where_filter)
+        value = await self._database.fetch_one(query=query)
+        return not value is None
 
-    @abstractmethod
     async def find_by_id(self, pk_id: Id) -> Awaitable[Domain]:
-        pass
+        where_filter = self._build_id_filter(pk_id)
+        query = self._table.select().where(where_filter)
+        value = await self._database.fetch_one(query=query)
+
+        if value is None:
+            raise RessourceNotFound()
+
+        result = self._mapper.map(self._dao(**value), self._domain)
+        return result
 
     async def update(
         self, value_filter: QueryFilter, query_filter: QueryFilter
     ) -> Awaitable:
-        assert not self._table_filter_type is None
-        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
-        where_filter = build_and_column_filter(self._table, filter_fields)
+        """
+        Update records base on query.
+        """
+        where_filter = self._build_filter(query_filter)
         update_fields = self._mapper.map(value_filter, dict, self._table_filter_type)
         query = self._table.update().where(where_filter).values(update_fields)
         await self._database.execute(query=query)
 
-    async def insert_many_raw(self, daos: List[BaseModel]) -> Awaitable:
-        columns_name = [
-            column_processor.name for column_processor in self._column_processors
-        ]
+    def make_record_token(self, domain: Domain) -> str:
+        """
+        Return next page token for a domain object.
+        """
+        assert not self._paginator is None, "Paginator required"
+        dao = self._mapper.map(domain, self._dao)
+        next_page_token = self._paginator.encode_dao(dao)
+        return next_page_token
 
-        records = [
-            [
-                column_processor.processor(getattr(dao, column_processor.name))
-                for column_processor in self._column_processors
-            ]
-            for dao in daos
-        ]
-
-        async with self._database.connection() as connection:
-            n = 300
-            for i in range(0, len(records), n):
-                await connection.raw_connection.copy_records_to_table(
-                    self._table.name, records=records[i : i + n], columns=columns_name
-                )
-
-    def map_many_to(self, records, dao_type, domain_type):
+    def map_many_to(self, records: list, dao_type: BaseModel, domain_type: Domain):
+        """
+        Remap a list of records to it domain equivalent.
+        """
         daos = [dao_type(**record) for record in records]
         results = self._mapper.map_many(daos, domain_type)
         return results
@@ -305,90 +297,48 @@ class CoreCrudTableService(ABC, Generic[Domain]):
 
             yield domains, daos
 
+    async def _insert_many_raw(self, daos: List[BaseModel]) -> Awaitable:
+        """
+        Postgres specific bulk insert of daos
+        """
+        columns_name = [
+            column_processor.name for column_processor in self._column_processors
+        ]
+
+        records = [
+            [
+                column_processor.processor(getattr(dao, column_processor.name))
+                for column_processor in self._column_processors
+            ]
+            for dao in daos
+        ]
+
+        async with self._database.connection() as connection:
+            n = 300
+            for i in range(0, len(records), n):
+                await connection.raw_connection.copy_records_to_table(
+                    self._table.name, records=records[i : i + n], columns=columns_name
+                )
+
     def _build_filter(self, query_filter: QueryFilter):
         query_type = type(query_filter)
 
         if query_type in self._custom_filters:
-            return self._custom_filters[query_type](query_filter)
+            return self._custom_filters[query_type](query_filter, self._mapper)
 
-        filter_fields = self._mapper.map(query_filter, dict)
-        where_filter = build_and_column_filter(self._table, filter_fields)
+        assert not self._table_filter_type is None, "Table filter is missing."
+        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
+        where_filter = ExactMatchFilter.build_and_column_filter(
+            self._table, filter_fields
+        )
 
         return where_filter
 
+    def _build_id_filter(self, pk_id):
+        if len(self.table_ids) == 1:
+            return self.table_ids[0] == pk_id
 
-class BaseCrudTableService(CoreCrudTableService[Domain]):
-    def __init__(self, database: Database, mapper: Mapper):
-        CoreCrudTableService.__init__(self, database, mapper)
-
-        pk = list(self._table.primary_key.columns.values())
-        assert (
-            len(pk) == 1
-        ), f"Crud table service must have single value primary key for table {self._table}"
-
-        self.table_id_name = pk[0].name
-        self.table_id = getattr(self._table.c, self.table_id_name)
-
-    async def delete_by_id(self, pk_id: Id) -> Awaitable:
-        query = self._table.delete().where(self.table_id == pk_id)
-        await self._database.execute(query=query)
-
-    async def has(self, pk_id: Id) -> Awaitable[bool]:
-        query = select([self.table_id]).where(self.table_id == pk_id)
-        value = await self._database.fetch_one(query=query)
-        return not value is None
-
-    async def find_by_id(self, pk_id: Id) -> Awaitable[Domain]:
-        query = self._table.select().where(self.table_id == pk_id)
-        value = await self._database.fetch_one(query=query)
-
-        if value is None:
-            raise RessourceNotFound()
-
-        result = self._mapper.map(self._dao(**value), self._domain)
-        return result
-
-
-class BaseCompositeCrudTableService(CoreCrudTableService[Domain]):
-    def __init__(self, database: Database, mapper: Mapper):
-        CoreCrudTableService.__init__(self, database, mapper)
-
-        pks = list(self._table.primary_key.columns.values())
-        assert len(pks) > 1, f"Compose crud must have composite key for {self._table}"
-
-        self.table_id_names = [pk.name for pk in pks]
-        self.table_ids = [
-            getattr(self._table.c, table_id_name)
-            for table_id_name in self.table_id_names
-        ]
-
-    async def delete_by_id(self, pk_id: Id) -> Awaitable:
         identifier = self._mapper.map(pk_id, dict)
-        where_filter = self._build_id_filter(identifier)
-        query = self._table.delete().where(where_filter)
-        await self._database.execute(query=query)
-
-    async def has(self, pk_id: Id) -> Awaitable[bool]:
-        identifier = self._mapper.map(pk_id, dict)
-        where_filter = self._build_id_filter(identifier)
-        query = select([self.table_id]).where(where_filter)
-        value = await self._database.fetch_one(query=query)
-        return not value is None
-
-    async def find_by_id(self, pk_id: Id) -> Awaitable[Domain]:
-        identifier = self._mapper.map(pk_id, dict)
-        where_filter = self._build_id_filter(identifier)
-        query = self._table.select().where(where_filter)
-        value = await self._database.fetch_one(query=query)
-
-        if value is None:
-            raise RessourceNotFound()
-
-        result = self._mapper.map(self._dao(**value), self._domain)
-
-        return result
-
-    def _build_id_filter(self, identifier: dict):
         name = self.table_id_names[0]
         condition = getattr(self._table.c, name) == identifier[name]
 
@@ -398,3 +348,15 @@ class BaseCompositeCrudTableService(CoreCrudTableService[Domain]):
             condition = and_(condition, comparaison)
 
         return condition
+
+    def _build_table_raw_processors(self) -> List[TableColumnProcessor]:
+        noop = lambda x: x
+        dialect = postgresql.dialect()
+
+        return [
+            TableColumnProcessor(
+                name=column.name, processor=column.type.bind_processor(dialect) or noop
+            )
+            for column in self._table.c
+            if not isinstance(column.server_default, FetchedValue)
+        ]

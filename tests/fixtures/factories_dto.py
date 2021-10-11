@@ -141,8 +141,7 @@ class DatasheetDtoFactory(factory.Factory):
     class Meta:
         model = NewDatasheetDto
 
-    id = factory.LazyFunction(uuid4)
     name = factory.Sequence(lambda n: f"datasheet{n}")
     is_staged = False
-    datasheet_def_id = factory.LazyFunction(uuid4)
-    from_datasheet_id = factory.SelfAttribute("id")
+    datasheet_definition_id = factory.LazyFunction(uuid4)
+    from_datasheet_id = None

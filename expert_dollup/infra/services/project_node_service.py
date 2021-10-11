@@ -11,7 +11,7 @@ from expert_dollup.core.domains import (
     ProjectNodeFilter,
     FieldNode,
 )
-from expert_dollup.shared.database_services import BaseCrudTableService
+from expert_dollup.shared.database_services import TableService
 from expert_dollup.core.utils.path_transform import join_uuid_path, split_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
@@ -24,7 +24,7 @@ from expert_dollup.infra.expert_dollup_db import (
 )
 
 
-class ProjectNodeService(BaseCrudTableService[ProjectNode]):
+class ProjectNodeService(TableService[ProjectNode]):
     class Meta:
         table = project_node_table
         dao = ProjectNodeDao

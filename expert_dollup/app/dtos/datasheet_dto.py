@@ -6,7 +6,6 @@ from pydantic import Field
 
 
 class NewDatasheetDto(CamelModel):
-    id: UUID = Field(default_factory=uuid4)
     name: str
     datasheet_definition_id: UUID
     from_datasheet_id: Optional[UUID] = None

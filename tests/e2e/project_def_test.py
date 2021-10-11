@@ -30,7 +30,6 @@ async def test_project_creation(ac, mapper):
             "/api/project_definition_node",
             data=project_definiton_node_dto.json(),
         )
-        node = find_name(db.project_definition_nodes, project_definiton_node_dto.name)
 
         assert response.status_code == 200, response.json()
 

@@ -8,7 +8,7 @@ from expert_dollup.core.domains import (
     ProjectNodeTree,
     ProjectNodeFilter,
     ValueUnion,
-    ProjectDefinitionNode,
+    ProjectNodeMeta,
     TriggerAction,
     Trigger,
     ProjectNodeMetaFilter,
@@ -94,9 +94,9 @@ class NodeEventDispatcher:
         project_id = bounded_node.node.project_id
 
         for trigger in bounded_node.definition.config.triggers:
-            if trigger.action == TriggerAction.SET_VISIBILITY.value:
+            if trigger.action == TriggerAction.SET_VISIBILITY:
                 await self._trigger_toogle_visibility(trigger, project_id, value)
-            elif trigger.action == TriggerAction.CHANGE_NAME.value:
+            elif trigger.action == TriggerAction.CHANGE_NAME:
                 await self._trigger_change_name(trigger, bounded_node, value)
 
     async def _trigger_toogle_visibility(

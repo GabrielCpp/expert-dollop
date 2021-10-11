@@ -11,7 +11,7 @@ class ProjectNodeDto(CamelModel):
     path: List[UUID]
     type_path: List[UUID]
     value: ValueUnionDto
-    label: Optional[str]
+    label: str = ""
 
 
 class ProjectNodeCollectionTargetDto(CamelModel):

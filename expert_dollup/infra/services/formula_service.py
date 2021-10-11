@@ -1,5 +1,5 @@
 from expert_dollup.core.domains.formula import FormulaFilter
-import jsonpickle
+import ast
 from sqlalchemy import select, join, and_, desc, or_, text
 from sqlalchemy.sql.expression import func, select, alias, tuple_
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -7,7 +7,7 @@ from typing import List, Optional, Awaitable, Dict
 from collections import defaultdict
 from uuid import UUID
 from expert_dollup.shared.database_services import (
-    BaseCrudTableService,
+    TableService,
     IdStampedDateCursorEncoder,
 )
 from expert_dollup.core.domains import Formula, FormulaDetails, FormulaNode
@@ -22,7 +22,7 @@ from expert_dollup.infra.expert_dollup_db import (
 )
 
 
-class FormulaService(BaseCrudTableService[Formula]):
+class FormulaService(TableService[Formula]):
     class Meta:
         table = project_definition_formula_table
         dao = ProjectDefinitionFormulaDao
@@ -105,16 +105,6 @@ class FormulaService(BaseCrudTableService[Formula]):
         if len(formula_details.field_dependencies) > 0:
             await self._database.execute(query=query)
 
-        formula_dao = self._mapper.map(formula_details.formula, self._dao, self._domain)
-
-        query = (
-            self._table.update()
-            .where(self._table.c.id == formula_details.formula.id)
-            .values({"generated_ast": formula_dao.generated_ast})
-        )
-
-        await self._database.execute(query=query)
-
     async def get_all_project_formula_ast(
         self, project_id: UUID, project_definition_id: UUID
     ) -> Awaitable[List[FormulaNode]]:
@@ -130,7 +120,7 @@ class FormulaService(BaseCrudTableService[Formula]):
             select(
                 [
                     self._table.c.name,
-                    self._table.c.generated_ast,
+                    self._table.c.expression,
                     self._table.c.id.label("formula_id"),
                     project_node_table.c.path,
                     project_node_table.c.id,
@@ -183,11 +173,11 @@ class FormulaService(BaseCrudTableService[Formula]):
         return [
             FormulaNode(
                 id=record.get("id"),
+                expression=ast.parse(record.get("expression")),
                 name=record.get("name"),
                 path=split_uuid_path(record.get("path")),
                 type_id=record.get("type_id"),
                 type_path=split_uuid_path(record.get("type_path")),
-                expression=jsonpickle.decode(record.get("generated_ast")),
                 dependencies=dependencies[record.get("formula_id")],
                 formula_id=record.get("formula_id"),
             )

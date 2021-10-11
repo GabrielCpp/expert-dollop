@@ -83,10 +83,6 @@ class RequestHandler:
                 params[key] = self.mapper.map(params[key], mapping.domain, mapping.dto)
 
         result = await usecase(**params)
-        import jsonpickle
-
-        with open("test.json", "w") as f:
-            f.write(jsonpickle.encode(result))
 
         if not mapping_chain.out_dto is None:
             if getattr(mapping_chain.out_dto, "__origin__", None) is list:

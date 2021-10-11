@@ -1,4 +1,4 @@
-from expert_dollup.shared.database_services import BaseCrudTableService
+from expert_dollup.shared.database_services import TableService
 from expert_dollup.infra.expert_dollup_db import (
     ExpertDollupDatabase,
     datasheet_definition_label_collection_table,
@@ -7,7 +7,7 @@ from expert_dollup.infra.expert_dollup_db import (
 from expert_dollup.core.domains import LabelCollection
 
 
-class LabelCollectionService(BaseCrudTableService[LabelCollection]):
+class LabelCollectionService(TableService[LabelCollection]):
     class Meta:
         table = datasheet_definition_label_collection_table
         dao = LabelCollectionDao
