@@ -598,7 +598,7 @@ def map_new_datasheet_from_dto(src: NewDatasheetDto, mapper: Mapper) -> Datashee
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
-        datasheet_def_id=src.datasheet_def_id,
+        datasheet_def_id=src.datasheet_definition_id,
         from_datasheet_id=src.from_datasheet_id,
         creation_date_utc=mapper.get(Clock).utcnow(),
     )

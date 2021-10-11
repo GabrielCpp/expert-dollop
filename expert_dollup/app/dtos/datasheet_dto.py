@@ -1,17 +1,16 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 from typing import Optional
-from dataclasses import dataclass
 from datetime import datetime
 from expert_dollup.shared.modeling import CamelModel
-from expert_dollup.shared.database_services import QueryFilter
+from pydantic import Field
 
 
 class NewDatasheetDto(CamelModel):
-    id: UUID
+    id: UUID = Field(default_factory=uuid4)
     name: str
-    is_staged: bool
-    datasheet_def_id: UUID
-    from_datasheet_id: Optional[UUID]
+    datasheet_definition_id: UUID
+    from_datasheet_id: Optional[UUID] = None
+    is_staged: bool = False
 
 
 class DatasheetUpdatableProperties(CamelModel):
@@ -34,5 +33,5 @@ class DatasheetDto(CamelModel):
     name: str
     is_staged: bool
     datasheet_def_id: UUID
-    from_datasheet_id: UUID
+    from_datasheet_id: Optional[UUID]
     creation_date_utc: datetime

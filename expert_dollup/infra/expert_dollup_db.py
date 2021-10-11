@@ -394,7 +394,7 @@ class DatasheetDao(BaseModel):
     name: str
     is_staged: bool
     datasheet_def_id: UUID
-    from_datasheet_id: UUID
+    from_datasheet_id: Optional[UUID]
     creation_date_utc: datetime
 
 

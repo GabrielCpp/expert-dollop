@@ -11,8 +11,8 @@
         "editor.formatOnPaste": false
     },
     "[json]": {
-        "editor.defaultFormatter": "remimarsal.prettier-now"
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "python.formatting.provider": "black",
-    "python.formatting.blackPath": "/home/gabriel/Documents/expert-dollop/.venv/bin/black"
+    "python.formatting.blackPath": "./.venv/bin/black"
 }

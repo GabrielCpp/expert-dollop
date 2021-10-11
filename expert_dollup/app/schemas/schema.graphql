@@ -86,9 +86,19 @@ type Datasheet {
   id: ID!
   name: String!
   isStaged: Boolean!
-  datasheetDefId: ID!
-  fromDatasheetId: ID!
-  elements(first: Int!, after: String): DatasheetElementConnection
+  datasheetDefId: String!
+  fromDatasheetId: String
+  elements(first: Int!, after: String): DatasheetElementConnection!
+}
+
+type DatasheetEdge {
+  node: Datasheet!
+  cursor: String!
+}
+
+type DatasheetConnection {
+  edges: [DatasheetEdge!]!
+  pageInfo: PageInfo!
 }
 
 type IntFieldConfig {
@@ -451,6 +461,11 @@ type PageInfo {
 
 type Query {
   findDatasheet(id: ID!): Datasheet!
+  findDatasheets(
+    query: String!
+    first: Int!
+    after: String
+  ): DatasheetConnection!
   findDatasheetDefinitions(
     query: String!
     first: Int!
@@ -533,6 +548,12 @@ input ProjectNodeCollectionTargetInput {
     collectionTypeId: String!
 }
 
+input DatasheetInput {
+  name: String! 
+  datasheetDefinitionId: String!
+  fromDatasheetId: String
+}
+
 type Mutation {
   addTranslations(translations: [TranslationInput!]!): [Translation!]!
   updateTranslations(translations: [TranslationUpdateInput!]!): [Translation!]!
@@ -551,6 +572,7 @@ type Mutation {
   cloneProjectCollection(projectId: ID!, collectionNodeId: ID!): [ProjectNode]!
   addProjectCollectionItem(projectId: ID!, collectionTarget: ProjectNodeCollectionTargetInput!): [ProjectNode]!
   createProject(projectDetails: ProjectDetailsInput): ProjectDetails!
+  createDatasheet(datasheet: DatasheetInput): Datasheet!
 }
 
 schema {
