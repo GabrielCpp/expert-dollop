@@ -32,6 +32,8 @@ class ProjectNodeFilter(QueryFilter):
     path: Optional[List[UUID]]
     label: Optional[str]
     value: ValueUnion
+    level: Optional[int]
+    display_query_internal_id: Optional[UUID]
 
 
 @dataclass

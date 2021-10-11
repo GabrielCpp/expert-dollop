@@ -13,6 +13,10 @@ class QueryBuilder(ABC):
         pass
 
     @abstractmethod
+    def order_by(self, name: str, direction: str) -> "QueryBuilder":
+        pass
+
+    @abstractmethod
     def find_by(self, query_filter: QueryFilter) -> "QueryBuilder":
         pass
 

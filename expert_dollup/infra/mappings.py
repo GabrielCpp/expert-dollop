@@ -297,9 +297,11 @@ def map_project_node_filter_to_dict(src: ProjectNodeFilter, mapper: Mapper) -> d
             "id": ("id", None),
             "project_id": ("project_id", None),
             "type_id": ("type_id", None),
-            "path": ("path", None),
+            "path": ("path", join_uuid_path),
             "value": ("value", jsonpickle.encode),
             "label": ("label", None),
+            "level": ("level", None),
+            "display_query_internal_id": ("display_query_internal_id", None),
         },
     )
 

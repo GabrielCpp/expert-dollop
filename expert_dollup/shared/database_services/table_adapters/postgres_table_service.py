@@ -10,7 +10,7 @@ from typing import (
     AsyncGenerator,
 )
 from pydantic import BaseModel
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, func, or_, desc, asc
 from sqlalchemy.schema import FetchedValue
 from sqlalchemy.sql import select, tuple_
 from databases import Database
@@ -35,8 +35,11 @@ class TableColumnProcessor:
 
 class PostgresQueryBuilder(QueryBuilder):
     @staticmethod
-    def _build_query():
-        pass
+    def order_by_clause(table, name: str, direction: str):
+        assert direction in ("desc", "asc")
+        order = desc if direction is "desc" else asc
+
+        return order(getattr(table.c, name))
 
     def __init__(self, table, mapper, build_filter):
         self._table = table
@@ -46,6 +49,7 @@ class PostgresQueryBuilder(QueryBuilder):
         self._saved = {}
         self.final_query = None
         self.fields = None
+        self.order = None
 
     def select_fields(self, *names: List[str]) -> "QueryBuilder":
         self.fields = []
@@ -56,6 +60,9 @@ class PostgresQueryBuilder(QueryBuilder):
 
         return self
 
+    def order_by(self, name: str, direction: str) -> "QueryBuilder":
+        self.order = PostgresQueryBuilder.order_by_clause(self._table, name, direction)
+
     def find_by(self, query_filter: QueryFilter) -> "QueryBuilder":
         where_filter = self._build_filter(query_filter)
         self._conditions.append(where_filter)
@@ -65,7 +72,7 @@ class PostgresQueryBuilder(QueryBuilder):
         filter_fields = self._mapper.map(query_filter, dict)
 
         for name, path_filter in filter_fields.items():
-            where_filter = getattr(self._table, name).like(f"{path_filter}%")
+            where_filter = getattr(self._table.c, name).like(f"{path_filter}%")
             self._conditions.append(where_filter)
 
         return self
@@ -173,6 +180,7 @@ class PostgresTableService(TableService[Domain]):
         query_filter: WhereFilter,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        order_by: Optional[Tuple[str, str]] = None,
     ) -> Awaitable[List[Domain]]:
         where_filter = self._build_filter(query_filter)
         query = self._table.select().where(where_filter)
@@ -182,6 +190,12 @@ class PostgresTableService(TableService[Domain]):
 
         if not offset is None:
             query = query.offset(offset)
+
+        if not order_by is None:
+            name, direction = order_by
+            query = query.order_by(
+                PostgresQueryBuilder.order_by_clause(self._table, name, direction)
+            )
 
         records = await self._database.fetch_all(query=query)
         results = self.map_many_to(records, self._dao, self._domain)
@@ -348,7 +362,7 @@ class PostgresTableService(TableService[Domain]):
     def _build_filter(self, query_filter: QueryFilter):
         query_type = type(query_filter)
 
-        if query_filter is PostgresQueryBuilder:
+        if query_type is PostgresQueryBuilder:
             assert (
                 not query_filter.final_query is None
             ), "Query builder query must be finalized"

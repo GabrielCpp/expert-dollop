@@ -182,6 +182,7 @@ async def test_given_formula_instances_should_compute_collection():
     project_definition_id = uuid4()
     formula_service = StrictInterfaceSetup(FormulaService)
     project_node_service = StrictInterfaceSetup(ProjectNodeService)
+    project_definition_node_service = StrictInterfaceSetup(ProjectNodeService)
     formula_cache_service = StrictInterfaceSetup(FormulaCacheService)
 
     node_graphs: Dict[str, NodeSeed] = {
@@ -262,6 +263,7 @@ async def test_given_formula_instances_should_compute_collection():
     formula_resolver = FormulaResolver(
         formula_service.object,
         project_node_service.object,
+        project_definition_node_service.object,
         formula_cache_service.object,
     )
 

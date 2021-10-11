@@ -11,6 +11,9 @@ from expert_dollup.core.domains import (
     ProjectNodeFilter,
     FieldNode,
 )
+from expert_dollup.core.domains.project_definition_node import (
+    ProjectDefinitionNodeFilter,
+)
 from expert_dollup.shared.database_services import PostgresTableService
 from expert_dollup.core.utils.path_transform import join_uuid_path, split_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
@@ -34,91 +37,73 @@ class ProjectNodeService(PostgresTableService[ProjectNode]):
     async def find_children(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None
     ) -> Awaitable[ProjectNode]:
-        path_filter = join_uuid_path(path)
-        other_filters = []
-
-        if not level is None:
-            other_filters.append(self._table.c.level == level)
-
-        query = (
-            select([self._table])
-            .where(
-                and_(
-                    self._table.c.project_id == project_id,
-                    self._table.c.path.like(f"{path_filter}%"),
-                    *other_filters,
-                )
-            )
-            .order_by(desc(self._table.c.level))
+        builder = (
+            self.get_builder()
+            .find_by(ProjectNodeFilter(project_id=project_id))
+            .startwiths(ProjectNodeFilter(path=path))
         )
 
-        records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
+        if not level is None:
+            builder.find_by(ProjectNodeFilter(level=level))
+
+        builder.finalize()
+        results = await self.find_by(builder, order_by=("level", "desc"))
+
         return results
 
     async def remove_collection(self, container: ProjectNode) -> Awaitable:
-        path_to_delete = join_uuid_path(container.subpath)
-        query = self._table.delete().where(
-            and_(
-                self._table.c.project_id == container.project_id,
-                self._table.c.path.like(f"{path_to_delete}%"),
-            )
+        builder = (
+            self.get_builder()
+            .find_by(ProjectNodeFilter(project_id=container.project_id))
+            .startwiths(ProjectNodeFilter(path=container.subpath))
+            .finalize()
         )
-        await self._database.execute(query=query)
+
+        await self.delete_by(builder)
 
     async def find_root_sections(
         self, project_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
-        query = (
-            select([self._table])
-            .where(
-                and_(
-                    self._table.c.project_id == project_id,
-                    self._table.c.display_query_internal_id == project_id,
+        builder = (
+            self.get_builder()
+            .find_by(
+                ProjectNodeFilter(
+                    project_id=project_id, display_query_internal_id=project_id
                 )
             )
-            .order_by(desc(self._table.c.level))
+            .finalize()
         )
-
-        records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
+        results = await self.find_by(builder, order_by=("level", "desc"))
         return results
 
     async def find_root_section_nodes(
         self, project_id: UUID, root_section_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
-        query = (
-            select([self._table])
-            .where(
-                and_(
-                    self._table.c.project_id == project_id,
-                    self._table.c.display_query_internal_id == root_section_id,
+        builder = (
+            self.get_builder()
+            .find_by(
+                ProjectNodeFilter(
+                    project_id=project_id, display_query_internal_id=root_section_id
                 )
             )
-            .order_by(desc(self._table.c.level))
+            .finalize()
         )
-
-        records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
+        results = await self.find_by(builder, order_by=("level", "desc"))
         return results
 
     async def find_form_content(
         self, project_id: UUID, form_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
-        query = (
-            select([self._table])
-            .where(
-                and_(
-                    self._table.c.project_id == project_id,
-                    self._table.c.display_query_internal_id == form_id,
+        builder = (
+            self.get_builder()
+            .find_by(
+                ProjectNodeFilter(
+                    project_id=project_id, display_query_internal_id=form_id
                 )
             )
-            .order_by(desc(self._table.c.level))
+            .finalize()
         )
-
-        records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
-
+        results = await self.find_by(builder, order_by=("level", "desc"))
         return results
 
     async def get_all_fields(self, project_id: UUID) -> Awaitable[List[FieldNode]]:
