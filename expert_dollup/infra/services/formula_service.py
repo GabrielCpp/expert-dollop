@@ -10,7 +10,12 @@ from expert_dollup.shared.database_services import (
     PostgresTableService,
     IdStampedDateCursorEncoder,
 )
-from expert_dollup.core.domains import Formula, FormulaDetails, FormulaNode
+from expert_dollup.core.domains import (
+    Formula,
+    FormulaDetails,
+    FormulaNode,
+    FormulaPluckFilter,
+)
 from expert_dollup.core.utils.path_transform import split_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
     ProjectDefinitionFormulaDao,
@@ -36,14 +41,14 @@ class FormulaService(PostgresTableService[Formula]):
         if len(names) == 0:
             return {}
 
-        query = select(
-            [
-                project_definition_formula_table.c.id,
-                project_definition_formula_table.c.name,
-            ]
-        ).where(project_definition_formula_table.c.name.in_(tuple_(*names)))
+        query = (
+            self.get_builder()
+            .select_fields("id", "name")
+            .pluck(FormulaPluckFilter(names=names))
+            .finalize()
+        )
+        records = await self.fetch_all_records(query)
 
-        records = await self._database.fetch_all(query=query)
         return {record.get("name"): record.get("id") for record in records}
 
     async def get_fields_by_name(self, names: List[str]) -> Awaitable[Dict[str, UUID]]:

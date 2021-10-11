@@ -59,3 +59,7 @@ class FormulaFilter(QueryFilter):
     attached_to_type_id: Optional[UUID]
     name: Optional[str]
     expression: Optional[str]
+
+
+class FormulaPluckFilter(QueryFilter):
+    names: List[str]

@@ -1,2 +1,2 @@
-from .postgres_table_service import PostgresTableService
-from .table_service import TableService
+from .postgres_table_service import PostgresTableService, PostgresQueryBuilder
+from .table_service import TableService, QueryBuilder

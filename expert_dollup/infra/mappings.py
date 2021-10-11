@@ -578,3 +578,12 @@ def map_formula_filter(src: FormulaFilter, mapper: Mapper) -> dict:
             "expression": ("expression", None),
         },
     )
+
+
+def map_fomula_pluck_filter(src: FormulaPluckFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "names": ("name", None),
+        },
+    )

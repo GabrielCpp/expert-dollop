@@ -1,17 +1,27 @@
-from typing import List, TypeVar, Optional, Awaitable, Any, Dict, Type, Tuple
+from typing import (
+    List,
+    TypeVar,
+    Optional,
+    Awaitable,
+    Any,
+    Dict,
+    Type,
+    Tuple,
+    AsyncGenerator,
+)
 from pydantic import BaseModel
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, or_
 from sqlalchemy.schema import FetchedValue
 from sqlalchemy.sql import select, tuple_
 from databases import Database
 from dataclasses import dataclass
 from sqlalchemy.dialects import postgresql
-from expert_dollup.shared.automapping import Mapper, mapper
+from expert_dollup.shared.automapping import Mapper
 from ..filters import ExactMatchFilter
 from ..page import Page
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
-from .table_service import TableService
+from .table_service import TableService, QueryBuilder, WhereFilter
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")
@@ -21,6 +31,83 @@ Id = TypeVar("Id")
 class TableColumnProcessor:
     name: str
     processor: callable
+
+
+class PostgresQueryBuilder(QueryBuilder):
+    @staticmethod
+    def _build_query():
+        pass
+
+    def __init__(self, table, mapper, build_filter):
+        self._table = table
+        self._mapper = mapper
+        self._build_filter = build_filter
+        self._conditions = []
+        self._saved = {}
+        self.final_query = None
+        self.fields = None
+
+    def select_fields(self, *names: List[str]) -> "QueryBuilder":
+        self.fields = []
+
+        for name in names:
+            field = getattr(self._table.c, name)
+            self.fields.append(field)
+
+        return self
+
+    def find_by(self, query_filter: QueryFilter) -> "QueryBuilder":
+        where_filter = self._build_filter(query_filter)
+        self._conditions.append(where_filter)
+        return self
+
+    def startwiths(self, query_filter: QueryFilter) -> "QueryBuilder":
+        filter_fields = self._mapper.map(query_filter, dict)
+
+        for name, path_filter in filter_fields.items():
+            where_filter = getattr(self._table, name).like(f"{path_filter}%")
+            self._conditions.append(where_filter)
+
+        return self
+
+    def pluck(self, pluck_filter: QueryFilter) -> "QueryBuilder":
+        filter_fields = self._mapper.map(pluck_filter, dict)
+
+        for name, values in filter_fields.items():
+            where_filter = getattr(self._table.c, name).in_(tuple_(*values))
+            self._conditions.append(where_filter)
+
+        return self
+
+    def save(self, name) -> "QueryBuilder":
+        self._saved[name] = self._conditions
+        self._conditions = []
+        return self
+
+    def any_of(self, *names: List[str]) -> "QueryBuilder":
+        if len(names) == 0 and len(self._conditions) > 0:
+            self._conditions = [or_(*self._conditions)]
+
+        if len(names) > 0:
+            self._conditions.append(or_(*[self._saved[name] for name in names]))
+
+    def all_of(self, *names: List[str]) -> "QueryBuilder":
+        if len(names) == 0 and len(self._conditions) > 0:
+            self._conditions = [and_(*self._conditions)]
+
+        if len(names) > 0:
+            self._conditions.append(and_(*[self._saved[name] for name in names]))
+
+    def finalize(self) -> "QueryBuilder":
+        assert (
+            len(self._conditions) > 0
+        ), "Query builder must contains at leas a condition"
+
+        if len(self._conditions) == 1:
+            self.final_query = self._conditions[0]
+
+        self.final_query = and_(*self._conditions)
+        return self
 
 
 class PostgresTableService(TableService[Domain]):
@@ -83,7 +170,7 @@ class PostgresTableService(TableService[Domain]):
 
     async def find_by(
         self,
-        query_filter: QueryFilter,
+        query_filter: WhereFilter,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
     ) -> Awaitable[List[Domain]]:
@@ -103,7 +190,7 @@ class PostgresTableService(TableService[Domain]):
 
     async def find_by_paginated(
         self,
-        query_filter: QueryFilter,
+        query_filter: WhereFilter,
         limit: int,
         next_page_token: Optional[str] = None,
     ) -> Awaitable[Page[Domain]]:
@@ -125,7 +212,7 @@ class PostgresTableService(TableService[Domain]):
             results=results,
         )
 
-    async def find_one_by(self, query_filter: QueryFilter) -> Awaitable[List[Domain]]:
+    async def find_one_by(self, query_filter: WhereFilter) -> Awaitable[List[Domain]]:
         where_filter = self._build_filter(query_filter)
         query = self._table.select().where(where_filter)
         record = await self._database.fetch_one(query=query)
@@ -137,12 +224,12 @@ class PostgresTableService(TableService[Domain]):
 
         return result
 
-    async def delete_by(self, query_filter: QueryFilter) -> Awaitable:
+    async def delete_by(self, query_filter: WhereFilter) -> Awaitable:
         where_filter = self._build_filter(query_filter)
         query = self._table.delete().where(where_filter)
         await self._database.execute(query)
 
-    async def count(self, query_filter: Optional[QueryFilter] = None) -> Awaitable[int]:
+    async def count(self, query_filter: Optional[WhereFilter] = None) -> Awaitable[int]:
         if query_filter is None:
             query = select([func.count()]).select_from(self._table)
         else:
@@ -175,7 +262,7 @@ class PostgresTableService(TableService[Domain]):
         return result
 
     async def update(
-        self, value_filter: QueryFilter, query_filter: QueryFilter
+        self, value_filter: QueryFilter, query_filter: WhereFilter
     ) -> Awaitable:
         """
         Update records base on query.
@@ -184,14 +271,6 @@ class PostgresTableService(TableService[Domain]):
         update_fields = self._mapper.map(value_filter, dict, self._table_filter_type)
         query = self._table.update().where(where_filter).values(update_fields)
         await self._database.execute(query=query)
-
-    async def pluck(self, pluck_filter: QueryFilter) -> Awaitable[List[Domain]]:
-        name, ids = self._mapper.map(pluck_filter, Tuple[str, List[Any]])
-        query = self._table.select().where(getattr(self._table, name)._in(tuple_(*ids)))
-        records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
-
-        return results
 
     def make_record_token(self, domain: Domain) -> str:
         """
@@ -209,14 +288,6 @@ class PostgresTableService(TableService[Domain]):
         daos = [dao_type(**record) for record in records]
         results = self._mapper.map_many(daos, domain_type)
         return results
-
-    async def map_over(
-        self, iterator: AsyncGenerator[Any, Any]
-    ) -> AsyncGenerator[Domain, None]:
-        async for record in iterator:
-            dao = self.dao(**record)
-            result = self._mapper.map(dao, self._domain)
-            yield result
 
     def hydrate_joined_table(self, records, dao_table_pairs):
         def slice_record(record, delta, columns):
@@ -243,6 +314,14 @@ class PostgresTableService(TableService[Domain]):
 
             yield domains, daos
 
+    def get_builder(self) -> QueryBuilder:
+        return PostgresQueryBuilder(self._table, self._mapper, self._build_filter)
+
+    async def fetch_all_records(self, builder: QueryBuilder) -> dict:
+        query = select(builder.fields or []).where(builder.final_query)
+        records = await self._database.fetch_all(query=query)
+        return records
+
     async def _insert_many_raw(self, daos: List[BaseModel]) -> Awaitable:
         """
         Postgres specific bulk insert of daos
@@ -268,6 +347,12 @@ class PostgresTableService(TableService[Domain]):
 
     def _build_filter(self, query_filter: QueryFilter):
         query_type = type(query_filter)
+
+        if query_filter is PostgresQueryBuilder:
+            assert (
+                not query_filter.final_query is None
+            ), "Query builder query must be finalized"
+            return query_filter.final_query
 
         if query_type in self._custom_filters:
             return self._custom_filters[query_type](query_filter, self._mapper)

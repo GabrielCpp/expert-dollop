@@ -49,6 +49,7 @@ from .formula import (
     FormulaNode,
     FieldNode,
     FormulaFilter,
+    FormulaPluckFilter,
 )
 
 from .datasheet_definition import DatasheetDefinition, ElementPropertySchema
