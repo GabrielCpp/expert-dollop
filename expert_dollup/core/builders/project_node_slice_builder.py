@@ -35,6 +35,7 @@ class ProjectNodeSliceBuilder:
                 project_id=project_details.id,
                 type_path=[],
                 type_id=project_details.project_def_id,
+                type_name="",
                 path=[],
                 value=None,
             )
@@ -67,6 +68,7 @@ class ProjectNodeSliceBuilder:
                     id=type_to_instance_id[definition_node.id],
                     project_id=project_details.id,
                     type_id=definition_node.id,
+                    type_name=definition_node.name,
                     type_path=definition_node.path,
                     path=[
                         type_to_instance_id[def_id] for def_id in definition_node.path
@@ -99,6 +101,7 @@ class ProjectNodeSliceBuilder:
                 id=id_mapping[node.id],
                 project_id=node.project_id,
                 type_id=node.type_id,
+                type_name=node.type_name,
                 type_path=node.type_path,
                 path=[id_mapping[node_id] for node_id in node.path],
                 value=node.value,

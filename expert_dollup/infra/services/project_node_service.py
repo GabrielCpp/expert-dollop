@@ -1,29 +1,19 @@
 import jsonpickle
-from typing import List, Optional, Awaitable, Any, Dict
+from typing import List, Optional, Awaitable
 from uuid import UUID
-from sqlalchemy import select, join, and_, desc, or_
+from sqlalchemy import select, and_, or_
 from expert_dollup.core.domains import (
     ProjectNode,
-    ProjectNodeTreeNode,
-    ProjectNodeMeta,
     ProjectDefinitionNode,
-    ProjectNodeTree,
     ProjectNodeFilter,
     FieldNode,
 )
-from expert_dollup.core.domains.project_definition_node import (
-    ProjectDefinitionNodeFilter,
-)
+
 from expert_dollup.shared.database_services import PostgresTableService
 from expert_dollup.core.utils.path_transform import join_uuid_path, split_uuid_path
 from expert_dollup.infra.expert_dollup_db import (
-    ExpertDollupDatabase,
     project_node_table,
     ProjectNodeDao,
-    project_definition_node_table,
-    ProjectDefinitionNodeDao,
-    project_node_meta_table,
-    ProjectNodeMetaDao,
 )
 
 
@@ -107,37 +97,20 @@ class ProjectNodeService(PostgresTableService[ProjectNode]):
         return results
 
     async def get_all_fields(self, project_id: UUID) -> Awaitable[List[FieldNode]]:
-        join_definition = self._table.join(
-            project_definition_node_table,
-            project_definition_node_table.c.id == self._table.c.type_id,
+        builder = (
+            self.get_builder()
+            .select_fields("type_name", "value", "id", "path", "type_id", "type_path")
+            .find_by(ProjectNodeFilter(project_id=project_id))
+            .find_by_isnot(ProjectNodeFilter(value=None))
+            .finalize()
         )
 
-        query = (
-            select(
-                [
-                    project_definition_node_table.c.name,
-                    self._table.c.value,
-                    self._table.c.id,
-                    self._table.c.path,
-                    self._table.c.type_id,
-                    self._table.c.type_path,
-                ]
-            )
-            .select_from(join_definition)
-            .where(
-                and_(
-                    self._table.c.project_id == project_id,
-                    self._table.c.value.isnot(None),
-                )
-            )
-        )
-
-        records = await self._database.fetch_all(query=query)
+        records = await self.fetch_all_records(builder)
 
         return [
             FieldNode(
                 id=record.get("id"),
-                name=record.get("name"),
+                name=record.get("type_name"),
                 path=split_uuid_path(record.get("path")),
                 type_id=record.get("type_id"),
                 type_path=split_uuid_path(record.get("type_path")),

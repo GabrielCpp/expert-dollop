@@ -68,6 +68,15 @@ class PostgresQueryBuilder(QueryBuilder):
         self._conditions.append(where_filter)
         return self
 
+    def find_by_isnot(self, query_filter: QueryFilter) -> "QueryBuilder":
+        filter_fields = self._mapper.map(query_filter, dict)
+
+        for name, value in filter_fields.items():
+            where_filter = getattr(self._table.c, name).isnot(value)
+            self._conditions.append(where_filter)
+
+        return self
+
     def startwiths(self, query_filter: QueryFilter) -> "QueryBuilder":
         filter_fields = self._mapper.map(query_filter, dict)
 

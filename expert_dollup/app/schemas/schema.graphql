@@ -392,6 +392,7 @@ type ProjectNode {
   projectId: String!
   typePath: [String!]!
   typeId: String!
+  typeName: String!
   path: [String!]!
   value: FieldValue
   label: String

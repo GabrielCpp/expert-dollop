@@ -21,7 +21,7 @@ ROOT_LEVEL = 0
 SECTION_LEVEL = 1
 FORM_LEVEL = 2
 FORM_SECTION_LEVEL = 3
-FIEL_LEVEL = 4
+FIELD_LEVEL = 4
 
 
 class ExpertDollupDatabase(Database):
@@ -109,6 +109,7 @@ project_node_table = Table(
     Column("id", postgresql.UUID(), nullable=False, primary_key=True),
     Column("project_id", postgresql.UUID(), nullable=False),
     Column("type_id", postgresql.UUID(), nullable=False),
+    Column("type_name", String, nullable=False),
     Column("path", String, nullable=False),
     Column("value", String, nullable=True),
     Column("label", String, nullable=True),
@@ -123,6 +124,7 @@ class ProjectNodeDao(BaseModel):
     id: UUID
     project_id: UUID
     type_id: UUID
+    type_name: str
     path: str
     value: Optional[str]
     label: str

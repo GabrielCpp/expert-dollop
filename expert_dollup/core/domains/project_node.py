@@ -12,6 +12,7 @@ class ProjectNode:
     project_id: UUID
     type_path: List[UUID]
     type_id: UUID
+    type_name: str
     path: List[UUID]
     value: ValueUnion
     label: str = ""

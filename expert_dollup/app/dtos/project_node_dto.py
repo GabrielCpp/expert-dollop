@@ -8,6 +8,7 @@ class ProjectNodeDto(CamelModel):
     id: UUID
     project_id: UUID
     type_id: UUID
+    type_name: str
     path: List[UUID]
     type_path: List[UUID]
     value: ValueUnionDto
