@@ -20,7 +20,7 @@ from expert_dollup.shared.automapping import Mapper
 from ..filters import ExactMatchFilter
 from ..page import Page
 from ..query_filter import QueryFilter
-from expert_dollup.core.exceptions import RessourceNotFound
+from ..exceptions import RecordNotFound
 from .table_service import TableService
 
 Domain = TypeVar("Domain")
@@ -141,7 +141,7 @@ class PostgresTableService(TableService[Domain]):
         record = await self._database.fetch_one(query=query)
 
         if record is None:
-            raise RessourceNotFound()
+            raise RecordNotFound()
 
         result = self._mapper.map(self._dao(**record), self._domain)
 
@@ -179,7 +179,7 @@ class PostgresTableService(TableService[Domain]):
         value = await self._database.fetch_one(query=query)
 
         if value is None:
-            raise RessourceNotFound()
+            raise RecordNotFound()
 
         result = self._mapper.map(self._dao(**value), self._domain)
         return result
