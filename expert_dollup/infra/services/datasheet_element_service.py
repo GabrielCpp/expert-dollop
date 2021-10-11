@@ -5,7 +5,7 @@ from sqlalchemy import desc, select, and_
 from sqlalchemy import func
 from expert_dollup.shared.database_services import (
     ExactMatchFilter,
-    TableService,
+    PostgresTableService,
     IdStampedDateCursorEncoder,
 )
 from expert_dollup.core.domains import DatasheetElement
@@ -20,7 +20,7 @@ from expert_dollup.core.domains import (
 )
 
 
-class DatasheetElementService(TableService[DatasheetElement]):
+class DatasheetElementService(PostgresTableService[DatasheetElement]):
     class Meta:
         table = datasheet_element_table
         dao = DatasheetElementDao

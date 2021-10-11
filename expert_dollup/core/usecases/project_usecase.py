@@ -47,11 +47,11 @@ class ProjectUseCase:
 
         return cloned_project.details
 
-    async def remove_by_id(self, project_id: UUID) -> Awaitable:
-        await self.project_node_service.remove_by(
+    async def delete_by_id(self, project_id: UUID) -> Awaitable:
+        await self.project_node_service.delete_by(
             ProjectNodeFilter(project_id=project_id)
         )
-        await self.project_node_meta_service.remove_by(
+        await self.project_node_meta_service.delete_by(
             ProjectNodeFilter(project_id=project_id)
         )
         await self.project_service.delete_by_id(project_id)

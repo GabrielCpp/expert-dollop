@@ -78,7 +78,7 @@ async def delete_translation(
     handler=Depends(Inject(RequestHandler)),
 ):
     id = TranslationId(ressource_id=ressource_id, locale=locale, scope=scope, name=name)
-    await usecase.remove_by_id(id)
+    await usecase.delete_by_id(id)
 
 
 @router.get("/translation/{ressource_id}/{locale}")

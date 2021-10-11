@@ -5,12 +5,12 @@ from expert_dollup.infra.expert_dollup_db import (
 )
 from expert_dollup.core.domains import ProjectDetails
 from expert_dollup.shared.database_services import (
-    TableService,
+    PostgresTableService,
     IdStampedDateCursorEncoder,
 )
 
 
-class ProjectService(TableService[ProjectDetails]):
+class ProjectService(PostgresTableService[ProjectDetails]):
     class Meta:
         table = project_table
         dao = ProjectDao

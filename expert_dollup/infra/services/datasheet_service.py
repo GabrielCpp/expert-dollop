@@ -1,5 +1,5 @@
 from expert_dollup.shared.database_services import (
-    TableService,
+    PostgresTableService,
     IdStampedDateCursorEncoder,
 )
 from expert_dollup.infra.expert_dollup_db import (
@@ -10,7 +10,7 @@ from expert_dollup.infra.expert_dollup_db import (
 from expert_dollup.core.domains import Datasheet, DatasheetFilter
 
 
-class DatasheetService(TableService[Datasheet]):
+class DatasheetService(PostgresTableService[Datasheet]):
     class Meta:
         table = datasheet_table
         dao = DatasheetDao

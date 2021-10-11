@@ -5,7 +5,7 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects import postgresql
 from expert_dollup.shared.database_services import (
-    TableService,
+    PostgresTableService,
     Page,
     IdStampedDateCursorEncoder,
 )
@@ -22,7 +22,7 @@ from expert_dollup.infra.expert_dollup_db import (
 from expert_dollup.shared.automapping import Mapper
 
 
-class ProjectDefinitionNodeService(TableService[ProjectDefinitionNode]):
+class ProjectDefinitionNodeService(PostgresTableService[ProjectDefinitionNode]):
     class Meta:
         table = project_definition_node_table
         dao = ProjectDefinitionNodeDao

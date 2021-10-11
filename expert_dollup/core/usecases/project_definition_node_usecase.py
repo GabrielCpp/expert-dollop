@@ -45,7 +45,7 @@ class ProjectDefinitionNodeUseCase:
         await self.service.insert(domain)
         return await self.find_by_id(domain.id)
 
-    async def remove_by_id(self, id: UUID) -> Awaitable:
+    async def delete_by_id(self, id: UUID) -> Awaitable:
         await self.service.delete_child_of(id)
         await self.service.delete_by_id(id)
 

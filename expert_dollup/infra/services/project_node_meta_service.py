@@ -7,10 +7,10 @@ from expert_dollup.infra.expert_dollup_db import (
     ProjectNodeMetaDao,
 )
 from expert_dollup.core.domains import ProjectNodeMeta, ProjectNodeMetaFilter
-from expert_dollup.shared.database_services import TableService
+from expert_dollup.shared.database_services import PostgresTableService
 
 
-class ProjectNodeMetaService(TableService[ProjectNodeMeta]):
+class ProjectNodeMetaService(PostgresTableService[ProjectNodeMeta]):
     class Meta:
         table = project_node_meta_table
         dao = ProjectNodeMetaDao

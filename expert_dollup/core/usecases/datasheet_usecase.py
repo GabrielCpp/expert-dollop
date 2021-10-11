@@ -121,7 +121,7 @@ class DatasheetUseCase:
         return await self.datasheet_service.find_by_id(datasheet_id)
 
     async def delete_by_id(self, datasheet_id: UUID) -> Awaitable:
-        await self.datasheet_element_service.remove_by(
+        await self.datasheet_element_service.delete_by(
             DatasheetElementFilter(datasheet_id=datasheet_id)
         )
         await self.datasheet_service.delete_by_id(datasheet_id)

@@ -29,7 +29,7 @@ class FormulaUseCase:
 
         return formula
 
-    async def remove_by_id(
+    async def delete_by_id(
         self, formula_id: UUID, remove_recursively: bool
     ) -> Awaitable:
         await self.formula_service.find_by_id(formula_id)

@@ -8,13 +8,13 @@ from expert_dollup.core.domains import (
     TranslationRessourceLocaleQuery,
 )
 from expert_dollup.shared.database_services import (
-    TableService,
+    PostgresTableService,
     IdStampedDateCursorEncoder,
     ExactMatchFilter,
 )
 
 
-class TranslationService(TableService[Translation]):
+class TranslationService(PostgresTableService[Translation]):
     class Meta:
         table = translation_table
         dao = TranslationDao

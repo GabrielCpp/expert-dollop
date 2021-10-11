@@ -73,7 +73,7 @@ async def delete_project_definition_node(
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
-    await usecase.remove_by_id(id)
+    await usecase.delete_by_id(id)
 
 
 @router.get("/{project_def_id}/project_definition_nodes")

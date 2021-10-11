@@ -7,7 +7,7 @@ from typing import List, Optional, Awaitable, Dict
 from collections import defaultdict
 from uuid import UUID
 from expert_dollup.shared.database_services import (
-    TableService,
+    PostgresTableService,
     IdStampedDateCursorEncoder,
 )
 from expert_dollup.core.domains import Formula, FormulaDetails, FormulaNode
@@ -22,7 +22,7 @@ from expert_dollup.infra.expert_dollup_db import (
 )
 
 
-class FormulaService(TableService[Formula]):
+class FormulaService(PostgresTableService[Formula]):
     class Meta:
         table = project_definition_formula_table
         dao = ProjectDefinitionFormulaDao

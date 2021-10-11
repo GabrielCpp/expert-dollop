@@ -1,6 +1,6 @@
 from uuid import UUID
 from typing import List
-from expert_dollup.shared.database_services import TableService
+from expert_dollup.shared.database_services import PostgresTableService
 from expert_dollup.infra.expert_dollup_db import (
     project_formula_cache_table,
     ProjectFormulaCacheDao,
@@ -8,7 +8,7 @@ from expert_dollup.infra.expert_dollup_db import (
 from expert_dollup.core.domains import FormulaCachedResult
 
 
-class FormulaCacheService(TableService[FormulaCachedResult]):
+class FormulaCacheService(PostgresTableService[FormulaCachedResult]):
     class Meta:
         table = project_formula_cache_table
         dao = ProjectFormulaCacheDao

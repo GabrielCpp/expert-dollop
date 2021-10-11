@@ -26,7 +26,7 @@ class TranslationUseCase:
         await self.service.insert(domain)
         return domain
 
-    async def remove_by_id(self, id: TranslationId) -> Awaitable:
+    async def delete_by_id(self, id: TranslationId) -> Awaitable:
         await self.service.delete_by_id(id)
 
     async def update(self, domain: Translation) -> Awaitable:
