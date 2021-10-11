@@ -195,6 +195,14 @@ class PostgresTableService(TableService[Domain]):
         query = self._table.update().where(where_filter).values(update_fields)
         await self._database.execute(query=query)
 
+    async def pluck(self, ids: List[Id]) -> Awaitable[List[Domain]]:
+        assert len(self.table_ids) == 1, "Pluck only work with one primary key."
+        query = self._table.select().where(self.table_ids[0]._in(ids))
+        records = await self._database.fetch_all(query=query)
+        results = self.map_many_to(records, self._dao, self._domain)
+
+        return results
+
     def make_record_token(self, domain: Domain) -> str:
         """
         Return next page token for a domain object.

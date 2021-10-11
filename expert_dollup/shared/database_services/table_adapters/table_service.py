@@ -69,6 +69,10 @@ class TableService(ABC, Generic[Domain]):
         """
 
     @abstractmethod
+    async def pluck(self, ids: List[Id]) -> Awaitable[List[Domain]]:
+        pass
+
+    @abstractmethod
     async def has(self, pk_id: Id) -> Awaitable[bool]:
         pass
 
