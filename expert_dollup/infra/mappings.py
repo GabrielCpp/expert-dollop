@@ -316,6 +316,7 @@ def map_project_node_meta_filter_to_dict(
         {
             "project_id": ("project_id", None),
             "type_id": ("type_id", None),
+            "display_query_internal_id": ("display_query_internal_id", None),
             "state": (
                 "state",
                 lambda state: map_project_node_meta_state_to_dao(state, mapper).json(),
@@ -600,5 +601,16 @@ def map_fomula_pluck_filter(src: FormulaPluckFilter, mapper: Mapper) -> dict:
         src.args,
         {
             "names": ("name", None),
+        },
+    )
+
+
+def map_formula_cached_result_filter(
+    src: FormulaCachedResultFilter, mapper: Mapper
+) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "project_id": ("project_id", None),
         },
     )

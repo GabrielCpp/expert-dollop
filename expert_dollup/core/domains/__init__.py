@@ -51,6 +51,7 @@ from .formula import (
     FieldNode,
     FormulaFilter,
     FormulaPluckFilter,
+    FormulaCachedResultFilter,
 )
 
 from .datasheet_definition import DatasheetDefinition, ElementPropertySchema

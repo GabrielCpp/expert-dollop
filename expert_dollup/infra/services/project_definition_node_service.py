@@ -1,10 +1,8 @@
 from typing import Awaitable, List, Dict
 from uuid import UUID
 from sqlalchemy import select, and_, desc
-from sqlalchemy.dialects import postgresql
 from expert_dollup.shared.database_services import (
     PostgresTableService,
-    Page,
     IdStampedDateCursorEncoder,
 )
 from expert_dollup.core.domains import (

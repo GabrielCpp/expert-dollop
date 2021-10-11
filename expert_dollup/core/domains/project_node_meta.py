@@ -23,3 +23,4 @@ class ProjectNodeMetaFilter(QueryFilter):
     project_id: Optional[UUID]
     type_id: Optional[UUID]
     state: Optional[ProjectNodeMetaState]
+    display_query_internal_id: Optional[UUID]

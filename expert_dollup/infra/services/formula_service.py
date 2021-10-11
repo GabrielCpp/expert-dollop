@@ -1,9 +1,8 @@
 from expert_dollup.core.domains.formula import FormulaFilter
 import ast
-from sqlalchemy import select, join, and_, desc, or_, text
-from sqlalchemy.sql.expression import func, select, alias, tuple_
+from sqlalchemy import select, and_
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from typing import List, Optional, Awaitable, Dict
+from typing import List, Awaitable, Dict
 from collections import defaultdict
 from uuid import UUID
 from expert_dollup.shared.database_services import (

@@ -3,7 +3,6 @@ from expert_dollup.shared.database_services import (
     IdStampedDateCursorEncoder,
 )
 from expert_dollup.infra.expert_dollup_db import (
-    ExpertDollupDatabase,
     datasheet_definition_element_table,
     DatasheetDefinitionElementDao,
 )

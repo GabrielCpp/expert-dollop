@@ -1,8 +1,3 @@
-from typing import Awaitable, Optional, Tuple
-from datetime import datetime
-from uuid import UUID
-from sqlalchemy import desc, select, and_
-from sqlalchemy import func
 from expert_dollup.shared.database_services import (
     ExactMatchFilter,
     PostgresTableService,

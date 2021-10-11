@@ -1,6 +1,5 @@
 from expert_dollup.shared.database_services import PostgresTableService
 from expert_dollup.infra.expert_dollup_db import (
-    ExpertDollupDatabase,
     datasheet_definition_label_collection_table,
     LabelCollectionDao,
 )

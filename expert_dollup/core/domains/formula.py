@@ -63,3 +63,7 @@ class FormulaFilter(QueryFilter):
 
 class FormulaPluckFilter(QueryFilter):
     names: List[str]
+
+
+class FormulaCachedResultFilter(QueryFilter):
+    project_id: UUID
