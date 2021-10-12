@@ -7,9 +7,9 @@ from typing import (
     Dict,
     Type,
     Tuple,
-    AsyncGenerator,
 )
 from pydantic import BaseModel
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy import and_, func, or_, desc, asc
 from sqlalchemy.schema import FetchedValue
 from sqlalchemy.sql import select
@@ -168,9 +168,14 @@ class PostgresTableService(TableService[Domain]):
         value = self._mapper.map(domain, self._dao).dict()
         await self._database.execute(query=query, values=value)
 
-    async def insert_many(self, domains: List[Domain]) -> Awaitable:
+    async def insert_many(self, domains: List[Domain], bulk=True) -> Awaitable:
         daos = self._mapper.map_many(domains, self._dao)
-        await self._insert_many_raw(daos)
+
+        if bulk:
+            await self._insert_many_raw(daos)
+        else:
+            query = pg_insert(self._table, [dao.dict() for dao in daos])
+            await self._database.execute(query=query)
 
     async def find_all(self, limit: int = 1000) -> Awaitable[List[Domain]]:
         query = self._table.select().limit(limit)

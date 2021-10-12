@@ -1,7 +1,6 @@
 from random import choice
 from dataclasses import dataclass
 from faker import Faker
-from sqlalchemy.sql.expression import label
 from expert_dollup.core.domains import *
 
 

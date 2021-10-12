@@ -1,11 +1,9 @@
 from typing import Awaitable, List, Optional
 from uuid import UUID
-from sqlalchemy import select, join, and_, desc, or_
 from expert_dollup.core.units import NodeValueValidation
 from expert_dollup.core.builders import ProjectNodeSliceBuilder, ProjectTreeBuilder
 from expert_dollup.core.domains import (
     ProjectNode,
-    ProjectNodeTree,
     ProjectNodeFilter,
     ValueUnion,
     ProjectNodeMeta,
@@ -18,7 +16,6 @@ from expert_dollup.core.domains import (
 from expert_dollup.infra.services import (
     ProjectService,
     ProjectNodeService,
-    ProjectDefinitionNodeService,
     ProjectNodeMetaService,
 )
 
