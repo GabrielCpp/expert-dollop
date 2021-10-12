@@ -25,8 +25,20 @@ services:
       - 8080:8080
     networks:
       - backend
-
+  firebase:
+      build:
+          context: .
+          dockerfile: firebase.dockerfile
+      ports:
+      - 8806:8806
+      command: gcloud beta emulators firestore start --host-port=0.0.0.0:8806
+      volumes:
+          - firebase_data:/opt/data
+      networks:
+          - backend
 volumes:
+  firebase_data:
+    name: firebase_data
   postgres_data:
     name: postgres_data
 
