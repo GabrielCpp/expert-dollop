@@ -136,6 +136,7 @@ class ProjectDefinitionNodeFilter(QueryFilter):
     default_value: ValueUnion
     path: Optional[List[UUID]]
     creation_date_utc: Optional[datetime]
+    display_query_internal_id: Optional[UUID]
 
 
 class ProjectDefinitionNodePluckFilter(QueryFilter):

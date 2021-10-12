@@ -276,7 +276,8 @@ def map_project_definition_node_filter_to_dict(
             "order_index": ("order_index", None),
             "config": ("config", jsonpickle.encode),
             "default_value": ("default_value", jsonpickle.encode),
-            "path": ("default_value", join_uuid_path),
+            "path": ("path", join_uuid_path),
+            "display_query_internal_id": ("display_query_internal_id", None),
         },
     )
 

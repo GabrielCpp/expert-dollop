@@ -12,7 +12,7 @@ from typing import (
 from pydantic import BaseModel
 from sqlalchemy import and_, func, or_, desc, asc
 from sqlalchemy.schema import FetchedValue
-from sqlalchemy.sql import select, tuple_
+from sqlalchemy.sql import select
 from databases import Database
 from dataclasses import dataclass
 from sqlalchemy.dialects import postgresql
@@ -91,7 +91,7 @@ class PostgresQueryBuilder(QueryBuilder):
         filter_fields = self._mapper.map(pluck_filter, dict)
 
         for name, values in filter_fields.items():
-            where_filter = getattr(self._table.c, name).in_(tuple_(*values))
+            where_filter = getattr(self._table.c, name).in_(values)
             self._conditions.append(where_filter)
 
         return self
