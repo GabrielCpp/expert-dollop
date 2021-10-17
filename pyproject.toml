@@ -5,7 +5,7 @@ description = ""
 authors = ["gabriel <gabcpp@outlook.fr>"]
 
 [tool.poetry.dependencies]
-python = "^3.7.4"
+python = "^3.7.11"
 fastapi = "^0.61.2"
 injector = "^0.18.4"
 python-dotenv = "^0.15.0"
