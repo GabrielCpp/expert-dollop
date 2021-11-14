@@ -149,7 +149,7 @@ def map_translation_config_to_dto(
 
 def map_trigger_from_dto(src: TriggerDto, mapper: Mapper) -> Trigger:
     return Trigger(
-        action=TriggerAction(src.action),
+        action=TriggerAction[src.action],
         target_type_id=src.target_type_id,
         params=dict(src.params),
     )
@@ -157,7 +157,7 @@ def map_trigger_from_dto(src: TriggerDto, mapper: Mapper) -> Trigger:
 
 def map_trigger_to_dto(src: Trigger, mapper: Mapper) -> TriggerDto:
     return TriggerDto(
-        action=str(src.action),
+        action=str(src.action.value),
         target_type_id=src.target_type_id,
         params=dict(src.params),
     )
