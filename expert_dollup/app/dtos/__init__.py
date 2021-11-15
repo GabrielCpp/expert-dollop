@@ -61,8 +61,10 @@ from .datasheet_dto import (
     DatasheetCloneTargetDto,
     DatasheetUpdateDto,
     DatasheetUpdatableProperties,
+    DatasheetImportDto,
 )
 from .datasheet_element_dto import (
     DatasheetElementDto,
     DatasheetElementPageDto,
+    DatasheetElementImportDto,
 )

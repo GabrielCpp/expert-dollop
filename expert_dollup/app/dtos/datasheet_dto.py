@@ -34,3 +34,9 @@ class DatasheetDto(CamelModel):
     datasheet_def_id: UUID
     from_datasheet_id: Optional[UUID]
     creation_date_utc: datetime
+
+
+class DatasheetImportDto(CamelModel):
+    id: UUID
+    name: str
+    datasheet_definition_id: UUID

@@ -471,6 +471,16 @@ def map_translation_id_to_dto(src: TranslationId, mapper: Mapper) -> Translation
     )
 
 
+def map_formula_from_dto(src: Formula, mapper: Mapper) -> Formula:
+    return Formula(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        attached_to_type_id=src.attached_to_type_id,
+        name=src.name,
+        expression=src.expression,
+    )
+
+
 def map_input_formula_from_dto(src: InputFormulaDto, mapper: Mapper) -> Formula:
     return Formula(
         id=src.id,
@@ -481,8 +491,8 @@ def map_input_formula_from_dto(src: InputFormulaDto, mapper: Mapper) -> Formula:
     )
 
 
-def map_formula_to_dto(src: Formula, mapper: Mapper) -> FormulaDto:
-    return FormulaDto(
+def map_formula_from_dto(src: FormulaDto, mapper: Mapper) -> Formula:
+    return Formula(
         id=src.id,
         project_def_id=src.project_def_id,
         attached_to_type_id=src.attached_to_type_id,
@@ -611,6 +621,17 @@ def map_new_datasheet_from_dto(src: NewDatasheetDto, mapper: Mapper) -> Datashee
     )
 
 
+def map_datasheet_import_from_dto(src: DatasheetImportDto, mapper: Mapper) -> Datasheet:
+    return Datasheet(
+        id=src.id,
+        name=src.name,
+        is_staged=False,
+        datasheet_def_id=src.datasheet_definition_id,
+        from_datasheet_id=src.id,
+        creation_date_utc=mapper.get(Clock).utcnow(),
+    )
+
+
 def map_datasheet_to_dto(src: Datasheet, mapper: Mapper) -> DatasheetDto:
     return DatasheetDto(
         id=src.id,
@@ -629,6 +650,19 @@ def map_datasheet_page_element_to_dto(
         next_page_token=src.next_page_token,
         limit=src.limit,
         results=mapper.map_many(src.results, DatasheetElementDto, DatasheetElement),
+    )
+
+
+def map_datasheet_element_import_from_dto(
+    src: DatasheetElementImportDto, mapper: Mapper
+) -> DatasheetElement:
+    return DatasheetElement(
+        datasheet_id=src.datasheet_id,
+        element_def_id=src.element_def_id,
+        child_element_reference=src.child_element_reference,
+        properties=src.properties,
+        original_datasheet_id=src.original_datasheet_id,
+        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 

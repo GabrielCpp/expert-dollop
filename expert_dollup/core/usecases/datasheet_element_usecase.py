@@ -40,6 +40,27 @@ class DatasheetElementUseCase:
         self.datasheet_definition_service = datasheet_definition_service
         self.clock = clock
 
+    async def import_element(self, element: DatasheetElement):
+        elements = await self.datasheet_element_service.find_by(
+            DatasheetElementFilter(
+                datasheet_id=element.datasheet_id,
+                element_def_id=element.element_def_id,
+                child_element_reference=element.child_element_reference,
+            ),
+        )
+
+        if len(elements) == 0:
+            await self.datasheet_element_service.insert(element)
+        else:
+            await self.datasheet_element_service.update(
+                DatasheetElementFilter(properties=element.properties),
+                DatasheetElementFilter(
+                    datasheet_id=element.datasheet_id,
+                    element_def_id=element.element_def_id,
+                    child_element_reference=element.child_element_reference,
+                ),
+            )
+
     async def find_datasheet_element(
         self, id: DatasheetElementId
     ) -> Awaitable[DatasheetElement]:

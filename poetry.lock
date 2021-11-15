@@ -777,6 +777,17 @@ python-versions = "*"
 cli = ["click (>=5.0)"]
 
 [[package]]
+name = "python-multipart"
+version = "0.0.5"
+description = "A streaming multipart parser for Python"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+six = ">=1.4.0"
+
+[[package]]
 name = "regex"
 version = "2021.10.8"
 description = "Alternative regular expression module, to replace re."
@@ -948,7 +959,7 @@ postgres = ["databases", "sqlalchemy"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.11"
-content-hash = "0b6f86261cb576ee222627ceb4a85be6b5ba14214a5af12ca06a8644d4fbe5b0"
+content-hash = "e2bb7a572d495a5f2971c6e35da18febf2c48d0a10a1dc5e6ec3cf464d0ab7c3"
 
 [metadata.files]
 alembic = [
@@ -1561,6 +1572,9 @@ python-dateutil = [
 python-dotenv = [
     {file = "python-dotenv-0.15.0.tar.gz", hash = "sha256:587825ed60b1711daea4832cf37524dfd404325b7db5e25ebe88c495c9f807a0"},
     {file = "python_dotenv-0.15.0-py2.py3-none-any.whl", hash = "sha256:0c8d1b80d1a1e91717ea7d526178e3882732420b03f08afea0406db6402e220e"},
+]
+python-multipart = [
+    {file = "python-multipart-0.0.5.tar.gz", hash = "sha256:f7bb5f611fc600d15fa47b3974c8aa16e93724513b49b5f95c81e6624c83fa43"},
 ]
 regex = [
     {file = "regex-2021.10.8-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:094a905e87a4171508c2a0e10217795f83c636ccc05ddf86e7272c26e14056ae"},

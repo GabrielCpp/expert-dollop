@@ -188,3 +188,12 @@ def generate_env(c, hostname="predykt.dev"):
         f.write(f"JWT_PUBLIC_KEY={key_base64}\n")
         f.write(f"JWT_PRIVATE_KEY={private_key_base64}\n")
         f.write(f"HOSTNAME={hostname}\n")
+
+
+@task(name="upload-base-project")
+def upload_base_project(c):
+    cwd = os.getcwd()
+    truncate_db(c)
+    c.run(
+        f"curl -X POST -F 'file=@{cwd}/calls.jsonl'  http://localhost:8000/api/import/definition"
+    )
