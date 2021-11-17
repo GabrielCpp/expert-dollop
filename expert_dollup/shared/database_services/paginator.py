@@ -67,10 +67,10 @@ class IdStampedDateCursorEncoder:
 
     def _encode(self, id: Any):
         id_str = self._extract_field_id(id)
-        token = base64.urlsafe_b64encode(id_str.encode("ascii"))
+        token = base64.urlsafe_b64encode(id_str.encode("utf8"))
         return token.decode("utf8")
 
     def _decode(self, cursor: str) -> Any:
-        id_field_str = base64.urlsafe_b64decode(cursor.encode("ascii"))
-        id_field = self._build_id_field(id_field_str.decode("ascii"))
+        id_field_str = base64.urlsafe_b64decode(cursor.encode("utf8"))
+        id_field = self._build_id_field(id_field_str.decode("utf8"))
         return id_field
