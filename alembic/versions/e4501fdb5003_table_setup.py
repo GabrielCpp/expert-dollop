@@ -227,6 +227,7 @@ def create_datasheet_tables():
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("datasheet_definition_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
+        Column("default_properties", postgresql.JSON(), nullable=False),
     )
 
     op.create_table(
@@ -238,6 +239,8 @@ def create_datasheet_tables():
             nullable=False,
         ),
         Column("order_index", Integer, nullable=False),
+        Column("properties", postgresql.JSON(), nullable=False),
+        Column("aggregates", postgresql.JSON(), nullable=False),
     )
 
     op.create_index(
@@ -301,60 +304,36 @@ def create_report_tables():
     op.create_table(
         "project_report_datasheet_rule",
         Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("substage_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("instance_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("formula_def_id", postgresql.UUID(), nullable=False),
-        Column("derivable_product_reference", postgresql.UUID(), nullable=False),
+        Column("aggregate_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("datashet_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("element_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column(
+            "child_reference_id", postgresql.UUID(), nullable=False, primary_key=True
+        ),
     )
 
     op.create_table(
         "report_definition",
-        Column("project_def_id", postgresql.UUID(), nullable=False, primary_key=True),
-    )
-
-    """
-    id	int(11) Auto Increment	
-    floor_id	int(11) NULL	
-    localisation	varchar(255)	
-    stageOrder	int(11)	
-    subStageIndex	int(11)	
-    associatedGlobalSection	varchar(255)	
-    compileInOne	tinyint(1)
-    """
-    op.create_table(
-        "report_definition_stage",
-        Column("project_def_id", postgresql.UUID(), nullable=False, primary_key=True),
-    )
-
-    """
-    id_old	int(11)	
-    id	binary(16)	
-    stage_id	int(11) NULL	
-    stageOrder	int(11)	
-    variableName	varchar(5)	
-    specialCondition	tinyint(1)	
-    quantity	decimal(10,0)	
-    abstract_product_id	binary(16)	
-    order_form_category_id	int(11) NULL	
-    """
-    op.create_table(
-        "report_definition_substage",
-        Column("project_def_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("project_def_id", postgresql.UUID(), nullable=False),
+        Column("name", String, nullable=False),
+        Column("structure", postgresql.JSON(), nullable=False),
     )
 
     op.create_table(
-        "report_definition_aggregate",
-        Column("project_def_id", postgresql.UUID(), nullable=False, primary_key=True),
+        "report_aggregatee",
+        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("report_def_id", postgresql.UUID(), nullable=False),
+        Column("aggregate_id", String(256), nullable=False, primary_key=True),
+        Column("aggregatee", postgresql.JSON(), nullable=False),
     )
 
     op.create_table(
-        "report_stage",
-        Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
-    )
-
-    op.create_table(
-        "report_substage",
-        Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
+        "report",
+        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("aggregate_id", String(256), nullable=False, primary_key=True),
+        Column("report_def_id", postgresql.UUID(), nullable=False),
+        Column("row", postgresql.JSON(), nullable=False),
     )
 
 
@@ -363,6 +342,7 @@ def upgrade():
     create_project_definition_tables()
     create_project_tables()
     create_datasheet_tables()
+    create_report_tables()
 
 
 def downgrade():

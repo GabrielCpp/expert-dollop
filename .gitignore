@@ -139,4 +139,4 @@ cython_debug/
 
 # Local files
 .local
-calls.jsonl
+*.jsonl

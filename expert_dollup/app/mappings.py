@@ -471,8 +471,8 @@ def map_translation_id_to_dto(src: TranslationId, mapper: Mapper) -> Translation
     )
 
 
-def map_formula_from_dto(src: Formula, mapper: Mapper) -> Formula:
-    return Formula(
+def map_formula_to_dto(src: Formula, mapper: Mapper) -> FormulaDto:
+    return FormulaDto(
         id=src.id,
         project_def_id=src.project_def_id,
         attached_to_type_id=src.attached_to_type_id,
@@ -578,6 +578,10 @@ def map_label_collection_from_dto(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
+        default_properties={
+            key: mapper.map(value, ValueUnion, ValueUnionDto)
+            for key, value in src.default_properties.items()
+        },
     )
 
 
@@ -588,6 +592,10 @@ def map_label_collection_to_dto(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
+        default_properties={
+            key: mapper.map(value, ValueUnionDto, ValueUnion)
+            for key, value in src.default_properties.items()
+        },
     )
 
 
@@ -596,6 +604,11 @@ def map_datasheet_definition_label_to_dto(src: Label, mapper: Mapper) -> LabelDt
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
+        aggregates=src.aggregates,
+        properties={
+            key: mapper.map(value, ValueUnionDto, ValueUnion)
+            for key, value in src.properties.items()
+        },
     )
 
 
@@ -604,6 +617,11 @@ def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> La
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
+        aggregates=src.aggregates,
+        properties={
+            key: mapper.map(value, ValueUnion, ValueUnionDto)
+            for key, value in src.properties.items()
+        },
     )
 
 

@@ -195,7 +195,7 @@ def upload_base_project(c):
     cwd = os.getcwd()
     truncate_db(c)
     c.run(
-        f"curl -X POST -F 'file=@{cwd}/calls.jsonl'  http://localhost:8000/api/import"
+        f"curl -X POST -F 'file=@{cwd}/project-setup.jsonl'  http://localhost:8000/api/import"
     )
 
 
