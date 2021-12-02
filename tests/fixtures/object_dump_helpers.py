@@ -23,6 +23,7 @@ class ExtraEncoder(json.JSONEncoder):
 
 
 def set_dump_path(path: str) -> None:
+    global dump_file_path
     dump_file_path = dump_file_path
 
 

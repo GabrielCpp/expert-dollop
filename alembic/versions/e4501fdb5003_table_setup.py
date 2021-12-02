@@ -227,7 +227,8 @@ def create_datasheet_tables():
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("datasheet_definition_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
-        Column("default_properties", postgresql.JSON(), nullable=False),
+        Column("properties_schema", postgresql.JSON(), nullable=False),
+        Column("accepted_aggregates", postgresql.JSON(), nullable=False),
     )
 
     op.create_table(
@@ -321,11 +322,11 @@ def create_report_tables():
     )
 
     op.create_table(
-        "report_aggregatee",
+        "report_aggregates",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("report_def_id", postgresql.UUID(), nullable=False),
         Column("aggregate_id", String(256), nullable=False, primary_key=True),
-        Column("aggregatee", postgresql.JSON(), nullable=False),
+        Column("aggregate", postgresql.JSON(), nullable=False),
     )
 
     op.create_table(

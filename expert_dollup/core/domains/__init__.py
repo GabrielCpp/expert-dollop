@@ -55,7 +55,12 @@ from .formula import (
 )
 
 from .datasheet_definition import DatasheetDefinition, ElementPropertySchema
-from .datasheet_definition_label_collection import LabelCollection
+from .datasheet_definition_label_collection import (
+    LabelCollection,
+    AcceptedAggregateUnion,
+    DatasheetAggregate,
+    CollectionAggregate,
+)
 from .datasheet_definition_label import Label
 from .datasheet_definition_element import (
     DatasheetDefinitionElement,

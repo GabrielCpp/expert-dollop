@@ -49,6 +49,9 @@ from .formula_dto import FormulaDto, InputFormulaDto
 from .datasheet_definition_dto import DatasheetDefinitionDto, ElementPropertySchemaDto
 from .datasheet_definition_label_collection_dto import (
     LabelCollectionDto,
+    CollectionAggregateDto,
+    DatasheetAggregateDto,
+    AcceptedAggregateDtoUnion,
 )
 from .datasheet_definition_label_dto import LabelDto
 from .datasheet_definition_element_dto import (
