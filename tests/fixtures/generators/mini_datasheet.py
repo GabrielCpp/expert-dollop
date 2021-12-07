@@ -1,12 +1,12 @@
 from uuid import uuid4, UUID
 from faker import Faker
 from expert_dollup.core.domains import *
-from ..fake_db_helpers import FakeExpertDollupDb as Tables
+from ..fake_db_helpers import FakeDb
 
 
 class MiniDatasheet:
     def __init__(self):
-        self.tables = Tables()
+        self.db = FakeDb()
         self.fake = Faker()
         self.fake.seed_instance(seed=1)
 
@@ -21,24 +21,24 @@ class MiniDatasheet:
                 "lost": ElementPropertySchema(value_validator={"type": "number"}),
             },
         )
-        self.tables.datasheet_definitions.append(datasheet_definition)
+        self.db.add(datasheet_definition)
 
         label_collection = LabelCollection(
             id=uuid4(),
             datasheet_definition_id=datasheet_definition.id,
             name="abstract_product",
         )
-        self.tables.label_collections.append(label_collection)
+        self.db.add(label_collection)
 
         label_a = Label(
             id=uuid4(), label_collection_id=label_collection.id, order_index=0
         )
-        self.tables.labels.append(label_a)
+        self.db.add(label_a)
 
         label_b = Label(
             id=uuid4(), label_collection_id=label_collection.id, order_index=0
         )
-        self.tables.labels.append(label_b)
+        self.db.add(label_b)
 
         datasheet_definition_element_single = DatasheetDefinitionElement(
             id=uuid4(),
@@ -56,9 +56,7 @@ class MiniDatasheet:
             tags=[str(label_a.id)],
             creation_date_utc=self.fake.date_time(),
         )
-        self.tables.datasheet_definition_elements.append(
-            datasheet_definition_element_single
-        )
+        self.db.add(datasheet_definition_element_single)
 
         datasheet_definition_element_collection = DatasheetDefinitionElement(
             id=uuid4(),
@@ -76,12 +74,10 @@ class MiniDatasheet:
             tags=[str(label_b.id)],
             creation_date_utc=self.fake.date_time(),
         )
-        self.tables.datasheet_definition_elements.append(
-            datasheet_definition_element_collection
-        )
+        self.db.add(datasheet_definition_element_collection)
 
         return self
 
     @property
-    def model(self) -> Tables:
-        return self.tables
+    def model(self) -> FakeDb:
+        return self.db

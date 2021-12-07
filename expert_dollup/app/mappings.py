@@ -578,7 +578,7 @@ def map_label_collection_from_dto(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
-        properties_schema=src.default_properties,
+        properties_schema=src.properties_schema,
         accepted_aggregates={
             key: mapper.map(value, ValueUnion, ValueUnionDto)
             for key, value in src.accepted_aggregates.items()
@@ -593,7 +593,7 @@ def map_label_collection_to_dto(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
-        properties_schema=src.default_properties,
+        properties_schema=src.properties_schema,
         accepted_aggregates={
             key: mapper.map(value, AcceptedAggregateUnion, AcceptedAggregateDtoUnion)
             for key, value in src.accepted_aggregates.items()

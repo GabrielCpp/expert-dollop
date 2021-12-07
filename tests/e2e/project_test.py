@@ -4,14 +4,14 @@ from expert_dollup.app.dtos import *
 from ..fixtures import *
 
 
-@pytest.fixture
-async def project(ac, expert_dollup_simple_project):
-    fake_db = expert_dollup_simple_project
-    project = ProjectDetailsDtoFactory(project_def_id=fake_db.project_definitions[0].id)
+async def create_project(ac, fake_db: FakeDb):
+    project = ProjectDetailsDtoFactory(
+        project_def_id=fake_db.get_only_one(ProjectDefinition).id
+    )
     response = await ac.post("/api/project", data=project.json())
     assert response.status_code == 200
     assert ProjectDetailsDto(**response.json()) == project
-    yield project
+    return project
 
 
 def over_tree(tree: ProjectNodeTreeDto):
@@ -25,11 +25,11 @@ def over_tree(tree: ProjectNodeTreeDto):
         bucket.extend(node.children)
 
 
-def assert_valid_instance_list_for_definition(nodes, fake_db, predicate):
+def assert_valid_instance_list_for_definition(nodes, fake_db: FakeDb, predicate):
     expected_definition_ids = {
         definition.id
         for definition in sorted(
-            fake_db.project_definition_nodes,
+            fake_db.all(ProjectDefinitionNode),
             key=lambda d: (len(d.path), d.id),
         )
         if predicate(definition)
@@ -42,7 +42,7 @@ def assert_valid_instance_list_for_definition(nodes, fake_db, predicate):
 
 
 @pytest.mark.asyncio
-async def test_project_loading(ac, expert_dollup_simple_project, project):
+async def test_project_loading(ac, db_helper: DbFixtureHelper):
     class IsDefinitionInstanciated:
         def __init__(self):
             self.disqualifying_parent = set()
@@ -57,7 +57,8 @@ async def test_project_loading(ac, expert_dollup_simple_project, project):
             self.disqualifying_parent.add(definition.id)
             return False
 
-    fake_db = expert_dollup_simple_project
+    fake_db = await db_helper.load_fixtures(SimpleProject)
+    project = await create_project(ac, fake_db)
 
     response = await ac.get(f"/api/project/{project.id}/children")
     assert response.status_code == 200
@@ -69,8 +70,10 @@ async def test_project_loading(ac, expert_dollup_simple_project, project):
 
 
 @pytest.mark.asyncio
-async def test_mutate_project_field(ac, expert_dollup_simple_project, project):
+async def test_mutate_project_field(ac, db_helper: DbFixtureHelper):
     runner = FlowRunner()
+    fake_db = await db_helper.load_fixtures(SimpleProject)
+    project = await create_project(ac, fake_db)
 
     @runner.step
     async def get_root_level_nodes():
@@ -124,11 +127,12 @@ async def test_mutate_project_field(ac, expert_dollup_simple_project, project):
 
 
 @pytest.mark.asyncio
-async def test_instanciate_collection(ac, expert_dollup_simple_project, project):
-    fake_db = expert_dollup_simple_project
+async def test_instanciate_collection(ac, db_helper: DbFixtureHelper):
+    fake_db = await db_helper.load_fixtures(SimpleProject)
+    project = await create_project(ac, fake_db)
     root_collection_node_definition = next(
         container_definition
-        for container_definition in fake_db.project_definition_nodes
+        for container_definition in fake_db.all(ProjectDefinitionNode)
         if container_definition.is_collection and len(container_definition.path) == 0
     )
 
@@ -150,7 +154,7 @@ async def test_instanciate_collection(ac, expert_dollup_simple_project, project)
 
 
 @pytest.mark.asyncio
-async def test_clone_collection(ac, expert_dollup_simple_project, project):
+async def test_clone_collection(ac, db_helper: DbFixtureHelper):
     def assert_clone_tree_is_equivalent(
         lhs_nodes: List[ProjectNodeTreeNodeDto],
         rhs_nodes: List[ProjectNodeTreeNodeDto],
@@ -164,11 +168,12 @@ async def test_clone_collection(ac, expert_dollup_simple_project, project):
             assert lhs_node.type_path == rhs_node.type_path
             assert lhs_node.value == rhs_node.value
 
-    fake_db = expert_dollup_simple_project
+    fake_db = await db_helper.load_fixtures(SimpleProject)
+    project = await create_project(ac, fake_db)
     runner = FlowRunner()
     collection_node_definition = next(
         container_definition
-        for container_definition in fake_db.project_definition_nodes
+        for container_definition in fake_db.all(ProjectDefinitionNode)
         if container_definition.is_collection
         and container_definition.instanciate_by_default
         and len(container_definition.path) == 1
@@ -213,12 +218,13 @@ async def test_clone_collection(ac, expert_dollup_simple_project, project):
 
 
 @pytest.mark.asyncio
-async def test_remove_collection(ac, expert_dollup_simple_project, project):
-    fake_db = expert_dollup_simple_project
+async def test_remove_collection(ac, db_helper: DbFixtureHelper):
+    fake_db = await db_helper.load_fixtures(SimpleProject)
+    project = await create_project(ac, fake_db)
     runner = FlowRunner()
     collection_node_definition = next(
         container_definition
-        for container_definition in fake_db.project_definition_nodes
+        for container_definition in fake_db.all(ProjectDefinitionNode)
         if container_definition.is_collection
         and container_definition.instanciate_by_default
         and len(container_definition.path) == 1
@@ -269,7 +275,10 @@ async def test_remove_collection(ac, expert_dollup_simple_project, project):
 
 
 @pytest.mark.asyncio
-async def test_remove_project(ac, project):
+async def test_remove_project(ac, db_helper: DbFixtureHelper):
+    fake_db = await db_helper.load_fixtures(SimpleProject)
+    project = await create_project(ac, fake_db)
+
     response = await ac.delete(f"/api/project/{project.id}")
     assert response.status_code == 200, response.text
 
@@ -278,7 +287,10 @@ async def test_remove_project(ac, project):
 
 
 @pytest.mark.asyncio
-async def test_clone_project(ac, project):
+async def test_clone_project(ac, db_helper: DbFixtureHelper):
+    fake_db = await db_helper.load_fixtures(SimpleProject)
+    project = await create_project(ac, fake_db)
+
     response = await ac.post(f"/api/project/{project.id}/clone")
     assert response.status_code == 200, response.text
 

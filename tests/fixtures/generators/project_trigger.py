@@ -1,16 +1,14 @@
-from datetime import datetime, timezone, timedelta
+from datetime import timezone
 from uuid import uuid4, UUID
 from faker import Faker
-from typing import List
-from pydantic import BaseModel
 from expert_dollup.core.domains import *
-from ..fake_db_helpers import FakeExpertDollupDb as Tables
+from ..fake_db_helpers import FakeDb
 from ..factories import FieldConfigFactory
 
 
 class ProjectWithTrigger:
     def __init__(self):
-        self.model = Tables()
+        self.db = FakeDb()
         self.fake = Faker()
         self.fake.seed_instance(seed=1)
         self.field_config_factory = FieldConfigFactory(self.fake)
@@ -25,7 +23,7 @@ class ProjectWithTrigger:
             creation_date_utc=self.fake.date_time(),
         )
 
-        self.model.project_definitions.append(project_definition)
+        self.db.add(project_definition)
 
         root_a = ProjectDefinitionNode(
             id=uuid4(),
@@ -48,10 +46,10 @@ class ProjectWithTrigger:
         form_a = self._create_container_node(subsection_a)
         section_a = self._create_section_node(form_a)
 
-        self.model.project_definition_nodes.append(root_a)
-        self.model.project_definition_nodes.append(subsection_a)
-        self.model.project_definition_nodes.append(form_a)
-        self.model.project_definition_nodes.append(section_a)
+        self.db.add(root_a)
+        self.db.add(subsection_a)
+        self.db.add(form_a)
+        self.db.add(section_a)
 
         root_b = ProjectDefinitionNode(
             id=uuid4(),
@@ -72,18 +70,18 @@ class ProjectWithTrigger:
         )
 
         field_a = self._create_checkbox_field(section_a, root_b.id)
-        self.model.project_definition_nodes.append(field_a)
+        self.db.add(field_a)
 
         subsection_b = self._create_container_node(root_b)
         form_b = self._create_container_node(subsection_b)
         section_b = self._create_section_node(form_b)
         field_b = self._create_textfield(section_b, root_b.id)
 
-        self.model.project_definition_nodes.append(root_b)
-        self.model.project_definition_nodes.append(subsection_b)
-        self.model.project_definition_nodes.append(form_b)
-        self.model.project_definition_nodes.append(section_b)
-        self.model.project_definition_nodes.append(field_b)
+        self.db.add(root_b)
+        self.db.add(subsection_b)
+        self.db.add(form_b)
+        self.db.add(section_b)
+        self.db.add(field_b)
 
         return self
 

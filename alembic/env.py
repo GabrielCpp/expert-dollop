@@ -28,12 +28,7 @@ target_metadata = None
 
 load_dotenv()
 
-DATABASE_URL = "postgresql://{}:{}@{}/{}".format(
-    os.environ["POSTGRES_USERNAME"],
-    os.environ["POSTGRES_PASSWORD"],
-    os.environ["POSTGRES_HOST"],
-    os.environ["POSTGRES_DB"],
-)
+DATABASE_URL = os.environ["DATABASE_URL"]
 
 
 def run_migrations_offline():

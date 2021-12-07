@@ -2,6 +2,37 @@ from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, Awaitable, List, Optional, Union
 from ..page import Page
 from ..query_filter import QueryFilter
+from abc import ABC, abstractmethod
+from typing import Union
+from urllib.parse import urlparse
+
+
+class DbConnection(ABC):
+    _REGISTRY = {}
+
+    @abstractmethod
+    def internal_connector(self):
+        pass
+
+    @abstractmethod
+    async def truncate_db(self):
+        pass
+
+    @abstractmethod
+    async def drop_db(self):
+        pass
+
+
+def create_connection(connection_string: str, **kwargs) -> DbConnection:
+    scheme = urlparse(connection_string).scheme
+
+    build_connection = DbConnection._REGISTRY.get(scheme)
+
+    if build_connection is None:
+        raise KeyError(f"No key for schem {scheme}")
+
+    return build_connection(connection_string, **kwargs)
+
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")

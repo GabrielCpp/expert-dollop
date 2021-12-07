@@ -33,7 +33,7 @@ def fill_db(model):
 
     load_dotenv()
     injector = build_container()
-    db_setup_helper = injector.get(DbSetupHelper)
+    db_setup_helper = injector.get(DbFixtureHelper)
 
     async def main():
         async with injector.get(ExpertDollupDatabase) as _:

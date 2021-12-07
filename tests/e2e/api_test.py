@@ -3,7 +3,7 @@ from uuid import uuid4
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_db import *
-from expert_dollup.shared.database_services import Page
+from expert_dollup.infra.services import *
 from expert_dollup.shared.handlers import make_page_model
 from ..fixtures import *
 
@@ -105,7 +105,7 @@ async def test_given_translation_should_be_able_to_create_update_delete(
 
 @pytest.mark.asyncio
 async def test_given_translation_should_be_able_to_retrieve_it(
-    ac, dal, map_dao_to_dto, static_clock
+    ac, db_helper, map_dao_to_dto, static_clock
 ):
     ressource_id = uuid4()
     translations = dict(
@@ -151,7 +151,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
         results=[dto_translations["b_fr"], dto_translations["a_fr"]],
     )
 
-    await populate_db(dal, translation_table, translations)
+    await db_helper.insert_daos(TranslationService, translations.values())
 
     response = await ac.get(f"/api/translation/{ressource_id}/fr")
     assert response.status_code == 200

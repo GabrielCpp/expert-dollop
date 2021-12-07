@@ -4,15 +4,13 @@ from faker import Faker
 from typing import List
 from pydantic import BaseModel
 from expert_dollup.core.domains import *
-from ..fake_db_helpers import FakeExpertDollupDb as Tables
+from ..fake_db_helpers import FakeDb
 from ..factories import FieldConfigFactory
 
 
 class SimpleProject:
     def __init__(self):
-        self.project_definition_nodes: List[ProjectDefinitionNode] = []
-        self.project_definitions: List[ProjectDefinition] = []
-        self.tanslations: List[Translation] = []
+        self.db = FakeDb()
         self.fake = Faker()
         self.field_config_factory = FieldConfigFactory(self.fake)
 
@@ -51,7 +49,7 @@ class SimpleProject:
                     default_value=value,
                 )
 
-                self.project_definition_nodes.append(sub_node)
+                self.db.add(sub_node)
                 generate_child_node(sub_node, [*parents, str(sub_node.id)])
 
         root_a = ProjectDefinitionNode(
@@ -71,7 +69,7 @@ class SimpleProject:
             default_value=None,
         )
 
-        self.project_definition_nodes.append(root_a)
+        self.db.add(root_a)
         generate_child_node(root_a, [str(root_a.id)])
 
         root_b = ProjectDefinitionNode(
@@ -91,7 +89,7 @@ class SimpleProject:
             default_value=None,
         )
 
-        self.project_definition_nodes.append(root_b)
+        self.db.add(root_b)
         generate_child_node(root_b, [str(root_b.id)])
 
     def generate_project_definition(self):
@@ -103,15 +101,17 @@ class SimpleProject:
             creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
         )
 
-        self.project_definitions.append(project_definition)
+        self.db.add(project_definition)
         self.generate_project_node_definition(project_definition.id)
 
     def generate_translations(self):
-        for project_node_definition in self.project_definition_nodes:
-            self.tanslations.append(
+        project_definition = self.db.get_only_one(ProjectDefinition)
+
+        for project_node_definition in self.db.all(ProjectDefinitionNode):
+            self.db.add(
                 Translation(
                     id=uuid4(),
-                    ressource_id=self.project_definitions[0].id,
+                    ressource_id=project_definition.id,
                     scope=project_node_definition.id,
                     locale="fr",
                     name=project_node_definition.config.translations.label,
@@ -120,10 +120,10 @@ class SimpleProject:
                 )
             )
 
-            self.tanslations.append(
+            self.db.add(
                 Translation(
                     id=uuid4(),
-                    ressource_id=self.project_definitions[0].id,
+                    ressource_id=project_definition.id,
                     scope=project_node_definition.id,
                     locale="fr",
                     name=project_node_definition.config.translations.help_text_name,
@@ -132,10 +132,10 @@ class SimpleProject:
                 )
             )
 
-            self.tanslations.append(
+            self.db.add(
                 Translation(
                     id=uuid4(),
-                    ressource_id=self.project_definitions[0].id,
+                    ressource_id=project_definition.id,
                     scope=project_node_definition.id,
                     locale="en",
                     name=project_node_definition.config.translations.label,
@@ -144,10 +144,10 @@ class SimpleProject:
                 )
             )
 
-            self.tanslations.append(
+            self.db.add(
                 Translation(
                     id=uuid4(),
-                    ressource_id=self.project_definitions[0].id,
+                    ressource_id=project_definition.id,
                     scope=project_node_definition.id,
                     locale="en",
                     name=project_node_definition.config.translations.help_text_name,
@@ -160,10 +160,10 @@ class SimpleProject:
                 project_node_definition.config.field_details, StaticChoiceFieldConfig
             ):
                 for option in project_node_definition.config.field_details.options:
-                    self.tanslations.append(
+                    self.db.add(
                         Translation(
                             id=uuid4(),
-                            ressource_id=self.project_definitions[0].id,
+                            ressource_id=project_definition.id,
                             scope=project_node_definition.id,
                             locale="en",
                             name=option.label,
@@ -172,10 +172,10 @@ class SimpleProject:
                         )
                     )
 
-                    self.tanslations.append(
+                    self.db.add(
                         Translation(
                             id=uuid4(),
-                            ressource_id=self.project_definitions[0].id,
+                            ressource_id=project_definition.id,
                             scope=project_node_definition.id,
                             locale="en",
                             name=option.help_text,
@@ -188,11 +188,3 @@ class SimpleProject:
         self.generate_project_definition()
         self.generate_translations()
         return self
-
-    @property
-    def model(self) -> Tables:
-        return Tables(
-            project_definitions=self.project_definitions,
-            project_definition_nodes=self.project_definition_nodes,
-            translations=self.tanslations,
-        )

@@ -14,7 +14,14 @@ class DatasheetAggregate:
     from_datasheet: str
 
 
-AcceptedAggregateUnion = Union[CollectionAggregate, DatasheetAggregate]
+@dataclass
+class FormulaAggregate:
+    from_formula: str
+
+
+AcceptedAggregateUnion = Union[
+    CollectionAggregate, DatasheetAggregate, FormulaAggregate
+]
 
 
 @dataclass

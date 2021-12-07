@@ -1,16 +1,12 @@
-from uuid import uuid4, UUID
-from datetime import timezone
+from uuid import uuid4
 from faker import Faker
-from typing import List
-from pydantic import BaseModel
 from expert_dollup.core.domains import *
-from ..fake_db_helpers import FakeExpertDollupDb as Tables
-from ..factories import FieldConfigFactory
+from ..fake_db_helpers import FakeDb
 
 
 class SimpleDatasheetDef:
     def __init__(self):
-        self.tables = Tables()
+        self.db = FakeDb()
         self.fake = Faker()
         self.fake.seed_instance(seed=1)
 
@@ -42,74 +38,71 @@ class SimpleDatasheetDef:
                 ),
             },
         )
-        self.tables.datasheet_definitions.append(datasheet_definition)
-
-        self.tables.datasheet_definition_elements.extend(
-            [
-                DatasheetDefinitionElement(
-                    id=uuid4(),
-                    datasheet_def_id=datasheet_definition.id,
-                    unit_id="cube_meter",
-                    is_collection=False,
-                    order_index=0,
-                    name="concrete_mpa",
-                    default_properties={
-                        "price": DatasheetDefinitionElementProperty(
-                            is_readonly=False, value=148.0
-                        ),
-                        "conversion_factor": DatasheetDefinitionElementProperty(
-                            is_readonly=False, value=35.328
-                        ),
-                        "lost": DatasheetDefinitionElementProperty(
-                            is_readonly=False, value=0.05
-                        ),
-                    },
-                    tags=[],
-                    creation_date_utc=self.fake.date_time(),
-                ),
-                DatasheetDefinitionElement(
-                    id=uuid4(),
-                    datasheet_def_id=datasheet_definition.id,
-                    unit_id="cube_meter",
-                    is_collection=False,
-                    order_index=1,
-                    name="concrete_mpa_air",
-                    default_properties={
-                        "price": DatasheetDefinitionElementProperty(
-                            is_readonly=False, value=148.0
-                        ),
-                        "conversion_factor": DatasheetDefinitionElementProperty(
-                            is_readonly=False, value=35.328
-                        ),
-                        "lost": DatasheetDefinitionElementProperty(
-                            is_readonly=False, value=0.05
-                        ),
-                    },
-                    tags=[],
-                    creation_date_utc=self.fake.date_time(),
-                ),
-                DatasheetDefinitionElement(
-                    id=uuid4(),
-                    datasheet_def_id=datasheet_definition.id,
-                    unit_id="square_foot",
-                    is_collection=True,
-                    order_index=2,
-                    name="tile_wall_ceramic",
-                    default_properties={
-                        "price": DatasheetDefinitionElementProperty(
-                            is_readonly=False, value=4.0
-                        ),
-                        "conversion_factor": DatasheetDefinitionElementProperty(
-                            is_readonly=False, value=1.0
-                        ),
-                        "lost": DatasheetDefinitionElementProperty(
-                            is_readonly=False, value=0.05
-                        ),
-                    },
-                    tags=[],
-                    creation_date_utc=self.fake.date_time(),
-                ),
-            ]
+        self.db.add(datasheet_definition)
+        self.db.add(
+            DatasheetDefinitionElement(
+                id=uuid4(),
+                datasheet_def_id=datasheet_definition.id,
+                unit_id="cube_meter",
+                is_collection=False,
+                order_index=0,
+                name="concrete_mpa",
+                default_properties={
+                    "price": DatasheetDefinitionElementProperty(
+                        is_readonly=False, value=148.0
+                    ),
+                    "conversion_factor": DatasheetDefinitionElementProperty(
+                        is_readonly=False, value=35.328
+                    ),
+                    "lost": DatasheetDefinitionElementProperty(
+                        is_readonly=False, value=0.05
+                    ),
+                },
+                tags=[],
+                creation_date_utc=self.fake.date_time(),
+            ),
+            DatasheetDefinitionElement(
+                id=uuid4(),
+                datasheet_def_id=datasheet_definition.id,
+                unit_id="cube_meter",
+                is_collection=False,
+                order_index=1,
+                name="concrete_mpa_air",
+                default_properties={
+                    "price": DatasheetDefinitionElementProperty(
+                        is_readonly=False, value=148.0
+                    ),
+                    "conversion_factor": DatasheetDefinitionElementProperty(
+                        is_readonly=False, value=35.328
+                    ),
+                    "lost": DatasheetDefinitionElementProperty(
+                        is_readonly=False, value=0.05
+                    ),
+                },
+                tags=[],
+                creation_date_utc=self.fake.date_time(),
+            ),
+            DatasheetDefinitionElement(
+                id=uuid4(),
+                datasheet_def_id=datasheet_definition.id,
+                unit_id="square_foot",
+                is_collection=True,
+                order_index=2,
+                name="tile_wall_ceramic",
+                default_properties={
+                    "price": DatasheetDefinitionElementProperty(
+                        is_readonly=False, value=4.0
+                    ),
+                    "conversion_factor": DatasheetDefinitionElementProperty(
+                        is_readonly=False, value=1.0
+                    ),
+                    "lost": DatasheetDefinitionElementProperty(
+                        is_readonly=False, value=0.05
+                    ),
+                },
+                tags=[],
+                creation_date_utc=self.fake.date_time(),
+            ),
         )
 
         order_form_category = LabelCollection(
@@ -118,7 +111,7 @@ class SimpleDatasheetDef:
             name="orderformcategory",
         )
 
-        self.tables.label_collections.append(order_form_category)
+        self.db.add(order_form_category)
 
         product_category = LabelCollection(
             id=uuid4(),
@@ -126,32 +119,26 @@ class SimpleDatasheetDef:
             name="_".join(self.fake.words()),
         )
 
-        self.tables.label_collections.append(product_category)
+        self.db.add(product_category)
 
-        self.tables.labels.extend(
-            [
-                Label(
-                    id=uuid4(),
-                    order_index=0,
-                    label_collection_id=order_form_category.id,
-                ),
-                Label(
-                    id=uuid4(),
-                    order_index=1,
-                    label_collection_id=order_form_category.id,
-                ),
-                Label(
-                    id=uuid4(), order_index=0, label_collection_id=product_category.id
-                ),
-                Label(
-                    id=uuid4(), order_index=1, label_collection_id=product_category.id
-                ),
-            ]
+        self.db.add(
+            Label(
+                id=uuid4(),
+                order_index=0,
+                label_collection_id=order_form_category.id,
+            ),
+            Label(
+                id=uuid4(),
+                order_index=1,
+                label_collection_id=order_form_category.id,
+            ),
+            Label(id=uuid4(), order_index=0, label_collection_id=product_category.id),
+            Label(id=uuid4(), order_index=1, label_collection_id=product_category.id),
         )
 
-        for label in self.tables.labels:
+        for label in self.db.all(Label):
             words = self.fake.words()
-            self.tables.translations.append(
+            self.db.add(
                 Translation(
                     id=uuid4(),
                     ressource_id=datasheet_definition.id,
@@ -163,7 +150,7 @@ class SimpleDatasheetDef:
                 )
             )
 
-            self.tables.translations.append(
+            self.db.add(
                 Translation(
                     id=uuid4(),
                     ressource_id=datasheet_definition.id,
@@ -176,7 +163,3 @@ class SimpleDatasheetDef:
             )
 
         return self
-
-    @property
-    def model(self) -> Tables:
-        return self.tables

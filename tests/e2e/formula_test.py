@@ -6,12 +6,14 @@ from ..fixtures import *
 
 
 @pytest.mark.asyncio
-async def test_create_get_delete_formula(ac, expert_dollup_mini_project):
-    fake_db = expert_dollup_mini_project
-    project_definition = fake_db.project_definitions[0]
+async def test_create_get_delete_formula(ac, db_helper: DbFixtureHelper):
+    fake_db = await db_helper.load_fixtures(MiniProject)
+    project_definition = fake_db.get_only_one(ProjectDefinition)
     formula = FormulaDtoFactory(
         project_def_id=project_definition.id,
-        attached_to_type_id=fake_db.project_definition_nodes[0].id,
+        attached_to_type_id=fake_db.get_only_one_matching(
+            ProjectDefinitionNode, lambda n: n.name == "price"
+        ).id,
         name="shipping_price",
         expression="5",
     )
@@ -20,7 +22,9 @@ async def test_create_get_delete_formula(ac, expert_dollup_mini_project):
 
     formula = FormulaDtoFactory(
         project_def_id=project_definition.id,
-        attached_to_type_id=fake_db.project_definition_nodes[0].id,
+        attached_to_type_id=fake_db.get_only_one_matching(
+            ProjectDefinitionNode, lambda n: n.name == "root"
+        ).id,
         name="article_price",
         expression="shipping_price/sqrt(1)+quantity*price*is_confirmed+4*(item_size == '0')+taxes",
     )

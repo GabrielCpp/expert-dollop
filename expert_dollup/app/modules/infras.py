@@ -6,17 +6,12 @@ from expert_dollup.shared.starlette_injection import factory_of
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 from expert_dollup.infra.validators import SchemaValidator
 from expert_dollup.infra.providers import WordProvider
+from expert_dollup.shared.database_services import create_connection
 
 
 def bind_database(binder: Binder) -> None:
-    DATABASE_URL = "postgresql://{}:{}@{}/{}".format(
-        environ["POSTGRES_USERNAME"],
-        environ["POSTGRES_PASSWORD"],
-        environ["POSTGRES_HOST"],
-        environ["POSTGRES_DB"],
-    )
-
-    database = ExpertDollupDatabase(DATABASE_URL)
+    DATABASE_URL = environ["DATABASE_URL"]
+    database = create_connection(DATABASE_URL)
     binder.bind(ExpertDollupDatabase, to=database, scope=singleton)
 
 

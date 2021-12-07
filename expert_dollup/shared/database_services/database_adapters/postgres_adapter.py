@@ -10,7 +10,7 @@ from typing import (
 )
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy import and_, func, or_, desc, asc
+from sqlalchemy import MetaData, create_engine, and_, func, or_, desc, asc
 from sqlalchemy.schema import FetchedValue
 from sqlalchemy.sql import select
 from databases import Database
@@ -21,7 +21,48 @@ from ..filters import ExactMatchFilter
 from ..page import Page
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
-from .table_service import TableService, QueryBuilder, WhereFilter
+from .adapter_interfaces import TableService, QueryBuilder, WhereFilter, DbConnection
+
+
+class PostgresConnection(DbConnection):
+    def __init__(self, connection_string: str, **kwargs):
+        self.connection_string = connection_string
+        self.database = Database(connection_string, **kwargs)
+
+    def internal_connector(self):
+        return self.database
+
+    async def truncate_db(self):
+        engine = create_engine(self.connection_string)
+        meta = MetaData()
+        meta.reflect(bind=engine)
+        con = engine.connect()
+        trans = con.begin()
+        for table in meta.sorted_tables:
+            con.execute(f'ALTER TABLE "{table.name}" DISABLE TRIGGER ALL;')
+            con.execute(table.delete())
+            con.execute(f'ALTER TABLE "{table.name}" ENABLE TRIGGER ALL;')
+        trans.commit()
+
+    async def drop_db(self):
+        engine = create_engine(self.connection_string)
+        meta = MetaData()
+        meta.reflect(bind=engine)
+        for tbl in reversed(meta.sorted_tables):
+            tbl.drop(engine)
+
+    async def connect(self) -> None:
+        await self.database.connect()
+
+    async def disconnect(self) -> None:
+        await self.database.disconnect()
+
+    @property
+    def is_connected(self) -> bool:
+        return self.database.is_connected
+
+
+DbConnection._REGISTRY["postgresql"] = PostgresConnection
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")
@@ -140,8 +181,8 @@ class PostgresQueryBuilder(QueryBuilder):
 
 
 class PostgresTableService(TableService[Domain]):
-    def __init__(self, database: Database, mapper: Mapper):
-        self._database = database
+    def __init__(self, database: PostgresConnection, mapper: Mapper):
+        self._database = database.internal_connector()
         self._mapper = mapper
         self._table = self.__class__.Meta.table
         self._custom_filters: Dict[Type, callable] = getattr(

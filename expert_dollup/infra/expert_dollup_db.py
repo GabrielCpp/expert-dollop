@@ -11,11 +11,10 @@ from sqlalchemy import (
     Text,
     Integer,
 )
-from sqlalchemy.schema import FetchedValue
-from databases import Database
 from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime
+from expert_dollup.shared.database_services import DbConnection
 
 ROOT_LEVEL = 0
 SECTION_LEVEL = 1
@@ -24,7 +23,7 @@ FORM_SECTION_LEVEL = 3
 FIELD_LEVEL = 4
 
 
-class ExpertDollupDatabase(Database):
+class ExpertDollupDatabase(DbConnection):
     pass
 
 
