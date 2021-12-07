@@ -1,8 +1,8 @@
 import pytest
 from typing import List
+from uuid import UUID
 from expert_dollup.app.dtos import *
 from ..fixtures import *
-from typing import Awaitable
 
 
 async def create_project(ac, fake_db: FakeDb):
@@ -17,7 +17,7 @@ async def create_project(ac, fake_db: FakeDb):
 
 async def get_containers_by_type(
     ac, project_id: UUID, type_id: UUID
-) -> Awaitable[List[ProjectNodeDto]]:
+) -> List[ProjectNodeDto]:
     response = await ac.get(f"/api/project/{project_id}/containers?typeId={type_id}")
     assert response.status_code == 200, response.text
 

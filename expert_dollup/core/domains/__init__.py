@@ -74,3 +74,10 @@ from .datasheet_element import (
     DatasheetElementId,
 )
 from .bounded_node import BoundedNode
+from .report_definition import (
+    ReportDefinition,
+    ReportColumn,
+    ReportStructure,
+    ReportJoin,
+    JoinType,
+)

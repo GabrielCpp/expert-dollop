@@ -8,11 +8,15 @@ from ..factories import FieldConfigFactory
 
 class ProjectWithTrigger(DbFixtureGenerator):
     def __init__(self):
-        self.db = FakeDb()
+        self._db = FakeDb()
         self.fake = Faker()
         self.fake.seed_instance(seed=1)
         self.field_config_factory = FieldConfigFactory(self.fake)
         self.labels = ["root", "subsection", "form", "section", "field"]
+
+    @property
+    def db(self) -> FakeDb:
+        return self._db
 
     def generate(self):
         project_definition = ProjectDefinition(

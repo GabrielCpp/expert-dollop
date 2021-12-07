@@ -13,9 +13,11 @@ import expert_dollup.infra.services as services
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import create_connection
 from .fixtures import *
+from factory.random import reseed_random
 
 load_dotenv(dotenv_path=Path(".") / ".env.test")
 load_dotenv()
+reseed_random(1)
 
 
 @pytest.fixture

@@ -9,9 +9,13 @@ from ..factories import FieldConfigFactory
 
 class SimpleProject(DbFixtureGenerator):
     def __init__(self):
-        self.db = FakeDb()
+        self._db = FakeDb()
         self.fake = Faker()
         self.field_config_factory = FieldConfigFactory(self.fake)
+
+    @property
+    def db(self) -> FakeDb:
+        return self._db
 
     def generate_project_node_definition(self, project_def_id: UUID) -> None:
         labels = ["root", "subsection", "form", "section", "field"]

@@ -6,9 +6,13 @@ from ..fake_db_helpers import FakeDb, DbFixtureGenerator
 
 class SimpleDatasheetDef(DbFixtureGenerator):
     def __init__(self):
-        self.db = FakeDb()
+        self._db = FakeDb()
         self.fake = Faker()
         self.fake.seed_instance(seed=1)
+
+    @property
+    def db(self) -> FakeDb:
+        return self._db
 
     def generate(self):
         datasheet_definition = DatasheetDefinition(
