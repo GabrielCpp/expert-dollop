@@ -1,10 +1,10 @@
-from uuid import uuid4, UUID
+from uuid import uuid4
 from faker import Faker
 from expert_dollup.core.domains import *
-from ..fake_db_helpers import FakeDb
+from ..fake_db_helpers import FakeDb, DbFixtureGenerator
 
 
-class MiniDatasheet:
+class MiniDatasheet(DbFixtureGenerator):
     def __init__(self):
         self.db = FakeDb()
         self.fake = Faker()
