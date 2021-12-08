@@ -3,7 +3,7 @@ from inspect import isclass
 from expert_dollup.shared.automapping import Mapper
 from .query_filter import QueryFilter
 from .page import Page
-from .database_adapters.adapter_interfaces import (
+from .adapter_interfaces import (
     CollectionService,
     DbConnection,
     QueryBuilder,

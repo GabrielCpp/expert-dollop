@@ -1,4 +1,4 @@
-from jsonschema import validate, Draft7Validator
+from jsonschema import Draft7Validator
 from expert_dollup.core.exceptions import ValidationError
 
 

@@ -5,8 +5,8 @@ from inspect import isclass
 from urllib.parse import urlparse
 from pydantic import BaseModel
 from expert_dollup.shared.automapping import Mapper
-from ..page import Page
-from ..query_filter import QueryFilter
+from .page import Page
+from .query_filter import QueryFilter
 
 
 class DbConnection(ABC):
@@ -39,7 +39,7 @@ def create_connection(
 
         for connector in connectors:
             if connector == "postgresql":
-                from .postgres_adapter import PostgresConnection
+                from .database_adapters.postgres_adapter import PostgresConnection
 
                 DbConnection._REGISTRY["postgresql"] = PostgresConnection
 

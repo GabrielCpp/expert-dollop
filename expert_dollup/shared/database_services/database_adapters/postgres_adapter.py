@@ -28,7 +28,7 @@ from sqlalchemy.sql import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects import postgresql
 from expert_dollup.shared.automapping import Mapper
-from .adapter_interfaces import (
+from ..adapter_interfaces import (
     CollectionService,
     QueryBuilder,
     WhereFilter,
