@@ -212,7 +212,7 @@ def create_project_tables():
 def create_datasheet_tables():
     op.create_table(
         "unit",
-        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("id", String(16), nullable=False, primary_key=True),
     )
 
     op.create_table(

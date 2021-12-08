@@ -44,7 +44,7 @@ class TranslationDtoFactory(factory.Factory):
     id = factory.Faker("uuid4")
     ressource_id = factory.Faker("uuid4")
     scope = factory.Faker("uuid4")
-    locale = "fr"
+    locale = "fr_CA"
     name = factory.Sequence(lambda n: f"hello{n}")
     value = factory.Sequence(lambda n: f"translation{n}")
     creation_date_utc = factory.Faker("date_time")
@@ -57,7 +57,7 @@ class TranslationInputDtoFactory(factory.Factory):
     id = factory.Faker("uuid4")
     ressource_id = factory.Faker("uuid4")
     scope = factory.Faker("uuid4")
-    locale = "fr"
+    locale = "fr_CA"
     name = factory.Sequence(lambda n: f"hello{n}")
     value = factory.Sequence(lambda n: f"translation{n}")
 

@@ -113,7 +113,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             id=UUID("96492b2d-49fa-4250-b655-ff8cf5030953"),
             ressource_id=ressource_id,
             scope=ressource_id,
-            locale="fr",
+            locale="fr_CA",
             name="a",
             value="a_fr",
             creation_date_utc=static_clock.utcnow(),
@@ -122,7 +122,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             id=UUID("96492b2d-49fa-4250-b655-ff8cf5030954"),
             ressource_id=ressource_id,
             scope=ressource_id,
-            locale="en",
+            locale="en_US",
             name="a",
             value="a_en",
             creation_date_utc=static_clock.utcnow(),
@@ -131,7 +131,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             id=UUID("96492b2d-49fa-4250-b655-ff8cf5030955"),
             ressource_id=ressource_id,
             scope=ressource_id,
-            locale="fr",
+            locale="fr_CA",
             name="b",
             value="b_fr",
             creation_date_utc=static_clock.utcnow(),
@@ -153,7 +153,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
 
     await db_helper.insert_daos(TranslationService, translations.values())
 
-    response = await ac.get(f"/api/translation/{ressource_id}/fr")
+    response = await ac.get(f"/api/translation/{ressource_id}/fr_CA")
     assert response.status_code == 200
 
     actual = unwrap(response, PageDto)

@@ -146,7 +146,7 @@ class SimpleDatasheetDef(DbFixtureGenerator):
                 Translation(
                     id=uuid4(),
                     ressource_id=datasheet_definition.id,
-                    locale="fr",
+                    locale="fr_CA",
                     name="_".join(words),
                     scope=label.label_collection_id,
                     value=" ".join(words),
@@ -158,7 +158,7 @@ class SimpleDatasheetDef(DbFixtureGenerator):
                 Translation(
                     id=uuid4(),
                     ressource_id=datasheet_definition.id,
-                    locale="en",
+                    locale="en_US",
                     name="_".join(words),
                     scope=label.label_collection_id,
                     value=" ".join(words),

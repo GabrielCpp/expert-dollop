@@ -1,5 +1,5 @@
 from typing import List, TypeVar, Optional, Awaitable, Dict, Type, Tuple, Union, Set
-from pydantic import BaseModel
+from pydantic import BaseModel, ConstrainedStr
 from pydantic.fields import ModelField
 from dataclasses import dataclass
 from inspect import isclass
@@ -51,21 +51,25 @@ class PostgresColumnBuilder:
             UUID: self._build_uuid,
             int: self._build_int,
             str: self._build_str,
+            "ConstrainedStrValue": self._build_str,
+            ConstrainedStr: self._build_str,
             bool: self._build_bool,
             datetime: self._build_datetime,
             BaseModel: self._build_object,
         }
 
-    def build(self, meta, name: str, field: ModelField):
-        db_type = self._build_column_type(meta, field.type_)
+    def build(self, meta: Type, schema: dict, field: ModelField):
+        db_type = self._build_column_type(schema, field.type_)
         options = {"nullable": field.required}
 
-        if name == meta.pk or (isinstance(meta.pk, tuple) and name in meta.pk):
+        if field.name == meta.pk or (
+            isinstance(meta.pk, tuple) and field.name in meta.pk
+        ):
             options["primary_key"] = True
 
-        return Column(name, db_type, **options)
+        return Column(field.name, db_type, **options)
 
-    def _build_column_type(self, meta, field_type: Type) -> Column:
+    def _build_column_type(self, schema: dict, field_type: Type) -> Column:
         type_origin = getattr(field_type, "__origin__", field_type)
         type_args = getattr(field_type, "__args__", [])
 
@@ -81,35 +85,44 @@ class PostgresColumnBuilder:
 
         assert (
             type_origin in self._column_builder
+            or type_origin.__name__ in self._column_builder
         ), f"Unsupported column type for {type_origin}"
-        return self._column_builder[type_origin](type_origin, type_args)
 
-    def _build_int(self, type_origin: Type, type_args: List[Type]):
+        build_type = self._column_builder[
+            type_origin if type_origin in self._column_builder else type_origin.__name__
+        ]
+
+        return build_type(schema, type_args)
+
+    def _build_int(self, schema: dict, type_args: List[Type]):
         return Integer
 
-    def _build_str(self, type_origin: Type, type_args: List[Type]):
+    def _build_str(self, schema: dict, type_args: List[Type]):
+        if "maxLength" in schema:
+            return String(schema["maxLength"])
+
         return String
 
-    def _build_uuid(self, type_origin: Type, type_args: List[Type]):
+    def _build_uuid(self, schema: dict, type_args: List[Type]):
         return postgresql.UUID()
 
-    def _build_bool(self, type_origin: Type, type_args: List[Type]):
+    def _build_bool(self, schema: dict, type_args: List[Type]):
         return Boolean
 
-    def _build_datetime(self, type_origin: Type, type_args: List[Type]):
+    def _build_datetime(self, schema: dict, type_args: List[Type]):
         return DateTime(timezone=True)
 
-    def _build_object(self, type_origin: Type, type_args: List[Type]):
+    def _build_object(self, schema: dict, type_args: List[Type]):
         return postgresql.JSON(none_as_null=True)
 
-    def _build_union(self, type_origin: Type, type_args: List[Type]):
+    def _build_union(self, schema: dict, type_args: List[Type]):
         return postgresql.JSON(none_as_null=True)
 
-    def _build_dict(self, type_origin: Type, type_args: List[Type]):
+    def _build_dict(self, schema: dict, type_args: List[Type]):
         return postgresql.JSON(none_as_null=True)
 
-    def _build_list(self, type_origin: Type, type_args: List[Type]):
-        if type_origin is str:
+    def _build_list(self, schema: dict, type_args: List[Type]):
+        if type_args[0] is str:
             return postgresql.ARRAY(String, dimensions=1)
 
         return postgresql.JSON(none_as_null=True)
@@ -141,9 +154,11 @@ class PostgresConnection(DbConnection):
 
             columns = [
                 column_builder.build(
-                    getattr(dao_type, "Meta", PostgresConnection.EmptyMeta), name, field
+                    getattr(dao_type, "Meta", PostgresConnection.EmptyMeta),
+                    schema["properties"][field.name],
+                    field,
                 )
-                for name, field in dao_type.__fields__.items()
+                for field in dao_type.__fields__.values()
             ]
             table_name = schema["title"]
             table = Table(table_name, self.metadata, *columns)

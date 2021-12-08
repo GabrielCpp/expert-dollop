@@ -13,7 +13,7 @@ async def test_should_be_able_to_scan_translations(
 
     translations = await AsyncCursor.all(
         ac,
-        f"/api/translation/{project_definition.id}/en",
+        f"/api/translation/{project_definition.id}/en_US",
         after=normalize_request_results(TranslationDto, lambda c: (c["name"], c["id"])),
     )
 
@@ -22,7 +22,7 @@ async def test_should_be_able_to_scan_translations(
             [
                 translation
                 for translation in db.all(Translation)
-                if translation.locale == "en"
+                if translation.locale == "en_US"
             ],
             TranslationDto,
         ),

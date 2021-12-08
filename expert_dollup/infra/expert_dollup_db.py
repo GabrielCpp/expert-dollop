@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 from uuid import UUID
 from datetime import datetime
-from pydantic import StrictBool, StrictInt, StrictStr, StrictFloat, BaseModel
+from pydantic import StrictBool, StrictInt, StrictStr, StrictFloat, BaseModel, Field
 from expert_dollup.shared.database_services import DbConnection
 
 ROOT_LEVEL = 0
@@ -15,17 +15,8 @@ class ExpertDollupDatabase(DbConnection):
     pass
 
 
-"""
-project_definition_table = Table(
-    "project_definition",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("name", String, nullable=False),
-    Column("default_datasheet_id", postgresql.UUID(), nullable=False),
-    Column("datasheet_def_id", postgresql.UUID(), nullable=False),
-    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
-)
-"""
+ValueUnion = Union[StrictBool, StrictInt, StrictStr, StrictFloat, None]
+JsonSchemaDao = dict
 
 
 class ProjectDefinitionDao(BaseModel):
@@ -40,28 +31,6 @@ class ProjectDefinitionDao(BaseModel):
     default_datasheet_id: UUID
     datasheet_def_id: UUID
     creation_date_utc: datetime
-
-
-"""
-project_definition_node_table = Table(
-    "project_definition_node",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("project_def_id", postgresql.UUID(), nullable=False),
-    Column("name", String, nullable=False),
-    Column("is_collection", Boolean, nullable=False),
-    Column("instanciate_by_default", Boolean, nullable=False),
-    Column("order_index", Integer, nullable=False),
-    Column("config", String, nullable=False),
-    Column("default_value", String, nullable=True),
-    Column("path", String, nullable=False),
-    Column("display_query_internal_id", postgresql.UUID(), nullable=False),
-    Column("level", Integer, nullable=False),
-    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
-)
-"""
-
-ValueUnion = Union[StrictBool, StrictInt, StrictStr, StrictFloat, None]
 
 
 class ProjectDefinitionNodeDao(BaseModel):
@@ -85,20 +54,6 @@ class ProjectDefinitionNodeDao(BaseModel):
     creation_date_utc: datetime
 
 
-"""
-project_table = Table(
-    "project",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("name", String, nullable=False),
-    Column("is_staged", Boolean, nullable=False),
-    Column("project_def_id", postgresql.UUID(), nullable=True),
-    Column("datasheet_id", postgresql.UUID(), nullable=False),
-    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
-)
-"""
-
-
 class ProjectDao(BaseModel):
     class Meta:
         pk = "id"
@@ -112,25 +67,6 @@ class ProjectDao(BaseModel):
     project_def_id: UUID
     datasheet_id: UUID
     creation_date_utc: datetime
-
-
-"""
-project_node_table = Table(
-    "project_node",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("project_id", postgresql.UUID(), nullable=False),
-    Column("type_id", postgresql.UUID(), nullable=False),
-    Column("type_name", String, nullable=False),
-    Column("path", String, nullable=False),
-    Column("value", String, nullable=True),
-    Column("label", String, nullable=True),
-    Column("level", Integer, nullable=False),
-    Column("type_path", String, nullable=False),
-    Column("display_query_internal_id", postgresql.UUID(), nullable=False),
-    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
-)
-"""
 
 
 class ProjectNodeDao(BaseModel):
@@ -153,19 +89,6 @@ class ProjectNodeDao(BaseModel):
     creation_date_utc: datetime
 
 
-"""
-project_node_meta_table = Table(
-    "project_node_metadata",
-    metadata,
-    Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("type_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("state", String, nullable=False),
-    Column("definition", String, nullable=False),
-    Column("display_query_internal_id", postgresql.UUID(), nullable=False),
-)
-"""
-
-
 class ProjectNodeMetaStateDao(BaseModel):
     is_visible: bool
     selected_child: Optional[UUID]
@@ -185,17 +108,6 @@ class ProjectNodeMetaDao(BaseModel):
     display_query_internal_id: UUID
 
 
-"""
-ressource_table = Table(
-    "ressource",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("owner_id", postgresql.UUID(), nullable=False),
-    Column("name", String, nullable=False),
-)
-"""
-
-
 class RessourceDao(BaseModel):
     class Meta:
         pk = "id"
@@ -208,22 +120,6 @@ class RessourceDao(BaseModel):
     owner_id: UUID
 
 
-"""
-
-translation_table = Table(
-    "translation",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False),
-    Column("ressource_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("scope", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("locale", String(5), nullable=False, primary_key=True),
-    Column("name", String, nullable=False, primary_key=True),
-    Column("value", String, nullable=False),
-    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
-)
-"""
-
-
 class TranslationDao(BaseModel):
     class Meta:
         pk = ("ressource_id", "scope", "locale", "name")
@@ -233,21 +129,11 @@ class TranslationDao(BaseModel):
 
     id: UUID
     ressource_id: UUID
-    locale: str
+    locale: str = Field(min_length=5, max_length=5)
     scope: UUID
     name: str
     value: str
     creation_date_utc: datetime
-
-
-"""
-setting_table = Table(
-    "settings",
-    metadata,
-    Column("key", String, nullable=False, primary_key=True),
-    Column("value", postgresql.JSON(), nullable=False),
-)
-"""
 
 
 class SettingDao(BaseModel):
@@ -259,19 +145,6 @@ class SettingDao(BaseModel):
 
     key: str
     value: Union[dict, str, bool, int, list]
-
-
-"""
-project_definition_formula_table = Table(
-    "project_definition_formula",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("project_def_id", postgresql.UUID(), nullable=False),
-    Column("attached_to_type_id", postgresql.UUID(), nullable=False),
-    Column("name", String, nullable=False),
-    Column("expression", String, nullable=False),
-)
-"""
 
 
 class ProjectDefinitionFormulaDao(BaseModel):
@@ -288,17 +161,6 @@ class ProjectDefinitionFormulaDao(BaseModel):
     expression: str
 
 
-"""
-project_definition_formula_dependency_table = Table(
-    "project_definition_formula_dependencies",
-    metadata,
-    Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("depend_on_formula_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("project_def_id", postgresql.UUID(), nullable=False),
-)
-"""
-
-
 class ProjectDefinitionFormulaDependencyDao(BaseModel):
     class Meta:
         pk = ("formula_id", "depend_on_formula_id")
@@ -311,22 +173,6 @@ class ProjectDefinitionFormulaDependencyDao(BaseModel):
     project_def_id: UUID
 
 
-"""
-project_definition_formula_node_dependency_table = Table(
-    "project_definition_formula_node_dependencies",
-    metadata,
-    Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column(
-        "depend_on_node_id",
-        postgresql.UUID(),
-        nullable=False,
-        primary_key=True,
-    ),
-    Column("project_def_id", postgresql.UUID(), nullable=False),
-)
-"""
-
-
 class ProjectDefinitionFormulaContainerDependencyDao(BaseModel):
     class Meta:
         pk = ("formula_id", "depend_on_node_id")
@@ -337,20 +183,6 @@ class ProjectDefinitionFormulaContainerDependencyDao(BaseModel):
     formula_id: UUID
     depend_on_node_id: UUID
     project_def_id: UUID
-
-
-"""
-project_formula_cache_table = Table(
-    "project_node_formula_cache",
-    metadata,
-    Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("node_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("calculation_details", String, nullable=False),
-    Column("result", postgresql.JSON(), nullable=False),
-    Column("last_modified_date_utc", DateTime(timezone=True), nullable=False),
-)
-"""
 
 
 class ProjectFormulaCacheDao(BaseModel):
@@ -368,15 +200,6 @@ class ProjectFormulaCacheDao(BaseModel):
     last_modified_date_utc: datetime
 
 
-"""
-unit_table = Table(
-    "unit",
-    metadata,
-    Column("id", String, nullable=False, primary_key=True),
-)
-"""
-
-
 class UnitDao(BaseModel):
     class Meta:
         pk = "id"
@@ -384,19 +207,7 @@ class UnitDao(BaseModel):
     class Config:
         title = "unit"
 
-    id: str
-
-
-"""
-datasheet_definition_table = Table(
-    "datasheet_definition",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("name", String, nullable=False),
-    Column("properties", String(), nullable=False),
-)
-"""
-JsonSchemaDao = dict
+    id: str = Field(max_length=16)
 
 
 class ElementPropertySchemaDao:
@@ -415,17 +226,6 @@ class DatasheetDefinitionDao(BaseModel):
     properties: str
 
 
-"""
-datasheet_definition_label_collection_table = Table(
-    "datasheet_definition_label_collection",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("datasheet_definition_id", postgresql.UUID(), nullable=False),
-    Column("name", String, nullable=False),
-)
-"""
-
-
 class LabelCollectionDao(BaseModel):
     class Meta:
         pk = "id"
@@ -436,21 +236,6 @@ class LabelCollectionDao(BaseModel):
     id: UUID
     datasheet_definition_id: UUID
     name: str
-
-
-"""
-datasheet_definition_label_table = Table(
-    "datasheet_definition_label",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column(
-        "label_collection_id",
-        postgresql.UUID(),
-        nullable=False,
-    ),
-    Column("order_index", Integer, nullable=False),
-)
-"""
 
 
 class LabelDao(BaseModel):
@@ -465,23 +250,6 @@ class LabelDao(BaseModel):
     order_index: int
 
 
-"""
-datasheet_definition_element_table = Table(
-    "datasheet_definition_element",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("unit_id", postgresql.UUID(), nullable=False),
-    Column("name", String(64), nullable=False),
-    Column("is_collection", Boolean, nullable=False),
-    Column("datasheet_def_id", postgresql.UUID(), nullable=False),
-    Column("order_index", Integer, nullable=False),
-    Column("default_properties", postgresql.JSON(), nullable=False),
-    Column("tags", ARRAY(String, dimensions=1), nullable=False),
-    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
-)
-"""
-
-
 class DatasheetDefinitionElementDao(BaseModel):
     class Meta:
         pk = "id"
@@ -492,26 +260,12 @@ class DatasheetDefinitionElementDao(BaseModel):
     id: UUID
     unit_id: str
     is_collection: bool
-    name: str
+    name: str = Field(max_length=64)
     datasheet_def_id: UUID
     order_index: int
     default_properties: dict
     tags: List[str]
     creation_date_utc: datetime
-
-
-"""
-datasheet_table = Table(
-    "datasheet",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("name", String, nullable=False),
-    Column("is_staged", Boolean, nullable=False),
-    Column("datasheet_def_id", postgresql.UUID(), nullable=False),
-    Column("from_datasheet_id", postgresql.UUID(), nullable=True),
-    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
-)
-"""
 
 
 class DatasheetDao(BaseModel):
@@ -529,25 +283,6 @@ class DatasheetDao(BaseModel):
     creation_date_utc: datetime
 
 
-"""
-datasheet_element_table = Table(
-    "datasheet_element",
-    metadata,
-    Column("datasheet_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("element_def_id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column(
-        "child_element_reference",
-        postgresql.UUID(),
-        nullable=False,
-        primary_key=True,
-    ),
-    Column("properties", postgresql.JSON(), nullable=False),
-    Column("original_datasheet_id", postgresql.UUID(), nullable=False),
-    Column("creation_date_utc", DateTime(timezone=True), nullable=False),
-)
-"""
-
-
 class DatasheetElementDao(BaseModel):
     class Meta:
         pk = ("datasheet_id", "element_def_id", "child_element_reference")
@@ -561,18 +296,6 @@ class DatasheetElementDao(BaseModel):
     properties: dict
     original_datasheet_id: UUID
     creation_date_utc: datetime
-
-
-"""
-report_definition_table = Table(
-    "report_definition",
-    metadata,
-    Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-    Column("project_def_id", postgresql.UUID(), nullable=False),
-    Column("name", String, nullable=False),
-    Column("structure", postgresql.JSON(), nullable=False),
-)
-"""
 
 
 class ReportJoinDao(BaseModel):
