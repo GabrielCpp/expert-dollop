@@ -327,6 +327,16 @@ def map_formula_to_dao(src: Formula, mapper: Mapper) -> ProjectDefinitionFormula
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
+        dependency_graph=FormulaDependencyGraphDao(
+            formulas=[
+                FormulaDependencyDao(target_type_id=dependency.target_type_id)
+                for dependency in src.dependency_graph.formulas
+            ],
+            nodes=[
+                FormulaDependencyDao(target_type_id=dependency.target_type_id)
+                for dependency in src.dependency_graph.nodes
+            ],
+        ),
     )
 
 
@@ -337,6 +347,16 @@ def map_formula_from_dao(src: ProjectDefinitionFormulaDao, mapper: Mapper) -> Fo
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
+        dependency_graph=FormulaDependencyGraph(
+            formulas=[
+                FormulaDependency(target_type_id=dependency.target_type_id)
+                for dependency in src.dependency_graph.formulas
+            ],
+            nodes=[
+                FormulaDependency(target_type_id=dependency.target_type_id)
+                for dependency in src.dependency_graph.nodes
+            ],
+        ),
     )
 
 
@@ -447,6 +467,11 @@ def map_datasheet_definition_label_collection_from_dao(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
+        properties_schema=src.properties_schema,
+        accepted_aggregates={
+            key: mapper.map(value, AcceptedAggregateUnion, AcceptedAggregateDaoUnion)
+            for key, value in src.accepted_aggregates.items()
+        },
     )
 
 
@@ -457,6 +482,11 @@ def map_datasheet_definition_label_collection_to_dao(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
+        properties_schema=src.properties_schema,
+        accepted_aggregates={
+            key: mapper.map(value, AcceptedAggregateDaoUnion, AcceptedAggregateUnion)
+            for key, value in src.accepted_aggregates.items()
+        },
     )
 
 
@@ -465,6 +495,8 @@ def map_datasheet_definition_label_to_dao(src: Label, mapper: Mapper) -> LabelDa
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
+        properties=src.properties,
+        aggregates=src.aggregates,
     )
 
 
@@ -473,6 +505,8 @@ def map_datasheet_definition_label_from_dao(src: LabelDao, mapper: Mapper) -> La
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
+        properties=src.properties,
+        aggregates=src.aggregates,
     )
 
 
@@ -595,6 +629,7 @@ def map_fomula_pluck_filter(src: FormulaPluckFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
         {
+            "ids": ("ids", None),
             "names": ("name", None),
         },
     )

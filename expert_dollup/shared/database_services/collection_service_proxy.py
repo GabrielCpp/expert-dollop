@@ -84,4 +84,4 @@ class CollectionServiceProxy(CollectionService[Domain]):
         return self._impl.get_builder()
 
     async def fetch_all_records(self, builder: QueryBuilder) -> dict:
-        pass
+        return await self._impl.fetch_all_records(builder)

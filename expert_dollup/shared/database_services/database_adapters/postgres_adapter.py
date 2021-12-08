@@ -1,4 +1,15 @@
-from typing import List, TypeVar, Optional, Awaitable, Dict, Type, Tuple, Union, Set
+from typing import (
+    List,
+    TypeVar,
+    Optional,
+    Awaitable,
+    Dict,
+    Type,
+    Tuple,
+    Union,
+    Set,
+    Any,
+)
 from pydantic import BaseModel, ConstrainedStr
 from pydantic.fields import ModelField
 from dataclasses import dataclass
@@ -7,6 +18,7 @@ from uuid import UUID
 from datetime import datetime
 from jsonpickle import encode, decode
 from databases import Database
+from databases.backends.postgres import PostgresBackend
 from sqlalchemy import (
     MetaData,
     create_engine,
@@ -27,6 +39,7 @@ from sqlalchemy.schema import FetchedValue
 from sqlalchemy.sql import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.engine.interfaces import Dialect
 from expert_dollup.shared.automapping import Mapper
 from ..adapter_interfaces import (
     CollectionService,
@@ -38,7 +51,46 @@ from ..page import Page
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 
+
+class JsonSerializer:
+    @staticmethod
+    def encode(x: str) -> Any:
+        return encode(x, unpicklable=False)
+
+    @staticmethod
+    def decode(x: str):
+        return decode(x, safe=True)
+
+
 NoneType = type(None)
+
+
+def create_postgres_dialect():
+    dialect = postgresql.dialect(
+        json_deserializer=JsonSerializer.decode,
+        json_serializer=JsonSerializer.encode,
+        paramstyle="pyformat",
+    )
+
+    dialect.implicit_returning = True
+    dialect.supports_native_enum = True
+    dialect.supports_smallserial = True  # 9.2+
+    dialect._backslash_escapes = False
+    dialect.supports_sane_multi_rowcount = True  # psycopg 2.0.9+
+    dialect._has_native_hstore = True
+    dialect.supports_native_decimal = True
+
+    return dialect
+
+
+class AiopgBackendWithCustomSerializer(PostgresBackend):
+    def _get_dialect(self) -> Dialect:
+        return create_postgres_dialect()
+
+
+Database.SUPPORTED_BACKENDS[
+    "postgresql"
+] = "expert_dollup.shared.database_services.database_adapters.postgres_adapter:AiopgBackendWithCustomSerializer"
 
 
 class PostgresColumnBuilder:
@@ -104,7 +156,7 @@ class PostgresColumnBuilder:
         return String
 
     def _build_uuid(self, schema: dict, type_args: List[Type]):
-        return postgresql.UUID()
+        return postgresql.UUID(as_uuid=True)
 
     def _build_bool(self, schema: dict, type_args: List[Type]):
         return Boolean
@@ -113,19 +165,23 @@ class PostgresColumnBuilder:
         return DateTime(timezone=True)
 
     def _build_object(self, schema: dict, type_args: List[Type]):
-        return postgresql.JSON(none_as_null=True)
+        return self._make_json_column_type()
 
     def _build_union(self, schema: dict, type_args: List[Type]):
-        return postgresql.JSON(none_as_null=True)
+        return self._make_json_column_type()
 
     def _build_dict(self, schema: dict, type_args: List[Type]):
-        return postgresql.JSON(none_as_null=True)
+        return self._make_json_column_type()
 
     def _build_list(self, schema: dict, type_args: List[Type]):
         if type_args[0] is str:
             return postgresql.ARRAY(String, dimensions=1)
 
-        return postgresql.JSON(none_as_null=True)
+        return self._make_json_column_type()
+
+    def _make_json_column_type(self) -> postgresql.JSON:
+        column_type = postgresql.JSON(none_as_null=True)
+        return column_type
 
 
 class PostgresConnection(DbConnection):
@@ -197,15 +253,15 @@ class PostgresConnection(DbConnection):
     async def _init_connection(conn):
         await conn.set_type_codec(
             "json",
-            encoder=lambda x: encode(x, unpicklable=False),
-            decoder=lambda x: decode(x, safe=True),
+            encoder=JsonSerializer.encode,
+            decoder=JsonSerializer.decode,
             schema="pg_catalog",
         )
 
         await conn.set_type_codec(
             "json",
-            encoder=lambda x: encode(x, unpicklable=False).encode("utf8"),
-            decoder=lambda x: decode(x.decode("utf8"), safe=True),
+            encoder=lambda x: JsonSerializer.encode(x).encode("utf8"),
+            decoder=lambda x: JsonSerializer.decode(x.decode("utf8")),
             schema="pg_catalog",
             format="binary",
         )
@@ -355,12 +411,12 @@ class PostgresTableService(CollectionService[Domain]):
             for table_id_name in self.table_id_names
         ]
 
-    async def insert(self, domain: Domain) -> Awaitable:
+    async def insert(self, domain: Domain):
         query = self._table.insert()
         value = self._mapper.map(domain, self._dao).dict()
         await self._database.execute(query=query, values=value)
 
-    async def insert_many(self, domains: List[Domain], bulk=True) -> Awaitable:
+    async def insert_many(self, domains: List[Domain], bulk=True):
         daos = self._mapper.map_many(domains, self._dao)
 
         if bulk:
@@ -369,19 +425,19 @@ class PostgresTableService(CollectionService[Domain]):
             query = pg_insert(self._table, [dao.dict() for dao in daos])
             await self._database.execute(query=query)
 
-    async def find_all(self, limit: int = 1000) -> Awaitable[List[Domain]]:
+    async def find_all(self, limit: int = 1000) -> List[Domain]:
         query = self._table.select().limit(limit)
         records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
+        results = self._map_many_to(records, self._dao, self._domain)
         return results
 
     async def find_all_paginated(
         self, limit: int = 1000, next_page_token: Optional[str] = None
-    ) -> Awaitable[Page[Domain]]:
+    ) -> Page[Domain]:
         assert not self._paginator is None, "Paginator required"
         query = self._paginator.build_query(None, limit, next_page_token)
         records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
+        results = self._map_many_to(records, self._dao, self._domain)
         new_next_page_token = (
             self._paginator.default_token
             if len(records) == 0
@@ -400,7 +456,7 @@ class PostgresTableService(CollectionService[Domain]):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         order_by: Optional[Tuple[str, str]] = None,
-    ) -> Awaitable[List[Domain]]:
+    ) -> List[Domain]:
         where_filter = self._build_filter(query_filter)
         query = self._table.select().where(where_filter)
 
@@ -417,7 +473,7 @@ class PostgresTableService(CollectionService[Domain]):
             )
 
         records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
+        results = self._map_many_to(records, self._dao, self._domain)
 
         return results
 
@@ -426,12 +482,12 @@ class PostgresTableService(CollectionService[Domain]):
         query_filter: WhereFilter,
         limit: int,
         next_page_token: Optional[str] = None,
-    ) -> Awaitable[Page[Domain]]:
+    ) -> Page[Domain]:
         assert not self._paginator is None, "Paginator required"
         where_filter = self._build_filter(query_filter)
         query = self._paginator.build_query(where_filter, limit, next_page_token)
         records = await self._database.fetch_all(query=query)
-        results = self.map_many_to(records, self._dao, self._domain)
+        results = self._map_many_to(records, self._dao, self._domain)
 
         new_next_page_token = (
             self._paginator.default_token
@@ -445,7 +501,7 @@ class PostgresTableService(CollectionService[Domain]):
             results=results,
         )
 
-    async def find_one_by(self, query_filter: WhereFilter) -> Awaitable[List[Domain]]:
+    async def find_one_by(self, query_filter: WhereFilter) -> List[Domain]:
         where_filter = self._build_filter(query_filter)
         query = self._table.select().where(where_filter)
         record = await self._database.fetch_one(query=query)
@@ -457,12 +513,12 @@ class PostgresTableService(CollectionService[Domain]):
 
         return result
 
-    async def delete_by(self, query_filter: WhereFilter) -> Awaitable:
+    async def delete_by(self, query_filter: WhereFilter):
         where_filter = self._build_filter(query_filter)
         query = self._table.delete().where(where_filter)
         await self._database.execute(query)
 
-    async def count(self, query_filter: Optional[WhereFilter] = None) -> Awaitable[int]:
+    async def count(self, query_filter: Optional[WhereFilter] = None) -> int:
         if query_filter is None:
             query = select([func.count()]).select_from(self._table)
         else:
@@ -472,18 +528,18 @@ class PostgresTableService(CollectionService[Domain]):
         count = await self._database.fetch_val(query=query)
         return count
 
-    async def delete_by_id(self, pk_id: Id) -> Awaitable:
+    async def delete_by_id(self, pk_id: Id):
         where_filter = self._build_id_filter(pk_id)
         query = self._table.delete().where(where_filter)
         await self._database.execute(query=query)
 
-    async def has(self, pk_id: Id) -> Awaitable[bool]:
+    async def has(self, pk_id: Id) -> bool:
         where_filter = self._build_id_filter(pk_id)
         query = select(self.table_ids).where(where_filter)
         value = await self._database.fetch_one(query=query)
         return not value is None
 
-    async def find_by_id(self, pk_id: Id) -> Awaitable[Domain]:
+    async def find_by_id(self, pk_id: Id) -> Domain:
         where_filter = self._build_id_filter(pk_id)
         query = self._table.select().where(where_filter)
         value = await self._database.fetch_one(query=query)
@@ -494,58 +550,17 @@ class PostgresTableService(CollectionService[Domain]):
         result = self._mapper.map(self._dao(**value), self._domain)
         return result
 
-    async def update(
-        self, value_filter: QueryFilter, query_filter: WhereFilter
-    ) -> Awaitable:
-        """
-        Update records base on query.
-        """
+    async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):
         where_filter = self._build_filter(query_filter)
         update_fields = self._mapper.map(value_filter, dict, self._table_filter_type)
         query = self._table.update().where(where_filter).values(update_fields)
         await self._database.execute(query=query)
 
     def make_record_token(self, domain: Domain) -> str:
-        """
-        Return next page token for a domain object.
-        """
         assert not self._paginator is None, "Paginator required"
         dao = self._mapper.map(domain, self._dao)
         next_page_token = self._paginator.encode_dao(dao)
         return next_page_token
-
-    def map_many_to(self, records: list, dao_type: BaseModel, domain_type: Domain):
-        """
-        Remap a list of records to it domain equivalent.
-        """
-        daos = [dao_type(**record) for record in records]
-        results = self._mapper.map_many(daos, domain_type)
-        return results
-
-    def hydrate_joined_table(self, records, dao_table_pairs):
-        def slice_record(record, delta, columns):
-            mapped = {}
-
-            for index, column in enumerate(columns):
-                mapped[column.name] = record[delta + index]
-
-            return mapped
-
-        for record in records:
-            offset = 0
-            domains = []
-            daos = []
-
-            for (dao_type, domain_type, table) in dao_table_pairs:
-                dao = dao_type(**slice_record(record, offset, table.c))
-                daos.append(dao)
-
-                domain = self._mapper.map(dao, domain_type, dao_type)
-                domains.append(domain)
-
-                offset += len(table.c)
-
-            yield domains, daos
 
     def get_builder(self) -> QueryBuilder:
         return PostgresQueryBuilder(self._table, self._mapper, self._build_filter)
@@ -554,6 +569,14 @@ class PostgresTableService(CollectionService[Domain]):
         query = select(builder.fields or []).where(builder.final_query)
         records = await self._database.fetch_all(query=query)
         return records
+
+    def _map_many_to(self, records: list, dao_type: BaseModel, domain_type: Domain):
+        """
+        Remap a list of records to it domain equivalent.
+        """
+        daos = [dao_type(**record) for record in records]
+        results = self._mapper.map_many(daos, domain_type)
+        return results
 
     async def _insert_many_raw(self, daos: List[BaseModel]) -> Awaitable:
         """
@@ -616,11 +639,12 @@ class PostgresTableService(CollectionService[Domain]):
 
     def _build_table_raw_processors(self) -> List[TableColumnProcessor]:
         noop = lambda x: x
-        dialect = postgresql.dialect()
+        tuned_postgres_dialect = create_postgres_dialect()
 
         return [
             TableColumnProcessor(
-                name=column.name, processor=column.type.bind_processor(dialect) or noop
+                name=column.name,
+                processor=column.type.bind_processor(tuned_postgres_dialect) or noop,
             )
             for column in self._table.c
             if not isinstance(column.server_default, FetchedValue)

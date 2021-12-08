@@ -2,6 +2,25 @@ from invoke import task
 from pathlib import Path
 import base64
 import os
+import asyncio
+
+
+def drop_db():
+    from dotenv import load_dotenv
+    from expert_dollup.shared.database_services import create_connection
+
+    load_dotenv()
+    connection = create_connection(os.getenv("DATABASE_URL"))
+    asyncio.run(connection.drop_db())
+
+
+def truncate_db():
+    from dotenv import load_dotenv
+    from expert_dollup.shared.database_services import create_connection
+
+    load_dotenv()
+    connection = create_connection(os.getenv("DATABASE_URL"))
+    asyncio.run(connection.truncate_db())
 
 
 @task(name="start-http")
@@ -84,8 +103,7 @@ def fill_db_with_fixture(c, name, truncate=False, poetry=False):
         from expert_dollup.shared.database_services import create_connection
 
         if truncate is True:
-            load_dotenv()
-            create_connection(os.getenv("DATABASE_URL")).truncate_db()
+            truncate_db()
 
         if name == "simple_project":
             load_simple_project()
@@ -100,27 +118,19 @@ def fill_db_with_fixture(c, name, truncate=False, poetry=False):
 
 
 @task(name="db:truncate")
-def truncate_db(c, poetry=False):
-    if poetry:
-        from dotenv import load_dotenv
-        from expert_dollup.shared.database_services import create_connection
-
-        load_dotenv()
-        create_connection(os.getenv("DATABASE_URL")).truncate_db()
-    else:
+def db_truncate(c, poetry=False):
+    if not poetry:
         c.run("poetry run invoke db:truncate --poetry")
+
+    truncate_db()
 
 
 @task(name="db:drop")
-def drop_db(c, poetry=False):
-    if poetry:
-        from dotenv import load_dotenv
-        from expert_dollup.shared.database_services import create_connection
-
-        load_dotenv()
-        create_connection(os.getenv("DATABASE_URL")).drop_db()
-    else:
+def db_drop(c, poetry=False):
+    if not poetry:
         c.run("poetry run invoke db:drop --poetry")
+
+    drop_db()
 
 
 @task

@@ -1,4 +1,4 @@
-"""Intial database
+"""Initial database
 
 Revision ID: 2c47a3dd1b88
 Revises: 
@@ -114,6 +114,7 @@ def create_project_definition_tables():
         Column("attached_to_type_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
         Column("expression", String, nullable=False),
+        Column("dependency_graph", postgresql.JSON(), nullable=False),
     )
 
     op.create_index(
@@ -121,27 +122,6 @@ def create_project_definition_tables():
         "project_definition_formula",
         ["project_def_id", "name"],
         unique=True,
-    )
-
-    op.create_table(
-        "project_definition_formula_dependencies",
-        Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column(
-            "depend_on_formula_id", postgresql.UUID(), nullable=False, primary_key=True
-        ),
-        Column("project_def_id", postgresql.UUID(), nullable=False),
-    )
-
-    op.create_table(
-        "project_definition_formula_node_dependencies",
-        Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column(
-            "depend_on_node_id",
-            postgresql.UUID(),
-            nullable=False,
-            primary_key=True,
-        ),
-        Column("project_def_id", postgresql.UUID(), nullable=False),
     )
 
 

@@ -1,4 +1,6 @@
 import expert_dollup.infra.services as services
+import expert_dollup.infra.queries as queries
+import expert_dollup.core.queries as core_queries
 from os import environ
 from inspect import isclass
 from injector import Binder, singleton, inject
@@ -28,6 +30,19 @@ def bind_validators(binder: Binder) -> None:
     binder.bind(
         SchemaValidator,
         inject(SchemaValidator),
+    )
+
+
+def bind_queries(binder: Binder) -> None:
+
+    binder.bind(
+        core_queries.Plucker[services.ProjectNodeService],
+        factory_of(queries.PluckQuery, service=services.ProjectNodeService),
+    )
+
+    binder.bind(
+        core_queries.Plucker[services.FormulaService],
+        factory_of(queries.PluckQuery, service=services.FormulaService),
     )
 
 

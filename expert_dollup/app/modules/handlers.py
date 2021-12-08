@@ -19,7 +19,7 @@ def bind_graphql_handlers(binder: Binder) -> None:
         GraphqlPageHandler[
             DatasheetDefinitionElementService, DatasheetDefinitionElementDto
         ],
-        GraphqlPageHandler[FormulaService, FormulaDto],
+        GraphqlPageHandler[FormulaService, FormulaExpressionDto],
         GraphqlPageHandler[DatasheetService, DatasheetDto],
     ]
 

@@ -21,7 +21,7 @@ from .project_definition_node import (
     StaticNumberFieldConfig,
 )
 from .project import ProjectDetails, Project
-from .project_node import ProjectNode, ProjectNodeFilter, FieldUpdate
+from .project_node import ProjectNode, ProjectNodeFilter, FieldUpdate, NodePluckFilter
 from .project_definition_tree import (
     ProjectDefinitionNodeTree,
     ProjectDefinitionTreeNode,
@@ -45,13 +45,15 @@ from .translation import (
 from .ressource import Ressource
 from .formula import (
     Formula,
-    FormulaDetails,
+    FormulaExpression,
     FormulaCachedResult,
-    FormulaNode,
+    ComputedFormula,
     FieldNode,
     FormulaFilter,
     FormulaPluckFilter,
     FormulaCachedResultFilter,
+    FormulaDependencyGraph,
+    FormulaDependency,
 )
 
 from .datasheet_definition import DatasheetDefinition, ElementPropertySchema

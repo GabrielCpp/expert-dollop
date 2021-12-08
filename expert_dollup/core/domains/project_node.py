@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from typing import List, Optional, Union
+from typing import List, Optional
 from uuid import UUID
 from expert_dollup.shared.database_services import QueryFilter
 from .project_definition_node import ValueUnion
-from .project_node_meta import ProjectNodeMeta
 
 
 @dataclass
@@ -41,3 +40,7 @@ class ProjectNodeFilter(QueryFilter):
 class FieldUpdate:
     node_id: UUID
     value: ValueUnion
+
+
+class NodePluckFilter(QueryFilter):
+    ids: Optional[List[UUID]]

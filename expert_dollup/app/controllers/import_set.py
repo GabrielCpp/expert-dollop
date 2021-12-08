@@ -100,8 +100,8 @@ ressources = {
         usecase=ProjectDefinitionNodeUseCase,
     ),
     "/api/formula": RessourceLoader(
-        dto=FormulaDto,
-        domain=Formula,
+        dto=FormulaExpressionDto,
+        domain=FormulaExpression,
         usecase=FormulaUseCase,
     ),
     "raw_project": RessourceLoader(

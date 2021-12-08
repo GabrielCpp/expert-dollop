@@ -75,7 +75,7 @@ class ProjectDetailsDtoFactory(factory.Factory):
 
 class FormulaDtoFactory(factory.Factory):
     class Meta:
-        model = FormulaDto
+        model = FormulaExpressionDto
 
     id = factory.Faker("uuid4")
     project_def_id = factory.Faker("uuid4")
@@ -124,6 +124,8 @@ class LabelCollectionDtoFactory(factory.Factory):
     id = factory.Faker("uuid4")
     datasheet_definition_id = factory.Faker("uuid4")
     name = factory.Sequence(lambda n: f"label_collection_{n}")
+    properties_schema = factory.Dict({})
+    accepted_aggregates = factory.Dict({})
 
 
 class LabelDtoFactory(factory.Factory):

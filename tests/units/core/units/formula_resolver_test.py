@@ -11,7 +11,7 @@ from expert_dollup.infra.services import (
     ProjectNodeService,
     FormulaCacheService,
 )
-from expert_dollup.core.domains import FormulaNode, FieldNode, FormulaCachedResult
+from expert_dollup.core.domains import ComputedFormula, FieldNode, FormulaCachedResult
 
 Name = str
 
@@ -144,7 +144,7 @@ class FormulaFieldFixtureBuilder:
 
             for formula_name, formula_seed in node_seed.formulas.items():
                 formula_nodes.append(
-                    FormulaNode(
+                    ComputedFormula(
                         id=node_id,
                         name=formula_name,
                         path=instance_name_to_path[instance_name],
@@ -246,11 +246,6 @@ async def test_given_formula_instances_should_compute_collection():
             result=1,
         ),
     ]
-
-    formula_service.setup(
-        lambda x: x.get_all_project_formula_ast(project_id, project_definition_id),
-        returns_async=formula_nodes,
-    )
 
     project_node_service.setup(
         lambda x: x.get_all_fields(project_id), returns_async=fields

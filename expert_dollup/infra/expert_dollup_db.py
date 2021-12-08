@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 from uuid import UUID
 from datetime import datetime
 from pydantic import StrictBool, StrictInt, StrictStr, StrictFloat, BaseModel, Field
@@ -147,6 +147,15 @@ class SettingDao(BaseModel):
     value: Union[dict, str, bool, int, list]
 
 
+class FormulaDependencyDao(BaseModel):
+    target_type_id: UUID
+
+
+class FormulaDependencyGraphDao(BaseModel):
+    formulas: List[FormulaDependencyDao]
+    nodes: List[FormulaDependencyDao]
+
+
 class ProjectDefinitionFormulaDao(BaseModel):
     class Meta:
         pk = "id"
@@ -159,30 +168,7 @@ class ProjectDefinitionFormulaDao(BaseModel):
     attached_to_type_id: UUID
     name: str
     expression: str
-
-
-class ProjectDefinitionFormulaDependencyDao(BaseModel):
-    class Meta:
-        pk = ("formula_id", "depend_on_formula_id")
-
-    class Config:
-        title = "project_definition_formula_dependencies"
-
-    formula_id: UUID
-    depend_on_formula_id: UUID
-    project_def_id: UUID
-
-
-class ProjectDefinitionFormulaContainerDependencyDao(BaseModel):
-    class Meta:
-        pk = ("formula_id", "depend_on_node_id")
-
-    class Config:
-        title = "project_definition_formula_node_dependencies"
-
-    formula_id: UUID
-    depend_on_node_id: UUID
-    project_def_id: UUID
+    dependency_graph: FormulaDependencyGraphDao
 
 
 class ProjectFormulaCacheDao(BaseModel):
@@ -226,6 +212,23 @@ class DatasheetDefinitionDao(BaseModel):
     properties: str
 
 
+class CollectionAggregate(BaseModel):
+    from_collection: str
+
+
+class DatasheetAggregate(BaseModel):
+    from_datasheet: str
+
+
+class FormulaAggregate(BaseModel):
+    from_formula: str
+
+
+AcceptedAggregateDaoUnion = Union[
+    CollectionAggregate, DatasheetAggregate, FormulaAggregate
+]
+
+
 class LabelCollectionDao(BaseModel):
     class Meta:
         pk = "id"
@@ -236,6 +239,8 @@ class LabelCollectionDao(BaseModel):
     id: UUID
     datasheet_definition_id: UUID
     name: str
+    properties_schema: Dict[str, JsonSchemaDao]
+    accepted_aggregates: Dict[str, AcceptedAggregateDaoUnion]
 
 
 class LabelDao(BaseModel):
@@ -248,6 +253,8 @@ class LabelDao(BaseModel):
     id: UUID
     label_collection_id: UUID
     order_index: int
+    properties: Dict[str, ValueUnion]
+    aggregates: Dict[str, UUID]
 
 
 class DatasheetDefinitionElementDao(BaseModel):

@@ -1,12 +1,24 @@
 from uuid import UUID
 from dataclasses import dataclass
-from typing import List, Dict, Optional, Union
+from typing import List, Optional, Union
 from ast import AST
 from expert_dollup.shared.database_services import QueryFilter
+from .project_node import ProjectNode
 
 
 @dataclass
-class Formula:
+class FormulaDependency:
+    target_type_id: UUID
+
+
+@dataclass
+class FormulaDependencyGraph:
+    formulas: List[FormulaDependency]
+    nodes: List[FormulaDependency]
+
+
+@dataclass
+class FormulaExpression:
     id: UUID
     project_def_id: UUID
     attached_to_type_id: UUID
@@ -15,11 +27,8 @@ class Formula:
 
 
 @dataclass
-class FormulaDetails:
-    formula: Formula
-    formula_dependencies: Dict[str, UUID]
-    field_dependencies: Dict[str, UUID]
-    formula_ast: AST
+class Formula(FormulaExpression):
+    dependency_graph: FormulaDependencyGraph
 
 
 @dataclass
@@ -42,15 +51,11 @@ class FieldNode:
 
 
 @dataclass
-class FormulaNode:
-    id: UUID
-    name: str
-    path: List[UUID]
-    type_id: UUID
-    type_path: List[UUID]
-    expression: AST
-    formula_id: UUID
-    dependencies: List[str]
+class ComputedFormula:
+    formula: Formula
+    result: FormulaCachedResult
+    node: ProjectNode
+    final_ast: AST
 
 
 class FormulaFilter(QueryFilter):
@@ -62,7 +67,8 @@ class FormulaFilter(QueryFilter):
 
 
 class FormulaPluckFilter(QueryFilter):
-    names: List[str]
+    ids: Optional[List[UUID]]
+    names: Optional[List[str]]
 
 
 class FormulaCachedResultFilter(QueryFilter):
