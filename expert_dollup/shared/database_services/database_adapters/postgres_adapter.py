@@ -1,36 +1,153 @@
-from typing import (
-    List,
-    TypeVar,
-    Optional,
-    Awaitable,
-    Any,
-    Dict,
-    Type,
-    Tuple,
-)
+from typing import List, TypeVar, Optional, Awaitable, Dict, Type, Tuple, Union, Set
 from pydantic import BaseModel
-from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy import MetaData, create_engine, and_, func, or_, desc, asc
+from pydantic.fields import ModelField
+from dataclasses import dataclass
+from inspect import isclass
+from uuid import UUID
+from datetime import datetime
+from jsonpickle import encode, decode
+from databases import Database
+from sqlalchemy import (
+    MetaData,
+    create_engine,
+    and_,
+    func,
+    or_,
+    desc,
+    asc,
+    Table,
+    Column,
+    String,
+    Boolean,
+    DateTime,
+    Text,
+    Integer,
+)
 from sqlalchemy.schema import FetchedValue
 from sqlalchemy.sql import select
-from databases import Database
-from dataclasses import dataclass
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects import postgresql
 from expert_dollup.shared.automapping import Mapper
-from ..filters import ExactMatchFilter
+from .adapter_interfaces import (
+    CollectionService,
+    QueryBuilder,
+    WhereFilter,
+    DbConnection,
+)
 from ..page import Page
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
-from .adapter_interfaces import TableService, QueryBuilder, WhereFilter, DbConnection
+
+NoneType = type(None)
+
+
+class PostgresColumnBuilder:
+    def __init__(self):
+        self._column_builder = {
+            Union: self._build_union,
+            Dict: self._build_dict,
+            dict: self._build_dict,
+            List: self._build_list,
+            UUID: self._build_uuid,
+            int: self._build_int,
+            str: self._build_str,
+            bool: self._build_bool,
+            datetime: self._build_datetime,
+            BaseModel: self._build_object,
+        }
+
+    def build(self, meta, name: str, field: ModelField):
+        db_type = self._build_column_type(meta, field.type_)
+        options = {"nullable": field.required}
+
+        if name == meta.pk or (isinstance(meta.pk, tuple) and name in meta.pk):
+            options["primary_key"] = True
+
+        return Column(name, db_type, **options)
+
+    def _build_column_type(self, meta, field_type: Type) -> Column:
+        type_origin = getattr(field_type, "__origin__", field_type)
+        type_args = getattr(field_type, "__args__", [])
+
+        if type_origin == Union and len(type_args) == 2 and NoneType in type_args:
+            type_origin = [
+                type_arg for type_arg in type_args if not type_arg is NoneType
+            ][0]
+            type_args = []
+
+        elif isclass(type_origin) and issubclass(type_origin, BaseModel):
+            type_origin = BaseModel
+            type_args = []
+
+        assert (
+            type_origin in self._column_builder
+        ), f"Unsupported column type for {type_origin}"
+        return self._column_builder[type_origin](type_origin, type_args)
+
+    def _build_int(self, type_origin: Type, type_args: List[Type]):
+        return Integer
+
+    def _build_str(self, type_origin: Type, type_args: List[Type]):
+        return String
+
+    def _build_uuid(self, type_origin: Type, type_args: List[Type]):
+        return postgresql.UUID()
+
+    def _build_bool(self, type_origin: Type, type_args: List[Type]):
+        return Boolean
+
+    def _build_datetime(self, type_origin: Type, type_args: List[Type]):
+        return DateTime(timezone=True)
+
+    def _build_object(self, type_origin: Type, type_args: List[Type]):
+        return postgresql.JSON(none_as_null=True)
+
+    def _build_union(self, type_origin: Type, type_args: List[Type]):
+        return postgresql.JSON(none_as_null=True)
+
+    def _build_dict(self, type_origin: Type, type_args: List[Type]):
+        return postgresql.JSON(none_as_null=True)
+
+    def _build_list(self, type_origin: Type, type_args: List[Type]):
+        if type_origin is str:
+            return postgresql.ARRAY(String, dimensions=1)
+
+        return postgresql.JSON(none_as_null=True)
 
 
 class PostgresConnection(DbConnection):
+    class EmptyMeta:
+        pk = None
+
     def __init__(self, connection_string: str, **kwargs):
         self.connection_string = connection_string
-        self.database = Database(connection_string, **kwargs)
+        self._database = Database(
+            connection_string,
+            init=PostgresConnection._init_connection,
+            **kwargs,
+        )
+        self.metadata = MetaData()
+        self.tables: Dict[Type, Table] = {}
 
-    def internal_connector(self):
-        return self.database
+    def get_collection_service(self, meta: Type, mapper: Mapper):
+        return PostgresTableService(meta, self.tables, self._database, mapper)
+
+    def load_metadatas(self, dao_types):
+        column_builder = PostgresColumnBuilder()
+
+        for dao_type in dao_types:
+            schema = dao_type.schema()
+            assert schema["type"] == "object"
+
+            columns = [
+                column_builder.build(
+                    getattr(dao_type, "Meta", PostgresConnection.EmptyMeta), name, field
+                )
+                for name, field in dao_type.__fields__.items()
+            ]
+            table_name = schema["title"]
+            table = Table(table_name, self.metadata, *columns)
+            self.tables[dao_type] = table
 
     async def truncate_db(self):
         engine = create_engine(self.connection_string)
@@ -52,17 +169,32 @@ class PostgresConnection(DbConnection):
             tbl.drop(engine)
 
     async def connect(self) -> None:
-        await self.database.connect()
+        await self._database.connect()
 
     async def disconnect(self) -> None:
-        await self.database.disconnect()
+        await self._database.disconnect()
 
     @property
     def is_connected(self) -> bool:
-        return self.database.is_connected
+        return self._database.is_connected
 
+    @staticmethod
+    async def _init_connection(conn):
+        await conn.set_type_codec(
+            "json",
+            encoder=lambda x: encode(x, unpicklable=False),
+            decoder=lambda x: decode(x, safe=True),
+            schema="pg_catalog",
+        )
 
-DbConnection._REGISTRY["postgresql"] = PostgresConnection
+        await conn.set_type_codec(
+            "json",
+            encoder=lambda x: encode(x, unpicklable=False).encode("utf8"),
+            decoder=lambda x: decode(x.decode("utf8"), safe=True),
+            schema="pg_catalog",
+            format="binary",
+        )
+
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")
@@ -78,7 +210,7 @@ class PostgresQueryBuilder(QueryBuilder):
     @staticmethod
     def order_by_clause(table, name: str, direction: str):
         assert direction in ("desc", "asc")
-        order = desc if direction is "desc" else asc
+        order = desc if direction == "desc" else asc
 
         return order(getattr(table.c, name))
 
@@ -180,25 +312,29 @@ class PostgresQueryBuilder(QueryBuilder):
         return self
 
 
-class PostgresTableService(TableService[Domain]):
-    def __init__(self, database: PostgresConnection, mapper: Mapper):
-        self._database = database.internal_connector()
+class PostgresTableService(CollectionService[Domain]):
+    def __init__(
+        self,
+        meta: Type,
+        tables: Dict[Type, Table],
+        connector: Database,
+        mapper: Mapper,
+    ):
         self._mapper = mapper
-        self._table = self.__class__.Meta.table
-        self._custom_filters: Dict[Type, callable] = getattr(
-            self.__class__.Meta, "custom_filters", dict()
-        )
-        self._paginator = getattr(self.__class__.Meta, "paginator", lambda _: None)(
-            self._table
-        )
-        self._dao = self.__class__.Meta.dao
-        self._domain = self.__class__.Meta.domain
-        self._table_filter_type = self.__class__.Meta.table_filter_type
+        self._dao = meta.dao
+        self._domain = meta.domain
+        self._table_filter_type = getattr(meta, "table_filter_type", None)
+        self._custom_filters: Set[Type] = getattr(meta, "custom_filters", set())
+        self._paginator_factory = getattr(meta, "paginator", lambda _: None)
+        self._database = connector
+        self._table = tables.get(self._dao)
+        self._paginator = self._paginator_factory(self._table)
         self._column_processors = self._build_table_raw_processors()
 
         self.table_id_names = [
             pk.name for pk in self._table.primary_key.columns.values()
         ]
+
         self.table_ids = [
             getattr(self._table.c, table_id_name)
             for table_id_name in self.table_id_names
@@ -436,14 +572,15 @@ class PostgresTableService(TableService[Domain]):
             ), "Query builder query must be finalized"
             return query_filter.final_query
 
-        if query_type in self._custom_filters:
-            return self._custom_filters[query_type](query_filter, self._mapper)
-
-        assert not self._table_filter_type is None, "Table filter is missing."
-        filter_fields = self._mapper.map(query_filter, dict, self._table_filter_type)
-        where_filter = ExactMatchFilter.build_and_column_filter(
-            self._table, filter_fields
+        filter_type = (
+            query_type
+            if query_type in self._custom_filters
+            else self._table_filter_type
         )
+        assert not filter_type is None, "Table filter is missing."
+
+        filter_fields = self._mapper.map(query_filter, dict, filter_type)
+        where_filter = self._build_and_column_filter(filter_fields)
 
         return where_filter
 
@@ -473,3 +610,16 @@ class PostgresTableService(TableService[Domain]):
             for column in self._table.c
             if not isinstance(column.server_default, FetchedValue)
         ]
+
+    def _build_and_column_filter(self, fields: dict):
+        condition = None
+
+        for column_name, value in fields.items():
+            if condition is None:
+                condition = getattr(self._table.c, column_name) == value
+            else:
+                condition = and_(
+                    condition, getattr(self._table.c, column_name) == value
+                )
+
+        return condition

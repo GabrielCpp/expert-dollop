@@ -7,6 +7,7 @@ from enum import Enum
 class JoinType(Enum):
     AGGREGATE = "AGGREGATE"
     PROPERTY = "PROPERTY"
+    TABLE_PROPERTY = "PROPERTY"
 
 
 @dataclass

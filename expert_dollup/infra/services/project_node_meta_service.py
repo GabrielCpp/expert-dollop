@@ -1,16 +1,12 @@
 from typing import Awaitable, List
 from uuid import UUID
-from expert_dollup.infra.expert_dollup_db import (
-    project_node_meta_table,
-    ProjectNodeMetaDao,
-)
+from expert_dollup.infra.expert_dollup_db import ProjectNodeMetaDao
 from expert_dollup.core.domains import ProjectNodeMeta, ProjectNodeMetaFilter
-from expert_dollup.shared.database_services import PostgresTableService
+from expert_dollup.shared.database_services import CollectionServiceProxy
 
 
-class ProjectNodeMetaService(PostgresTableService[ProjectNodeMeta]):
+class ProjectNodeMetaService(CollectionServiceProxy[ProjectNodeMeta]):
     class Meta:
-        table = project_node_meta_table
         dao = ProjectNodeMetaDao
         domain = ProjectNodeMeta
         table_filter_type = ProjectNodeMetaFilter

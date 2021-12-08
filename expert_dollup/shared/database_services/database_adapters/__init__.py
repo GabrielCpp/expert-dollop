@@ -1,10 +1,5 @@
-from .postgres_adapter import (
-    PostgresTableService,
-    PostgresQueryBuilder,
-    PostgresConnection,
-)
 from .adapter_interfaces import (
-    TableService,
+    CollectionService,
     QueryBuilder,
     DbConnection,
     create_connection,

@@ -1,5 +1,5 @@
 import jsonpickle
-from typing import List
+from typing import List, Dict
 from uuid import UUID
 from dataclasses import asdict
 from pydantic import parse_raw_as
@@ -7,7 +7,6 @@ from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import map_dict_keys
 from expert_dollup.core.utils.path_transform import (
-    join_path,
     split_uuid_path,
     join_uuid_path,
     list_uuid_to_str,
@@ -64,9 +63,7 @@ def map_project_definition_node_from_dao(
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
         config=jsonpickle.decode(src.config),
-        default_value=None
-        if src.default_value is None
-        else jsonpickle.decode(src.default_value),
+        default_value=src.default_value,
         path=split_uuid_path(src.path),
         creation_date_utc=src.creation_date_utc,
     )
@@ -89,9 +86,7 @@ def map_project_definition_node_to_dao(
         display_query_internal_id=display_query_internal_id,
         level=len(src.path),
         creation_date_utc=mapper.get(Clock).utcnow(),
-        default_value=None
-        if src.default_value is None
-        else jsonpickle.encode(src.default_value),
+        default_value=src.default_value,
     )
 
 
@@ -125,7 +120,7 @@ def map_project_node_to_dao(src: ProjectNode, mapper: Mapper) -> ProjectNodeDao:
         type_id=src.type_id,
         type_name=src.type_name,
         path=join_uuid_path(src.path),
-        value=None if src.value is None else jsonpickle.encode(src.value),
+        value=src.value,
         label=src.label,
         type_path=join_uuid_path(src.type_path),
         level=len(src.path),
@@ -142,7 +137,7 @@ def map_project_node_from_dao(src: ProjectNodeDao, mapper: Mapper) -> ProjectNod
         type_name=src.type_name,
         path=split_uuid_path(src.path),
         type_path=split_uuid_path(src.type_path),
-        value=None if src.value is None else jsonpickle.decode(src.value),
+        value=src.value,
         label=src.label,
     )
 
@@ -275,7 +270,7 @@ def map_project_definition_node_filter_to_dict(
             "instanciate_by_default": ("instanciate_by_default", None),
             "order_index": ("order_index", None),
             "config": ("config", jsonpickle.encode),
-            "default_value": ("default_value", jsonpickle.encode),
+            "default_value": ("default_value", None),
             "path": ("path", join_uuid_path),
             "display_query_internal_id": ("display_query_internal_id", None),
         },
@@ -301,7 +296,7 @@ def map_project_node_filter_to_dict(src: ProjectNodeFilter, mapper: Mapper) -> d
             "project_id": ("project_id", None),
             "type_id": ("type_id", None),
             "path": ("path", join_uuid_path),
-            "value": ("value", lambda v: None if v is None else jsonpickle.encode(v)),
+            "value": ("value", None),
             "label": ("label", None),
             "level": ("level", None),
             "display_query_internal_id": ("display_query_internal_id", None),
@@ -614,4 +609,15 @@ def map_formula_cached_result_filter(
         {
             "project_id": ("project_id", None),
         },
+    )
+
+
+def map_report_definition_to_dao(
+    src: ReportDefinition, mapper: Mapper
+) -> ReportDefinitionDao:
+    return ReportDefinitionDao(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        name=src.name,
+        structure=src.structure,
     )

@@ -1,17 +1,23 @@
+from os import environ
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Awaitable, List, Optional, Union
+from typing import Generic, TypeVar, List, Optional, Union, Type, Tuple, Literal
+from inspect import isclass
+from urllib.parse import urlparse
+from pydantic import BaseModel
+from expert_dollup.shared.automapping import Mapper
 from ..page import Page
 from ..query_filter import QueryFilter
-from abc import ABC, abstractmethod
-from typing import Union
-from urllib.parse import urlparse
 
 
 class DbConnection(ABC):
     _REGISTRY = {}
 
     @abstractmethod
-    def internal_connector(self):
+    def load_metadatas(self, dao_types):
+        pass
+
+    @abstractmethod
+    def get_collection_service(self, meta: Type, mapper: Mapper):
         pass
 
     @abstractmethod
@@ -23,15 +29,37 @@ class DbConnection(ABC):
         pass
 
 
-def create_connection(connection_string: str, **kwargs) -> DbConnection:
+def create_connection(
+    connection_string: str, dao_module=None, **kwargs
+) -> DbConnection:
     scheme = urlparse(connection_string).scheme
+
+    if len(DbConnection._REGISTRY) == 0:
+        connectors = environ.get("DB_CONNECTORS").split()
+
+        for connector in connectors:
+            if connector == "postgresql":
+                from .postgres_adapter import PostgresConnection
+
+                DbConnection._REGISTRY["postgresql"] = PostgresConnection
 
     build_connection = DbConnection._REGISTRY.get(scheme)
 
     if build_connection is None:
         raise KeyError(f"No key for schem {scheme}")
 
-    return build_connection(connection_string, **kwargs)
+    connection = build_connection(connection_string, **kwargs)
+
+    if not dao_module is None:
+        connection.load_metadatas(
+            [
+                class_type
+                for class_type in dao_module.__dict__.values()
+                if isclass(class_type) and issubclass(class_type, BaseModel)
+            ]
+        )
+
+    return connection
 
 
 Domain = TypeVar("Domain")
@@ -82,23 +110,23 @@ class QueryBuilder(ABC):
 WhereFilter = Union[QueryFilter, QueryBuilder]
 
 
-class TableService(ABC, Generic[Domain]):
+class CollectionService(ABC, Generic[Domain]):
     @abstractmethod
-    async def insert(self, domain: Domain) -> Awaitable:
+    async def insert(self, domain: Domain):
         pass
 
     @abstractmethod
-    async def insert_many(self, domains: List[Domain]) -> Awaitable:
+    async def insert_many(self, domains: List[Domain]):
         pass
 
     @abstractmethod
-    async def find_all(self, limit: int = 1000) -> Awaitable[List[Domain]]:
+    async def find_all(self, limit: int = 1000) -> List[Domain]:
         pass
 
     @abstractmethod
     async def find_all_paginated(
         self, limit: int = 1000, next_page_token: Optional[str] = None
-    ) -> Awaitable[Page[Domain]]:
+    ) -> Page[Domain]:
         pass
 
     @abstractmethod
@@ -107,7 +135,8 @@ class TableService(ABC, Generic[Domain]):
         query_filter: WhereFilter,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
-    ) -> Awaitable[List[Domain]]:
+        order_by: Optional[Tuple[str, Literal["desc", "asc"]]] = None,
+    ) -> List[Domain]:
         pass
 
     @abstractmethod
@@ -116,39 +145,37 @@ class TableService(ABC, Generic[Domain]):
         query_filter: WhereFilter,
         limit: int,
         next_page_token: Optional[str] = None,
-    ) -> Awaitable[Page[Domain]]:
+    ) -> Page[Domain]:
         pass
 
     @abstractmethod
-    async def find_one_by(self, query_filter: WhereFilter) -> Awaitable[List[Domain]]:
+    async def find_one_by(self, query_filter: WhereFilter) -> List[Domain]:
         pass
 
     @abstractmethod
-    async def find_by_id(self, pk_id: Id) -> Awaitable[Domain]:
+    async def find_by_id(self, pk_id: Id) -> Domain:
         pass
 
     @abstractmethod
-    async def delete_by(self, query_filter: WhereFilter) -> Awaitable:
+    async def delete_by(self, query_filter: WhereFilter):
         pass
 
     @abstractmethod
-    async def delete_by_id(self, pk_id: Id) -> Awaitable:
+    async def delete_by_id(self, pk_id: Id):
         pass
 
     @abstractmethod
-    async def update(
-        self, value_filter: QueryFilter, query_filter: WhereFilter
-    ) -> Awaitable:
+    async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):
         """
         Update records base on query.
         """
 
     @abstractmethod
-    async def has(self, pk_id: Id) -> Awaitable[bool]:
+    async def has(self, pk_id: Id) -> bool:
         pass
 
     @abstractmethod
-    async def count(self, query_filter: Optional[WhereFilter] = None) -> Awaitable[int]:
+    async def count(self, query_filter: Optional[WhereFilter] = None) -> int:
         pass
 
     @abstractmethod
@@ -163,5 +190,6 @@ class TableService(ABC, Generic[Domain]):
         Return new query builder
         """
 
+    @abstractmethod
     async def fetch_all_records(self, builder: QueryBuilder) -> dict:
         pass

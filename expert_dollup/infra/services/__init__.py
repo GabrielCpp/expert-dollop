@@ -15,3 +15,4 @@ from .datasheet_definition_label_service import LabelService
 from .datasheet_definition_element_service import DatasheetDefinitionElementService
 from .datasheet_service import DatasheetService
 from .datasheet_element_service import DatasheetElementService
+from .report_definition_service import ReportDefinitionService

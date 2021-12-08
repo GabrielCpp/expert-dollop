@@ -6,9 +6,10 @@ from typing import List, Awaitable, Dict
 from collections import defaultdict
 from uuid import UUID
 from expert_dollup.shared.database_services import (
-    PostgresTableService,
+    CollectionServiceProxy,
     IdStampedDateCursorEncoder,
 )
+from expert_dollup.shared.automapping import Mapper
 from expert_dollup.core.domains import (
     Formula,
     FormulaDetails,
@@ -16,22 +17,20 @@ from expert_dollup.core.domains import (
     FormulaPluckFilter,
 )
 from expert_dollup.core.utils.path_transform import split_uuid_path
-from expert_dollup.infra.expert_dollup_db import (
-    ProjectDefinitionFormulaDao,
-    project_definition_formula_table,
-    project_definition_formula_dependency_table,
-    project_definition_formula_node_dependency_table,
-    project_node_table,
-)
+from expert_dollup.infra.expert_dollup_db import *
 
 
-class FormulaService(PostgresTableService[Formula]):
+class FormulaService(CollectionServiceProxy[Formula]):
     class Meta:
-        table = project_definition_formula_table
         dao = ProjectDefinitionFormulaDao
         domain = Formula
         table_filter_type = FormulaFilter
         paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")
+
+    def __init__(self, database, mapper: Mapper):
+        CollectionServiceProxy.__init__(self, database, mapper)
+        self.tables = database.tables
+        self._database = database._database
 
     async def get_formulas_by_name(
         self, project_def_id: UUID, names: List[str]
@@ -51,6 +50,13 @@ class FormulaService(PostgresTableService[Formula]):
         return {record.get("name"): record.get("id") for record in records}
 
     async def patch_formula_graph(self, formula_details: FormulaDetails) -> Awaitable:
+        project_definition_formula_dependency_table = self.tables.get(
+            ProjectDefinitionFormulaDependencyDao
+        )
+        project_definition_formula_node_dependency_table = self.tables.get(
+            ProjectDefinitionFormulaContainerDependencyDao
+        )
+
         query = project_definition_formula_dependency_table.delete().where(
             project_definition_formula_dependency_table.c.formula_id
             == formula_details.formula.id
@@ -98,6 +104,14 @@ class FormulaService(PostgresTableService[Formula]):
     async def get_all_project_formula_ast(
         self, project_id: UUID, project_definition_id: UUID
     ) -> Awaitable[List[FormulaNode]]:
+        project_definition_formula_dependency_table = self.tables.get(
+            ProjectDefinitionFormulaDependencyDao
+        )
+        project_definition_formula_node_dependency_table = self.tables.get(
+            ProjectDefinitionFormulaContainerDependencyDao
+        )
+        project_node_table = self.tables.get(ProjectNodeDao)
+
         join_definition = self._table.join(
             project_node_table,
             and_(

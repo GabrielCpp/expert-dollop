@@ -1,13 +1,9 @@
 from expert_dollup.shared.database_services import (
-    ExactMatchFilter,
-    PostgresTableService,
+    CollectionServiceProxy,
     IdStampedDateCursorEncoder,
 )
 from expert_dollup.core.domains import DatasheetElement
-from expert_dollup.infra.expert_dollup_db import (
-    datasheet_element_table,
-    DatasheetElementDao,
-)
+from expert_dollup.infra.expert_dollup_db import DatasheetElementDao
 from expert_dollup.core.domains import (
     DatasheetElement,
     DatasheetElementFilter,
@@ -15,11 +11,10 @@ from expert_dollup.core.domains import (
 )
 
 
-class DatasheetElementService(PostgresTableService[DatasheetElement]):
+class DatasheetElementService(CollectionServiceProxy[DatasheetElement]):
     class Meta:
-        table = datasheet_element_table
         dao = DatasheetElementDao
         domain = DatasheetElement
         table_filter_type = DatasheetElementFilter
         paginator = IdStampedDateCursorEncoder.for_fields("child_element_reference")
-        custom_filters = {DatasheetElementId: ExactMatchFilter(datasheet_element_table)}
+        custom_filters = {DatasheetElementId}

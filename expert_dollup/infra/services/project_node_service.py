@@ -1,4 +1,3 @@
-import jsonpickle
 from typing import List, Optional, Awaitable
 from uuid import UUID
 from expert_dollup.core.domains import (
@@ -7,17 +6,13 @@ from expert_dollup.core.domains import (
     ProjectNodeFilter,
     FieldNode,
 )
-from expert_dollup.shared.database_services import PostgresTableService
+from expert_dollup.shared.database_services import CollectionServiceProxy
 from expert_dollup.core.utils.path_transform import split_uuid_path
-from expert_dollup.infra.expert_dollup_db import (
-    project_node_table,
-    ProjectNodeDao,
-)
+from expert_dollup.infra.expert_dollup_db import ProjectNodeDao
 
 
-class ProjectNodeService(PostgresTableService[ProjectNode]):
+class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
     class Meta:
-        table = project_node_table
         dao = ProjectNodeDao
         domain = ProjectNode
         table_filter_type = ProjectNodeFilter
@@ -112,7 +107,7 @@ class ProjectNodeService(PostgresTableService[ProjectNode]):
                 path=split_uuid_path(record.get("path")),
                 type_id=record.get("type_id"),
                 type_path=split_uuid_path(record.get("type_path")),
-                expression=jsonpickle.decode(record.get("value")),
+                expression=record.get("value"),
             )
             for record in records
         ]

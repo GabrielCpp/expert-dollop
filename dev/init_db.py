@@ -5,7 +5,6 @@ from tests.fixtures import *
 
 
 def generate_json(generate_layer, output_path=None):
-    from injector import Injector
     from jsonpickle import encode, set_encoder_options, set_preferred_backend
 
     fixture = SimpleProject()

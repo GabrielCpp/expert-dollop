@@ -68,12 +68,15 @@ class DbFixtureHelper:
 
     async def insert_daos(self, service_type: Type, daos: Dict[str, Any]):
         service = self.injector.get(service_type)
-        await service._insert_many_raw(daos)
+        await service._impl._insert_many_raw(daos)
 
     async def init_db(self, fake_db: FakeDb):
         await self.dal.truncate_db()
 
         for domain_type, objects in fake_db.collections.items():
+            assert (
+                domain_type in self.services_by_domain
+            ), f"No service for domain {domain_type.__name__}"
             service_type = self.services_by_domain[domain_type]
             service = self.injector.get(service_type)
             await service.insert_many(objects)

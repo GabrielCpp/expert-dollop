@@ -8,6 +8,7 @@ from async_asgi_testclient import TestClient
 from expert_dollup.app.app import creat_app
 from expert_dollup.app.modules import build_container
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
+import expert_dollup.infra.expert_dollup_db as daos
 from expert_dollup.shared.database_services import DbConnection
 import expert_dollup.infra.services as services
 from expert_dollup.shared.automapping import Mapper
@@ -24,7 +25,7 @@ reseed_random(1)
 async def dal() -> DbConnection:
     DATABASE_URL = os.environ["DATABASE_URL"]
     force_rollback = os.getenv("FORCE_ROLLBACK", True) in [True, "True"]
-    connection = create_connection(DATABASE_URL, force_rollback=False)
+    connection = create_connection(DATABASE_URL, daos, force_rollback=False)
 
     await connection.truncate_db()
     await connection.connect()

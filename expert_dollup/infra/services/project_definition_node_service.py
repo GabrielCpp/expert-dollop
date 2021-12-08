@@ -1,7 +1,7 @@
 from typing import Awaitable, List, Dict
 from uuid import UUID
 from expert_dollup.shared.database_services import (
-    PostgresTableService,
+    CollectionServiceProxy,
     IdStampedDateCursorEncoder,
 )
 from expert_dollup.core.domains import (
@@ -9,15 +9,11 @@ from expert_dollup.core.domains import (
     ProjectDefinitionNodeFilter,
     ProjectDefinitionNodePluckFilter,
 )
-from expert_dollup.infra.expert_dollup_db import (
-    project_definition_node_table,
-    ProjectDefinitionNodeDao,
-)
+from expert_dollup.infra.expert_dollup_db import ProjectDefinitionNodeDao
 
 
-class ProjectDefinitionNodeService(PostgresTableService[ProjectDefinitionNode]):
+class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]):
     class Meta:
-        table = project_definition_node_table
         dao = ProjectDefinitionNodeDao
         domain = ProjectDefinitionNode
         table_filter_type = ProjectDefinitionNodeFilter
