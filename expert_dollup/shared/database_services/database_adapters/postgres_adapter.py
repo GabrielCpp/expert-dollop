@@ -36,6 +36,7 @@ from sqlalchemy import (
     Text,
     Integer,
 )
+from sqlalchemy import schema
 from sqlalchemy.schema import FetchedValue
 from sqlalchemy.sql import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -221,8 +222,12 @@ class PostgresConnection(DbConnection):
         column_builder = PostgresColumnBuilder()
 
         for dao_type in dao_types:
+            if not hasattr(dao_type, "Meta"):
+                continue
+
             schema = dao_type.schema()
-            assert schema["type"] == "object"
+            assert schema.get("type") == "object"
+            assert "properties" in schema
 
             columns = [
                 column_builder.build(
@@ -231,12 +236,11 @@ class PostgresConnection(DbConnection):
                     field,
                 )
                 for field in dao_type.__fields__.values()
-                if hasattr(
-                    dao_type,
-                    "Meta",
-                )
             ]
-            # columns.append(Column("_version"), Integer, nullable=False)
+
+            if hasattr(dao_type.Meta, "version"):
+                columns.append(Column("_version", Integer, nullable=False))
+
             table_name = schema["title"]
             table = Table(table_name, self.metadata, *columns)
             self.tables[dao_type] = table
@@ -335,7 +339,7 @@ class PostgresQueryBuilder(QueryBuilder):
         return self
 
     def find_by_isnot(self, query_filter: QueryFilter) -> "QueryBuilder":
-        filter_fields = self._mapper.map(query_filter, dict)
+        filter_fields = self._mapper.map(query_filter, dict, query_filter.__class__)
 
         for name, value in filter_fields.items():
             where_filter = getattr(self._table.c, name).isnot(value)
@@ -344,7 +348,7 @@ class PostgresQueryBuilder(QueryBuilder):
         return self
 
     def startwiths(self, query_filter: QueryFilter) -> "QueryBuilder":
-        filter_fields = self._mapper.map(query_filter, dict)
+        filter_fields = self._mapper.map(query_filter, dict, query_filter.__class__)
 
         for name, path_filter in filter_fields.items():
             where_filter = getattr(self._table.c, name).like(f"{path_filter}%")
@@ -353,7 +357,7 @@ class PostgresQueryBuilder(QueryBuilder):
         return self
 
     def pluck(self, pluck_filter: QueryFilter) -> "QueryBuilder":
-        filter_fields = self._mapper.map(pluck_filter, dict)
+        filter_fields = self._mapper.map(pluck_filter, dict, pluck_filter.__class__)
 
         for name, values in filter_fields.items():
             where_filter = getattr(self._table.c, name).in_(values)
@@ -416,6 +420,8 @@ class PostgresTableService(CollectionService[Domain]):
         self._dao = meta.dao
         self._domain = meta.domain
         self._paginator_factory = getattr(meta, "paginator", lambda _: None)
+        self._version = getattr(self._dao.Meta, "version", None)
+        self._version_mappers = getattr(self._dao.Meta, "version_mappers", {})
         self._database = connector
         self._table = tables.get(self._dao)
         self._paginator = self._paginator_factory(self._table)
@@ -432,22 +438,22 @@ class PostgresTableService(CollectionService[Domain]):
 
     async def insert(self, domain: Domain):
         query = self._table.insert()
-        value = self._mapper.map(domain, self._dao).dict()
+        value = self._map_to_dict(domain)
         await self._database.execute(query=query, values=value)
 
     async def insert_many(self, domains: List[Domain], bulk=True):
-        daos = self._mapper.map_many(domains, self._dao)
+        dicts = self._map_many_to_dict(domains)
 
         if bulk:
-            await self._insert_many_raw(daos)
+            await self._insert_many_raw(dicts)
         else:
-            query = pg_insert(self._table, [dao.dict() for dao in daos])
+            query = pg_insert(self._table, dicts)
             await self._database.execute(query=query)
 
     async def find_all(self, limit: int = 1000) -> List[Domain]:
         query = self._table.select().limit(limit)
         records = await self._database.fetch_all(query=query)
-        results = self._map_many_to(records, self._dao, self._domain)
+        results = self._map_many_to_domain(records)
         return results
 
     async def find_all_paginated(
@@ -456,7 +462,7 @@ class PostgresTableService(CollectionService[Domain]):
         assert not self._paginator is None, "Paginator required"
         query = self._paginator.build_query(None, limit, next_page_token)
         records = await self._database.fetch_all(query=query)
-        results = self._map_many_to(records, self._dao, self._domain)
+        results = self._map_many_to_domain(records)
         new_next_page_token = (
             self._paginator.default_token
             if len(records) == 0
@@ -492,7 +498,7 @@ class PostgresTableService(CollectionService[Domain]):
             )
 
         records = await self._database.fetch_all(query=query)
-        results = self._map_many_to(records, self._dao, self._domain)
+        results = self._map_many_to_domain(records)
 
         return results
 
@@ -506,7 +512,7 @@ class PostgresTableService(CollectionService[Domain]):
         where_filter = self._build_filter(query_filter)
         query = self._paginator.build_query(where_filter, limit, next_page_token)
         records = await self._database.fetch_all(query=query)
-        results = self._map_many_to(records, self._dao, self._domain)
+        results = self._map_many_to_domain(records)
 
         new_next_page_token = (
             self._paginator.default_token
@@ -528,7 +534,7 @@ class PostgresTableService(CollectionService[Domain]):
         if record is None:
             raise RecordNotFound()
 
-        result = self._mapper.map(self._dao(**record), self._domain)
+        result = self._map_to_domain(record)
 
         return result
 
@@ -561,12 +567,12 @@ class PostgresTableService(CollectionService[Domain]):
     async def find_by_id(self, pk_id: Id) -> Domain:
         where_filter = self._build_id_filter(pk_id)
         query = self._table.select().where(where_filter)
-        value = await self._database.fetch_one(query=query)
+        record = await self._database.fetch_one(query=query)
 
-        if value is None:
+        if record is None:
             raise RecordNotFound()
 
-        result = self._mapper.map(self._dao(**value), self._domain)
+        result = self._map_to_domain(record)
         return result
 
     async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):
@@ -589,15 +595,47 @@ class PostgresTableService(CollectionService[Domain]):
         records = await self._database.fetch_all(query=query)
         return records
 
-    def _map_many_to(self, records: list, dao_type: BaseModel, domain_type: Domain):
-        """
-        Remap a list of records to it domain equivalent.
-        """
-        daos = [dao_type(**record) for record in records]
-        results = self._mapper.map_many(daos, domain_type)
+    def _map_to_dict(self, domain: Domain) -> dict:
+        dao = self._mapper.map(domain, self._dao)
+        d = self._add_version_to_dao(dao)
+
+        return d
+
+    def _map_many_to_dict(self, domains: List[Domain]) -> List[dict]:
+        dicts = self._mapper.map_many(
+            domains, self._dao, after=self._add_version_to_dao
+        )
+        return dicts
+
+    def _map_to_domain(self, record) -> Domain:
+        dao = self._remap_record_to_lastest(record)
+        result = self._mapper.map(dao, self._domain)
+        return result
+
+    def _map_many_to_domain(self, records: list) -> List[Domain]:
+        daos = [self._remap_record_to_lastest(record) for record in records]
+        results = self._mapper.map_many(daos, self._domain)
         return results
 
-    async def _insert_many_raw(self, daos: List[BaseModel]) -> Awaitable:
+    def _remap_record_to_lastest(self, record):
+        version = record.get("_version", None)
+
+        if version is None or version == self._version:
+            return self._dao(**record)
+
+        return self._version_mappers[version][self._version](
+            self._version_mappers, record
+        )
+
+    def _add_version_to_dao(self, dao: BaseModel) -> dict:
+        d = dao.dict()
+
+        if not self._version is None:
+            d["_version"] = self._version
+
+        return d
+
+    async def _insert_many_raw(self, dicts: List[dict]) -> Awaitable:
         """
         Postgres specific bulk insert of daos
         """
@@ -607,10 +645,10 @@ class PostgresTableService(CollectionService[Domain]):
 
         records = [
             [
-                column_processor.processor(getattr(dao, column_processor.name))
+                column_processor.processor(d[column_processor.name])
                 for column_processor in self._column_processors
             ]
-            for dao in daos
+            for d in dicts
         ]
 
         async with self._database.connection() as connection:

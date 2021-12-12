@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Callable, List, Dict, Any, Type
 from injector import Injector
 from inspect import isclass
+from expert_dollup.infra import services
 from expert_dollup.shared.database_services import DbConnection
 
 
@@ -68,7 +69,9 @@ class DbFixtureHelper:
 
     async def insert_daos(self, service_type: Type, daos: Dict[str, Any]):
         service = self.injector.get(service_type)
-        await service._impl._insert_many_raw(daos)
+        await service._impl._insert_many_raw(
+            [service._impl._add_version_to_dao(dao) for dao in daos]
+        )
 
     async def init_db(self, fake_db: FakeDb):
         await self.dal.truncate_db()

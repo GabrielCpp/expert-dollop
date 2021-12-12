@@ -86,6 +86,7 @@ def create_project_definition_tables():
         Column("level", Integer, nullable=False),
         Column("display_query_internal_id", postgresql.UUID(), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
+        Column("_version", Integer, nullable=False),
     )
 
     op.create_index(

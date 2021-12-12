@@ -36,6 +36,8 @@ class ProjectDefinitionDao(BaseModel):
 class ProjectDefinitionNodeDao(BaseModel):
     class Meta:
         pk = "id"
+        version = 1
+        version_mappers = {}
 
     class Config:
         title = "project_definition_node"
