@@ -80,7 +80,7 @@ def create_project_definition_tables():
         Column("is_collection", Boolean, nullable=False),
         Column("instanciate_by_default", Boolean, nullable=False),
         Column("order_index", Integer, nullable=False),
-        Column("config", String, nullable=False),
+        Column("config", postgresql.JSON(), nullable=False),
         Column("default_value", postgresql.JSON(), nullable=True),
         Column("path", String, nullable=False),
         Column("level", Integer, nullable=False),
@@ -168,8 +168,8 @@ def create_project_tables():
         "project_node_metadata",
         Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("type_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("state", String, nullable=False),
-        Column("definition", String, nullable=False),
+        Column("state", postgresql.JSON(), nullable=False),
+        Column("definition", postgresql.JSON(), nullable=False),
         Column("display_query_internal_id", postgresql.UUID(), nullable=False),
     )
 

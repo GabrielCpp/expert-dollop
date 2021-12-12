@@ -15,7 +15,7 @@ class DatasheetElement:
     creation_date_utc: datetime
 
 
-@dataclass
+@dataclass(init=False)
 class DatasheetElementId(QueryFilter):
     datasheet_id: UUID
     element_def_id: UUID

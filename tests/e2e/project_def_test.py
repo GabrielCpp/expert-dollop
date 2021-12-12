@@ -33,10 +33,10 @@ async def test_project_creation(ac, mapper):
     containers = await AsyncCursor.all(
         ac,
         f"/api/{project_definition.id}/project_definition_nodes",
-        after=normalize_request_results(ProjectDefinitionNodeDto, lambda c: c["id"]),
+        after=normalize_request_results(ProjectDefinitionNodeDto, lambda c: c["name"]),
     )
 
-    expected_nodes = normalize_dtos(project_definition_nodes_dto, lambda c: c["id"])
+    expected_nodes = normalize_dtos(project_definition_nodes_dto, lambda c: c["name"])
 
     assert len(containers) == len(project_definition_nodes_dto)
     assert containers == expected_nodes

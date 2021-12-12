@@ -4,6 +4,8 @@ import dataclasses
 import datetime
 from uuid import UUID
 
+from pydantic.main import BaseModel
+
 dump_file_path = "."
 index = 0
 
@@ -12,6 +14,9 @@ class ExtraEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, UUID):
             return str(obj)
+
+        if isinstance(obj, BaseModel):
+            return obj.dict()
 
         if dataclasses.is_dataclass(obj):
             return dataclasses.asdict(obj)

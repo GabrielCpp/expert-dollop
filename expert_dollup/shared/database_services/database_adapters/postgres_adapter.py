@@ -74,7 +74,6 @@ class ExtraEncoder(json.JSONEncoder):
 class JsonSerializer:
     @staticmethod
     def encode(x: str) -> Any:
-        print(x)
         return json.dumps(x, indent=2, sort_keys=True, cls=ExtraEncoder)
 
     @staticmethod

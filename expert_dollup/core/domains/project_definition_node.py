@@ -132,7 +132,6 @@ class ProjectDefinitionNodeFilter(QueryFilter):
     is_collection: Optional[bool]
     instanciate_by_default: Optional[bool]
     order_index: Optional[int]
-    config: Optional[NodeConfig]
     default_value: ValueUnion
     path: Optional[List[UUID]]
     creation_date_utc: Optional[datetime]

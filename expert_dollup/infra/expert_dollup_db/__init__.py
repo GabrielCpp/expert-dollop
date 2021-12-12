@@ -3,6 +3,21 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import StrictBool, StrictInt, StrictStr, StrictFloat, BaseModel, Field
 from expert_dollup.shared.database_services import DbConnection
+from .node_config_dao import (
+    NodeConfigDao,
+    TranslationConfigDao,
+    TriggerDao,
+    NodeMetaConfigDao,
+    FieldDetailsUnionDao,
+    StaticNumberFieldConfigDao,
+    CollapsibleContainerFieldConfigDao,
+    StaticChoiceFieldConfigDao,
+    StaticChoiceOptionDao,
+    BoolFieldConfigDao,
+    StringFieldConfigDao,
+    DecimalFieldConfigDao,
+    IntFieldConfigDao,
+)
 
 ROOT_LEVEL = 0
 SECTION_LEVEL = 1
@@ -48,7 +63,7 @@ class ProjectDefinitionNodeDao(BaseModel):
     is_collection: bool
     instanciate_by_default: bool
     order_index: int
-    config: str
+    config: NodeConfigDao
     default_value: ValueUnion
     path: str
     level: int
@@ -105,8 +120,8 @@ class ProjectNodeMetaDao(BaseModel):
 
     project_id: UUID
     type_id: UUID
-    state: str
-    definition: str
+    state: ProjectNodeMetaStateDao
+    definition: ProjectDefinitionNodeDao
     display_query_internal_id: UUID
 
 
@@ -198,7 +213,7 @@ class UnitDao(BaseModel):
     id: str = Field(max_length=16)
 
 
-class ElementPropertySchemaDao:
+class ElementPropertySchemaDao(BaseModel):
     value_validator: JsonSchemaDao
 
 
@@ -211,7 +226,7 @@ class DatasheetDefinitionDao(BaseModel):
 
     id: UUID
     name: str
-    properties: str
+    properties: Dict[str, ElementPropertySchemaDao]
 
 
 class CollectionAggregateDao(BaseModel):
@@ -259,6 +274,11 @@ class LabelDao(BaseModel):
     aggregates: Dict[str, UUID]
 
 
+class DatasheetDefinitionElementPropertyDao(BaseModel):
+    is_readonly: bool
+    value: ValueUnion
+
+
 class DatasheetDefinitionElementDao(BaseModel):
     class Meta:
         pk = "id"
@@ -272,7 +292,7 @@ class DatasheetDefinitionElementDao(BaseModel):
     name: str = Field(max_length=64)
     datasheet_def_id: UUID
     order_index: int
-    default_properties: dict
+    default_properties: Dict[str, DatasheetDefinitionElementPropertyDao]
     tags: List[str]
     creation_date_utc: datetime
 

@@ -12,8 +12,6 @@ python-dotenv = "^0.15.0"
 structlog = "^20.1.0"
 jsonschema = "^3.2.0"
 pyhumps = "^1.6.1"
-jsonpickle = "^2.0.0"
-astor = "^0.8.1"
 ariadne = "^0.12.0"
 PyJWT = "^2.1.0"
 cryptography = ">=2.6"
@@ -30,7 +28,6 @@ firebase = ["google-cloud-firestore"]
 [tool.poetry.dev-dependencies]
 flake8 = "^3.8.4"
 black = "^20.8b1"
-alembic = "^1.4.3"
 pytest = "^6.1.2"
 pytest-asyncio = "^0.14.0"
 faker = "^5.0.1"
@@ -38,8 +35,9 @@ async_asgi_testclient = "^1.4.4"
 factory-boy = "^3.1.0"
 invoke = "^1.5.0"
 uvicorn = "^0.12.3"
-psycopg2-binary = "^2.9.1"
 deepdiff = "^5.5.0"
+alembic = "^1.4.3"
+psycopg2-binary = "^2.9.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
