@@ -364,7 +364,6 @@ type Formula {
   attachedToTypeId: String!
   name: String!
   expression: String!
-  generatedAst: String!
 }
 
 type FormulaEdge {

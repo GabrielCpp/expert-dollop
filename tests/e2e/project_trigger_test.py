@@ -1,13 +1,14 @@
 import pytest
 from typing import List
+from uuid import UUID
 from expert_dollup.app.dtos import *
 from ..fixtures import *
-from typing import Awaitable
 
 
-async def create_project(ac, project_with_trigger: FakeExpertDollupDb):
-    fake_db = project_with_trigger
-    project = ProjectDetailsDtoFactory(project_def_id=fake_db.project_definitions[0].id)
+async def create_project(ac, fake_db: FakeDb):
+    project = ProjectDetailsDtoFactory(
+        project_def_id=fake_db.get_only_one(ProjectDefinition).id
+    )
     response = await ac.post("/api/project", data=project.json())
     assert response.status_code == 200
     assert ProjectDetailsDto(**response.json()) == project
@@ -16,7 +17,7 @@ async def create_project(ac, project_with_trigger: FakeExpertDollupDb):
 
 async def get_containers_by_type(
     ac, project_id: UUID, type_id: UUID
-) -> Awaitable[List[ProjectNodeDto]]:
+) -> List[ProjectNodeDto]:
     response = await ac.get(f"/api/project/{project_id}/containers?typeId={type_id}")
     assert response.status_code == 200, response.text
 
@@ -34,25 +35,26 @@ async def get_node_meta(ac, project_id: UUID, type_id: UUID) -> ProjectNodeMetaD
 
 
 @pytest.mark.asyncio
-async def test_project_with_trigger(ac, project_with_trigger: FakeExpertDollupDb):
+async def test_project_with_trigger(ac, db_helper: DbFixtureHelper):
     runner = FlowRunner()
-    project = await create_project(ac, project_with_trigger)
+    fake_db = await db_helper.load_fixtures(ProjectWithTrigger)
+    project = await create_project(ac, fake_db)
 
     checkbox_node = next(
         node_def
-        for node_def in project_with_trigger.project_definition_nodes
+        for node_def in fake_db.all(ProjectDefinitionNode)
         if isinstance(node_def.config.field_details, BoolFieldConfig)
     )
 
     textbox_node = next(
         node_def
-        for node_def in project_with_trigger.project_definition_nodes
+        for node_def in fake_db.all(ProjectDefinitionNode)
         if isinstance(node_def.config.field_details, StringFieldConfig)
     )
 
     root_b_node = next(
         node_def
-        for node_def in project_with_trigger.project_definition_nodes
+        for node_def in fake_db.all(ProjectDefinitionNode)
         if node_def.name == "root_b"
     )
 

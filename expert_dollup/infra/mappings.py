@@ -1,13 +1,8 @@
-import jsonpickle
 from typing import List
 from uuid import UUID
-from dataclasses import asdict
-from pydantic import parse_raw_as
 from expert_dollup.shared.starlette_injection import Clock
-from expert_dollup.shared.automapping import Mapper
-from expert_dollup.shared.database_services import map_dict_keys
+from expert_dollup.shared.automapping import Mapper, map_dict_keys
 from expert_dollup.core.utils.path_transform import (
-    join_path,
     split_uuid_path,
     join_uuid_path,
     list_uuid_to_str,
@@ -63,13 +58,165 @@ def map_project_definition_node_from_dao(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        config=jsonpickle.decode(src.config),
-        default_value=None
-        if src.default_value is None
-        else jsonpickle.decode(src.default_value),
+        config=mapper.map(src.config, NodeConfig, NodeConfigDao),
+        default_value=src.default_value,
         path=split_uuid_path(src.path),
         creation_date_utc=src.creation_date_utc,
     )
+
+
+def map_node_config_from_dao(src: NodeConfigDao, mapper: Mapper) -> NodeConfig:
+    return NodeConfig(
+        translations=TranslationConfig(
+            help_text_name=src.translations.help_text_name, label=src.translations.label
+        ),
+        triggers=[
+            Trigger(
+                action=TriggerAction(trigger.action),
+                target_type_id=trigger.target_type_id,
+                params=trigger.params,
+            )
+            for trigger in src.triggers
+        ],
+        meta=NodeMetaConfig(is_visible=src.meta.is_visible),
+        field_details=mapper.map(
+            src.field_details, FieldDetailsUnion, FieldDetailsUnionDao
+        ),
+        value_validator=src.value_validator,
+    )
+
+
+def map_node_config_to_dao(src: NodeConfig, mapper: Mapper) -> NodeConfigDao:
+    return NodeConfigDao(
+        translations=TranslationConfigDao(
+            help_text_name=src.translations.help_text_name, label=src.translations.label
+        ),
+        triggers=[
+            TriggerDao(
+                action=trigger.action.value,
+                target_type_id=trigger.target_type_id,
+                params=trigger.params,
+            )
+            for trigger in src.triggers
+        ],
+        meta=NodeMetaConfigDao(is_visible=src.meta.is_visible),
+        field_details=mapper.map(
+            src.field_details, FieldDetailsUnionDao, FieldDetailsUnion
+        ),
+        value_validator=src.value_validator,
+    )
+
+
+def map_field_details_union_from_dao(
+    src: FieldDetailsUnionDao, mapper: Mapper
+) -> FieldDetailsUnion:
+    if src is None:
+        return None
+
+    assert isinstance(
+        src,
+        (
+            IntFieldConfigDao,
+            DecimalFieldConfigDao,
+            StringFieldConfigDao,
+            BoolFieldConfigDao,
+            StaticChoiceFieldConfigDao,
+            CollapsibleContainerFieldConfigDao,
+            StaticNumberFieldConfigDao,
+        ),
+    )
+
+    if isinstance(src, IntFieldConfigDao):
+        return IntFieldConfig(unit=src.unit)
+
+    if isinstance(src, DecimalFieldConfigDao):
+        return DecimalFieldConfig(unit=src.unit, precision=src.precision)
+
+    if isinstance(src, StringFieldConfigDao):
+        return StringFieldConfig(
+            transforms=src.transforms,
+        )
+
+    if isinstance(src, BoolFieldConfigDao):
+        return BoolFieldConfig(is_checkbox=src.is_checkbox)
+
+    if isinstance(src, StaticChoiceFieldConfigDao):
+        return StaticChoiceFieldConfig(
+            options=[
+                StaticChoiceOption(
+                    id=option.id,
+                    label=option.label,
+                    help_text=option.help_text,
+                )
+                for option in src.options
+            ]
+        )
+
+    if isinstance(src, CollapsibleContainerFieldConfigDao):
+        return CollapsibleContainerFieldConfig(is_collapsible=src.is_collapsible)
+
+    if isinstance(src, StaticNumberFieldConfigDao):
+        return StaticNumberFieldConfig(
+            pass_to_translation=src.pass_to_translation,
+            precision=src.precision,
+            unit=src.unit,
+        )
+
+
+def map_field_details_union_to_dao(
+    src: FieldDetailsUnion, mapper: Mapper
+) -> FieldDetailsUnionDao:
+    if src is None:
+        return None
+
+    assert isinstance(
+        src,
+        (
+            IntFieldConfig,
+            DecimalFieldConfig,
+            StringFieldConfig,
+            BoolFieldConfig,
+            StaticChoiceFieldConfig,
+            CollapsibleContainerFieldConfig,
+            StaticNumberFieldConfig,
+        ),
+    )
+
+    if isinstance(src, IntFieldConfig):
+        return IntFieldConfigDao(unit=src.unit)
+
+    if isinstance(src, DecimalFieldConfig):
+        return DecimalFieldConfigDao(unit=src.unit, precision=src.precision)
+
+    if isinstance(src, StringFieldConfig):
+        return StringFieldConfigDao(
+            transforms=src.transforms,
+        )
+
+    if isinstance(src, BoolFieldConfig):
+        return BoolFieldConfigDao(is_checkbox=src.is_checkbox)
+
+    if isinstance(src, StaticChoiceFieldConfig):
+        return StaticChoiceFieldConfigDao(
+            options=[
+                StaticChoiceOptionDao(
+                    id=option.id,
+                    label=option.label,
+                    help_text=option.help_text,
+                )
+                for option in src.options
+            ]
+        )
+
+    if isinstance(src, CollapsibleContainerFieldConfig):
+        return CollapsibleContainerFieldConfigDao(is_collapsible=src.is_collapsible)
+
+    if isinstance(src, StaticNumberFieldConfig):
+        return StaticNumberFieldConfigDao(
+            pass_to_translation=src.pass_to_translation,
+            precision=src.precision,
+            unit=src.unit,
+        )
 
 
 def map_project_definition_node_to_dao(
@@ -84,14 +231,12 @@ def map_project_definition_node_to_dao(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        config=jsonpickle.encode(src.config),
+        config=mapper.map(src.config, NodeConfigDao),
         path=join_uuid_path(src.path),
         display_query_internal_id=display_query_internal_id,
         level=len(src.path),
         creation_date_utc=mapper.get(Clock).utcnow(),
-        default_value=None
-        if src.default_value is None
-        else jsonpickle.encode(src.default_value),
+        default_value=src.default_value,
     )
 
 
@@ -125,7 +270,7 @@ def map_project_node_to_dao(src: ProjectNode, mapper: Mapper) -> ProjectNodeDao:
         type_id=src.type_id,
         type_name=src.type_name,
         path=join_uuid_path(src.path),
-        value=None if src.value is None else jsonpickle.encode(src.value),
+        value=src.value,
         label=src.label,
         type_path=join_uuid_path(src.type_path),
         level=len(src.path),
@@ -142,7 +287,7 @@ def map_project_node_from_dao(src: ProjectNodeDao, mapper: Mapper) -> ProjectNod
         type_name=src.type_name,
         path=split_uuid_path(src.path),
         type_path=split_uuid_path(src.type_path),
-        value=None if src.value is None else jsonpickle.decode(src.value),
+        value=src.value,
         label=src.label,
     )
 
@@ -153,8 +298,8 @@ def map_project_node_meta_to_dao(
     return ProjectNodeMetaDao(
         project_id=src.project_id,
         type_id=src.type_id,
-        definition=mapper.map(src.definition, ProjectDefinitionNodeDao).json(),
-        state=mapper.map(src.state, ProjectNodeMetaStateDao).json(),
+        definition=mapper.map(src.definition, ProjectDefinitionNodeDao),
+        state=mapper.map(src.state, ProjectNodeMetaStateDao),
         display_query_internal_id=get_display_query_id(
             src.project_id, src.definition.path
         ),
@@ -167,12 +312,8 @@ def map_project_node_meta_from_dao(
     return ProjectNodeMeta(
         project_id=src.project_id,
         type_id=src.type_id,
-        state=mapper.map(
-            ProjectNodeMetaStateDao.parse_raw(src.state), ProjectNodeMetaState
-        ),
-        definition=mapper.map(
-            ProjectDefinitionNodeDao.parse_raw(src.definition), ProjectDefinitionNode
-        ),
+        state=mapper.map(src.state, ProjectNodeMetaState),
+        definition=mapper.map(src.definition, ProjectDefinitionNode),
     )
 
 
@@ -274,8 +415,7 @@ def map_project_definition_node_filter_to_dict(
             "is_collection": ("is_collection", None),
             "instanciate_by_default": ("instanciate_by_default", None),
             "order_index": ("order_index", None),
-            "config": ("config", jsonpickle.encode),
-            "default_value": ("default_value", jsonpickle.encode),
+            "default_value": ("default_value", None),
             "path": ("path", join_uuid_path),
             "display_query_internal_id": ("display_query_internal_id", None),
         },
@@ -301,7 +441,7 @@ def map_project_node_filter_to_dict(src: ProjectNodeFilter, mapper: Mapper) -> d
             "project_id": ("project_id", None),
             "type_id": ("type_id", None),
             "path": ("path", join_uuid_path),
-            "value": ("value", lambda v: None if v is None else jsonpickle.encode(v)),
+            "value": ("value", None),
             "label": ("label", None),
             "level": ("level", None),
             "display_query_internal_id": ("display_query_internal_id", None),
@@ -320,7 +460,7 @@ def map_project_node_meta_filter_to_dict(
             "display_query_internal_id": ("display_query_internal_id", None),
             "state": (
                 "state",
-                lambda state: map_project_node_meta_state_to_dao(state, mapper).json(),
+                lambda state: map_project_node_meta_state_to_dao(state, mapper),
             ),
         },
     )
@@ -333,6 +473,16 @@ def map_formula_to_dao(src: Formula, mapper: Mapper) -> ProjectDefinitionFormula
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
+        dependency_graph=FormulaDependencyGraphDao(
+            formulas=[
+                FormulaDependencyDao(target_type_id=dependency.target_type_id)
+                for dependency in src.dependency_graph.formulas
+            ],
+            nodes=[
+                FormulaDependencyDao(target_type_id=dependency.target_type_id)
+                for dependency in src.dependency_graph.nodes
+            ],
+        ),
     )
 
 
@@ -343,6 +493,16 @@ def map_formula_from_dao(src: ProjectDefinitionFormulaDao, mapper: Mapper) -> Fo
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
+        dependency_graph=FormulaDependencyGraph(
+            formulas=[
+                FormulaDependency(target_type_id=dependency.target_type_id)
+                for dependency in src.dependency_graph.formulas
+            ],
+            nodes=[
+                FormulaDependency(target_type_id=dependency.target_type_id)
+                for dependency in src.dependency_graph.nodes
+            ],
+        ),
     )
 
 
@@ -377,7 +537,10 @@ def map_datasheet_definition_to_dao(
     return DatasheetDefinitionDao(
         id=src.id,
         name=src.name,
-        properties=jsonpickle.dumps(src.properties, unpicklable=False),
+        properties={
+            key: mapper.map(element, ElementPropertySchemaDao)
+            for key, element in src.properties.items()
+        },
     )
 
 
@@ -387,8 +550,23 @@ def map_datasheet_definition_from_dao(
     return DatasheetDefinition(
         id=src.id,
         name=src.name,
-        properties=parse_raw_as(Dict[str, ElementPropertySchema], src.properties),
+        properties={
+            key: mapper.map(element, ElementPropertySchema, ElementPropertySchemaDao)
+            for key, element in src.properties.items()
+        },
     )
+
+
+def map_element_property_schema_to_dao(
+    src: ElementPropertySchema, mapper: Mapper
+) -> ElementPropertySchemaDao:
+    return ElementPropertySchemaDao(value_validator=src.value_validator)
+
+
+def map_element_property_schema_from_dao(
+    src: ElementPropertySchemaDao, mapper: Mapper
+) -> ElementPropertySchema:
+    return ElementPropertySchema(value_validator=src.value_validator)
 
 
 def map_datasheet_definition_element_to_dao(
@@ -402,7 +580,7 @@ def map_datasheet_definition_element_to_dao(
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
         default_properties={
-            name: asdict(property_details)
+            name: mapper.map(property_details, DatasheetDefinitionElementPropertyDao)
             for (name, property_details) in src.default_properties.items()
         },
         tags=list_uuid_to_str(src.tags),
@@ -421,11 +599,33 @@ def map_datasheet_definition_element_from_dao(
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
         default_properties={
-            name: DatasheetDefinitionElementProperty(**item_property)
+            name: mapper.map(
+                item_property,
+                DatasheetDefinitionElementProperty,
+                DatasheetDefinitionElementPropertyDao,
+            )
             for name, item_property in src.default_properties.items()
         },
         tags=list_str_to_uuid(src.tags),
         creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_datasheet_definition_element_property_to_dao(
+    src: DatasheetDefinitionElementProperty, mapper: Mapper
+) -> DatasheetDefinitionElementPropertyDao:
+    return DatasheetDefinitionElementPropertyDao(
+        is_readonly=src.is_readonly,
+        value=src.value,
+    )
+
+
+def map_datasheet_definition_element_property_from_dao(
+    src: DatasheetDefinitionElementPropertyDao, mapper: Mapper
+) -> DatasheetDefinitionElementProperty:
+    return DatasheetDefinitionElementProperty(
+        is_readonly=src.is_readonly,
+        value=src.value,
     )
 
 
@@ -453,6 +653,11 @@ def map_datasheet_definition_label_collection_from_dao(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
+        properties_schema=src.properties_schema,
+        accepted_aggregates={
+            key: mapper.map(value, AcceptedAggregateUnion, AcceptedAggregateDaoUnion)
+            for key, value in src.accepted_aggregates.items()
+        },
     )
 
 
@@ -463,7 +668,36 @@ def map_datasheet_definition_label_collection_to_dao(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
+        properties_schema=src.properties_schema,
+        accepted_aggregates={
+            key: mapper.map(value, AcceptedAggregateDaoUnion, AcceptedAggregateUnion)
+            for key, value in src.accepted_aggregates.items()
+        },
     )
+
+
+def map_accepted_aggregate_dto_union_from_dao(
+    src: AcceptedAggregateDaoUnion, mapper: Mapper
+) -> AcceptedAggregateUnion:
+    if isinstance(src, CollectionAggregateDao):
+        return CollectionAggregate(from_collection=src.from_collection)
+
+    if isinstance(src, DatasheetAggregateDao):
+        return DatasheetAggregate(from_datasheet=src.from_datasheet)
+
+    assert False, f"{type(src)} not in union"
+
+
+def map_accepted_aggregate_dto_union_to_dao(
+    src: AcceptedAggregateUnion, mapper: Mapper
+) -> AcceptedAggregateDaoUnion:
+    if isinstance(src, CollectionAggregate):
+        return CollectionAggregateDao(from_collection=src.from_collection)
+
+    if isinstance(src, DatasheetAggregate):
+        return DatasheetAggregateDao(from_datasheet=src.from_datasheet)
+
+    assert False, f"{type(src)} not in union"
 
 
 def map_datasheet_definition_label_to_dao(src: Label, mapper: Mapper) -> LabelDao:
@@ -471,6 +705,8 @@ def map_datasheet_definition_label_to_dao(src: Label, mapper: Mapper) -> LabelDa
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
+        properties=src.properties,
+        aggregates=src.aggregates,
     )
 
 
@@ -479,6 +715,8 @@ def map_datasheet_definition_label_from_dao(src: LabelDao, mapper: Mapper) -> La
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
+        properties=src.properties,
+        aggregates=src.aggregates,
     )
 
 
@@ -546,7 +784,14 @@ def map_datasheet_element_filter_to_dict(
 
 
 def map_datasheet_element_id_to_dict(src: DatasheetElementId, mapper: Mapper) -> dict:
-    return asdict(src)
+    return map_dict_keys(
+        src.args,
+        {
+            "datasheet_id": ("datasheet_id", None),
+            "element_def_id": ("element_def_id", None),
+            "child_element_reference": ("child_element_reference", None),
+        },
+    )
 
 
 def map_datasheet_filter_to_dict(src: DatasheetFilter, mapper: Mapper) -> dict:
@@ -566,7 +811,13 @@ def map_datasheet_filter_to_dict(src: DatasheetFilter, mapper: Mapper) -> dict:
 def map_translation_ressource_locale_query_to_dict(
     src: TranslationRessourceLocaleQuery, mapper: Mapper
 ) -> dict:
-    return asdict(src)
+    return map_dict_keys(
+        src.args,
+        {
+            "ressource_id": ("ressource_id", None),
+            "locale": ("locale", None),
+        },
+    )
 
 
 def map_translation_filter(src: TranslationFilter, mapper: Mapper) -> dict:
@@ -601,6 +852,7 @@ def map_fomula_pluck_filter(src: FormulaPluckFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
         {
+            "ids": ("ids", None),
             "names": ("name", None),
         },
     )
@@ -614,4 +866,31 @@ def map_formula_cached_result_filter(
         {
             "project_id": ("project_id", None),
         },
+    )
+
+
+def map_report_definition_to_dao(
+    src: ReportDefinition, mapper: Mapper
+) -> ReportDefinitionDao:
+    return ReportDefinitionDao(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        name=src.name,
+        structure=ReportStructureDao(
+            initial_selection=ReportJoinDao(
+                to_object_name=src.structure.initial_selection.to_object_name,
+                from_object_name=src.structure.initial_selection.from_object_name,
+                join_on_property_name=src.structure.initial_selection.join_on_property_name,
+                join_type=src.structure.initial_selection.join_type.value,
+            ),
+            joins=[
+                ReportJoinDao(
+                    to_object_name=j.to_object_name,
+                    from_object_name=j.from_object_name,
+                    join_on_property_name=j.join_on_property_name,
+                    join_type=j.join_type.value,
+                )
+                for j in src.structure.joins
+            ],
+        ),
     )

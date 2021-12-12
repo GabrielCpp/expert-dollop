@@ -3,7 +3,7 @@ from uuid import uuid4
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_db import *
-from expert_dollup.shared.database_services import Page
+from expert_dollup.infra.services import *
 from expert_dollup.shared.handlers import make_page_model
 from ..fixtures import *
 
@@ -105,7 +105,7 @@ async def test_given_translation_should_be_able_to_create_update_delete(
 
 @pytest.mark.asyncio
 async def test_given_translation_should_be_able_to_retrieve_it(
-    ac, dal, map_dao_to_dto, static_clock
+    ac, db_helper, map_dao_to_dto, static_clock
 ):
     ressource_id = uuid4()
     translations = dict(
@@ -113,7 +113,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             id=UUID("96492b2d-49fa-4250-b655-ff8cf5030953"),
             ressource_id=ressource_id,
             scope=ressource_id,
-            locale="fr",
+            locale="fr_CA",
             name="a",
             value="a_fr",
             creation_date_utc=static_clock.utcnow(),
@@ -122,7 +122,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             id=UUID("96492b2d-49fa-4250-b655-ff8cf5030954"),
             ressource_id=ressource_id,
             scope=ressource_id,
-            locale="en",
+            locale="en_US",
             name="a",
             value="a_en",
             creation_date_utc=static_clock.utcnow(),
@@ -131,7 +131,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             id=UUID("96492b2d-49fa-4250-b655-ff8cf5030955"),
             ressource_id=ressource_id,
             scope=ressource_id,
-            locale="fr",
+            locale="fr_CA",
             name="b",
             value="b_fr",
             creation_date_utc=static_clock.utcnow(),
@@ -151,9 +151,9 @@ async def test_given_translation_should_be_able_to_retrieve_it(
         results=[dto_translations["b_fr"], dto_translations["a_fr"]],
     )
 
-    await populate_db(dal, translation_table, translations)
+    await db_helper.insert_daos(TranslationService, translations.values())
 
-    response = await ac.get(f"/api/translation/{ressource_id}/fr")
+    response = await ac.get(f"/api/translation/{ressource_id}/fr_CA")
     assert response.status_code == 200
 
     actual = unwrap(response, PageDto)

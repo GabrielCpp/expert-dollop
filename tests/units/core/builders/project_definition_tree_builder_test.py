@@ -1,38 +1,12 @@
 from ....fixtures import *
-from typing import List
-from uuid import uuid4
+from uuid import UUID
 import datetime
 from expert_dollup.core.builders.project_definition_tree_builder import (
     ProjectDefinitionTreeBuilder,
 )
 
 
-def generate_node_tree_list(
-    roots: list, project_def_id=None, path=None
-) -> List[ProjectDefinitionNode]:
-    nodes = []
-    project_def_id = project_def_id or uuid4()
-    path = path or []
-
-    for root in roots:
-        new_node = ProjectDefinitionNodeFactory(
-            project_def_id=project_def_id, path=path
-        )
-        nodes.append(new_node)
-
-        if isinstance(root, list):
-            children = generate_node_tree_list(
-                root, project_def_id, [*path, new_node.id]
-            )
-            nodes.extend(children)
-        else:
-            new_node.default_value = root
-
-    return nodes
-
-
 def test_project_definition_tree_builder_with_unbalenced_tree():
-
     nodes = [
         ProjectDefinitionNode(
             id=UUID("ab94e29a-33c6-42c1-9296-582769b19153"),

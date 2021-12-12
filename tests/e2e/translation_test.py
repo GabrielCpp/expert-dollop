@@ -6,15 +6,14 @@ from ..fixtures import *
 
 @pytest.mark.asyncio
 async def test_should_be_able_to_scan_translations(
-    ac, expert_dollup_simple_project, mapper
+    ac, db_helper: DbFixtureHelper, mapper
 ):
-    db = expert_dollup_simple_project
-    assert len(db.project_definitions) == 1
-    project_definition = db.project_definitions[0]
+    db = await db_helper.load_fixtures(SimpleProject)
+    project_definition = db.get_only_one(ProjectDefinition)
 
     translations = await AsyncCursor.all(
         ac,
-        f"/api/translation/{project_definition.id}/en",
+        f"/api/translation/{project_definition.id}/en_US",
         after=normalize_request_results(TranslationDto, lambda c: (c["name"], c["id"])),
     )
 
@@ -22,8 +21,8 @@ async def test_should_be_able_to_scan_translations(
         mapper.map_many(
             [
                 translation
-                for translation in db.translations
-                if translation.locale == "en"
+                for translation in db.all(Translation)
+                if translation.locale == "en_US"
             ],
             TranslationDto,
         ),

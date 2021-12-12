@@ -21,7 +21,7 @@ from .project_definition_node import (
     StaticNumberFieldConfig,
 )
 from .project import ProjectDetails, Project
-from .project_node import ProjectNode, ProjectNodeFilter, FieldUpdate
+from .project_node import ProjectNode, ProjectNodeFilter, FieldUpdate, NodePluckFilter
 from .project_definition_tree import (
     ProjectDefinitionNodeTree,
     ProjectDefinitionTreeNode,
@@ -45,17 +45,24 @@ from .translation import (
 from .ressource import Ressource
 from .formula import (
     Formula,
-    FormulaDetails,
+    FormulaExpression,
     FormulaCachedResult,
-    FormulaNode,
+    ComputedFormula,
     FieldNode,
     FormulaFilter,
     FormulaPluckFilter,
     FormulaCachedResultFilter,
+    FormulaDependencyGraph,
+    FormulaDependency,
 )
 
 from .datasheet_definition import DatasheetDefinition, ElementPropertySchema
-from .datasheet_definition_label_collection import LabelCollection
+from .datasheet_definition_label_collection import (
+    LabelCollection,
+    AcceptedAggregateUnion,
+    DatasheetAggregate,
+    CollectionAggregate,
+)
 from .datasheet_definition_label import Label
 from .datasheet_definition_element import (
     DatasheetDefinitionElement,
@@ -69,3 +76,10 @@ from .datasheet_element import (
     DatasheetElementId,
 )
 from .bounded_node import BoundedNode
+from .report_definition import (
+    ReportDefinition,
+    ReportColumn,
+    ReportStructure,
+    ReportJoin,
+    JoinType,
+)

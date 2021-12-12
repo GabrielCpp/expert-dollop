@@ -1,102 +1,98 @@
-import os
-from dotenv import load_dotenv
-from enum import Enum
-from typing import List, Dict, Any
-from dataclasses import dataclass, field
-from os.path import join
-from injector import inject
-from sqlalchemy import MetaData, create_engine
-from expert_dollup.core.domains import *
-from expert_dollup.infra.services import *
+from abc import ABC, abstractmethod
+from collections import defaultdict
+from typing import Callable, List, Dict, Any, Type
+from injector import Injector
+from inspect import isclass
+from expert_dollup.infra import services
+from expert_dollup.shared.database_services import DbConnection
 
 
-@dataclass
-class FakeExpertDollupDb:
-    project_definition_nodes: List[ProjectDefinitionNode] = field(default_factory=list)
-    project_definitions: List[ProjectDefinition] = field(default_factory=list)
-    datasheet_definitions: List[DatasheetDefinition] = field(default_factory=list)
-    datasheet_definition_elements: List[DatasheetDefinitionElement] = field(
-        default_factory=list
-    )
-    label_collections: List[LabelCollection] = field(default_factory=list)
-    labels: List[Label] = field(default_factory=list)
-    translations: List[Translation] = field(default_factory=list)
+class FakeDb:
+    def __init__(self):
+        self.collections: Dict[Type, List[object]] = defaultdict(list)
+
+    def all(self, object_type: Type) -> List[object]:
+        return self.collections[object_type]
+
+    def get_only_one(self, object_type: Type) -> object:
+        assert object_type in self.collections
+        objects = self.collections[object_type]
+        assert len(objects) == 1
+
+        return objects[0]
+
+    def get_only_one_matching(
+        self, object_type: Type, predicate: Callable[[object], bool]
+    ) -> object:
+        objects = self.collections[object_type]
+        results = [
+            matching_object
+            for matching_object in objects
+            if predicate(matching_object) is True
+        ]
+        assert len(results) == 1
+        return results[0]
+
+    def add(self, *args) -> object:
+        first_object = args[0]
+        self.collections[type(first_object)].extend(args)
+        return first_object if len(args) == 1 else args
+
+    def merge(self, other: "FakeDb") -> None:
+        for object_type, objects in other.collections.items():
+            self.collections[object_type].extend(objects)
 
 
-def truncate_db():
-    load_dotenv()
-    DATABASE_URL = "postgresql://{}:{}@{}/{}".format(
-        os.environ["POSTGRES_USERNAME"],
-        os.environ["POSTGRES_PASSWORD"],
-        os.environ["POSTGRES_HOST"],
-        os.environ["POSTGRES_DB"],
-    )
+class DbFixtureGenerator(ABC):
+    @property
+    @abstractmethod
+    def db() -> FakeDb:
+        pass
 
-    engine = create_engine(DATABASE_URL)
-    meta = MetaData()
-    meta.reflect(bind=engine)
-    con = engine.connect()
-    trans = con.begin()
-    for table in meta.sorted_tables:
-        con.execute(f'ALTER TABLE "{table.name}" DISABLE TRIGGER ALL;')
-        con.execute(table.delete())
-        con.execute(f'ALTER TABLE "{table.name}" ENABLE TRIGGER ALL;')
-    trans.commit()
+    @abstractmethod
+    def generate(self) -> None:
+        pass
 
 
-def drop_db():
-    load_dotenv()
-    DATABASE_URL = "postgresql://{}:{}@{}/{}".format(
-        os.environ["POSTGRES_USERNAME"],
-        os.environ["POSTGRES_PASSWORD"],
-        os.environ["POSTGRES_HOST"],
-        os.environ["POSTGRES_DB"],
-    )
+class DbFixtureHelper:
+    def __init__(self, injector: Injector, dal: DbConnection):
+        self.injector: Injector = injector
+        self.dal = dal
+        self.services_by_domain: Dict[Type, Type] = {}
 
-    engine = create_engine(DATABASE_URL)
-    meta = MetaData()
-    meta.reflect(bind=engine)
-    for tbl in reversed(meta.sorted_tables):
-        tbl.drop(engine)
+    def load_services(self, services) -> "DbFixtureHelper":
+        for class_type in services.__dict__.values():
+            if isclass(class_type):
+                self.services_by_domain[class_type.Meta.domain] = class_type
 
+        return self
 
-async def populate_db(db, table, daos: Dict[str, Any]):
-    await db.execute_many(table.insert(), [dao.dict() for dao in daos.values()])
-
-
-@inject
-class DbSetupHelper:
-    def __init__(
-        self,
-        project_definition_node_service: ProjectDefinitionNodeService,
-        project_definition_service: ProjectDefinitionService,
-        translation_service: TranslationService,
-        datasheet_definition_service: DatasheetDefinitionService,
-        datasheet_definition_element_service: DatasheetDefinitionElementService,
-        label_collection_service: LabelCollectionService,
-        label_service: LabelService,
-    ):
-        self.project_definition_node_service = project_definition_node_service
-        self.project_definition_service = project_definition_service
-        self.translation_service = translation_service
-        self.datasheet_definition_service = datasheet_definition_service
-        self.datasheet_definition_element_service = datasheet_definition_element_service
-        self.label_collection_service = label_collection_service
-        self.label_service = label_service
-
-    async def init_db(self, fake_db: FakeExpertDollupDb):
-        await self.project_definition_service.insert_many(fake_db.project_definitions)
-
-        await self.project_definition_node_service.insert_many(
-            fake_db.project_definition_nodes,
+    async def insert_daos(self, service_type: Type, daos: Dict[str, Any]):
+        service = self.injector.get(service_type)
+        await service._impl._insert_many_raw(
+            [service._impl._add_version_to_dao(dao) for dao in daos]
         )
 
-        await self.translation_service.insert_many(fake_db.translations)
-        await self.datasheet_definition_service.insert_many(
-            fake_db.datasheet_definitions
-        )
-        await self.datasheet_definition_element_service.insert_many(
-            fake_db.datasheet_definition_elements
-        )
-        await self.label_collection_service.insert_many(fake_db.label_collections)
-        await self.label_service.insert_many(fake_db.labels)
+    async def init_db(self, fake_db: FakeDb):
+        await self.dal.truncate_db()
+
+        for domain_type, objects in fake_db.collections.items():
+            assert (
+                domain_type in self.services_by_domain
+            ), f"No service for domain {domain_type.__name__}"
+            service_type = self.services_by_domain[domain_type]
+            service = self.injector.get(service_type)
+            await service.insert_many(objects)
+
+    async def load_fixtures(
+        self, *generator_types: List[Type[DbFixtureGenerator]]
+    ) -> FakeDb:
+        db = FakeDb()
+
+        for generator_type in generator_types:
+            generator = generator_type()
+            generator.generate()
+            db.merge(generator.db)
+
+        await self.init_db(db)
+        return db

@@ -1,26 +1,19 @@
-import jsonpickle
 from typing import List, Optional, Awaitable
 from uuid import UUID
 from expert_dollup.core.domains import (
     ProjectNode,
     ProjectDefinitionNode,
     ProjectNodeFilter,
-    FieldNode,
 )
-from expert_dollup.shared.database_services import PostgresTableService
+from expert_dollup.shared.database_services import CollectionServiceProxy
 from expert_dollup.core.utils.path_transform import split_uuid_path
-from expert_dollup.infra.expert_dollup_db import (
-    project_node_table,
-    ProjectNodeDao,
-)
+from expert_dollup.infra.expert_dollup_db import ProjectNodeDao
 
 
-class ProjectNodeService(PostgresTableService[ProjectNode]):
+class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
     class Meta:
-        table = project_node_table
         dao = ProjectNodeDao
         domain = ProjectNode
-        table_filter_type = ProjectNodeFilter
 
     async def find_children(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None
@@ -94,28 +87,17 @@ class ProjectNodeService(PostgresTableService[ProjectNode]):
         results = await self.find_by(builder, order_by=("level", "desc"))
         return results
 
-    async def get_all_fields(self, project_id: UUID) -> Awaitable[List[FieldNode]]:
+    async def get_all_fields(self, project_id: UUID) -> List[ProjectNode]:
         builder = (
             self.get_builder()
-            .select_fields("type_name", "value", "id", "path", "type_id", "type_path")
             .find_by(ProjectNodeFilter(project_id=project_id))
             .find_by_isnot(ProjectNodeFilter(value=None))
             .finalize()
         )
 
-        records = await self.fetch_all_records(builder)
+        nodes = await self.find_by(builder)
 
-        return [
-            FieldNode(
-                id=record.get("id"),
-                name=record.get("type_name"),
-                path=split_uuid_path(record.get("path")),
-                type_id=record.get("type_id"),
-                type_path=split_uuid_path(record.get("type_path")),
-                expression=jsonpickle.decode(record.get("value")),
-            )
-            for record in records
-        ]
+        return nodes
 
     async def find_node_on_path_by_type(
         self, project_id: UUID, start_with_path: List[UUID], type_id: UUID

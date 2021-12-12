@@ -1,18 +1,20 @@
-from uuid import uuid4, UUID
+from uuid import uuid4
 from faker import Faker
-from typing import List
-from pydantic import BaseModel
 from expert_dollup.core.domains import *
-from ..fake_db_helpers import FakeExpertDollupDb as Tables
+from ..fake_db_helpers import FakeDb, DbFixtureGenerator
 from ..factories import FieldConfigFactory
 
 
-class MiniProject:
+class MiniProject(DbFixtureGenerator):
     def __init__(self):
-        self.tables = Tables()
+        self._db = FakeDb()
         self.fake = Faker()
         self.fake.seed_instance(seed=1)
         self.field_config_factory = FieldConfigFactory(self.fake)
+
+    @property
+    def db(self) -> FakeDb:
+        return self._db
 
     def generate(self):
         project_definition = ProjectDefinition(
@@ -23,7 +25,7 @@ class MiniProject:
             creation_date_utc=self.fake.date_time(),
         )
 
-        self.tables.project_definitions.append(project_definition)
+        self.db.add(project_definition)
 
         root = ProjectDefinitionNode(
             id=uuid4(),
@@ -42,7 +44,7 @@ class MiniProject:
             default_value=None,
         )
 
-        self.tables.project_definition_nodes.append(root)
+        self.db.add(root)
 
         name_map = {
             IntFieldConfig: "quantity",
@@ -72,7 +74,7 @@ class MiniProject:
                 default_value=value,
             )
 
-            self.tables.project_definition_nodes.append(definition_node)
+            self.db.add(definition_node)
 
         value = self.field_config_factory.build_value(DecimalFieldConfig)
         index = len(name_map)
@@ -91,10 +93,6 @@ class MiniProject:
             default_value=value,
         )
 
-        self.tables.project_definition_nodes.append(definition_node)
+        self.db.add(definition_node)
 
         return self
-
-    @property
-    def model(self) -> Tables:
-        return self.tables

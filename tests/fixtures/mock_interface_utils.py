@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from unittest.mock import MagicMock, PropertyMock, call
 from collections import defaultdict
 from deepdiff import DeepDiff
+from typing import List, Tuple, Any, Dict
 
 
 def return_async(value=None):
@@ -86,10 +87,45 @@ def compare_call_strict(lhs: call, rhs: call):
     return all_args_are_same and all_kwargs_are_same
 
 
-def compare_loose(lhs: call, rhs: call):
-    arg_diff = DeepDiff(rhs[1], lhs[1])
-    kwarg_diff = DeepDiff(rhs[2], lhs[2])
+def compare_loose(
+    lhs: Tuple[List[Any], Dict[str, Any]], rhs: Tuple[List[Any], Dict[str, Any]]
+):
+    lhs_call = call(*lhs[0], **lhs[1])
+    rhs_call = call(*rhs[0], **rhs[1])
+
+    arg_diff = DeepDiff(rhs_call[1], lhs_call[1])
+    kwarg_diff = DeepDiff(rhs_call[2], lhs_call[2])
     return len(arg_diff) == 0 and len(kwarg_diff) == 0
+
+
+def compare_per_arg(
+    lhs: Tuple[List[Any], Dict[str, Any]], rhs: Tuple[List[Any], Dict[str, Any]]
+):
+    for lhs_arg, rhs_arg in zip(lhs[0], rhs[0]):
+
+        if callable(rhs_arg):
+            if rhs_arg(lhs_arg) == False:
+                return False
+
+            continue
+
+        if not (lhs_arg == rhs_arg):
+            return False
+
+    if set(lhs[1].keys()) != set(rhs[1].keys()):
+        return False
+
+    for lhs_kwarg_key, rhs_kwarg_key in zip(lhs[1].keys(), rhs[1].keys()):
+        rhs_kwarg = rhs[1][rhs_kwarg_key]
+        lhs_kwarg = lhs[1][lhs_kwarg_key]
+
+        if callable(rhs_kwarg) and rhs_kwarg(lhs_kwarg) == False:
+            return False
+
+        if not (lhs_kwarg == rhs_kwarg):
+            return False
+
+    return True
 
 
 class Never:
@@ -115,13 +151,17 @@ class StrictInterfaceSetup:
 
     @dataclass
     class CallCandidate:
-        invokation: call
+        proxy: "StrictInterfaceSetup.Proxy"
         effect: callable
         is_equivalent: callable
 
+        @property
+        def invokation(self) -> call:
+            return call(*self.proxy.args, **self.proxy.kwargs)
+
     class Stub:
         def __init__(self):
-            self.effect_by_calls = []
+            self.effect_by_calls: List[StrictInterfaceSetup.CallCandidate] = []
             self.method_name = None
             self.invoke_count = 0
 
@@ -139,7 +179,9 @@ class StrictInterfaceSetup:
                     selected_effect = candidate.effect
                     break
 
-                if candidate.is_equivalent(invokation, candidate.invokation):
+                if candidate.is_equivalent(
+                    (args, kwargs), (candidate.proxy.args, candidate.proxy.kwargs)
+                ):
                     selected_effect = candidate.effect
                     break
 
@@ -206,12 +248,10 @@ class StrictInterfaceSetup:
                 "Should pass an effect between: returnsAsync, returns, returnsSequence, invoke"
             )
 
-        invokation = call(*proxy.args, **proxy.kwargs)
-
         stub = self._setups_by_member_name[setup_method_name]
         stub.method_name = setup_method_name
         stub.effect_by_calls.append(
-            StrictInterfaceSetup.CallCandidate(invokation, effect, compare_method)
+            StrictInterfaceSetup.CallCandidate(proxy, effect, compare_method)
         )
 
     def assert_all_setup_called_in_order(self):
@@ -257,7 +297,9 @@ class StrictInterfaceSetup:
         def create_forwarder(method_name):
             def forward(*args, **kwargs):
                 if not method_name in self._setups_by_member_name:
-                    raise Exception("No setup for method {}".format(method_name))
+                    raise Exception(
+                        f"No setup for method {abstract_class}.{method_name}"
+                    )
 
                 return self._setups_by_member_name[method_name](args, kwargs)
 

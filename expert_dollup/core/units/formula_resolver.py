@@ -1,22 +1,29 @@
 import ast
 from ast import *
-from expert_dollup.core.domains.formula import FieldNode
-from typing import Awaitable, List, Union
+from expert_dollup.core.domains.formula import FieldNode, FormulaCachedResultFilter
+from typing import List, Union, Dict
 from math import sqrt
 from uuid import UUID
 from collections import defaultdict
 from expert_dollup.core.domains import (
     Formula,
-    FormulaDetails,
+    FormulaExpression,
     FormulaCachedResult,
-    FormulaNode,
+    ComputedFormula,
+    FormulaDependencyGraph,
+    FormulaDependency,
+    FormulaPluckFilter,
+    NodePluckFilter,
 )
+from expert_dollup.core.domains.project_definition_node import ValueUnion
+from expert_dollup.core.domains.project_node import ProjectNode
 from expert_dollup.infra.services import (
     FormulaService,
     ProjectNodeService,
     FormulaCacheService,
     ProjectDefinitionNodeService,
 )
+from expert_dollup.core.queries import Plucker
 
 
 def safe_div(a, b):
@@ -31,19 +38,22 @@ class FormulaInjector:
         self.unit_map: Dict[str, Union["FormulaUnit", "FieldUnit"]] = defaultdict(list)
         self.units: List["FormulaUnit"] = []
 
-    def add_unit(
-        self, path: List[UUID], name: str, unit: Union["FormulaUnit", "FieldUnit"]
-    ):
-        for item in path:
-            self.unit_map[f"{item}.{name}"].append(unit)
+    def add_unit(self, unit: Union["FormulaUnit", "FieldUnit"]):
+        for item in unit.path:
+            self.unit_map[f"{item}.{unit.name}"].append(unit)
 
-        self.unit_map[name].append(unit)
-        self.unit_map[f"{unit.node.id}.{name}"].append(unit)
+        self.unit_map[unit.name].append(unit)
+        self.unit_map[f"{unit.node_id}.{unit.name}"].append(unit)
 
         if isinstance(unit, FormulaUnit):
             self.units.append(unit)
 
-    def get_unit(self, path: List[UUID], name: str):
+    def get_unit(self, node_id: UUID, path: List[UUID], name: str):
+        unit_id = f"{node_id}.{name}"
+
+        if unit_id in self.unit_map:
+            return self.unit_map[unit_id]
+
         for id in reversed(path):
             unit_id = f"{id}.{name}"
 
@@ -59,22 +69,67 @@ class FormulaInjector:
 class FormulaUnit:
     def __init__(
         self,
-        node: FormulaNode,
-        dependencies: List[str],
+        computed_formula: ComputedFormula,
+        formula_id_to_name_map: Dict[UUID, str],
+        node_id_to_name_map: Dict[UUID, str],
         formula_injector: FormulaInjector,
     ):
-        self.node = node
-        self.formula_injector = formula_injector
-        self._dependencies = dependencies
+        self._computed_formula = computed_formula
+        self._formula_id_to_name_map = formula_id_to_name_map
+        self._node_id_to_name_map = node_id_to_name_map
+        self._formula_injector = formula_injector
+
+    @property
+    def dependencies(self) -> List[str]:
+        merged_dependencies = []
+
+        for dependency in self._computed_formula.formula.dependency_graph.formulas:
+            dependency_name = self._formula_id_to_name_map.get(
+                dependency.target_type_id
+            )
+
+            assert (
+                not dependency_name is None
+            ), f"Missing id {dependency.target_type_id} in dependencies"
+            merged_dependencies.append(dependency_name)
+
+        for dependency in self._computed_formula.formula.dependency_graph.nodes:
+            dependency_name = self._node_id_to_name_map.get(dependency.target_type_id)
+            assert (
+                not dependency_name is None
+            ), f"Missing id {dependency.target_type_id} in dependencies"
+            merged_dependencies.append(dependency_name)
+
+        return merged_dependencies
+
+    @property
+    def node_id(self) -> UUID:
+        return self._computed_formula.node.id
+
+    @property
+    def path(self) -> List[UUID]:
+        return self._computed_formula.node.path
+
+    @property
+    def name(self) -> str:
+        return self._computed_formula.formula.name
+
+    @property
+    def expression_body(self) -> AST:
+        return self._computed_formula.final_ast.body[0]
+
+    @property
+    def formula_id(self) -> UUID:
+        return self._computed_formula.formula.id
 
     @property
     def value(self):
         self.units = {
-            name: self.formula_injector.get_unit(self.node.path, name)
-            for name in self._dependencies
+            name: self._formula_injector.get_unit(self.node_id, self.path, name)
+            for name in self.dependencies
         }
 
-        result, calculation_details = self._compute(self.node.expression.body[0])
+        result, calculation_details = self._compute(self.expression_body)
         self.calculation_details = calculation_details
 
         return result
@@ -84,6 +139,7 @@ class FormulaUnit:
             return self._compute(node.value)
 
         if isinstance(node, ast.Name):
+            assert node.id in self.units, f"{node.id } not in {self.units}"
             values = self.units[node.id]
 
             if len(values) == 1:
@@ -201,9 +257,24 @@ class FormulaUnit:
 
 
 class FieldUnit:
-    def __init__(self, node: FieldNode, value: Union[bool, str, int, float]):
-        self.node = node
-        self.value = value
+    def __init__(self, node: ProjectNode):
+        self._node = node
+
+    @property
+    def value(self) -> ValueUnion:
+        return self._node.value
+
+    @property
+    def node_id(self) -> UUID:
+        return self._node.id
+
+    @property
+    def path(self) -> List[UUID]:
+        return self._node.path
+
+    @property
+    def name(self) -> str:
+        return self._node.type_name
 
 
 class FormulaVisitor(ast.NodeVisitor):
@@ -265,101 +336,102 @@ class FormulaResolver:
         project_node_service: ProjectNodeService,
         project_definition_node_service: ProjectDefinitionNodeService,
         formula_cache_service: FormulaCacheService,
+        formulas_plucker: Plucker[FormulaService],
+        nodes_plucker: Plucker[ProjectNodeService],
     ):
         self.formula_service = formula_service
         self.project_node_service = project_node_service
         self.project_definition_node_service = project_definition_node_service
         self.formula_cache_service = formula_cache_service
+        self.formulas_plucker = formulas_plucker
+        self.nodes_plucker = nodes_plucker
 
-    async def parse(self, formula: Formula) -> FormulaDetails:
-        formula_ast = ast.parse(formula.expression)
+    async def parse(self, formula_expression: FormulaExpression) -> Formula:
+        formula_ast = ast.parse(formula_expression.expression)
         visitor = FormulaVisitor()
         visitor.visit(formula_ast)
 
-        if formula.name in visitor.var_names:
+        if formula_expression.name in visitor.var_names:
             all_formulas = ",".join(visitor.var_names)
-            raise Exception(f"Formua {formula.name} not found in [{all_formulas}]")
+            raise Exception(
+                f"Formua {formula_expression.name} not found in [{all_formulas}]"
+            )
 
         for name in visitor.fn_names:
             if not name in FormulaVisitor.whithelisted_fn_names:
                 fn_names = ",".join(FormulaVisitor.whithelisted_fn_name)
                 raise Exception(f"Function {name} not found in [{fn_names}]")
 
-        formulas = await self.formula_service.get_formulas_by_name(
-            formula.project_def_id, visitor.var_names
+        formulas_by_name = await self.formula_service.get_formulas_by_name(
+            formula_expression.project_def_id, visitor.var_names
         )
-        fields = await self.project_definition_node_service.get_fields_by_name(
-            formula.project_def_id, visitor.var_names
+        fields_by_name = await self.project_definition_node_service.get_fields_by_name(
+            formula_expression.project_def_id, visitor.var_names
         )
         unkowns_names = (
-            set(visitor.var_names) - set(formulas.keys()) - set(fields.keys())
+            set(visitor.var_names)
+            - set(formulas_by_name.keys())
+            - set(fields_by_name.keys())
         )
 
         if len(unkowns_names) > 0:
             unkowns_names_joined = ",".join(unkowns_names)
             raise Exception(
-                f"There unknown name in expression [{unkowns_names_joined}] in {formula.name}"
+                f"There unknown name in expression [{unkowns_names_joined}] in {formula_expression.name}"
             )
 
-        formula_details = FormulaDetails(
-            formula=formula,
-            formula_dependencies=formulas,
-            field_dependencies=fields,
-            formula_ast=formula_ast,
+        formula = Formula(
+            id=formula_expression.id,
+            project_def_id=formula_expression.project_def_id,
+            attached_to_type_id=formula_expression.attached_to_type_id,
+            name=formula_expression.name,
+            expression=formula_expression.expression,
+            dependency_graph=FormulaDependencyGraph(
+                formulas=[
+                    FormulaDependency(target_type_id=formula_id)
+                    for formula_id in formulas_by_name.values()
+                ],
+                nodes=[
+                    FormulaDependency(target_type_id=field_id)
+                    for field_id in fields_by_name.values()
+                ],
+            ),
         )
 
-        # TODO: Check that
-        formula_details.formula.generated_ast = self.generate_formula_unit(
-            formula_details
-        )
-
-        return formula_details
-
-    def generate_formula_unit(self, formula_details: FormulaDetails):
-        return SafeguardDivision().visit(formula_details.formula_ast)
+        return formula
 
     async def compute_all_project_formula(
         self, project_id: UUID, project_definition_id: UUID
-    ) -> Awaitable[List[FormulaCachedResult]]:
+    ) -> List[FormulaCachedResult]:
         injector = FormulaInjector()
-        fields = await self.project_node_service.get_all_fields(project_id)
+        formula_id_to_name_map: Dict[UUID, str] = {}
+        nodes = await self.project_node_service.get_all_fields(project_id)
+        node_id_to_name_map: Dict[UUID, str] = {
+            node.type_id: node.type_name for node in nodes
+        }
 
-        for node in fields:
-            injector.add_unit(node.path, node.name, FieldUnit(node, node.expression))
+        for node in nodes:
+            injector.add_unit(FieldUnit(node))
 
-        formulas: List[
-            FormulaNode
-        ] = await self.formula_service.get_all_project_formula_ast(
+        computed_formulas = await self.get_all_project_formula_ast(
             project_id, project_definition_id
         )
 
-        formula_id_to_name_map = {}
-
-        for node in fields:
-            formula_id_to_name_map[node.type_id] = node.name
-
-        for node in formulas:
-            formula_id_to_name_map[node.formula_id] = node.name
-
-        for node in formulas:
-            injector.add_unit(
-                node.path,
-                node.name,
-                FormulaUnit(
-                    node,
-                    [
-                        formula_id_to_name_map[dependency_id]
-                        for dependency_id in node.dependencies
-                    ],
-                    injector,
-                ),
+        for computed_formula in computed_formulas:
+            unit = FormulaUnit(
+                computed_formula,
+                formula_id_to_name_map,
+                node_id_to_name_map,
+                injector,
             )
+            formula_id_to_name_map[unit.formula_id] = unit.name
+            injector.add_unit(unit)
 
         cached_results = [
             FormulaCachedResult(
                 project_id=project_id,
-                formula_id=unit.node.formula_id,
-                node_id=unit.node.id,
+                formula_id=unit.formula_id,
+                node_id=unit.node_id,
                 result=unit.value,
                 calculation_details=unit.calculation_details,
             )
@@ -369,3 +441,46 @@ class FormulaResolver:
         await self.formula_cache_service.repopulate(project_id, cached_results)
 
         return cached_results
+
+    async def get_all_project_formula_ast(
+        self, project_id: UUID, project_definition_id: UUID
+    ) -> List[ComputedFormula]:
+        def post_process_ast(formula_ast: AST):
+            return SafeguardDivision().visit(formula_ast)
+
+        def build_computed_formula(
+            result: FormulaCachedResult,
+            formulas_by_id: Dict[UUID, Formula],
+            nodes_by_id: Dict[UUID, ProjectNode],
+        ):
+            formula = formulas_by_id[result.formula_id]
+            node = nodes_by_id[result.node_id]
+            final_ast = post_process_ast(ast.parse(formula.expression))
+
+            return ComputedFormula(
+                formula=formula,
+                result=result,
+                node=node,
+                final_ast=final_ast,
+            )
+
+        results = await self.formula_cache_service.find_by(
+            FormulaCachedResultFilter(project_id=project_id)
+        )
+
+        formulas = await self.formulas_plucker.plucks(
+            lambda ids: FormulaPluckFilter(ids=ids),
+            list(set(result.formula_id for result in results)),
+        )
+        formulas_by_id = {formula.id: formula for formula in formulas}
+
+        nodes = await self.nodes_plucker.plucks(
+            lambda ids: NodePluckFilter(ids=ids),
+            [result.node_id for result in results],
+        )
+        nodes_by_id = {node.id: node for node in nodes}
+
+        return [
+            build_computed_formula(result, formulas_by_id, nodes_by_id)
+            for result in results
+        ]

@@ -2,7 +2,7 @@ from uuid import UUID
 from expert_dollup.shared.modeling import CamelModel
 
 
-class FormulaDto(CamelModel):
+class FormulaExpressionDto(CamelModel):
     id: UUID
     project_def_id: UUID
     attached_to_type_id: UUID

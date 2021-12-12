@@ -2,6 +2,25 @@ from invoke import task
 from pathlib import Path
 import base64
 import os
+import asyncio
+
+
+def drop_db():
+    from dotenv import load_dotenv
+    from expert_dollup.shared.database_services import create_connection
+
+    load_dotenv()
+    connection = create_connection(os.getenv("DATABASE_URL"))
+    asyncio.run(connection.drop_db())
+
+
+def truncate_db():
+    from dotenv import load_dotenv
+    from expert_dollup.shared.database_services import create_connection
+
+    load_dotenv()
+    connection = create_connection(os.getenv("DATABASE_URL"))
+    asyncio.run(connection.truncate_db())
 
 
 @task(name="start-http")
@@ -80,7 +99,8 @@ def dbUp(c):
 def fill_db_with_fixture(c, name, truncate=False, poetry=False):
     if poetry:
         from dev.init_db import load_simple_project, load_simple_datasheet_def
-        from tests.fixtures import truncate_db
+        from dotenv import load_dotenv
+        from expert_dollup.shared.database_services import create_connection
 
         if truncate is True:
             truncate_db()
@@ -98,23 +118,19 @@ def fill_db_with_fixture(c, name, truncate=False, poetry=False):
 
 
 @task(name="db:truncate")
-def truncate_db(c, poetry=False):
-    if poetry:
-        from tests.fixtures import truncate_db
-
-        truncate_db()
-    else:
+def db_truncate(c, poetry=False):
+    if not poetry:
         c.run("poetry run invoke db:truncate --poetry")
+
+    truncate_db()
 
 
 @task(name="db:drop")
-def drop_db(c, poetry=False):
-    if poetry:
-        from tests.fixtures import drop_db
-
-        drop_db()
-    else:
+def db_drop(c, poetry=False):
+    if not poetry:
         c.run("poetry run invoke db:drop --poetry")
+
+    drop_db()
 
 
 @task
@@ -193,7 +209,15 @@ def generate_env(c, hostname="predykt.dev"):
 @task(name="upload-base-project")
 def upload_base_project(c):
     cwd = os.getcwd()
-    truncate_db(c)
+    db_truncate(c)
     c.run(
-        f"curl -X POST -F 'file=@{cwd}/calls.jsonl'  http://localhost:8000/api/import/definition"
+        f"curl -X POST -F 'file=@{cwd}/project-setup.jsonl'  http://localhost:8000/api/import"
+    )
+
+
+@task(name="upload-project")
+def upload_project(c):
+    cwd = os.getcwd()
+    c.run(
+        f"curl -X POST -F 'file=@{cwd}/project.jsonl'  http://localhost:8000/api/import"
     )

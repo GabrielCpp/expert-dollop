@@ -1,23 +1,17 @@
 from expert_dollup.app.modules import build_container
-from expert_dollup.shared.automapping import Mapper
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
+from tests.fixtures import dump_snapshot
 from tests.fixtures import *
 
 
 def generate_json(generate_layer, output_path=None):
-    from injector import Injector
-    from jsonpickle import encode, set_encoder_options, set_preferred_backend
-
     fixture = SimpleProject()
     fixture.generate()
-    model = fixture.model
 
     if generate_layer != "dao":
         raise Exception(f"Unkown layer {generate_layer}")
 
-    set_encoder_options("simplejson", sort_keys=True)
-    set_preferred_backend("simplejson")
-    json_content = encode(model, indent=4, unpicklable=False)
+    json_content = dump_snapshot(fixture.db)
 
     if output_path is None:
         print(json_content)
@@ -33,7 +27,7 @@ def fill_db(model):
 
     load_dotenv()
     injector = build_container()
-    db_setup_helper = injector.get(DbSetupHelper)
+    db_setup_helper = injector.get(DbFixtureHelper)
 
     async def main():
         async with injector.get(ExpertDollupDatabase) as _:

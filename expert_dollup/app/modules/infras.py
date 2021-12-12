@@ -1,22 +1,20 @@
 import expert_dollup.infra.services as services
+import expert_dollup.infra.queries as queries
+import expert_dollup.core.queries as core_queries
 from os import environ
 from inspect import isclass
 from injector import Binder, singleton, inject
 from expert_dollup.shared.starlette_injection import factory_of
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
+import expert_dollup.infra.expert_dollup_db as daos
 from expert_dollup.infra.validators import SchemaValidator
 from expert_dollup.infra.providers import WordProvider
+from expert_dollup.shared.database_services import create_connection
 
 
 def bind_database(binder: Binder) -> None:
-    DATABASE_URL = "postgresql://{}:{}@{}/{}".format(
-        environ["POSTGRES_USERNAME"],
-        environ["POSTGRES_PASSWORD"],
-        environ["POSTGRES_HOST"],
-        environ["POSTGRES_DB"],
-    )
-
-    database = ExpertDollupDatabase(DATABASE_URL)
+    DATABASE_URL = environ["DATABASE_URL"]
+    database = create_connection(DATABASE_URL, daos)
     binder.bind(ExpertDollupDatabase, to=database, scope=singleton)
 
 
@@ -32,6 +30,19 @@ def bind_validators(binder: Binder) -> None:
     binder.bind(
         SchemaValidator,
         inject(SchemaValidator),
+    )
+
+
+def bind_queries(binder: Binder) -> None:
+
+    binder.bind(
+        core_queries.Plucker[services.ProjectNodeService],
+        factory_of(queries.PluckQuery, service=services.ProjectNodeService),
+    )
+
+    binder.bind(
+        core_queries.Plucker[services.FormulaService],
+        factory_of(queries.PluckQuery, service=services.FormulaService),
     )
 
 

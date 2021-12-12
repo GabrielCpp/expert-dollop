@@ -471,8 +471,10 @@ def map_translation_id_to_dto(src: TranslationId, mapper: Mapper) -> Translation
     )
 
 
-def map_formula_from_dto(src: Formula, mapper: Mapper) -> Formula:
-    return Formula(
+def map_input_formula_expression_from_dto(
+    src: InputFormulaDto, mapper: Mapper
+) -> FormulaExpression:
+    return FormulaExpression(
         id=src.id,
         project_def_id=src.project_def_id,
         attached_to_type_id=src.attached_to_type_id,
@@ -481,8 +483,10 @@ def map_formula_from_dto(src: Formula, mapper: Mapper) -> Formula:
     )
 
 
-def map_input_formula_from_dto(src: InputFormulaDto, mapper: Mapper) -> Formula:
-    return Formula(
+def map_formula_expression_to_dto(
+    src: FormulaExpression, mapper: Mapper
+) -> FormulaExpressionDto:
+    return FormulaExpressionDto(
         id=src.id,
         project_def_id=src.project_def_id,
         attached_to_type_id=src.attached_to_type_id,
@@ -491,8 +495,20 @@ def map_input_formula_from_dto(src: InputFormulaDto, mapper: Mapper) -> Formula:
     )
 
 
-def map_formula_from_dto(src: FormulaDto, mapper: Mapper) -> Formula:
-    return Formula(
+def map_formula_expression_from_dto(
+    src: FormulaExpressionDto, mapper: Mapper
+) -> FormulaExpression:
+    return FormulaExpression(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        attached_to_type_id=src.attached_to_type_id,
+        name=src.name,
+        expression=src.expression,
+    )
+
+
+def map_formula_to_expression_dto(src: Formula, mapper: Mapper) -> FormulaExpressionDto:
+    return FormulaExpressionDto(
         id=src.id,
         project_def_id=src.project_def_id,
         attached_to_type_id=src.attached_to_type_id,
@@ -578,6 +594,11 @@ def map_label_collection_from_dto(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
+        properties_schema=src.properties_schema,
+        accepted_aggregates={
+            key: mapper.map(value, AcceptedAggregateUnion, AcceptedAggregateDtoUnion)
+            for key, value in src.accepted_aggregates.items()
+        },
     )
 
 
@@ -588,6 +609,11 @@ def map_label_collection_to_dto(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
+        properties_schema=src.properties_schema,
+        accepted_aggregates={
+            key: mapper.map(value, AcceptedAggregateDtoUnion, AcceptedAggregateUnion)
+            for key, value in src.accepted_aggregates.items()
+        },
     )
 
 
@@ -596,7 +622,33 @@ def map_datasheet_definition_label_to_dto(src: Label, mapper: Mapper) -> LabelDt
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
+        aggregates=src.aggregates,
+        properties=src.properties,
     )
+
+
+def map_accepted_aggregate_dto_union_from_dto(
+    src: AcceptedAggregateDtoUnion, mapper: Mapper
+) -> AcceptedAggregateUnion:
+    if isinstance(src, CollectionAggregateDto):
+        return CollectionAggregate(from_collection=src.from_collection)
+
+    if isinstance(src, DatasheetAggregateDto):
+        return DatasheetAggregate(from_datasheet=src.from_datasheet)
+
+    assert False, f"{type(src)} not in union"
+
+
+def map_accepted_aggregate_dto_union_to_dto(
+    src: AcceptedAggregateUnion, mapper: Mapper
+) -> AcceptedAggregateDtoUnion:
+    if isinstance(src, CollectionAggregate):
+        return CollectionAggregateDto(from_collection=src.from_collection)
+
+    if isinstance(src, DatasheetAggregate):
+        return DatasheetAggregateDto(from_datasheet=src.from_datasheet)
+
+    assert False, f"{type(src)} not in union"
 
 
 def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> Label:
@@ -604,6 +656,8 @@ def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> La
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
+        aggregates=src.aggregates,
+        properties=src.properties,
     )
 
 

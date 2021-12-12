@@ -5,38 +5,38 @@ from injector import Injector
 from dotenv import load_dotenv
 from pathlib import Path
 from async_asgi_testclient import TestClient
-from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 from expert_dollup.app.app import creat_app
 from expert_dollup.app.modules import build_container
+from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
+import expert_dollup.infra.expert_dollup_db as daos
+from expert_dollup.shared.database_services import DbConnection
+import expert_dollup.infra.services as services
 from expert_dollup.shared.automapping import Mapper
+from expert_dollup.shared.database_services import create_connection
 from .fixtures import *
+from factory.random import reseed_random
 
 load_dotenv(dotenv_path=Path(".") / ".env.test")
 load_dotenv()
+reseed_random(1)
 
 
 @pytest.fixture
-async def dal():
-    truncate_db()
-    DATABASE_URL = "postgresql://{}:{}@{}/{}".format(
-        os.environ["POSTGRES_USERNAME"],
-        os.environ["POSTGRES_PASSWORD"],
-        os.environ["POSTGRES_HOST"],
-        os.environ["POSTGRES_DB"],
-    )
-
+async def dal() -> DbConnection:
+    DATABASE_URL = os.environ["DATABASE_URL"]
     force_rollback = os.getenv("FORCE_ROLLBACK", True) in [True, "True"]
-    database = ExpertDollupDatabase(DATABASE_URL, force_rollback=False)
+    connection = create_connection(DATABASE_URL, daos, force_rollback=False)
 
-    await database.connect()
-    yield database
+    await connection.truncate_db()
+    await connection.connect()
+    yield connection
 
-    if database.is_connected:
-        await database.disconnect()
+    if connection.is_connected:
+        await connection.disconnect()
 
 
 @pytest.fixture
-def container(dal, request) -> Injector:
+def container(dal: DbConnection, request) -> Injector:
     container = build_container()
     container.binder.bind(ExpertDollupDatabase, dal)
 
@@ -48,7 +48,12 @@ def container(dal, request) -> Injector:
 
 
 @pytest.fixture
-def mapper(container):
+def db_helper(container: Injector, dal: DbConnection) -> DbFixtureHelper:
+    return DbFixtureHelper(container, dal).load_services(services)
+
+
+@pytest.fixture
+def mapper(container: Injector):
     mapper = container.get(Mapper)
     return mapper
 
@@ -64,35 +69,3 @@ async def ac(app, caplog) -> TestClient:
 
     async with TestClient(app) as ac:
         yield ac
-
-
-@pytest.fixture
-async def expert_dollup_simple_project(container: Injector):
-    db_helper = container.get(DbSetupHelper)
-    fixture = SimpleProject().generate().model
-    await db_helper.init_db(fixture)
-    yield fixture
-
-
-@pytest.fixture
-async def expert_dollup_mini_project(container: Injector):
-    db_helper = container.get(DbSetupHelper)
-    fixture = MiniProject().generate().model
-    await db_helper.init_db(fixture)
-    yield fixture
-
-
-@pytest.fixture
-async def mini_datasheet(container: Injector):
-    db_helper = container.get(DbSetupHelper)
-    fixture = MiniDatasheet().generate().model
-    await db_helper.init_db(fixture)
-    yield fixture
-
-
-@pytest.fixture
-async def project_with_trigger(container: Injector):
-    db_helper = container.get(DbSetupHelper)
-    fixture = ProjectWithTrigger().generate().model
-    await db_helper.init_db(fixture)
-    yield fixture

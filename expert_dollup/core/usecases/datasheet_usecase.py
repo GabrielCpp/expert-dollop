@@ -69,7 +69,7 @@ class DatasheetUseCase:
                 [
                     DatasheetElement(
                         datasheet_id=cloned_datasheet.id,
-                        element_def_id=definition_element.id,
+                        element_def_id=result.definition_element.id,
                         child_element_reference=uuid4(),
                         properties=result.properties,
                         original_datasheet_id=result.original_datasheet_id,

@@ -1,7 +1,7 @@
-from typing import Awaitable, List, Dict
+from typing import List, Dict
 from uuid import UUID
 from expert_dollup.shared.database_services import (
-    PostgresTableService,
+    CollectionServiceProxy,
     IdStampedDateCursorEncoder,
 )
 from expert_dollup.core.domains import (
@@ -9,23 +9,18 @@ from expert_dollup.core.domains import (
     ProjectDefinitionNodeFilter,
     ProjectDefinitionNodePluckFilter,
 )
-from expert_dollup.infra.expert_dollup_db import (
-    project_definition_node_table,
-    ProjectDefinitionNodeDao,
-)
+from expert_dollup.infra.expert_dollup_db import ProjectDefinitionNodeDao
 
 
-class ProjectDefinitionNodeService(PostgresTableService[ProjectDefinitionNode]):
+class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]):
     class Meta:
-        table = project_definition_node_table
         dao = ProjectDefinitionNodeDao
         domain = ProjectDefinitionNode
-        table_filter_type = ProjectDefinitionNodeFilter
         paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")
 
     async def get_fields_by_name(
         self, project_def_id: UUID, names: List[str]
-    ) -> Awaitable[Dict[str, UUID]]:
+    ) -> Dict[str, UUID]:
         if len(names) == 0:
             return {}
 
@@ -40,7 +35,7 @@ class ProjectDefinitionNodeService(PostgresTableService[ProjectDefinitionNode]):
 
         return {record.get("name"): record.get("id") for record in records}
 
-    async def has_path(self, path: List[UUID]) -> Awaitable[bool]:
+    async def has_path(self, path: List[UUID]) -> bool:
         if len(path) == 0:
             return True
 
@@ -52,7 +47,7 @@ class ProjectDefinitionNodeService(PostgresTableService[ProjectDefinitionNode]):
 
         return count > 0
 
-    async def delete_child_of(self, id: UUID) -> Awaitable:
+    async def delete_child_of(self, id: UUID):
         value = await self.find_by_id(id)
         query = (
             self.get_builder()
@@ -65,7 +60,7 @@ class ProjectDefinitionNodeService(PostgresTableService[ProjectDefinitionNode]):
 
     async def find_children(
         self, project_def_id: UUID, path: List[UUID]
-    ) -> Awaitable[List[ProjectDefinitionNode]]:
+    ) -> List[ProjectDefinitionNode]:
         query = (
             self.get_builder()
             .find_by(ProjectDefinitionNodeFilter(project_def_id=project_def_id))
@@ -79,7 +74,7 @@ class ProjectDefinitionNodeService(PostgresTableService[ProjectDefinitionNode]):
 
     async def find_root_sections(
         self, project_def_id: UUID
-    ) -> Awaitable[List[ProjectDefinitionNode]]:
+    ) -> List[ProjectDefinitionNode]:
         query = (
             self.get_builder()
             .find_by(
@@ -97,7 +92,7 @@ class ProjectDefinitionNodeService(PostgresTableService[ProjectDefinitionNode]):
 
     async def find_root_section_nodes(
         self, project_def_id: UUID, root_section_id: UUID
-    ) -> Awaitable[List[ProjectDefinitionNode]]:
+    ) -> List[ProjectDefinitionNode]:
         query = (
             self.get_builder()
             .find_by(
@@ -115,7 +110,7 @@ class ProjectDefinitionNodeService(PostgresTableService[ProjectDefinitionNode]):
 
     async def find_form_content(
         self, project_def_id: UUID, form_id: UUID
-    ) -> Awaitable[List[ProjectDefinitionNode]]:
+    ) -> List[ProjectDefinitionNode]:
         query = (
             self.get_builder()
             .find_by(

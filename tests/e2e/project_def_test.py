@@ -1,18 +1,15 @@
 import pytest
-from typing import Generator
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_db import *
 from ..fixtures import *
-from ..utils import strip_tree_traces, find_name
+from ..utils import find_name
 
 
 @pytest.mark.asyncio
 async def test_project_creation(ac, mapper):
-    db = SimpleProject().generate().model
-
-    assert len(db.project_definitions) == 1
-    project_definition = db.project_definitions[0]
+    db = SimpleProject().generate().db
+    project_definition = db.get_only_one(ProjectDefinition)
 
     response = await ac.post(
         "/api/project_definition", data=jsonify(project_definition)
@@ -20,7 +17,7 @@ async def test_project_creation(ac, mapper):
     assert response.status_code == 200, response.json()
 
     project_definition_nodes_dto = mapper.map_many(
-        db.project_definition_nodes,
+        db.all(ProjectDefinitionNode),
         ProjectDefinitionNodeDto,
         ProjectDefinitionNode,
     )
@@ -36,19 +33,19 @@ async def test_project_creation(ac, mapper):
     containers = await AsyncCursor.all(
         ac,
         f"/api/{project_definition.id}/project_definition_nodes",
-        after=normalize_request_results(ProjectDefinitionNodeDto, lambda c: c["id"]),
+        after=normalize_request_results(ProjectDefinitionNodeDto, lambda c: c["name"]),
     )
 
-    expected_nodes = normalize_dtos(project_definition_nodes_dto, lambda c: c["id"])
+    expected_nodes = normalize_dtos(project_definition_nodes_dto, lambda c: c["name"])
 
     assert len(containers) == len(project_definition_nodes_dto)
     assert containers == expected_nodes
 
 
 @pytest.mark.asyncio
-async def test_query_project_definition_parts(ac, mapper, expert_dollup_simple_project):
-    db = expert_dollup_simple_project
-    project_definition = db.project_definitions[0]
+async def test_query_project_definition_parts(ac, db_helper: DbFixtureHelper):
+    db = await db_helper.load_fixtures(SimpleProject)
+    project_definition = db.get_only_one(ProjectDefinition)
     runner = FlowRunner()
 
     @runner.step
@@ -91,7 +88,9 @@ async def test_query_project_definition_parts(ac, mapper, expert_dollup_simple_p
 
     @runner.step
     async def find_first_root_section_form_content():
-        form_node = find_name(db.project_definition_nodes, "root_a_subsection_0_form_0")
+        form_node = find_name(
+            db.all(ProjectDefinitionNode), "root_a_subsection_0_form_0"
+        )
         response = await ac.get(
             f"/api/project_definition/{project_definition.id}/form_content/{form_node.id}"
         )
