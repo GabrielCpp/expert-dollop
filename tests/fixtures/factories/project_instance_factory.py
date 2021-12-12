@@ -14,10 +14,10 @@ class FormulaSeed:
     def __init__(
         self,
         expression: str,
-        calculation_details: str,
-        result: Optional[float],
         formula_dependencies: List[str],
         node_dependencies: List[str],
+        calculation_details: str = "",
+        result: Optional[float] = None,
     ):
         self.expression = expression
         self.calculation_details = calculation_details
@@ -249,48 +249,40 @@ class ProjectSeed:
             definiton.backfill(name, self)
 
 
+@dataclass
+class CustomProjectInstancePackage:
+    project_definition: ProjectDefinition
+    project: ProjectDetails
+    formulas: List[Formula]
+    formulas_cache_result: List[FormulaCachedResult]
+    definition_nodes: List[ProjectDefinitionNode]
+    nodes: List[ProjectNode]
+    any_id_to_name: Dict[str, str]
+
+
 class ProjectInstanceFactory:
-    def __init__(self, project_name: str = "test"):
-        self.project_definition = ProjectDefinition(
-            id=make_uuid(project_name),
-            name=project_name,
-            default_datasheet_id=make_uuid(f"{project_name}-default-datasheet"),
-            datasheet_def_id=make_uuid(f"{project_name}-datasheet-def"),
-            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
-        )
+    @staticmethod
+    def build(
+        project_seed: ProjectSeed, project_name: str = "test"
+    ) -> CustomProjectInstancePackage:
+        seed_nodes_by_name: Dict[str, NodeSeed] = {}
+        formula_instances_by_name: Dict[str, FormulaSeed] = {}
+        formulas_by_name: Dict[str, FormulaSeed] = {}
 
-        self.project = ProjectDetails(
-            id=make_uuid(f"{project_name}-instance"),
-            name=project_name,
-            is_staged=False,
-            project_def_id=self.project_definition.id,
-            datasheet_id=self.project_definition.default_datasheet_id,
-        )
-
-        self.formulas: List[Formula] = []
-        self.formulas_cache_result: List[FormulaCachedResult] = []
-        self.definition_nodes: List[ProjectDefinitionNode] = []
-        self.nodes: List[ProjectNode] = []
-
-        self.seed_nodes_by_name: Dict[str, NodeSeed] = {}
-        self.formula_instances_by_name: Dict[str, FormulaSeed] = {}
-        self.formulas_by_name: Dict[str, FormulaSeed] = {}
-
-    def build(self, project_seed: ProjectSeed):
         for def_node_seed in project_seed.definitions.values():
             for node_seed in def_node_seed.instances.values():
                 node_seed_name = node_seed.name
 
-                assert not node_seed_name in self.seed_nodes_by_name
-                self.seed_nodes_by_name[node_seed_name] = node_seed
+                assert not node_seed_name in seed_nodes_by_name
+                seed_nodes_by_name[node_seed_name] = node_seed
 
                 for formula_seed in node_seed.formulas.values():
                     formula_instance_name = formula_seed.full_name
 
-                    assert not formula_instance_name in self.formula_instances_by_name
-                    self.formula_instances_by_name[formula_instance_name] = formula_seed
+                    assert not formula_instance_name in formula_instances_by_name
+                    formula_instances_by_name[formula_instance_name] = formula_seed
 
-                    previous_formula_definition = self.formulas_by_name.get(
+                    previous_formula_definition = formulas_by_name.get(
                         formula_seed.name, formula_seed
                     )
                     assert (
@@ -298,12 +290,28 @@ class ProjectInstanceFactory:
                         is formula_seed.node.definition
                     )
 
-                    self.formulas_by_name[formula_seed.name] = formula_seed
+                    formulas_by_name[formula_seed.name] = formula_seed
 
-        self.definition_nodes = [
+        project_definition = ProjectDefinition(
+            id=make_uuid(project_name),
+            name=project_name,
+            default_datasheet_id=make_uuid(f"{project_name}-default-datasheet"),
+            datasheet_def_id=make_uuid(f"{project_name}-datasheet-def"),
+            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
+        )
+
+        project = ProjectDetails(
+            id=make_uuid(f"{project_name}-instance"),
+            name=project_name,
+            is_staged=False,
+            project_def_id=project_definition.id,
+            datasheet_id=project_definition.default_datasheet_id,
+        )
+
+        definition_nodes = [
             ProjectDefinitionNode(
                 id=node_def_seed.id,
-                project_def_id=self.project_definition.id,
+                project_def_id=project_definition.id,
                 name=node_def_seed.name,
                 is_collection=node_def_seed.is_collection,
                 instanciate_by_default=True,
@@ -316,40 +324,78 @@ class ProjectInstanceFactory:
             for index, node_def_seed in enumerate(project_seed.definitions.values())
         ]
 
-        self.nodes = [
+        nodes = [
             ProjectNode(
                 id=node_seed.id,
-                project_id=self.project.id,
+                project_id=project.id,
                 type_path=node_seed.definition.path,
                 type_id=node_seed.definition.id,
                 type_name=node_seed.definition.name,
                 path=node_seed.path,
                 value=node_seed.value,
             )
-            for node_seed in self.seed_nodes_by_name.values()
+            for node_seed in seed_nodes_by_name.values()
         ]
 
-        self.formulas = [
+        formulas = [
             Formula(
                 id=formula_seed.id,
-                project_def_id=self.project_definition.id,
+                project_def_id=project_definition.id,
                 attached_to_type_id=formula_seed.node.definition.id,
                 expression=formula_seed.expression,
                 name=formula_seed.name,
                 dependency_graph=FormulaDependencyGraph(
                     formulas=[
                         FormulaDependency(
-                            target_type_id=self.formulas_by_name[dependant_name].id
+                            target_type_id=formulas_by_name[dependant_name].id
                         )
                         for dependant_name in formula_seed.formula_dependencies
                     ],
                     nodes=[
-                        project_seed.definitions[dependant_name].id
+                        FormulaDependency(
+                            target_type_id=project_seed.definitions[dependant_name].id
+                        )
                         for dependant_name in formula_seed.node_dependencies
                     ],
                 ),
             )
-            for formula_seed in self.formulas_by_name.values()
+            for formula_seed in formulas_by_name.values()
         ]
 
-        self.formulas_cache_result = []
+        formulas_cache_result = [
+            FormulaCachedResult(
+                project_id=project.id,
+                formula_id=formula_instance.id,
+                node_id=formula_instance.node.id,
+                calculation_details=formula_instance.calculation_details,
+                result=formula_instance.result,
+            )
+            for formula_instance in formula_instances_by_name.values()
+        ]
+
+        any_id_to_name: Dict[str, str] = {
+            project.id: project.name,
+            project_definition.id: project_definition.name,
+        }
+
+        for seed in project_seed.definitions.values():
+            assert not str(seed.id) in any_id_to_name
+            any_id_to_name[str(seed.id)] = seed.name
+
+        for seed in seed_nodes_by_name.values():
+            assert not str(seed.id) in any_id_to_name
+            any_id_to_name[str(seed.id)] = seed.name
+
+        for seed in formulas_by_name.values():
+            assert not str(seed.id) in any_id_to_name
+            any_id_to_name[str(seed.id)] = seed.name
+
+        return CustomProjectInstancePackage(
+            project_definition=project_definition,
+            project=project,
+            definition_nodes=definition_nodes,
+            nodes=nodes,
+            formulas=formulas,
+            formulas_cache_result=formulas_cache_result,
+            any_id_to_name=any_id_to_name,
+        )

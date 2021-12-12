@@ -15,6 +15,7 @@ from expert_dollup.core.domains import (
     FormulaPluckFilter,
     NodePluckFilter,
 )
+from expert_dollup.core.domains.project_definition_node import ValueUnion
 from expert_dollup.core.domains.project_node import ProjectNode
 from expert_dollup.infra.services import (
     FormulaService,
@@ -37,19 +38,22 @@ class FormulaInjector:
         self.unit_map: Dict[str, Union["FormulaUnit", "FieldUnit"]] = defaultdict(list)
         self.units: List["FormulaUnit"] = []
 
-    def add_unit(
-        self, path: List[UUID], name: str, unit: Union["FormulaUnit", "FieldUnit"]
-    ):
-        for item in path:
-            self.unit_map[f"{item}.{name}"].append(unit)
+    def add_unit(self, unit: Union["FormulaUnit", "FieldUnit"]):
+        for item in unit.path:
+            self.unit_map[f"{item}.{unit.name}"].append(unit)
 
-        self.unit_map[name].append(unit)
-        self.unit_map[f"{unit.node.id}.{name}"].append(unit)
+        self.unit_map[unit.name].append(unit)
+        self.unit_map[f"{unit.node_id}.{unit.name}"].append(unit)
 
         if isinstance(unit, FormulaUnit):
             self.units.append(unit)
 
-    def get_unit(self, path: List[UUID], name: str):
+    def get_unit(self, node_id: UUID, path: List[UUID], name: str):
+        unit_id = f"{node_id}.{name}"
+
+        if unit_id in self.unit_map:
+            return self.unit_map[unit_id]
+
         for id in reversed(path):
             unit_id = f"{id}.{name}"
 
@@ -65,22 +69,67 @@ class FormulaInjector:
 class FormulaUnit:
     def __init__(
         self,
-        node: ComputedFormula,
-        dependencies: List[str],
+        computed_formula: ComputedFormula,
+        formula_id_to_name_map: Dict[UUID, str],
+        node_id_to_name_map: Dict[UUID, str],
         formula_injector: FormulaInjector,
     ):
-        self.node = node
-        self.formula_injector = formula_injector
-        self._dependencies = dependencies
+        self._computed_formula = computed_formula
+        self._formula_id_to_name_map = formula_id_to_name_map
+        self._node_id_to_name_map = node_id_to_name_map
+        self._formula_injector = formula_injector
+
+    @property
+    def dependencies(self) -> List[str]:
+        merged_dependencies = []
+
+        for dependency in self._computed_formula.formula.dependency_graph.formulas:
+            dependency_name = self._formula_id_to_name_map.get(
+                dependency.target_type_id
+            )
+
+            assert (
+                not dependency_name is None
+            ), f"Missing id {dependency.target_type_id} in dependencies"
+            merged_dependencies.append(dependency_name)
+
+        for dependency in self._computed_formula.formula.dependency_graph.nodes:
+            dependency_name = self._node_id_to_name_map.get(dependency.target_type_id)
+            assert (
+                not dependency_name is None
+            ), f"Missing id {dependency.target_type_id} in dependencies"
+            merged_dependencies.append(dependency_name)
+
+        return merged_dependencies
+
+    @property
+    def node_id(self) -> UUID:
+        return self._computed_formula.node.id
+
+    @property
+    def path(self) -> List[UUID]:
+        return self._computed_formula.node.path
+
+    @property
+    def name(self) -> str:
+        return self._computed_formula.formula.name
+
+    @property
+    def expression_body(self) -> AST:
+        return self._computed_formula.final_ast.body[0]
+
+    @property
+    def formula_id(self) -> UUID:
+        return self._computed_formula.formula.id
 
     @property
     def value(self):
         self.units = {
-            name: self.formula_injector.get_unit(self.node.path, name)
-            for name in self._dependencies
+            name: self._formula_injector.get_unit(self.node_id, self.path, name)
+            for name in self.dependencies
         }
 
-        result, calculation_details = self._compute(self.node.expression.body[0])
+        result, calculation_details = self._compute(self.expression_body)
         self.calculation_details = calculation_details
 
         return result
@@ -90,6 +139,7 @@ class FormulaUnit:
             return self._compute(node.value)
 
         if isinstance(node, ast.Name):
+            assert node.id in self.units, f"{node.id } not in {self.units}"
             values = self.units[node.id]
 
             if len(values) == 1:
@@ -207,9 +257,24 @@ class FormulaUnit:
 
 
 class FieldUnit:
-    def __init__(self, node: FieldNode, value: Union[bool, str, int, float]):
-        self.node = node
-        self.value = value
+    def __init__(self, node: ProjectNode):
+        self._node = node
+
+    @property
+    def value(self) -> ValueUnion:
+        return self._node.value
+
+    @property
+    def node_id(self) -> UUID:
+        return self._node.id
+
+    @property
+    def path(self) -> List[UUID]:
+        return self._node.path
+
+    @property
+    def name(self) -> str:
+        return self._node.type_name
 
 
 class FormulaVisitor(ast.NodeVisitor):
@@ -339,44 +404,34 @@ class FormulaResolver:
         self, project_id: UUID, project_definition_id: UUID
     ) -> List[FormulaCachedResult]:
         injector = FormulaInjector()
-        fields = await self.project_node_service.get_all_fields(project_id)
+        formula_id_to_name_map: Dict[UUID, str] = {}
+        nodes = await self.project_node_service.get_all_fields(project_id)
+        node_id_to_name_map: Dict[UUID, str] = {
+            node.type_id: node.type_name for node in nodes
+        }
 
-        for node in fields:
-            injector.add_unit(node.path, node.type_name, FieldUnit(node, node.value))
+        for node in nodes:
+            injector.add_unit(FieldUnit(node))
 
         computed_formulas = await self.get_all_project_formula_ast(
             project_id, project_definition_id
         )
 
-        formula_id_to_name_map = {}
-
-        for field in fields:
-            formula_id_to_name_map[field.type_id] = field.type_name
-
         for computed_formula in computed_formulas:
-            formula_id_to_name_map[
-                computed_formula.formula.id
-            ] = computed_formula.formula.name
-
-        for computed_formula in computed_formulas:
-            injector.add_unit(
-                computed_formula.node.path,
-                computed_formula.node.name,
-                FormulaUnit(
-                    computed_formula,
-                    [
-                        formula_id_to_name_map[dependency_id]
-                        for dependency_id in computed_formula.formula.dependencies.formulas
-                    ],
-                    injector,
-                ),
+            unit = FormulaUnit(
+                computed_formula,
+                formula_id_to_name_map,
+                node_id_to_name_map,
+                injector,
             )
+            formula_id_to_name_map[unit.formula_id] = unit.name
+            injector.add_unit(unit)
 
         cached_results = [
             FormulaCachedResult(
                 project_id=project_id,
-                formula_id=unit.node.formula_id,
-                node_id=unit.node.id,
+                formula_id=unit.formula_id,
+                node_id=unit.node_id,
                 result=unit.value,
                 calculation_details=unit.calculation_details,
             )
@@ -415,7 +470,7 @@ class FormulaResolver:
 
         formulas = await self.formulas_plucker.plucks(
             lambda ids: FormulaPluckFilter(ids=ids),
-            [result.formula_id for result in results],
+            list(set(result.formula_id for result in results)),
         )
         formulas_by_id = {formula.id: formula for formula in formulas}
 
