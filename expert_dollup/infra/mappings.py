@@ -677,5 +677,21 @@ def map_report_definition_to_dao(
         id=src.id,
         project_def_id=src.project_def_id,
         name=src.name,
-        structure=src.structure,
+        structure=ReportStructureDao(
+            initial_selection=ReportJoinDao(
+                to_object_name=src.structure.initial_selection.to_object_name,
+                from_object_name=src.structure.initial_selection.from_object_name,
+                join_on_property_name=src.structure.initial_selection.join_on_property_name,
+                join_type=src.structure.initial_selection.join_type.value,
+            ),
+            joins=[
+                ReportJoinDao(
+                    to_object_name=j.to_object_name,
+                    from_object_name=j.from_object_name,
+                    join_on_property_name=j.join_on_property_name,
+                    join_type=j.join_type.value,
+                )
+                for j in src.structure.joins
+            ],
+        ),
     )

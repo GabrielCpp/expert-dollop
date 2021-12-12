@@ -17,4 +17,3 @@ class DatasheetElementService(CollectionServiceProxy[DatasheetElement]):
         domain = DatasheetElement
         table_filter_type = DatasheetElementFilter
         paginator = IdStampedDateCursorEncoder.for_fields("child_element_reference")
-        custom_filters = {DatasheetElementId}

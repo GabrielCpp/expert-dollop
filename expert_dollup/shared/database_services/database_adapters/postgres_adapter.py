@@ -17,7 +17,7 @@ from pydantic.fields import ModelField
 from dataclasses import dataclass
 from inspect import isclass
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, date
 from databases import Database
 from databases.backends.postgres import PostgresBackend
 from sqlalchemy import (
@@ -61,8 +61,11 @@ class ExtraEncoder(json.JSONEncoder):
         if dataclasses.is_dataclass(obj):
             return dataclasses.asdict(obj)
 
-        if isinstance(obj, (datetime.date, datetime.datetime)):
+        if isinstance(obj, (date, datetime)):
             return obj.isoformat()
+
+        if isinstance(obj, BaseModel):
+            return obj.dict()
 
         return json.JSONEncoder.default(self, obj)
 
@@ -70,6 +73,7 @@ class ExtraEncoder(json.JSONEncoder):
 class JsonSerializer:
     @staticmethod
     def encode(x: str) -> Any:
+        print(x)
         return json.dumps(x, indent=2, sort_keys=True, cls=ExtraEncoder)
 
     @staticmethod
@@ -82,8 +86,8 @@ NoneType = type(None)
 
 def create_postgres_dialect():
     dialect = postgresql.dialect(
-        json_deserializer=JsonSerializer.decode,
-        json_serializer=JsonSerializer.encode,
+        json_deserializer=lambda x: x,
+        json_serializer=lambda x: x,
         paramstyle="pyformat",
     )
 
@@ -200,9 +204,6 @@ class PostgresColumnBuilder:
 
 
 class PostgresConnection(DbConnection):
-    class EmptyMeta:
-        pk = None
-
     def __init__(self, connection_string: str, **kwargs):
         self.connection_string = connection_string
         self._database = Database(
@@ -225,12 +226,17 @@ class PostgresConnection(DbConnection):
 
             columns = [
                 column_builder.build(
-                    getattr(dao_type, "Meta", PostgresConnection.EmptyMeta),
+                    dao_type.Meta,
                     schema["properties"][field.name],
                     field,
                 )
                 for field in dao_type.__fields__.values()
+                if hasattr(
+                    dao_type,
+                    "Meta",
+                )
             ]
+            # columns.append(Column("_version"), Integer, nullable=False)
             table_name = schema["title"]
             table = Table(table_name, self.metadata, *columns)
             self.tables[dao_type] = table
@@ -410,7 +416,6 @@ class PostgresTableService(CollectionService[Domain]):
         self._dao = meta.dao
         self._domain = meta.domain
         self._table_filter_type = getattr(meta, "table_filter_type", None)
-        self._custom_filters: Set[Type] = getattr(meta, "custom_filters", set())
         self._paginator_factory = getattr(meta, "paginator", lambda _: None)
         self._database = connector
         self._table = tables.get(self._dao)
@@ -625,14 +630,7 @@ class PostgresTableService(CollectionService[Domain]):
             ), "Query builder query must be finalized"
             return query_filter.final_query
 
-        filter_type = (
-            query_type
-            if query_type in self._custom_filters
-            else self._table_filter_type
-        )
-        assert not filter_type is None, "Table filter is missing."
-
-        filter_fields = self._mapper.map(query_filter, dict, filter_type)
+        filter_fields = self._mapper.map(query_filter, dict, query_filter.__class__)
         where_filter = self._build_and_column_filter(filter_fields)
 
         return where_filter

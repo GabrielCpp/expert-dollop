@@ -25,7 +25,7 @@ class TranslationId:
 
 
 @dataclass
-class TranslationRessourceLocaleQuery:
+class TranslationRessourceLocaleQuery(QueryFilter):
     ressource_id: UUID
     locale: str
 

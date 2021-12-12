@@ -16,7 +16,7 @@ class DatasheetElement:
 
 
 @dataclass
-class DatasheetElementId:
+class DatasheetElementId(QueryFilter):
     datasheet_id: UUID
     element_def_id: UUID
     child_element_reference: UUID

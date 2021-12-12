@@ -135,6 +135,8 @@ class LabelDtoFactory(factory.Factory):
     id = factory.Faker("uuid4")
     label_collection_id = factory.Faker("uuid4")
     order_index = factory.Sequence(lambda n: n)
+    properties = factory.Dict({})
+    aggregates = factory.Dict({})
 
 
 class DatasheetDtoFactory(factory.Factory):

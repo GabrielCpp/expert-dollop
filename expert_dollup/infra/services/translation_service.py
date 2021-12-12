@@ -16,4 +16,3 @@ class TranslationService(CollectionServiceProxy[Translation]):
         domain = Translation
         table_filter_type = TranslationFilter
         paginator = IdStampedDateCursorEncoder.for_fields("id")
-        custom_filters = {TranslationRessourceLocaleQuery}
