@@ -342,7 +342,7 @@ class FormulaResolver:
         fields = await self.project_node_service.get_all_fields(project_id)
 
         for node in fields:
-            injector.add_unit(node.path, node.name, FieldUnit(node, node.expression))
+            injector.add_unit(node.path, node.type_name, FieldUnit(node, node.value))
 
         computed_formulas = await self.get_all_project_formula_ast(
             project_id, project_definition_id
@@ -351,7 +351,7 @@ class FormulaResolver:
         formula_id_to_name_map = {}
 
         for field in fields:
-            formula_id_to_name_map[field.type_id] = field.name
+            formula_id_to_name_map[field.type_id] = field.type_name
 
         for computed_formula in computed_formulas:
             formula_id_to_name_map[
@@ -413,9 +413,8 @@ class FormulaResolver:
             FormulaCachedResultFilter(project_id=project_id)
         )
 
-        make_it = lambda ids: FormulaPluckFilter(ids=ids)
         formulas = await self.formulas_plucker.plucks(
-            make_it,
+            lambda ids: FormulaPluckFilter(ids=ids),
             [result.formula_id for result in results],
         )
         formulas_by_id = {formula.id: formula for formula in formulas}

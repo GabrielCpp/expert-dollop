@@ -257,7 +257,9 @@ class StrictInterfaceSetup:
         def create_forwarder(method_name):
             def forward(*args, **kwargs):
                 if not method_name in self._setups_by_member_name:
-                    raise Exception("No setup for method {}".format(method_name))
+                    raise Exception(
+                        f"No setup for method {abstract_class}.{method_name}"
+                    )
 
                 return self._setups_by_member_name[method_name](args, kwargs)
 

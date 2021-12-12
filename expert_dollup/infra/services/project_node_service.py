@@ -89,28 +89,17 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
         results = await self.find_by(builder, order_by=("level", "desc"))
         return results
 
-    async def get_all_fields(self, project_id: UUID) -> Awaitable[List[FieldNode]]:
+    async def get_all_fields(self, project_id: UUID) -> List[ProjectNode]:
         builder = (
             self.get_builder()
-            .select_fields("type_name", "value", "id", "path", "type_id", "type_path")
             .find_by(ProjectNodeFilter(project_id=project_id))
             .find_by_isnot(ProjectNodeFilter(value=None))
             .finalize()
         )
 
-        records = await self.fetch_all_records(builder)
+        nodes = await self.find_by(builder)
 
-        return [
-            FieldNode(
-                id=record.get("id"),
-                name=record.get("type_name"),
-                path=split_uuid_path(record.get("path")),
-                type_id=record.get("type_id"),
-                type_path=split_uuid_path(record.get("type_path")),
-                expression=record.get("value"),
-            )
-            for record in records
-        ]
+        return nodes
 
     async def find_node_on_path_by_type(
         self, project_id: UUID, start_with_path: List[UUID], type_id: UUID
