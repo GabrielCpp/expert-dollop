@@ -4,7 +4,6 @@ from expert_dollup.core.domains import (
     ProjectNode,
     ProjectDefinitionNode,
     ProjectNodeFilter,
-    FieldNode,
 )
 from expert_dollup.shared.database_services import CollectionServiceProxy
 from expert_dollup.core.utils.path_transform import split_uuid_path
@@ -15,7 +14,6 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
     class Meta:
         dao = ProjectNodeDao
         domain = ProjectNode
-        table_filter_type = ProjectNodeFilter
 
     async def find_children(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None

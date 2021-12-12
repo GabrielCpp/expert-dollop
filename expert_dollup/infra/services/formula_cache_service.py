@@ -9,7 +9,6 @@ class FormulaCacheService(CollectionServiceProxy[FormulaCachedResult]):
     class Meta:
         dao = ProjectFormulaCacheDao
         domain = FormulaCachedResult
-        table_filter_type = FormulaCachedResultFilter
 
     async def repopulate(self, project_id: UUID, domains: List[FormulaCachedResult]):
         await self.delete_by(FormulaCachedResultFilter(project_id=project_id))

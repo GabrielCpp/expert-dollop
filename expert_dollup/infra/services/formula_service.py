@@ -12,7 +12,6 @@ class FormulaService(CollectionServiceProxy[Formula]):
     class Meta:
         dao = ProjectDefinitionFormulaDao
         domain = Formula
-        table_filter_type = FormulaFilter
         paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")
 
     async def get_formulas_by_name(

@@ -10,5 +10,4 @@ class ReportDefinitionService(CollectionServiceProxy[ReportDefinition]):
     class Meta:
         dao = ReportDefinitionDao
         domain = ReportDefinition
-        table_filter_type = None
         paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")

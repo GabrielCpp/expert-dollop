@@ -10,5 +10,4 @@ class ProjectService(CollectionServiceProxy[ProjectDetails]):
     class Meta:
         dao = ProjectDao
         domain = ProjectDetails
-        table_filter_type = None
         paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")

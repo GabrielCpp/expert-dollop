@@ -10,5 +10,4 @@ class DatasheetDefinitionService(CollectionServiceProxy[DatasheetDefinition]):
     class Meta:
         dao = DatasheetDefinitionDao
         domain = DatasheetDefinition
-        table_filter_type = None
         paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")

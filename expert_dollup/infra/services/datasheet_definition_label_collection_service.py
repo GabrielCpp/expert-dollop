@@ -7,4 +7,3 @@ class LabelCollectionService(CollectionServiceProxy[LabelCollection]):
     class Meta:
         dao = LabelCollectionDao
         domain = LabelCollection
-        table_filter_type = None

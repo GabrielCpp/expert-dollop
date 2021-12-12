@@ -9,7 +9,6 @@ class ProjectNodeMetaService(CollectionServiceProxy[ProjectNodeMeta]):
     class Meta:
         dao = ProjectNodeMetaDao
         domain = ProjectNodeMeta
-        table_filter_type = ProjectNodeMetaFilter
 
     async def find_root_sections(
         self, project_id: UUID

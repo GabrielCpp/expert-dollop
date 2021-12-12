@@ -16,7 +16,6 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
     class Meta:
         dao = ProjectDefinitionNodeDao
         domain = ProjectDefinitionNode
-        table_filter_type = ProjectDefinitionNodeFilter
         paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")
 
     async def get_fields_by_name(

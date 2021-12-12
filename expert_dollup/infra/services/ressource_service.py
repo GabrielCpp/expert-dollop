@@ -7,4 +7,3 @@ class RessourceService(CollectionServiceProxy[Ressource]):
     class Meta:
         dao = RessourceDao
         domain = Ressource
-        table_filter_type = None

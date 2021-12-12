@@ -12,5 +12,4 @@ class DatasheetDefinitionElementService(
     class Meta:
         dao = DatasheetDefinitionElementDao
         domain = DatasheetDefinitionElement
-        table_filter_type = None
         paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")

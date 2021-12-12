@@ -415,7 +415,6 @@ class PostgresTableService(CollectionService[Domain]):
         self._mapper = mapper
         self._dao = meta.dao
         self._domain = meta.domain
-        self._table_filter_type = getattr(meta, "table_filter_type", None)
         self._paginator_factory = getattr(meta, "paginator", lambda _: None)
         self._database = connector
         self._table = tables.get(self._dao)
@@ -572,7 +571,7 @@ class PostgresTableService(CollectionService[Domain]):
 
     async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):
         where_filter = self._build_filter(query_filter)
-        update_fields = self._mapper.map(value_filter, dict, self._table_filter_type)
+        update_fields = self._mapper.map(value_filter, dict, value_filter.__class__)
         query = self._table.update().where(where_filter).values(update_fields)
         await self._database.execute(query=query)
 
