@@ -20,7 +20,5 @@ class LabelCollectionDto(CamelModel):
     id: UUID
     datasheet_definition_id: UUID
     name: str
-    properties_schema: Dict[str, JsonSchema] = Field(default_factory=dict)
-    accepted_aggregates: Dict[str, AcceptedAggregateDtoUnion] = Field(
-        default_factory=dict
-    )
+    properties_schema: Dict[str, JsonSchema]
+    accepted_aggregates: Dict[str, AcceptedAggregateDtoUnion]

@@ -212,20 +212,20 @@ class DatasheetDefinitionDao(BaseModel):
     properties: str
 
 
-class CollectionAggregate(BaseModel):
+class CollectionAggregateDao(BaseModel):
     from_collection: str
 
 
-class DatasheetAggregate(BaseModel):
+class DatasheetAggregateDao(BaseModel):
     from_datasheet: str
 
 
-class FormulaAggregate(BaseModel):
+class FormulaAggregateDao(BaseModel):
     from_formula: str
 
 
 AcceptedAggregateDaoUnion = Union[
-    CollectionAggregate, DatasheetAggregate, FormulaAggregate
+    CollectionAggregateDao, DatasheetAggregateDao, FormulaAggregateDao
 ]
 
 

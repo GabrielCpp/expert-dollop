@@ -199,7 +199,7 @@ def create_datasheet_tables():
         "datasheet_definition",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("name", String, nullable=False),
-        Column("properties", String, nullable=False),
+        Column("properties", postgresql.JSON(), nullable=False),
     )
 
     op.create_table(

@@ -596,7 +596,7 @@ def map_label_collection_from_dto(
         name=src.name,
         properties_schema=src.properties_schema,
         accepted_aggregates={
-            key: mapper.map(value, ValueUnion, ValueUnionDto)
+            key: mapper.map(value, AcceptedAggregateUnion, AcceptedAggregateDtoUnion)
             for key, value in src.accepted_aggregates.items()
         },
     )
@@ -611,7 +611,7 @@ def map_label_collection_to_dto(
         name=src.name,
         properties_schema=src.properties_schema,
         accepted_aggregates={
-            key: mapper.map(value, AcceptedAggregateUnion, AcceptedAggregateDtoUnion)
+            key: mapper.map(value, AcceptedAggregateDtoUnion, AcceptedAggregateUnion)
             for key, value in src.accepted_aggregates.items()
         },
     )
@@ -623,11 +623,32 @@ def map_datasheet_definition_label_to_dto(src: Label, mapper: Mapper) -> LabelDt
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
         aggregates=src.aggregates,
-        properties={
-            key: mapper.map(value, AcceptedAggregateDtoUnion, AcceptedAggregateUnion)
-            for key, value in src.properties.items()
-        },
+        properties=src.properties,
     )
+
+
+def map_accepted_aggregate_dto_union_from_dto(
+    src: AcceptedAggregateDtoUnion, mapper: Mapper
+) -> AcceptedAggregateUnion:
+    if isinstance(src, CollectionAggregateDto):
+        return CollectionAggregate(from_collection=src.from_collection)
+
+    if isinstance(src, DatasheetAggregateDto):
+        return DatasheetAggregate(from_datasheet=src.from_datasheet)
+
+    assert False, f"{type(src)} not in union"
+
+
+def map_accepted_aggregate_dto_union_to_dto(
+    src: AcceptedAggregateUnion, mapper: Mapper
+) -> AcceptedAggregateDtoUnion:
+    if isinstance(src, CollectionAggregate):
+        return CollectionAggregateDto(from_collection=src.from_collection)
+
+    if isinstance(src, DatasheetAggregate):
+        return DatasheetAggregateDto(from_datasheet=src.from_datasheet)
+
+    assert False, f"{type(src)} not in union"
 
 
 def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> Label:
@@ -636,10 +657,7 @@ def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> La
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
         aggregates=src.aggregates,
-        properties={
-            key: mapper.map(value, ValueUnion, ValueUnionDto)
-            for key, value in src.properties.items()
-        },
+        properties=src.properties,
     )
 
 

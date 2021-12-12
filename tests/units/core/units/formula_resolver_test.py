@@ -139,12 +139,10 @@ async def test_given_formula_instances_should_compute_collection():
         nodes_plucker.object,
     )
 
-    print(fixture.any_id_to_name["cbaba831-5e3a-aa8b-a7a5-60234fe98b14"])
     results = await formula_resolver.compute_all_project_formula(
         fixture.project.id, fixture.project_definition.id
     )
 
-    print(results)
     assert results == [
         FormulaCachedResult(
             project_id=UUID("10b75052-eb7b-8984-b934-6eae1d6feecc"),

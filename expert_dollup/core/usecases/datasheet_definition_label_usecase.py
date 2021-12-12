@@ -11,13 +11,13 @@ class LabelUseCase:
     async def find_by_id(self, id: UUID):
         return await self.label_service.find_by_id(id)
 
-    async def add(self, label: Label) -> Awaitable[Label]:
+    async def add(self, label: Label) -> Label:
         await self.label_service.insert(label)
         return await self.label_service.find_by_id(label.id)
 
-    async def update(self, label: Label) -> Awaitable[Label]:
+    async def update(self, label: Label) -> Label:
         await self.label_service.update(label)
         return await self.label_service.find_by_id(label.id)
 
-    async def delete_by_id(self, id: UUID) -> Awaitable:
+    async def delete_by_id(self, id: UUID):
         await self.label_service.delete_by_id(id)

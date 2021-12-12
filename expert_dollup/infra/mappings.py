@@ -490,6 +490,30 @@ def map_datasheet_definition_label_collection_to_dao(
     )
 
 
+def map_accepted_aggregate_dto_union_from_dao(
+    src: AcceptedAggregateDaoUnion, mapper: Mapper
+) -> AcceptedAggregateUnion:
+    if isinstance(src, CollectionAggregateDao):
+        return CollectionAggregate(from_collection=src.from_collection)
+
+    if isinstance(src, DatasheetAggregateDao):
+        return DatasheetAggregate(from_datasheet=src.from_datasheet)
+
+    assert False, f"{type(src)} not in union"
+
+
+def map_accepted_aggregate_dto_union_to_dao(
+    src: AcceptedAggregateUnion, mapper: Mapper
+) -> AcceptedAggregateDaoUnion:
+    if isinstance(src, CollectionAggregate):
+        return CollectionAggregateDao(from_collection=src.from_collection)
+
+    if isinstance(src, DatasheetAggregate):
+        return DatasheetAggregateDao(from_datasheet=src.from_datasheet)
+
+    assert False, f"{type(src)} not in union"
+
+
 def map_datasheet_definition_label_to_dao(src: Label, mapper: Mapper) -> LabelDao:
     return LabelDao(
         id=src.id,

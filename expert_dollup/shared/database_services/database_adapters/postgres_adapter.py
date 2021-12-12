@@ -1,3 +1,5 @@
+import json
+import dataclasses
 from typing import (
     List,
     TypeVar,
@@ -16,7 +18,6 @@ from dataclasses import dataclass
 from inspect import isclass
 from uuid import UUID
 from datetime import datetime
-from jsonpickle import encode, decode
 from databases import Database
 from databases.backends.postgres import PostgresBackend
 from sqlalchemy import (
@@ -52,14 +53,28 @@ from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 
 
+class ExtraEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            return str(obj)
+
+        if dataclasses.is_dataclass(obj):
+            return dataclasses.asdict(obj)
+
+        if isinstance(obj, (datetime.date, datetime.datetime)):
+            return obj.isoformat()
+
+        return json.JSONEncoder.default(self, obj)
+
+
 class JsonSerializer:
     @staticmethod
     def encode(x: str) -> Any:
-        return encode(x, unpicklable=False)
+        return json.dumps(x, indent=2, sort_keys=True, cls=ExtraEncoder)
 
     @staticmethod
     def decode(x: str):
-        return decode(x, safe=True)
+        return json.loads(x)
 
 
 NoneType = type(None)
