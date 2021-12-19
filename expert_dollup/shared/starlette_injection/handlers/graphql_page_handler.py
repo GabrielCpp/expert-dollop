@@ -1,7 +1,6 @@
-from typing import Type, Optional, TypeVar, Generic
-from dataclasses import dataclass
-from ..automapping import Mapper
-from ..database_services import Page
+from typing import Optional, TypeVar, Generic
+from ...automapping import Mapper
+
 
 Service = TypeVar("Service")
 OutDto = TypeVar("OutDto")

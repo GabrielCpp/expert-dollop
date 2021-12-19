@@ -3,7 +3,7 @@ from uuid import UUID
 from typing import Optional, Union, Dict
 from expert_dollup.shared.database_services import Page
 from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.handlers import RequestHandler, MappingChain
+from expert_dollup.shared.starlette_injection import RequestHandler, MappingChain
 from expert_dollup.core.domains import (
     Datasheet,
     DatasheetElement,

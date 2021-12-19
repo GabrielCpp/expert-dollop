@@ -1,6 +1,6 @@
 from uuid import UUID
 from typing import Optional, List, Union, Dict
-from expert_dollup.shared.modeling import CamelModel
+from expert_dollup.shared.starlette_injection import CamelModel
 from expert_dollup.core.domains import *
 from .dynamic_primitive import (
     IntFieldValueDto,

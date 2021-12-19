@@ -1,7 +1,7 @@
 from injector import Binder, inject
 from expert_dollup.shared.starlette_injection import factory_of, Constant
 from expert_dollup.shared.automapping import Mapper
-from expert_dollup.shared.handlers import (
+from expert_dollup.shared.starlette_injection import (
     RequestHandler,
     GraphqlPageHandler,
     HttpPageHandler,

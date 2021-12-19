@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 from typing import Optional
 from datetime import datetime
-from expert_dollup.shared.modeling import CamelModel
+from expert_dollup.shared.starlette_injection import CamelModel
 from pydantic import Field
 
 

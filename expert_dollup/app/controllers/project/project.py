@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID, uuid4
 from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.handlers import RequestHandler, MappingChain
+from expert_dollup.shared.starlette_injection import RequestHandler, MappingChain
 from expert_dollup.app.dtos import ProjectDetailsDto, ProjectDetailsInputDto
 from expert_dollup.core.domains import ProjectDetails
 from expert_dollup.core.usecases import ProjectUseCase

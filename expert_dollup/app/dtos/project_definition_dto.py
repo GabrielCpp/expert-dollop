@@ -1,4 +1,4 @@
-from expert_dollup.shared.modeling import CamelModel
+from expert_dollup.shared.starlette_injection import CamelModel
 from typing import List
 from uuid import UUID
 from datetime import datetime

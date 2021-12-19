@@ -2,7 +2,11 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
 from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.handlers import RequestHandler, MappingChain, HttpPageHandler
+from expert_dollup.shared.starlette_injection import (
+    RequestHandler,
+    MappingChain,
+    HttpPageHandler,
+)
 from expert_dollup.infra.services import TranslationService
 from expert_dollup.app.dtos import (
     TranslationDto,

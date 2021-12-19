@@ -1,6 +1,6 @@
 from typing import Type, Optional, List
 from dataclasses import dataclass
-from ..automapping import Mapper
+from ...automapping import Mapper
 
 
 @dataclass

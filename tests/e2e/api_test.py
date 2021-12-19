@@ -4,7 +4,7 @@ from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.infra.services import *
-from expert_dollup.shared.handlers import make_page_model
+from expert_dollup.shared.starlette_injection import make_page_model
 from ..fixtures import *
 
 

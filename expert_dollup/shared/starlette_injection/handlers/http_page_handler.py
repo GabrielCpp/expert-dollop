@@ -1,7 +1,7 @@
 from typing import Optional, TypeVar, Generic, Type, List
 from urllib.parse import unquote
 from ..modeling import CamelModel
-from ..automapping import Mapper
+from ...automapping import Mapper
 
 Service = TypeVar("Service")
 OutDto = TypeVar("OutDto")

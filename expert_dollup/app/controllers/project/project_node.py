@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from typing import List, Optional
 from uuid import UUID
 from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.handlers import RequestHandler, MappingChain
+from expert_dollup.shared.starlette_injection import RequestHandler, MappingChain
 from expert_dollup.core.usecases import ProjectNodeUseCase
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *

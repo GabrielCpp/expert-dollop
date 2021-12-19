@@ -190,5 +190,5 @@ async def test_given_report_definition():
         label_service.object,
         label_plucker.object,
     )
-    await report_linking.refresh_cache(report_definition)
+    # await report_linking.refresh_cache(report_definition)
     # report_linking.link_report(report_definition, project_fixture.project, "fr_CA")

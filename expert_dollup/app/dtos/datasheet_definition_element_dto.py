@@ -1,7 +1,7 @@
 from uuid import UUID
 from typing import List, Dict, Union
 from datetime import datetime
-from expert_dollup.shared.modeling import CamelModel
+from expert_dollup.shared.starlette_injection import CamelModel
 
 
 class DatasheetDefinitionElementPropertyDto(CamelModel):

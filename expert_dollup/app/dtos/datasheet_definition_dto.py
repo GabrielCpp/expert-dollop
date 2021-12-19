@@ -1,6 +1,6 @@
 from uuid import UUID
 from typing import Dict
-from expert_dollup.shared.modeling import CamelModel
+from expert_dollup.shared.starlette_injection import CamelModel
 
 
 class ElementPropertySchemaDto(CamelModel):
