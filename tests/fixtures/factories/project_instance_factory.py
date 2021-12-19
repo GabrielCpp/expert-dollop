@@ -244,6 +244,17 @@ class ProjectSeed:
         for name, definiton in self.definitions.items():
             definiton.backfill(name, self)
 
+    @property
+    def formulas(self) -> List[FormulaSeed]:
+        ids = {}
+
+        for definition in self.definitions.values():
+            for instance in definition.instances.values():
+                for formula in instance.formulas.values():
+                    ids[formula.id] = formula
+
+        return list(ids.values())
+
 
 @dataclass
 class CustomProjectInstancePackage:

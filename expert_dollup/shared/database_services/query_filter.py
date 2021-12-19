@@ -15,3 +15,9 @@ class QueryFilter:
     def args(self) -> dict:
         assert not self._args is None
         return self._args
+
+    def __eq__(self, other):
+        if not issubclass(type(other), QueryFilter):
+            return False
+
+        return self._args == other._args

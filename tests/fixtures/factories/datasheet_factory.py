@@ -1,6 +1,8 @@
-from typing import Dict, List, Optional, Union, Type
-from dataclasses import dataclass
+from typing import Dict, List, Optional, Union, Type, Protocol
+from dataclasses import dataclass, field
 from datetime import datetime
+from collections import defaultdict
+from itertools import islice
 from uuid import UUID
 from .helpers import make_uuid
 from expert_dollup.core.domains import *
@@ -26,6 +28,10 @@ DEFAULT_VALUE_GENERATOR = {
 }
 
 
+class FormulaLike(Protocol):
+    id: UUID
+
+
 @dataclass
 class CustomDatasheetInstancePackage:
     datasheet_definition: DatasheetDefinition
@@ -41,15 +47,22 @@ PropertyTypeUnion = Union[Type[int], Type[float], Type[str], Type[bool]]
 
 
 class ElementSeed:
-    def __init__(self, unit_id: str, is_collection: bool = False, tags: List[str] = []):
-        self._name: Optional[str] = None
+    def __init__(
+        self,
+        unit_id: str,
+        is_collection: bool = False,
+        tags: Optional[List[str]] = None,
+    ):
         self.unit_id = unit_id
         self.is_collection = is_collection
-        self._tags_name = list(tags)
+        self._tags_name = tags or []
+        self._name: Optional[str] = None
 
+    @property
     def tags_name(self) -> List[str]:
         return self._tags_name
 
+    @property
     def tags(self) -> UUID:
         return [make_uuid(name) for name in self.tags_name]
 
@@ -65,15 +78,26 @@ class ElementSeed:
     def seed_value(self, property_type: PropertyTypeUnion, index: int):
         return DEFAULT_VALUE_GENERATOR[property_type](index)
 
-    def backfill(self, name):
+    def backfill(self, name: str, datasheet_seed: "DatasheetSeed"):
         self._name = name
+        self.translations = [
+            Translation(
+                id=make_uuid(f"t_{locale.lower()}_element_{name}"),
+                ressource_id=datasheet_seed.id,
+                locale=locale,
+                scope=self.id,
+                name=self.name,
+                value=f"t_{locale.lower()}_element_{name}",
+                creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
+            )
+            for locale in datasheet_seed.locales
+        ]
 
 
 @dataclass
 class LabelSeed:
     name: str
-    properties: Dict[str, ValueUnion]
-    aggregates: Dict[str, UUID]
+    attributes: Dict[str, LabelAttributeUnion]
 
     @property
     def id(self) -> UUID:
@@ -84,18 +108,24 @@ class CollectionSeed:
     def __init__(
         self,
         label_count: int,
-        properties: Dict[str, PropertyTypeUnion],
-        aggregates: Dict[str, LabelAttributeSchemaUnion],
+        schemas: Optional[Dict[str, PropertyTypeUnion]] = None,
+        translations: Optional[Dict[str, Dict[str, str]]] = None,
     ):
         self.label_count = label_count
-        self._property_seeds = properties
-        self.properties = {
-            name: DEFAULT_VALUE_MAPPING[property_type]
-            for name, property_type in properties.items()
-        }
-        self.aggregates = aggregates
-        self.label_seeds: List[LabelSeed] = []
+        self._attributes_seed = schemas or {}
+        self.translation_seed = {}
         self._name: Optional[str] = None
+        self._translations = translations
+        self.label_seeds: List[LabelSeed] = []
+
+    @property
+    def attributes_schema(self) -> Dict[str, LabelAttributeSchemaUnion]:
+        return {
+            name: StaticProperty(DEFAULT_VALUE_MAPPING[property_type])
+            if property_type in DEFAULT_VALUE_MAPPING
+            else property_type
+            for name, property_type in self._attributes_seed.items()
+        }
 
     @property
     def name(self) -> str:
@@ -106,19 +136,84 @@ class CollectionSeed:
     def id(self) -> UUID:
         return make_uuid(self._name)
 
-    def backfill(self, name):
+    @property
+    def translations(self) -> List[Translation]:
+        assert not self._translations is None
+        translations: List[Translation] = []
+
+        for locale, translations_for_locale in self._translations.items():
+            for name, label in translations_for_locale.items():
+                translations.append(
+                    Translation(
+                        id=make_uuid(label),
+                        ressource_id=self.id,
+                        locale=locale,
+                        scope=make_uuid(name),
+                        name=name,
+                        value=label,
+                        creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
+                    )
+                )
+
+        return translations
+
+    def backfill(self, name: str, datasheet_seed: "DatasheetSeed"):
         self._name = name
         self.label_seeds = [
             LabelSeed(
                 name=f"{name}_label_{index}",
-                properties={
+                attributes={
                     name: DEFAULT_VALUE_GENERATOR[property_type]
-                    for name, property_type in self._property_seeds.items()
+                    for name, property_type in self._attributes_seed.items()
+                    if property_type in DEFAULT_VALUE_GENERATOR
                 },
-                aggregates={},
             )
             for index in range(0, self.label_count)
         ]
+
+        if self._translations is None:
+            self._translations = defaultdict(dict)
+
+            for locale in datasheet_seed.locales:
+                for index in range(0, self.label_count):
+                    self._translations[locale][
+                        f"{name}_label_{index}"
+                    ] = f"t_{locale.lower()}_{name}_label_{index}"
+
+    def backfill_label(self, datasheet_seed: "DatasheetSeed"):
+        for index, label_seed in enumerate(self.label_seeds):
+            for name, property_type in self._attributes_seed.items():
+                if not property_type in DEFAULT_VALUE_GENERATOR:
+                    assert isinstance(
+                        property_type,
+                        (CollectionAggregate, DatasheetAggregate, FormulaAggregate),
+                    )
+
+                    if isinstance(property_type, CollectionAggregate):
+                        label_seeds = datasheet_seed.collection_seeds[
+                            property_type.from_collection
+                        ].label_seeds
+                        assert len(label_seeds) > 1
+                        label_seed.attributes[name] = label_seeds[
+                            index % len(label_seeds)
+                        ].id
+
+                    if isinstance(property_type, DatasheetAggregate):
+                        assert len(datasheet_seed.element_seeds) > 1
+                        label_seed.attributes[name] = next(
+                            islice(
+                                datasheet_seed.element_seeds.values(),
+                                index % len(datasheet_seed.element_seeds),
+                                None,
+                            )
+                        ).id
+
+                    if isinstance(property_type, FormulaAggregate):
+                        assert not datasheet_seed.formulas is None
+                        assert len(datasheet_seed.formulas) > 1
+                        label_seed.attributes[name] = datasheet_seed.formulas[
+                            index % len(datasheet_seed.formulas)
+                        ].id
 
 
 @dataclass
@@ -126,23 +221,31 @@ class DatasheetSeed:
     properties: Dict[str, PropertyTypeUnion]
     element_seeds: Dict[str, ElementSeed]
     collection_seeds: Dict[str, CollectionSeed]
+    locales: List[str] = field(default_factory=lambda: ["fr_CA", "en_US"])
+    name: str = "test"
+    formulas: Optional[List[FormulaLike]] = None
+
+    @property
+    def id(self) -> str:
+        return make_uuid(self.name)
 
     def __post_init__(self):
         for name, element_seed in self.element_seeds.items():
-            element_seed.backfill(name)
+            element_seed.backfill(name, self)
 
         for name, collection_seed in self.collection_seeds.items():
-            collection_seed.backfill(name)
+            collection_seed.backfill(name, self)
+
+        for collection_seed in self.collection_seeds.values():
+            collection_seed.backfill_label(self)
 
 
 class DatasheetInstanceFactory:
     @staticmethod
-    def build(
-        datasheet_seed: DatasheetSeed, datasheet_name: str = "test"
-    ) -> CustomDatasheetInstancePackage:
+    def build(datasheet_seed: DatasheetSeed) -> CustomDatasheetInstancePackage:
         datasheet_definition = DatasheetDefinition(
-            id=make_uuid(f"{datasheet_name}-definition"),
-            name=f"{datasheet_name}-definition",
+            id=make_uuid(f"{datasheet_seed.name}-definition"),
+            name=f"{datasheet_seed.name}-definition",
             properties={
                 name: dict(DEFAULT_VALUE_MAPPING[property_type])
                 for name, property_type in datasheet_seed.properties.items()
@@ -150,11 +253,11 @@ class DatasheetInstanceFactory:
         )
 
         datasheet = Datasheet(
-            id=make_uuid(datasheet_name),
+            id=make_uuid(datasheet_seed.name),
             is_staged=False,
             datasheet_def_id=datasheet_definition.id,
-            name=datasheet_name,
-            from_datasheet_id=make_uuid(datasheet_name),
+            name=datasheet_seed.name,
+            from_datasheet_id=make_uuid(datasheet_seed.name),
             creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
         )
 
@@ -199,10 +302,7 @@ class DatasheetInstanceFactory:
                 id=collection_seed.id,
                 datasheet_definition_id=datasheet_definition.id,
                 name=collection_seed.name,
-                attributes_schema={
-                    **collection_seed.properties,
-                    **collection_seed.aggregates,
-                },
+                attributes_schema=collection_seed.attributes_schema,
             )
             for collection_seed in datasheet_seed.collection_seeds.values()
         ]
@@ -216,9 +316,17 @@ class DatasheetInstanceFactory:
                         id=label_seed.id,
                         label_collection_id=collection_seed.id,
                         order_index=index,
-                        attributes={**label_seed.properties, **label_seed.aggregates},
+                        attributes=label_seed.attributes,
                     )
                 )
+
+        translations: List[Translation] = []
+
+        for element_seed in datasheet_seed.element_seeds.values():
+            translations.extend(element_seed.translations)
+
+        for collection_seed in datasheet_seed.collection_seeds.values():
+            translations.extend(collection_seed.translations)
 
         return CustomDatasheetInstancePackage(
             datasheet_definition=datasheet_definition,
@@ -227,5 +335,5 @@ class DatasheetInstanceFactory:
             datasheet_elements=datasheet_elements,
             label_collections=label_collections,
             labels=labels,
-            translations=[],
+            translations=translations,
         )

@@ -1,6 +1,6 @@
 from uuid import UUID
 from typing import List, Union, Optional, Dict
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
 from expert_dollup.infra.expert_dollup_db import ValueUnion
 from expert_dollup.shared.database_services import QueryFilter
@@ -23,6 +23,10 @@ class DatasheetDefinitionElement:
     default_properties: Dict[str, DatasheetDefinitionElementProperty]
     tags: List[UUID]
     creation_date_utc: datetime
+
+    @property
+    def report_dict(self):
+        return asdict(self)
 
 
 class DatasheetDefinitionElementFilter(QueryFilter):

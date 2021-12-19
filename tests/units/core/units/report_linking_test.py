@@ -1,5 +1,5 @@
 import pytest
-from tests.fixtures.mock_interface_utils import StrictInterfaceSetup
+from tests.fixtures.mock_interface_utils import StrictInterfaceSetup, return_async
 from expert_dollup.app.dtos import *
 from expert_dollup.core.units import *
 from expert_dollup.core.domains import *
@@ -92,19 +92,46 @@ datasheet_seed = DatasheetSeed(
     properties={"price": float, "factor": float},
     element_seeds={
         "wood_plank": ElementSeed(
-            tags=["wood"],
+            tags=["productcategory_label_0"],
             unit_id="m",
-        )
+        ),
+        "concrete": ElementSeed(
+            tags=["productcategory_label_1"],
+            unit_id="m",
+        ),
+        "ceramix": ElementSeed(
+            tags=["productcategory_label_2"], unit_id="m", is_collection=True
+        ),
     },
     collection_seeds={
-        "collection_a": CollectionSeed(
-            label_count=5,
-            properties={
-                "name": str,
+        "substage": CollectionSeed(
+            label_count=10,
+            schemas={
+                "formula": FormulaAggregate("*"),
+                "special_condition": bool,
+                "quantity": float,
+                "stage": CollectionAggregate("stage"),
+                "orderformcategory": CollectionAggregate("orderformcategory"),
+                "datasheet_element": DatasheetAggregate("*"),
             },
-            aggregates={"datasheet_items": 0},
-        )
+        ),
+        "stage": CollectionSeed(
+            label_count=5,
+            schemas={
+                "localisation": str,
+                "associated_global_section": str,
+                "compile_in_one": bool,
+                "floor": CollectionAggregate("floor"),
+            },
+        ),
+        "orderformcategory": CollectionSeed(
+            label_count=3, schemas={"worksection": CollectionAggregate("worksection")}
+        ),
+        "worksection": CollectionSeed(label_count=3),
+        "productcategory": CollectionSeed(label_count=3),
+        "floor": CollectionSeed(label_count=3),
     },
+    formulas=project_seed.formulas,
 )
 
 
@@ -146,29 +173,50 @@ async def test_given_report_definition():
             ),
         ],
         structure=ReportStructure(
-            initial_selection=ReportInitialSelection(
-                from_object_name="substage",
-                from_property_name="formula",
-                alias_name="project_report_formula",
-                distinct=True,
-            ),
+            datasheet_selection_alias="abstractproduct",
             joins_cache=[
                 ReportJoin(
-                    from_object_name="",
-                    from_property_name="",
-                    to_object_name="",
-                    to_property_name="",
-                    alias_name="",
-                )
-            ],
-            joins=[
+                    from_object_name="abstractproduct",
+                    from_property_name="id",
+                    join_on_collection="substage",
+                    join_on_attribute="datasheet_element",
+                    alias_name="substage",
+                ),
                 ReportJoin(
-                    from_object_name="",
-                    from_property_name="",
-                    to_object_name="",
-                    to_property_name="",
-                    alias_name="",
-                )
+                    from_object_name="substage",
+                    from_property_name="stage",
+                    join_on_collection="stage",
+                    join_on_attribute="id",
+                    alias_name="stage",
+                ),
+                ReportJoin(
+                    from_object_name="stage",
+                    from_property_name="floor",
+                    join_on_collection="floor",
+                    join_on_attribute="id",
+                    alias_name="floor",
+                ),
+                ReportJoin(
+                    from_object_name="abstractproduct",
+                    from_property_name="tags",
+                    join_on_collection="productcategory",
+                    join_on_attribute="id",
+                    alias_name="productcategory",
+                ),
+                ReportJoin(
+                    from_object_name="substage",
+                    from_property_name="orderformcategory",
+                    join_on_collection="orderformcategory",
+                    join_on_attribute="id",
+                    alias_name="orderformcategory",
+                ),
+                ReportJoin(
+                    from_object_name="orderformcategory",
+                    from_property_name="worksection",
+                    join_on_collection="worksection",
+                    join_on_attribute="id",
+                    alias_name="worksection",
+                ),
             ],
         ),
         group_by=[
@@ -177,18 +225,66 @@ async def test_given_report_definition():
             "abstract_product_description",
             "order_form_category_description",
         ],
-        order_by=["stage_order", "substage_order"],
+        order_by=["stage.order", "substage.order"],
     )
 
+    datasheet_definition_service = StrictInterfaceSetup(DatasheetDefinitionService)
+    project_definition_service = StrictInterfaceSetup(ProjectDefinitionService)
+    datasheet_definition_element_service = StrictInterfaceSetup(
+        DatasheetDefinitionElementService
+    )
     report_definition_service = StrictInterfaceSetup(ReportDefinitionService)
     label_collection_service = StrictInterfaceSetup(LabelCollectionService)
     label_service = StrictInterfaceSetup(LabelService)
     label_plucker = StrictInterfaceSetup(Plucker)
+
+    project_definition_service.setup(
+        lambda x: x.find_by_id(report_definition.project_def_id),
+        returns_async=project_fixture.project_definition,
+    )
+
+    datasheet_def_id = datasheet_fixture.datasheet_definition.id
+
+    datasheet_definition_service.setup(
+        lambda x: x.find_by_id(datasheet_def_id),
+        returns_async=datasheet_fixture.datasheet_definition,
+    )
+
+    datasheet_definition_element_service.setup(
+        lambda x: x.find_by(
+            DatasheetDefinitionElementFilter(datasheet_def_id=datasheet_def_id)
+        ),
+        returns_async=datasheet_fixture.datasheet_definition_elements,
+    )
+
+    label_collection_service.setup(
+        lambda x: x.find_by(
+            LabelCollectionFilter(datasheet_definition_id=datasheet_def_id)
+        ),
+        returns_async=datasheet_fixture.label_collections,
+    )
+
+    for label_collection in datasheet_fixture.label_collections:
+        label_service.setup(
+            lambda x: x.find_by(LabelFilter(label_collection_id=label_collection.id)),
+            returns_async=[
+                label
+                for label in datasheet_fixture.labels
+                if label.label_collection_id == label_collection.id
+            ],
+        )
+
     report_linking = ReportLinking(
+        datasheet_definition_service.object,
+        project_definition_service.object,
+        datasheet_definition_element_service.object,
         report_definition_service.object,
         label_collection_service.object,
         label_service.object,
         label_plucker.object,
     )
-    # await report_linking.refresh_cache(report_definition)
+
+    report_buckets = await report_linking.refresh_cache(report_definition)
+    print(len(report_buckets), report_buckets)
+    assert False
     # report_linking.link_report(report_definition, project_fixture.project, "fr_CA")

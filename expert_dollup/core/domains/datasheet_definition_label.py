@@ -13,6 +13,16 @@ class Label:
     order_index: int
     attributes: Dict[str, LabelAttributeUnion] = field(default_factory=dict)
 
+    def get_attribute(self, name: str):
+        if name == "id":
+            return self.id
+
+        return self.attributes.get(name)
+
+    @property
+    def report_dict(self) -> dict:
+        return {**self.attributes, "id": self.id, "order_index": self.order_index}
+
 
 class LabelFilter(QueryFilter):
     id: Optional[UUID]

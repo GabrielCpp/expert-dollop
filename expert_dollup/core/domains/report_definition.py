@@ -7,31 +7,29 @@ from typing import List
 class ReportJoin:
     from_object_name: str
     from_property_name: str
-    to_object_name: str
-    to_property_name: str
+    join_on_collection: str
+    join_on_attribute: str
     alias_name: str
-    is_inner_join: bool = True
+    warn_about_idle_items: bool = True
 
 
 @dataclass
 class ReportInitialSelection:
     from_object_name: str
-    from_property_name: str
     alias_name: str
-    distinct: bool
 
 
 @dataclass
 class ReportStructure:
-    initial_selection: ReportInitialSelection
+    datasheet_selection_alias: str
     joins_cache: List[ReportJoin]
-    joins: List[ReportJoin]
 
 
 @dataclass
 class ReportColumn:
     name: str
     expression: str
+    is_top_level: bool = False
 
 
 @dataclass
