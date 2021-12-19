@@ -2,9 +2,11 @@ from typing import Type, TypeVar, Callable, Tuple, Dict, List, Optional, Union
 from collections import defaultdict
 from inspect import getmembers, isfunction, signature
 from injector import Injector
+from .mapping_error import MapingError
 
 T = TypeVar("T")
 U = TypeVar("U")
+K = TypeVar("K")
 
 
 class Mapper:
@@ -18,7 +20,7 @@ class Mapper:
     def add_mapping(
         self,
         from_type: Type[T],
-        to_type: Type[U],
+        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
         mapping_function: Callable[[T, Optional["Mapper"]], U],
     ):
         self._mappings[from_type][to_type] = mapping_function
@@ -26,23 +28,49 @@ class Mapper:
     def map_many(
         self,
         instances: List[T],
-        to_type: Type[U],
+        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
         from_type: Type[T] = None,
         after=lambda x: x,
     ) -> List[U]:
         return [after(self.map(instance, to_type, from_type)) for instance in instances]
 
-    def map(self, instance: T, to_type: Type[U], from_type: Type[T] = None) -> U:
+    def map_dict_values(
+        self,
+        instances: Dict[K, T],
+        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
+        from_type: Type[T] = None,
+        after=lambda x: x,
+    ) -> Dict[K, U]:
+        return {
+            key: after(self.map(instance, to_type, from_type))
+            for key, instance in instances.items()
+        }
+
+    def map(
+        self,
+        instance: T,
+        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
+        from_type: Type[T] = None,
+    ) -> U:
         from_type = type(instance) if from_type is None else from_type
 
         if not from_type in self._mappings:
-            raise Exception(f"No mapping for instance {from_type} -> {to_type}")
+            raise MapingError(f"No mapping for instance {from_type} -> {to_type}")
 
         submapper = self._mappings.get(from_type)
+
+        if isinstance(to_type, dict):
+            if not from_type in to_type:
+                raise MapingError(
+                    f"Mapping for type union must be among provided types {','.join(list(to_type.keys()))}"
+                )
+
+            to_type = to_type[from_type]
+
         object_mapper = submapper.get(to_type)
 
         if object_mapper is None:
-            raise Exception(f"No mapping for target {from_type} -> {to_type}")
+            raise MapingError(f"No mapping for target {from_type} -> {to_type}")
 
         result = object_mapper(instance, self)
 

@@ -12,10 +12,6 @@ from .project_definition_node_dto import (
     CollapsibleContainerFieldConfigDto,
     NodeConfigDto,
     NodeMetaConfigDto,
-    IntFieldValueDto,
-    DecimalFieldValueDto,
-    StringFieldValueDto,
-    BoolFieldValueDto,
     ValueUnionDto,
     FieldDetailsUnion,
     config_type_lookup_map,
@@ -25,6 +21,13 @@ from .project_definition_node_dto import (
     FieldDetailsUnionDto,
     TriggerDto,
     TranslationConfigDto,
+)
+from .dynamic_primitive import (
+    IntFieldValueDto,
+    DecimalFieldValueDto,
+    StringFieldValueDto,
+    BoolFieldValueDto,
+    ReferenceIdDto,
 )
 from .project_definition_node_tree_dto import (
     ProjectDefinitionTreeNodeDto,
@@ -51,9 +54,11 @@ from .datasheet_definition_label_collection_dto import (
     LabelCollectionDto,
     CollectionAggregateDto,
     DatasheetAggregateDto,
-    AcceptedAggregateDtoUnion,
+    LabelAttributeSchemaDtoUnion,
+    StaticPropertyDto,
+    FormulaAggregateDto,
 )
-from .datasheet_definition_label_dto import LabelDto
+from .datasheet_definition_label_dto import LabelDto, LabelAttributeValueDto
 from .datasheet_definition_element_dto import (
     DatasheetDefinitionElementDto,
     DatasheetDefinitionElementPropertyDto,

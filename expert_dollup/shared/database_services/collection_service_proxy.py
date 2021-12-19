@@ -56,7 +56,7 @@ class CollectionServiceProxy(CollectionService[Domain]):
     ) -> Page[Domain]:
         return await self._impl.find_by_paginated(query_filter, limit, next_page_token)
 
-    async def find_one_by(self, query_filter: WhereFilter) -> List[Domain]:
+    async def find_one_by(self, query_filter: WhereFilter) -> Domain:
         return await self._impl.find_one_by(query_filter)
 
     async def find_by_id(self, pk_id: Id) -> Domain:

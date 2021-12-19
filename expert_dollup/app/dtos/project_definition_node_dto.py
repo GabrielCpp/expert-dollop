@@ -2,6 +2,12 @@ from uuid import UUID
 from typing import Optional, List, Union, Dict
 from expert_dollup.shared.modeling import CamelModel
 from expert_dollup.core.domains import *
+from .dynamic_primitive import (
+    IntFieldValueDto,
+    DecimalFieldValueDto,
+    StringFieldValueDto,
+    BoolFieldValueDto,
+)
 
 
 class IntFieldConfigDto(CamelModel):
@@ -103,22 +109,6 @@ class NodeConfigDto(CamelModel):
     triggers: List[TriggerDto]
     field_details: Optional[FieldDetailsUnionDto]
     value_validator: Optional[JsonSchema]
-
-
-class IntFieldValueDto(CamelModel):
-    integer: int
-
-
-class DecimalFieldValueDto(CamelModel):
-    numeric: float
-
-
-class StringFieldValueDto(CamelModel):
-    text: str
-
-
-class BoolFieldValueDto(CamelModel):
-    enabled: bool
 
 
 ValueUnionDto = Union[

@@ -59,11 +59,19 @@ from .formula import (
 from .datasheet_definition import DatasheetDefinition, ElementPropertySchema
 from .datasheet_definition_label_collection import (
     LabelCollection,
-    AcceptedAggregateUnion,
+    LabelAttributeSchemaUnion,
     DatasheetAggregate,
     CollectionAggregate,
+    LabelCollectionFilter,
+    StaticProperty,
+    FormulaAggregate,
 )
-from .datasheet_definition_label import Label
+from .datasheet_definition_label import (
+    Label,
+    LabelFilter,
+    LabelPluckFilter,
+    LabelAttributeUnion,
+)
 from .datasheet_definition_element import (
     DatasheetDefinitionElement,
     DatasheetDefinitionElementProperty,
@@ -74,12 +82,13 @@ from .datasheet_element import (
     DatasheetElement,
     DatasheetElementFilter,
     DatasheetElementId,
+    zero_uuid,
 )
-from .bounded_node import BoundedNode
+from .bounded_node import BoundedNode, BoundedNodeSlice
 from .report_definition import (
     ReportDefinition,
     ReportColumn,
     ReportStructure,
     ReportJoin,
-    JoinType,
+    ReportInitialSelection,
 )

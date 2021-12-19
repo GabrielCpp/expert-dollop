@@ -149,7 +149,7 @@ class CollectionService(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
-    async def find_one_by(self, query_filter: WhereFilter) -> List[Domain]:
+    async def find_one_by(self, query_filter: WhereFilter) -> Domain:
         pass
 
     @abstractmethod

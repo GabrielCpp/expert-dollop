@@ -5,6 +5,10 @@ from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
 
 
+def zero_uuid() -> UUID:
+    return UUID(int=0)
+
+
 @dataclass
 class DatasheetElement:
     datasheet_id: UUID

@@ -30,7 +30,14 @@ class ExpertDollupDatabase(DbConnection):
     pass
 
 
+class ReferenceIdDao(BaseModel):
+    uuid: UUID
+
+
 ValueUnion = Union[StrictBool, StrictInt, StrictStr, StrictFloat, None]
+LabelAttributeDaoUnion = Union[
+    StrictBool, StrictInt, StrictStr, StrictFloat, ReferenceIdDao
+]
 JsonSchemaDao = dict
 
 
@@ -241,8 +248,12 @@ class FormulaAggregateDao(BaseModel):
     from_formula: str
 
 
-AcceptedAggregateDaoUnion = Union[
-    CollectionAggregateDao, DatasheetAggregateDao, FormulaAggregateDao
+class StaticProperty(BaseModel):
+    json_schema: JsonSchemaDao
+
+
+LabelAttributeSchemaDaoUnion = Union[
+    StaticProperty, CollectionAggregateDao, DatasheetAggregateDao, FormulaAggregateDao
 ]
 
 
@@ -256,8 +267,7 @@ class LabelCollectionDao(BaseModel):
     id: UUID
     datasheet_definition_id: UUID
     name: str
-    properties_schema: Dict[str, JsonSchemaDao]
-    accepted_aggregates: Dict[str, AcceptedAggregateDaoUnion]
+    attributes_schema: Dict[str, LabelAttributeSchemaDaoUnion]
 
 
 class LabelDao(BaseModel):
@@ -270,8 +280,7 @@ class LabelDao(BaseModel):
     id: UUID
     label_collection_id: UUID
     order_index: int
-    properties: Dict[str, ValueUnion]
-    aggregates: Dict[str, UUID]
+    attributes: Dict[str, LabelAttributeDaoUnion]
 
 
 class DatasheetDefinitionElementPropertyDao(BaseModel):
@@ -331,7 +340,6 @@ class ReportJoinDao(BaseModel):
     to_object_name: str
     from_object_name: str
     join_on_property_name: str
-    join_type: str
 
 
 class ReportStructureDao(BaseModel):

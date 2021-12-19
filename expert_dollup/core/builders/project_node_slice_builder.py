@@ -1,17 +1,12 @@
-from typing import List, Awaitable, Optional
+from typing import Optional
 from uuid import UUID, uuid4
 from collections import defaultdict
-from expert_dollup.core.domains import (
-    ProjectDetails,
-    ProjectNode,
-    ProjectNodeFilter,
-    ProjectDefinitionNodeFilter,
-    BoundedNode,
-)
+from expert_dollup.core.domains import *
 from expert_dollup.infra.services import (
     ProjectNodeService,
     ProjectDefinitionNodeService,
 )
+from .formula_cache_result_builder import FormulaCacheResultBuilder
 
 
 class ProjectNodeSliceBuilder:
@@ -19,16 +14,18 @@ class ProjectNodeSliceBuilder:
         self,
         project_node_service: ProjectNodeService,
         project_definition_node_service: ProjectDefinitionNodeService,
+        formula_cache_result_builder: FormulaCacheResultBuilder,
     ):
         self.project_node_service = project_node_service
         self.project_definition_node_service = project_definition_node_service
+        self.formula_cache_result_builder = formula_cache_result_builder
 
     async def build_collection(
         self,
         project_details: ProjectDetails,
         collection_type_id: UUID,
         parent_node_id: Optional[UUID],
-    ) -> Awaitable[List[BoundedNode]]:
+    ) -> BoundedNodeSlice:
         if parent_node_id is None:
             parent_node = ProjectNode(
                 id=project_details.id,
@@ -83,7 +80,14 @@ class ProjectNodeSliceBuilder:
             ]
         ]
 
-        return bounded_nodes
+        formulas_result = await self.formula_cache_result_builder.build(
+            project_details.project_def_id,
+            [bounded_node.node for bounded_node in bounded_nodes],
+        )
+
+        return BoundedNodeSlice(
+            bounded_nodes=bounded_nodes, formulas_result=formulas_result
+        )
 
     async def clone(self, project_id: UUID, node_id: UUID):
         parent_node = await self.project_node_service.find_one_by(
@@ -94,23 +98,44 @@ class ProjectNodeSliceBuilder:
             project_id, parent_node.subpath
         )
 
+        root_def_node = await self.project_definition_node_service.find_one_by(
+            ProjectDefinitionNodeFilter(id=parent_node.type_id)
+        )
+
+        definition_nodes = await self.project_definition_node_service.find_children(
+            root_def_node.project_def_id, root_def_node.subpath
+        )
+
         id_mapping = defaultdict(uuid4, iter((item, item) for item in parent_node.path))
 
-        nodes = [
-            ProjectNode(
-                id=id_mapping[node.id],
-                project_id=node.project_id,
-                type_id=node.type_id,
-                type_name=node.type_name,
-                type_path=node.type_path,
-                path=[id_mapping[node_id] for node_id in node.path],
-                value=node.value,
-                label=node.label,
+        bounded_nodes = [
+            BoundedNode(
+                node=ProjectNode(
+                    id=id_mapping[node.id],
+                    project_id=node.project_id,
+                    type_id=node.type_id,
+                    type_name=node.type_name,
+                    type_path=node.type_path,
+                    path=[id_mapping[node_id] for node_id in node.path],
+                    value=node.value,
+                    label=node.label,
+                ),
+                definition=definition,
             )
-            for node in [
-                parent_node,
-                *children,
-            ]
+            for definition, node in zip(
+                [root_def_node, *definition_nodes],
+                [
+                    parent_node,
+                    *children,
+                ],
+            )
         ]
 
-        return nodes
+        formulas_result = await self.formula_cache_result_builder.build(
+            root_def_node.project_def_id,
+            [bounded_node.node for bounded_node in bounded_nodes],
+        )
+
+        return BoundedNodeSlice(
+            bounded_nodes=bounded_nodes, formulas_result=formulas_result
+        )

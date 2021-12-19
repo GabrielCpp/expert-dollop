@@ -60,7 +60,7 @@ def newMigration(c, message=None):
     c.run('poetry run alembic revision -m "{}"'.format(message))
 
 
-@task(name="db:upgrade:head")
+@task(name="db:migrate:head")
 def runMigration(c):
     c.run("poetry run alembic upgrade head")
 

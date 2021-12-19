@@ -19,3 +19,12 @@ class Plucker(ABC, Generic[Service]):
         self, build_pluck_filter: QueryFilter, *ids_lists: List[List[UUID]]
     ) -> List[Domain]:
         pass
+
+    @abstractmethod
+    async def pluck_subressources(
+        self,
+        ressource_filter: QueryFilter,
+        build_pluck_filter: QueryFilter,
+        *ids_lists: List[List[UUID]]
+    ) -> List[Domain]:
+        pass

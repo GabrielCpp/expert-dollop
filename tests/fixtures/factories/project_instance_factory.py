@@ -2,12 +2,8 @@ from typing import Dict, List, Optional, Union
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
-from hashlib import md5
+from .helpers import make_uuid
 from expert_dollup.core.domains import *
-
-
-def make_uuid(value: str) -> UUID:
-    return UUID(bytes=md5(value.encode("utf8")).digest())
 
 
 class FormulaSeed:
@@ -263,7 +259,10 @@ class CustomProjectInstancePackage:
 class ProjectInstanceFactory:
     @staticmethod
     def build(
-        project_seed: ProjectSeed, project_name: str = "test"
+        project_seed: ProjectSeed,
+        project_name: str = "test",
+        default_datasheet_id: Optional[UUID] = None,
+        datasheet_def_id: Optional[UUID] = None,
     ) -> CustomProjectInstancePackage:
         seed_nodes_by_name: Dict[str, NodeSeed] = {}
         formula_instances_by_name: Dict[str, FormulaSeed] = {}
@@ -295,8 +294,10 @@ class ProjectInstanceFactory:
         project_definition = ProjectDefinition(
             id=make_uuid(project_name),
             name=project_name,
-            default_datasheet_id=make_uuid(f"{project_name}-default-datasheet"),
-            datasheet_def_id=make_uuid(f"{project_name}-datasheet-def"),
+            default_datasheet_id=default_datasheet_id
+            or make_uuid(f"{project_name}-default-datasheet"),
+            datasheet_def_id=datasheet_def_id
+            or make_uuid(f"{project_name}-datasheet-definition"),
             creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
         )
 

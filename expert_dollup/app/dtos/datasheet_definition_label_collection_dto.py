@@ -1,6 +1,5 @@
 from uuid import UUID
 from expert_dollup.shared.modeling import CamelModel
-from pydantic import Field
 from typing import Dict, Union
 from .project_definition_node_dto import JsonSchema
 
@@ -13,12 +12,24 @@ class DatasheetAggregateDto(CamelModel):
     from_datasheet: str
 
 
-AcceptedAggregateDtoUnion = Union[CollectionAggregateDto, DatasheetAggregateDto]
+class FormulaAggregateDto(CamelModel):
+    from_formula: str
+
+
+class StaticPropertyDto(CamelModel):
+    json_schema: JsonSchema
+
+
+LabelAttributeSchemaDtoUnion = Union[
+    StaticPropertyDto,
+    CollectionAggregateDto,
+    DatasheetAggregateDto,
+    FormulaAggregateDto,
+]
 
 
 class LabelCollectionDto(CamelModel):
     id: UUID
     datasheet_definition_id: UUID
     name: str
-    properties_schema: Dict[str, JsonSchema]
-    accepted_aggregates: Dict[str, AcceptedAggregateDtoUnion]
+    attributes_schema: Dict[str, LabelAttributeSchemaDtoUnion]

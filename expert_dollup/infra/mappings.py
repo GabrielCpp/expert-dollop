@@ -1,7 +1,11 @@
 from typing import List
 from uuid import UUID
 from expert_dollup.shared.starlette_injection import Clock
-from expert_dollup.shared.automapping import Mapper, map_dict_keys
+from expert_dollup.shared.automapping import (
+    Mapper,
+    map_dict_keys,
+    RevervibleUnionMapping,
+)
 from expert_dollup.core.utils.path_transform import (
     split_uuid_path,
     join_uuid_path,
@@ -646,6 +650,11 @@ def map_datasheet_definition_element_filter(
     )
 
 
+label_attribute_schema_dao_mappings = RevervibleUnionMapping(
+    LabelAttributeSchemaDaoUnion, LabelAttributeSchemaUnion
+)
+
+
 def map_datasheet_definition_label_collection_from_dao(
     src: LabelCollectionDao, mapper: Mapper
 ) -> LabelCollection:
@@ -653,11 +662,9 @@ def map_datasheet_definition_label_collection_from_dao(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
-        properties_schema=src.properties_schema,
-        accepted_aggregates={
-            key: mapper.map(value, AcceptedAggregateUnion, AcceptedAggregateDaoUnion)
-            for key, value in src.accepted_aggregates.items()
-        },
+        attributes_schema=mapper.map_dict_values(
+            src.attributes_schema, label_attribute_schema_dao_mappings.from_origin
+        ),
     )
 
 
@@ -668,36 +675,23 @@ def map_datasheet_definition_label_collection_to_dao(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
-        properties_schema=src.properties_schema,
-        accepted_aggregates={
-            key: mapper.map(value, AcceptedAggregateDaoUnion, AcceptedAggregateUnion)
-            for key, value in src.accepted_aggregates.items()
-        },
+        attributes_schema=mapper.map_dict_values(
+            src.attributes_schema, label_attribute_schema_dao_mappings.to_origin
+        ),
     )
 
 
-def map_accepted_aggregate_dto_union_from_dao(
-    src: AcceptedAggregateDaoUnion, mapper: Mapper
-) -> AcceptedAggregateUnion:
-    if isinstance(src, CollectionAggregateDao):
-        return CollectionAggregate(from_collection=src.from_collection)
-
-    if isinstance(src, DatasheetAggregateDao):
-        return DatasheetAggregate(from_datasheet=src.from_datasheet)
-
-    assert False, f"{type(src)} not in union"
-
-
-def map_accepted_aggregate_dto_union_to_dao(
-    src: AcceptedAggregateUnion, mapper: Mapper
-) -> AcceptedAggregateDaoUnion:
-    if isinstance(src, CollectionAggregate):
-        return CollectionAggregateDao(from_collection=src.from_collection)
-
-    if isinstance(src, DatasheetAggregate):
-        return DatasheetAggregateDao(from_datasheet=src.from_datasheet)
-
-    assert False, f"{type(src)} not in union"
+label_attribute_dao_mappings = RevervibleUnionMapping(
+    LabelAttributeDaoUnion,
+    LabelAttributeUnion,
+    {
+        StrictBool: bool,
+        StrictInt: int,
+        StrictStr: str,
+        StrictFloat: float,
+        ReferenceIdDao: UUID,
+    },
+)
 
 
 def map_datasheet_definition_label_to_dao(src: Label, mapper: Mapper) -> LabelDao:
@@ -705,8 +699,9 @@ def map_datasheet_definition_label_to_dao(src: Label, mapper: Mapper) -> LabelDa
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
-        properties=src.properties,
-        aggregates=src.aggregates,
+        attributes=mapper.map_dict_values(
+            src.attributes, label_attribute_dao_mappings.to_origin
+        ),
     )
 
 
@@ -715,8 +710,9 @@ def map_datasheet_definition_label_from_dao(src: LabelDao, mapper: Mapper) -> La
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
-        properties=src.properties,
-        aggregates=src.aggregates,
+        attributes=mapper.map_dict_values(
+            src.attributes, label_attribute_dao_mappings.from_origin
+        ),
     )
 
 
@@ -852,9 +848,17 @@ def map_fomula_pluck_filter(src: FormulaPluckFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
         {
-            "ids": ("ids", None),
+            "ids": ("id", None),
             "names": ("name", None),
+            "attached_to_type_ids": ("attached_to_type_id", None),
         },
+    )
+
+
+def map_node_pluck_filter(src: NodePluckFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {"ids": ("id", None)},
     )
 
 
@@ -881,14 +885,12 @@ def map_report_definition_to_dao(
                 to_object_name=src.structure.initial_selection.to_object_name,
                 from_object_name=src.structure.initial_selection.from_object_name,
                 join_on_property_name=src.structure.initial_selection.join_on_property_name,
-                join_type=src.structure.initial_selection.join_type.value,
             ),
             joins=[
                 ReportJoinDao(
                     to_object_name=j.to_object_name,
                     from_object_name=j.from_object_name,
                     join_on_property_name=j.join_on_property_name,
-                    join_type=j.join_type.value,
                 )
                 for j in src.structure.joins
             ],

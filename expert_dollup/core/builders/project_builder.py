@@ -1,4 +1,4 @@
-from typing import List, Awaitable
+from typing import List
 from uuid import UUID, uuid4
 from collections import defaultdict, OrderedDict
 from expert_dollup.core.builders import RessourceBuilder
@@ -12,31 +12,27 @@ from expert_dollup.core.domains import (
     ProjectNodeMetaFilter,
     ProjectNodeMetaState,
     BoundedNode,
-    ValueUnion,
     Trigger,
     TriggerAction,
 )
-from expert_dollup.infra.services import (
-    ProjectNodeService,
-    ProjectNodeMetaService,
-    ProjectDefinitionNodeService,
-)
+
+
+from expert_dollup.infra.services import *
+from .formula_cache_result_builder import FormulaCacheResultBuilder
 
 
 class TriggerHandler:
     def __init__(self, nodes_by_id: OrderedDict):
         self.nodes_by_id = nodes_by_id
 
-    def run(self, bounded_node: BoundedNode) -> Awaitable:
+    def run(self, bounded_node: BoundedNode):
         project_id = bounded_node.node.project_id
 
         for trigger in bounded_node.definition.config.triggers:
             if trigger.action == TriggerAction.CHANGE_NAME:
                 self._trigger_change_name(trigger, bounded_node)
 
-    def _trigger_change_name(
-        self, trigger: Trigger, bounded_node: BoundedNode
-    ) -> Awaitable:
+    def _trigger_change_name(self, trigger: Trigger, bounded_node: BoundedNode):
         index = bounded_node.node.type_path.index(trigger.target_type_id)
         path = bounded_node.node.path[0 : index + 1]
         node = self.nodes_by_id[path[-1]]
@@ -50,13 +46,15 @@ class ProjectBuilder:
         project_node_meta_service: ProjectNodeMetaService,
         project_definition_node_service: ProjectDefinitionNodeService,
         ressource_builder: RessourceBuilder,
+        formula_cache_result_builder: FormulaCacheResultBuilder,
     ):
         self.project_definition_node_service = project_definition_node_service
         self.project_node_meta_service = project_node_meta_service
         self.ressource_builder = ressource_builder
         self.project_node_service = project_node_service
+        self.formula_cache_result_builder = formula_cache_result_builder
 
-    async def build_new(self, project_details: ProjectDetails) -> Awaitable[Project]:
+    async def build_new(self, project_details: ProjectDetails) -> Project:
         node_definitions = await self.project_definition_node_service.find_by(
             ProjectDefinitionNodeFilter(project_def_id=project_details.project_def_id)
         )
@@ -104,16 +102,21 @@ class ProjectBuilder:
         for node in nodes_by_id.values():
             trigger_handler.run(node)
 
+        nodes = [bounded_node.node for bounded_node in nodes_by_id.values()]
+
         return Project(
             details=project_details,
-            nodes=[bounded_node.node for bounded_node in nodes_by_id.values()],
+            nodes=nodes,
             metas=node_metas,
+            formulas_result=await self.formula_cache_result_builder.build(
+                project_details.project_def_id, nodes
+            ),
             ressource=self.ressource_builder.build(
                 project_details.id, project_details.id, "project"
             ),
         )
 
-    async def clone(self, project_details: ProjectDetails) -> Awaitable[Project]:
+    async def clone(self, project_details: ProjectDetails) -> Project:
         cloned_project = ProjectDetails(
             id=uuid4(),
             name=project_details.name,
@@ -137,11 +140,14 @@ class ProjectBuilder:
             nodes=cloned_nodes,
             metas=cloned_metas,
             ressource=ressource,
+            formulas_result=await self.formula_cache_result_builder.build(
+                project_details.project_def_id, cloned_nodes
+            ),
         )
 
     async def _clone_project_nodes(
         self, project_id: UUID, cloned_project: ProjectDetails
-    ) -> Awaitable[List[ProjectNode]]:
+    ) -> List[ProjectNode]:
         original_nodes = await self.project_node_service.find_by(
             ProjectNodeFilter(project_id=project_id)
         )
@@ -165,7 +171,7 @@ class ProjectBuilder:
 
     async def _clone_metas(
         self, project_id: UUID, cloned_project: ProjectDetails
-    ) -> Awaitable[List[ProjectNodeMeta]]:
+    ) -> List[ProjectNodeMeta]:
         node_metas = await self.project_node_meta_service.find_by(
             ProjectNodeMetaFilter(project_id=project_id)
         )

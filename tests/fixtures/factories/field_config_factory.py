@@ -2,6 +2,12 @@ from random import choice
 from dataclasses import dataclass
 from faker import Faker
 from expert_dollup.core.domains import *
+from expert_dollup.infra.json_schema import (
+    INT_JSON_SCHEMA,
+    STRING_JSON_SCHEMA,
+    BOOL_JSON_SCHEMA,
+    NUMBER_JSON_SCHEMA,
+)
 
 
 @dataclass
@@ -73,7 +79,7 @@ class FieldConfigFactory:
     def _create_int_custom_attr(self, name: str, index: int):
         return NodeConfig(
             field_details=IntFieldConfig(unit="inch"),
-            value_validator={"type": "integer", "minimum": 0, "maximum": 100000},
+            value_validator=INT_JSON_SCHEMA,
             translations=TranslationConfig(
                 help_text_name=f"{name}_help_text", label=name
             ),
@@ -88,7 +94,7 @@ class FieldConfigFactory:
                 unit="pound",
                 precision=3,
             ),
-            value_validator={"type": "number", "minimum": -100000, "maximum": 100000},
+            value_validator=NUMBER_JSON_SCHEMA,
             translations=TranslationConfig(
                 help_text_name=f"{name}_help_text", label=name
             ),
@@ -102,11 +108,7 @@ class FieldConfigFactory:
             field_details=StringFieldConfig(
                 transforms=["trim"],
             ),
-            value_validator={
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 200,
-            },
+            value_validator=STRING_JSON_SCHEMA,
             translations=TranslationConfig(
                 help_text_name=f"{name}_help_text", label=name
             ),
@@ -118,7 +120,7 @@ class FieldConfigFactory:
     def _create_bool_custom_attr(self, name: str, index: int):
         return NodeConfig(
             field_details=BoolFieldConfig(is_checkbox=True),
-            value_validator={"type": "boolean"},
+            value_validator=BOOL_JSON_SCHEMA,
             translations=TranslationConfig(
                 help_text_name=f"{name}_help_text", label=name
             ),

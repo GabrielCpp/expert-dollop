@@ -1,0 +1,2 @@
+class MapingError(Exception):
+    pass

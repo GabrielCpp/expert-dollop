@@ -525,7 +525,7 @@ class PostgresTableService(CollectionService[Domain]):
             results=results,
         )
 
-    async def find_one_by(self, query_filter: WhereFilter) -> List[Domain]:
+    async def find_one_by(self, query_filter: WhereFilter) -> Domain:
         where_filter = self._build_filter(query_filter)
         query = self._table.select().where(where_filter)
         record = await self._database.fetch_one(query=query)

@@ -124,8 +124,7 @@ class LabelCollectionDtoFactory(factory.Factory):
     id = factory.Faker("uuid4")
     datasheet_definition_id = factory.Faker("uuid4")
     name = factory.Sequence(lambda n: f"label_collection_{n}")
-    properties_schema = factory.Dict({})
-    accepted_aggregates = factory.Dict({})
+    attributes_schema = factory.Dict({})
 
 
 class LabelDtoFactory(factory.Factory):
@@ -135,8 +134,7 @@ class LabelDtoFactory(factory.Factory):
     id = factory.Faker("uuid4")
     label_collection_id = factory.Faker("uuid4")
     order_index = factory.Sequence(lambda n: n)
-    properties = factory.Dict({})
-    aggregates = factory.Dict({})
+    attributes = factory.Dict({})
 
 
 class DatasheetDtoFactory(factory.Factory):

@@ -1,7 +1,7 @@
-from dataclasses import asdict
-from uuid import uuid4
+from dataclasses import dataclass
+from uuid import UUID, uuid4
 from expert_dollup.shared.starlette_injection import Clock
-from expert_dollup.shared.automapping import Mapper
+from expert_dollup.shared.automapping import Mapper, RevervibleUnionMapping
 from expert_dollup.shared.database_services import Page
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
@@ -305,6 +305,40 @@ def map_project_to_dto(src: ProjectDetails, mapper: Mapper) -> ProjectDetailsDto
     )
 
 
+def map_string_field_value_from_dto(src: StringFieldValueDto, mapper: Mapper) -> str:
+    return src.text
+
+
+def map_string_field_value_to_dto(src: str, mapper: Mapper) -> StringFieldValueDto:
+    return StringFieldValueDto(text=src)
+
+
+def map_bool_field_value_from_dto(src: BoolFieldValueDto, mapper: Mapper) -> bool:
+    return src.enabled
+
+
+def map_bool_field_value_to_dto(src: bool, mapper: Mapper) -> BoolFieldValueDto:
+    return BoolFieldValueDto(enabled=src)
+
+
+def map_int_field_value_from_dto(src: IntFieldValueDto, mapper: Mapper) -> int:
+    return src.integer
+
+
+def map_int_field_value_to_dto(src: int, mapper: Mapper) -> IntFieldValueDto:
+    return IntFieldValueDto(integer=src)
+
+
+def map_decimal_field_value_from_dto(
+    src: DecimalFieldValueDto, mapper: Mapper
+) -> float:
+    return src.integer
+
+
+def map_decimal_field_value_to_dto(src: float, mapper: Mapper) -> DecimalFieldValueDto:
+    return DecimalFieldValueDto(integer=src)
+
+
 def map_value_union_from_dto(src: ValueUnionDto, mapper: Mapper) -> ValueUnion:
     value = None
 
@@ -587,6 +621,18 @@ def map_datasheet_definition_element_from_dto(
     )
 
 
+label_attribute_schema_union_dto_mapping = RevervibleUnionMapping(
+    LabelAttributeSchemaDtoUnion,
+    LabelAttributeSchemaUnion,
+    {
+        StaticPropertyDto: StaticProperty,
+        CollectionAggregateDto: CollectionAggregate,
+        DatasheetAggregateDto: DatasheetAggregate,
+        FormulaAggregateDto: FormulaAggregate,
+    },
+)
+
+
 def map_label_collection_from_dto(
     src: LabelCollectionDto, mapper: Mapper
 ) -> LabelCollection:
@@ -594,11 +640,9 @@ def map_label_collection_from_dto(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
-        properties_schema=src.properties_schema,
-        accepted_aggregates={
-            key: mapper.map(value, AcceptedAggregateUnion, AcceptedAggregateDtoUnion)
-            for key, value in src.accepted_aggregates.items()
-        },
+        attributes_schema=mapper.map_dict_values(
+            src.attributes_schema, label_attribute_schema_union_dto_mapping.from_origin
+        ),
     )
 
 
@@ -609,11 +653,33 @@ def map_label_collection_to_dto(
         id=src.id,
         datasheet_definition_id=src.datasheet_definition_id,
         name=src.name,
-        properties_schema=src.properties_schema,
-        accepted_aggregates={
-            key: mapper.map(value, AcceptedAggregateDtoUnion, AcceptedAggregateUnion)
-            for key, value in src.accepted_aggregates.items()
-        },
+        attributes_schema=mapper.map_dict_values(
+            src.attributes_schema, label_attribute_schema_union_dto_mapping.to_origin
+        ),
+    )
+
+
+label_attribute_value_dto_mappings = RevervibleUnionMapping(
+    LabelAttributeValueDto,
+    LabelAttributeUnion,
+    {
+        BoolFieldValueDto: bool,
+        IntFieldValueDto: int,
+        StringFieldValueDto: str,
+        DecimalFieldValueDto: float,
+        ReferenceIdDto: UUID,
+    },
+)
+
+
+def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> Label:
+    return Label(
+        id=src.id,
+        label_collection_id=src.label_collection_id,
+        order_index=src.order_index,
+        attributes=mapper.map_dict_values(
+            src.attributes, label_attribute_value_dto_mappings.from_origin
+        ),
     )
 
 
@@ -622,42 +688,9 @@ def map_datasheet_definition_label_to_dto(src: Label, mapper: Mapper) -> LabelDt
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
-        aggregates=src.aggregates,
-        properties=src.properties,
-    )
-
-
-def map_accepted_aggregate_dto_union_from_dto(
-    src: AcceptedAggregateDtoUnion, mapper: Mapper
-) -> AcceptedAggregateUnion:
-    if isinstance(src, CollectionAggregateDto):
-        return CollectionAggregate(from_collection=src.from_collection)
-
-    if isinstance(src, DatasheetAggregateDto):
-        return DatasheetAggregate(from_datasheet=src.from_datasheet)
-
-    assert False, f"{type(src)} not in union"
-
-
-def map_accepted_aggregate_dto_union_to_dto(
-    src: AcceptedAggregateUnion, mapper: Mapper
-) -> AcceptedAggregateDtoUnion:
-    if isinstance(src, CollectionAggregate):
-        return CollectionAggregateDto(from_collection=src.from_collection)
-
-    if isinstance(src, DatasheetAggregate):
-        return DatasheetAggregateDto(from_datasheet=src.from_datasheet)
-
-    assert False, f"{type(src)} not in union"
-
-
-def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> Label:
-    return Label(
-        id=src.id,
-        label_collection_id=src.label_collection_id,
-        order_index=src.order_index,
-        aggregates=src.aggregates,
-        properties=src.properties,
+        attributes=mapper.map_dict_values(
+            src.attributes, label_attribute_value_dto_mappings.to_origin
+        ),
     )
 
 

@@ -69,6 +69,7 @@ class FormulaFilter(QueryFilter):
 class FormulaPluckFilter(QueryFilter):
     ids: Optional[List[UUID]]
     names: Optional[List[str]]
+    attached_to_type_ids: Optional[UUID]
 
 
 class FormulaCachedResultFilter(QueryFilter):

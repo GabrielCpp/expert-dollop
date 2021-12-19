@@ -1,6 +1,8 @@
 from uuid import UUID
 from dataclasses import dataclass, field
-from typing import Dict, Union
+from typing import Dict, Union, Optional
+
+from expert_dollup.shared.database_services import QueryFilter
 from .project_definition_node import JsonSchema
 
 
@@ -19,8 +21,13 @@ class FormulaAggregate:
     from_formula: str
 
 
-AcceptedAggregateUnion = Union[
-    CollectionAggregate, DatasheetAggregate, FormulaAggregate
+@dataclass
+class StaticProperty:
+    json_schema: JsonSchema
+
+
+LabelAttributeSchemaUnion = Union[
+    StaticProperty, CollectionAggregate, DatasheetAggregate, FormulaAggregate
 ]
 
 
@@ -29,5 +36,12 @@ class LabelCollection:
     id: UUID
     datasheet_definition_id: UUID
     name: str
-    properties_schema: Dict[str, JsonSchema] = field(default_factory=dict)
-    accepted_aggregates: Dict[str, AcceptedAggregateUnion] = field(default_factory=dict)
+    attributes_schema: Dict[str, LabelAttributeSchemaUnion] = field(
+        default_factory=dict
+    )
+
+
+class LabelCollectionFilter(QueryFilter):
+    id: Optional[UUID]
+    datasheet_definition_id: Optional[UUID]
+    name: Optional[str]

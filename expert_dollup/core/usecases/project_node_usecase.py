@@ -1,4 +1,4 @@
-from typing import Awaitable, List, Optional
+from typing import List, Optional
 from uuid import UUID
 from expert_dollup.core.units import NodeValueValidation, NodeEventDispatcher
 from expert_dollup.core.builders import ProjectNodeSliceBuilder, ProjectTreeBuilder
@@ -12,7 +12,6 @@ from expert_dollup.core.domains import (
 from expert_dollup.infra.services import (
     ProjectService,
     ProjectNodeService,
-    ProjectDefinitionNodeService,
     ProjectNodeMetaService,
 )
 
@@ -36,22 +35,20 @@ class ProjectNodeUseCase:
         self.project_tree_builder = project_tree_builder
         self.project_node_meta = project_node_meta
 
-    async def find_by_type(
-        self, project_id: UUID, type_id: UUID
-    ) -> Awaitable[List[ProjectNode]]:
+    async def find_by_type(self, project_id: UUID, type_id: UUID) -> List[ProjectNode]:
         results = await self.project_node_service.find_by(
             ProjectNodeFilter(project_id=project_id, type_id=type_id)
         )
 
         return results
 
-    async def find_by_id(self, id: UUID) -> Awaitable[ProjectNode]:
+    async def find_by_id(self, id: UUID) -> ProjectNode:
         node = await self.project_node_service.find_by_id(id)
         return node
 
     async def find_by_path(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None
-    ) -> Awaitable[List[ProjectNode]]:
+    ) -> List[ProjectNode]:
         children = await self.project_node_service.find_children(
             project_id, path, level
         )
@@ -62,7 +59,7 @@ class ProjectNodeUseCase:
         children = await self.project_node_service.find_children(project_id, path)
         return [node, *children]
 
-    async def find_root_sections(self, project_id: UUID) -> Awaitable[ProjectNodeTree]:
+    async def find_root_sections(self, project_id: UUID) -> ProjectNodeTree:
         roots = await self.project_node_service.find_root_sections(project_id)
         metas = await self.project_node_meta.find_root_sections(project_id)
         tree = self.project_tree_builder.build(roots, metas)
@@ -70,7 +67,7 @@ class ProjectNodeUseCase:
 
     async def find_root_section_nodes(
         self, project_id: UUID, root_section_id: UUID
-    ) -> Awaitable[ProjectNodeTree]:
+    ) -> ProjectNodeTree:
         root_section = await self.project_node_service.find_by_id(root_section_id)
         roots = await self.project_node_service.find_root_section_nodes(
             project_id, root_section_id
@@ -83,7 +80,7 @@ class ProjectNodeUseCase:
 
     async def find_form_content(
         self, project_id: UUID, form_id: UUID
-    ) -> Awaitable[ProjectNodeTree]:
+    ) -> ProjectNodeTree:
         form = await self.project_node_service.find_by_id(form_id)
         roots = await self.project_node_service.find_form_content(project_id, form_id)
         metas = await self.project_node_meta.find_form_content(project_id, form.type_id)
@@ -92,14 +89,14 @@ class ProjectNodeUseCase:
 
     async def update_node_value(
         self, project_id: UUID, node_id: UUID, value: ValueUnion
-    ) -> Awaitable[ProjectNode]:
+    ) -> ProjectNode:
         return await self.node_event_dispatcher.update_node_value(
             project_id, node_id, value
         )
 
     async def update_nodes_value(
         self, project_id: UUID, updates: List[FieldUpdate]
-    ) -> Awaitable[List[ProjectNode]]:
+    ) -> List[ProjectNode]:
         results = await self.node_event_dispatcher.update_nodes_value(
             project_id, updates
         )
@@ -110,27 +107,34 @@ class ProjectNodeUseCase:
         project_id: UUID,
         collection_type_id: UUID,
         parent_node_id: Optional[UUID],
-    ) -> Awaitable[List[ProjectNode]]:
+    ) -> List[ProjectNode]:
         project_details = await self.project_service.find_by_id(project_id)
-        bounded_nodes = await self.project_node_slice_builder.build_collection(
+        bounded_node_slice = await self.project_node_slice_builder.build_collection(
             project_details, collection_type_id, parent_node_id
         )
-        nodes = [bounded_node.node for bounded_node in bounded_nodes]
+        nodes = [bounded_node.node for bounded_node in bounded_node_slice.bounded_nodes]
         await self.project_node_service.insert_many(nodes)
 
-        for bounded_node in bounded_nodes:
+        for bounded_node in bounded_node_slice.bounded_nodes:
             await self.node_event_dispatcher.execute_node_trigger(bounded_node)
 
         return nodes
 
     async def clone_collection(
         self, project_id: UUID, node_id: UUID
-    ) -> Awaitable[List[ProjectNode]]:
-        nodes = await self.project_node_slice_builder.clone(project_id, node_id)
+    ) -> List[ProjectNode]:
+        bounded_node_slice = await self.project_node_slice_builder.clone(
+            project_id, node_id
+        )
+        nodes = [bounded_node.node for bounded_node in bounded_node_slice.bounded_nodes]
         await self.project_node_service.insert_many(nodes)
+
+        for bounded_node in bounded_node_slice.bounded_nodes:
+            await self.node_event_dispatcher.execute_node_trigger(bounded_node)
+
         return nodes
 
-    async def remove_collection(self, project_id: UUID, node_id: UUID) -> Awaitable:
+    async def remove_collection(self, project_id: UUID, node_id: UUID):
         container = await self.project_node_service.find_one_by(
             ProjectNodeFilter(project_id=project_id, id=node_id)
         )

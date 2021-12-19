@@ -24,21 +24,33 @@ class ProjectDefinitionNodeFactory(factory.Factory):
     creation_date_utc = factory.Faker("date_time")
 
 
+class ReportInitialSelectionFactory(factory.Factory):
+    class Meta:
+        model = ReportInitialSelection
+
+    from_object_name = "a"
+    from_property_name = "property_a"
+    alias_name = "join_a"
+    distinct = True
+
+
 class ReportJoinFactory(factory.Factory):
     class Meta:
         model = ReportJoin
 
-    to_object_name = factory.Sequence(lambda n: f"bucket_{n}")
-    from_object_name = factory.Sequence(lambda n: f"bucket_{n + 1}")
-    join_on_property_name = factory.Sequence(lambda n: f"property_{n}")
-    join_type = JoinType.PROPERTY
+    from_object_name = factory.Sequence(lambda n: f"from_object_{n}")
+    from_property_name = factory.Sequence(lambda n: f"from_property_{n}")
+    to_object_name = factory.Sequence(lambda n: f"to_object_name_{n}")
+    to_property_name = factory.Sequence(lambda n: f"to_property_name_{n}")
+    alias_name = factory.Sequence(lambda n: f"alias_name_{n}")
+    is_inner_join = True
 
 
 class ReportStructureFactory(factory.Factory):
     class Meta:
         model = ReportStructure
 
-    initial_selection = factory.SubFactory(ReportJoinFactory)
+    initial_selection = factory.SubFactory(ReportInitialSelectionFactory)
     joins = factory.List([factory.SubFactory(ReportJoinFactory) for _ in range(3)])
 
 
@@ -46,7 +58,6 @@ class ReportColumnFactory(factory.Factory):
     class Meta:
         model = ReportColumn
 
-    id = factory.Faker("uuid4")
     name = factory.Sequence(lambda n: f"property_{n}")
     expression = factory.Sequence(lambda n: f"property_{n}*2+1")
 
@@ -57,6 +68,8 @@ class ReportDefinitionFactory(factory.Factory):
 
     id = factory.Faker("uuid4")
     project_def_id = factory.Faker("uuid4")
-    name = factory.Sequence(lambda n: f"property_{n}")
-    columns = factory.List([factory.SubFactory(ReportColumnFactory) for _ in range(3)])
+    name = factory.Sequence(lambda n: f"report_name_{n}")
+    columns = factory.List([])
     structure = factory.SubFactory(ReportStructureFactory)
+    group_by = factory.List([])
+    order_by = factory.List([])
