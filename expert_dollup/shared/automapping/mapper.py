@@ -1,8 +1,9 @@
-from typing import Type, TypeVar, Callable, Tuple, Dict, List, Optional, Union
+from typing import Type, TypeVar, Callable, Dict, List, Optional, Union
 from collections import defaultdict
 from inspect import getmembers, isfunction, signature
-from injector import Injector
 from .mapping_error import MapingError
+from .injector_interface import Injector
+
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -10,17 +11,18 @@ K = TypeVar("K")
 
 
 class Mapper:
-    def __init__(self, injector: Injector):
+    def __init__(self, injector: Optional[Injector] = None):
         self._mappings = defaultdict(dict)
         self._injector = injector
 
-    def get(self, class_type):
+    def get(self, class_type: Type[T]) -> T:
+        assert not self._injector is None, "Injector not available in mapper."
         return self._injector.get(class_type)
 
     def add_mapping(
         self,
         from_type: Type[T],
-        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
+        to_type: Type[U],
         mapping_function: Callable[[T, Optional["Mapper"]], U],
     ):
         self._mappings[from_type][to_type] = mapping_function
