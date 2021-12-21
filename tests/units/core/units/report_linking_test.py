@@ -1,5 +1,8 @@
 import pytest
-from tests.fixtures.mock_interface_utils import StrictInterfaceSetup, return_async
+from tests.fixtures.mock_interface_utils import (
+    StrictInterfaceSetup,
+    compare_per_arg,
+)
 from expert_dollup.app.dtos import *
 from expert_dollup.core.units import *
 from expert_dollup.core.domains import *
@@ -236,7 +239,8 @@ async def test_given_report_definition():
     report_definition_service = StrictInterfaceSetup(ReportDefinitionService)
     label_collection_service = StrictInterfaceSetup(LabelCollectionService)
     label_service = StrictInterfaceSetup(LabelService)
-    label_plucker = StrictInterfaceSetup(Plucker)
+    translation_plucker = StrictInterfaceSetup(Plucker)
+    formula_plucker = StrictInterfaceSetup(Plucker)
 
     project_definition_service.setup(
         lambda x: x.find_by_id(report_definition.project_def_id),
@@ -274,6 +278,18 @@ async def test_given_report_definition():
             ],
         )
 
+    translation_plucker.setup(
+        lambda x: x.plucks(lambda x: callable(x), lambda x: True),
+        returns_async=datasheet_fixture.translations,
+        compare_method=compare_per_arg,
+    )
+
+    formula_plucker.setup(
+        lambda x: x.plucks(lambda x: callable(x), lambda x: True),
+        returns_async=project_fixture.formulas,
+        compare_method=compare_per_arg,
+    )
+
     report_linking = ReportLinking(
         datasheet_definition_service.object,
         project_definition_service.object,
@@ -281,10 +297,10 @@ async def test_given_report_definition():
         report_definition_service.object,
         label_collection_service.object,
         label_service.object,
-        label_plucker.object,
+        translation_plucker.object,
+        formula_plucker.object,
     )
 
     report_buckets = await report_linking.refresh_cache(report_definition)
-    print(len(report_buckets), report_buckets)
-    assert False
+    dump_to_file(report_buckets)
     # report_linking.link_report(report_definition, project_fixture.project, "fr_CA")

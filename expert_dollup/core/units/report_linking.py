@@ -31,7 +31,6 @@ class ReportLinkingCache:
         report_definition_service: ReportDefinitionService,
         label_collection_service: LabelCollectionService,
         label_service: LabelService,
-        label_plucker: Plucker[LabelService],
     ):
         self.datasheet_definition_service = datasheet_definition_service
         self.project_definition_service = project_definition_service
@@ -39,7 +38,6 @@ class ReportLinkingCache:
         self.report_definition_service = report_definition_service
         self.label_collection_service = label_collection_service
         self.label_service = label_service
-        self.label_plucker = label_plucker
 
         self._datasheet_definition: Optional[DatasheetDefinition] = None
         self._project_definition: Optional[ProjectDefinition] = None
@@ -56,6 +54,11 @@ class ReportLinkingCache:
     def datasheet_definition(self) -> DatasheetDefinition:
         assert not self._datasheet_definition is None
         return self._datasheet_definition
+
+    @property
+    def label_collections(self) -> List[LabelCollection]:
+        assert not self._label_collections is None
+        return self._label_collections
 
     @property
     @lru_cache(maxsize=1)
@@ -105,7 +108,8 @@ class ReportLinking:
         report_definition_service: ReportDefinitionService,
         label_collection_service: LabelCollectionService,
         label_service: LabelService,
-        label_plucker: Plucker[LabelService],
+        translation_plucker: Plucker[TranslationService],
+        formula_plucker: Plucker[FormulaService],
     ):
         self.datasheet_definition_service = datasheet_definition_service
         self.project_definition_service = project_definition_service
@@ -113,7 +117,8 @@ class ReportLinking:
         self.report_definition_service = report_definition_service
         self.label_collection_service = label_collection_service
         self.label_service = label_service
-        self.label_plucker = label_plucker
+        self.translation_plucker = translation_plucker
+        self.formula_plucker = formula_plucker
 
     async def refresh_cache(
         self, report_definition: ReportDefinition
@@ -125,7 +130,6 @@ class ReportLinking:
             self.report_definition_service,
             self.label_collection_service,
             self.label_service,
-            self.label_plucker,
         )
 
         await cache.load_report_project_ressources(report_definition.project_def_id)
@@ -140,45 +144,67 @@ class ReportLinking:
             await self._join_on(report_buckets, join, cache)
 
         await self._join_translations(report_buckets)
-        formula_ids = set()
-
-        # Join translation
-        # Join formula def
+        await self._join_formulas(report_buckets, cache)
 
         return report_buckets
 
-    def _join_translations(self, report_buckets: List[Dict[str, Dict[str, Any]]]):
+    async def _join_translations(self, report_buckets: List[Dict[str, Dict[str, Any]]]):
         ressource_ids = set()
 
         for report_bucket in report_buckets:
             for row in report_bucket.values():
                 ressource_ids.add(row["id"])
 
-        translations = self.translation_plucker.plucks(
-            TranslationPluckFilter(scopes=ressource_ids)
+        translations = await self.translation_plucker.plucks(
+            lambda scopes: TranslationPluckFilter(scopes=scopes), ressource_ids
         )
 
-        translations_by_scope = defaultdict(dict)
+        translations_by_scope: Dict[UUID, str] = {}
         for translation in translations:
-            translations_by_scope[translation.scope][translation.locale] = translation
+            translations_by_scope[translation.scope] = translation.name
 
         for report_bucket in report_buckets:
             for row in report_bucket.values():
-                row["translations"] = translations_by_scope[row["id"]]
+                row["translation"] = translations_by_scope[row["id"]]
 
-    def link_report(
+    async def _join_formulas(
         self,
-        report_definition: ReportDefinition,
-        project_details: ProjectDetails,
-        locale: str,
+        report_buckets: List[Dict[str, Dict[str, Any]]],
+        cache: ReportLinkingCache,
     ):
-        # project_formula_cache 1 def + project -> instance
-        # datasheet 1 def + datasheet -> instance
-        # project_report_datasheet_rule -> element instance -> maybe
-        # run column rendering on each row
-        # run group by
-        # run orderby
-        pass
+        formulas_aggregates = []
+
+        for label_collection in cache.label_collections:
+            for name, schema in label_collection.attributes_schema.items():
+                if isinstance(schema, FormulaAggregate):
+                    formulas_aggregates.append((label_collection.name, name))
+
+        if len(formulas_aggregates) == 0:
+            raise Exception("One formula aggregate required")
+
+        if len(formulas_aggregates) > 1:
+            raise Exception("Only formula aggregate accepted")
+
+        collection_name, attribute_name = formulas_aggregates[0]
+        formula_ids = set()
+
+        for report_bucket in report_buckets:
+            formula_id = report_bucket[collection_name][attribute_name]
+            formula_ids.add(formula_id)
+
+        formulas = await self.formula_plucker.plucks(
+            lambda ids: FormulaPluckFilter(ids=ids), formula_ids
+        )
+        formulas_by_id = {formula.id: formula for formula in formulas}
+
+        for report_bucket in report_buckets:
+            formula_id = report_bucket[collection_name][attribute_name]
+            formula = formulas_by_id[formula_id]
+            report_bucket["formula"] = {
+                "name": formula.name,
+                "expression": formula.expression,
+                "attached_to_type_id": formula.attached_to_type_id,
+            }
 
     async def _join_on(
         self,
@@ -261,3 +287,19 @@ class ReportLinking:
             return attributes_to_label[attributes]
 
         return []
+
+    def link_report(
+        self,
+        report_definition: ReportDefinition,
+        project_details: ProjectDetails,
+        locale: str,
+    ):
+        # get project_formula_cache
+        # Get formula instances associated to formula definitions
+        # get datasheet reference elements
+        # get project_report_datasheet_rule
+        # Select proper product
+        # run column rendering on each row
+        # run group by
+        # run orderby
+        pass

@@ -163,7 +163,7 @@ class CollectionSeed:
             LabelSeed(
                 name=f"{name}_label_{index}",
                 attributes={
-                    name: DEFAULT_VALUE_GENERATOR[property_type]
+                    name: DEFAULT_VALUE_GENERATOR[property_type](index)
                     for name, property_type in self._attributes_seed.items()
                     if property_type in DEFAULT_VALUE_GENERATOR
                 },

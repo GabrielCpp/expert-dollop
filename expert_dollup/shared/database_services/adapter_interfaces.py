@@ -35,7 +35,7 @@ def create_connection(
     scheme = urlparse(connection_string).scheme
 
     if len(DbConnection._REGISTRY) == 0:
-        connectors = environ.get("DB_CONNECTORS").split()
+        connectors = environ.get("DB_CONNECTORS", "postgresql").split()
 
         for connector in connectors:
             if connector == "postgresql":
