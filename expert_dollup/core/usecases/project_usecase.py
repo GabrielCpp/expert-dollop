@@ -14,7 +14,7 @@ from expert_dollup.infra.services import (
     RessourceService,
     ProjectNodeService,
     ProjectNodeMetaService,
-    FormulaCacheService,
+    FormulaInstanceService,
 )
 
 logger = structlog.get_logger(__name__)
@@ -28,7 +28,7 @@ class ProjectUseCase:
         project_node_meta_service: ProjectNodeMetaService,
         ressource_service: RessourceService,
         project_builder: ProjectBuilder,
-        formula_cache_service: FormulaCacheService,
+        formula_cache_service: FormulaInstanceService,
     ):
         self.project_service = project_service
         self.project_node_service = project_node_service

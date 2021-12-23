@@ -511,9 +511,9 @@ def map_formula_from_dao(src: ProjectDefinitionFormulaDao, mapper: Mapper) -> Fo
 
 
 def map_formula_cache_result_to_dao(
-    src: FormulaCachedResult, mapper: Mapper
-) -> ProjectFormulaCacheDao:
-    return ProjectFormulaCacheDao(
+    src: FormulaInstance, mapper: Mapper
+) -> ProjectFormulaInstanceDao:
+    return ProjectFormulaInstanceDao(
         project_id=src.project_id,
         formula_id=src.formula_id,
         node_id=src.node_id,
@@ -524,9 +524,9 @@ def map_formula_cache_result_to_dao(
 
 
 def map_formula_cache_result_from_dao(
-    src: ProjectFormulaCacheDao, mapper: Mapper
-) -> FormulaCachedResult:
-    return FormulaCachedResult(
+    src: ProjectFormulaInstanceDao, mapper: Mapper
+) -> FormulaInstance:
+    return FormulaInstance(
         project_id=src.project_id,
         formula_id=src.formula_id,
         node_id=src.node_id,
@@ -863,7 +863,7 @@ def map_node_pluck_filter(src: NodePluckFilter, mapper: Mapper) -> dict:
 
 
 def map_formula_cached_result_filter(
-    src: FormulaCachedResultFilter, mapper: Mapper
+    src: FormulaInstanceFilter, mapper: Mapper
 ) -> dict:
     return map_dict_keys(
         src.args,

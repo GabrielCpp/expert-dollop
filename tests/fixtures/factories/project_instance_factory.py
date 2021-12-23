@@ -261,7 +261,7 @@ class CustomProjectInstancePackage:
     project_definition: ProjectDefinition
     project: ProjectDetails
     formulas: List[Formula]
-    formulas_cache_result: List[FormulaCachedResult]
+    formula_instances: List[FormulaInstance]
     definition_nodes: List[ProjectDefinitionNode]
     nodes: List[ProjectNode]
     any_id_to_name: Dict[str, str]
@@ -374,8 +374,8 @@ class ProjectInstanceFactory:
             for formula_seed in formulas_by_name.values()
         ]
 
-        formulas_cache_result = [
-            FormulaCachedResult(
+        formula_instances = [
+            FormulaInstance(
                 project_id=project.id,
                 formula_id=formula_instance.id,
                 node_id=formula_instance.node.id,
@@ -408,6 +408,6 @@ class ProjectInstanceFactory:
             definition_nodes=definition_nodes,
             nodes=nodes,
             formulas=formulas,
-            formulas_cache_result=formulas_cache_result,
+            formula_instances=formula_instances,
             any_id_to_name=any_id_to_name,
         )

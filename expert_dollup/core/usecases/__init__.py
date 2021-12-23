@@ -10,3 +10,4 @@ from .datasheet_definition_label_collection_usecase import LabelCollectionUseCas
 from .datasheet_definition_label_usecase import LabelUseCase
 from .datasheet_usecase import DatasheetUseCase
 from .datasheet_element_usecase import DatasheetElementUseCase
+from .report_definition_usecase import ReportDefinitionUseCase

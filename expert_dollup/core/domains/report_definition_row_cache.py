@@ -12,5 +12,5 @@ class ReportDefinitionRowCache:
     row: ReportRowDict
 
 
-class ReportCacheFilter(QueryFilter):
+class ReportDefinitionRowCacheFilter(QueryFilter):
     report_def_id: Optional[UUID]

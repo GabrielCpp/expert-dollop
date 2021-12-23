@@ -293,12 +293,14 @@ class ReportRowCacheBuilder:
 class ReportLinking:
     def __init__(
         self,
-        formula_cache_plucker: Plucker[FormulaCacheService],
+        report_def_row_cache: ReportDefinitionRowCacheService,
         report_row_service: ReportRowService,
+        formula_instance_plucker: Plucker[FormulaInstanceService],
         datasheet_element_plucker: Plucker[DatasheetElementService],
     ):
-        self.formula_cache_plucker = formula_cache_plucker
+        self.report_def_row_cache = report_def_row_cache
         self.report_row_service = report_row_service
+        self.formula_instance_plucker = formula_instance_plucker
         self.datasheet_element_plucker = datasheet_element_plucker
 
     async def link_report(
@@ -306,57 +308,81 @@ class ReportLinking:
         report_definition: ReportDefinition,
         project_details: ProjectDetails,
     ) -> List[ReportRow]:
-        rows = await self.report_cache.find_by(
-            ReportCacheFilter(report_def_id=report_definition.id)
+        rows = await self.report_def_row_cache.find_by(
+            ReportDefinitionRowCacheFilter(report_def_id=report_definition.id)
         )
 
-        formula_attribute = report_definition.structure.formula_attribute
-        formula_ids = {formula_attribute.get(row) for row in rows}
+        new_rows = await self._join_row_cache_with_formula_instances(
+            rows, project_details, report_definition
+        )
+        await self._fill_datasheet_element_in_rows(new_rows, project_details)
+        self._fill_row_columns(new_rows, report_definition)
+        self._fill_row_order(new_rows, report_definition)
 
-        formulas_result = await self.formula_cache_plucker.pluck_subressources(
-            FormulaCachedResultFilter(project_id=project_details.id),
+        return new_rows
+
+    async def _get_report_formula_nodes(
+        self, project_id: UUID, formula_ids: Set[UUID]
+    ) -> Dict[UUID, List[FormulaInstance]]:
+        formula_instances = await self.formula_instance_plucker.pluck_subressources(
+            FormulaInstanceFilter(project_id=project_id),
             lambda ids: FormulaCachePluckFilter(formula_ids=ids),
             formula_ids,
         )
 
-        formulas_result_by_formula_id: Dict[
-            UUID, List[FormulaCachedResult]
-        ] = defaultdict(list)
-        for formula_result in formulas_result:
-            formulas_result_by_formula_id[formula_result.formula_id].append(
+        formulas_instance_by_def_id: Dict[UUID, List[FormulaInstance]] = defaultdict(
+            list
+        )
+
+        for formula_result in formula_instances:
+            formulas_instance_by_def_id[formula_result.formula_id].append(
                 formula_result
             )
 
-        element_attribute = report_definition.structure.datasheet_attribute
+        return formulas_instance_by_def_id
+
+    async def _join_row_cache_with_formula_instances(
+        self, rows, project_details, report_definition
+    ) -> List[ReportRow]:
         new_rows: List[ReportRow] = []
+
+        element_attribute = report_definition.structure.datasheet_attribute
+        formula_attribute = report_definition.structure.formula_attribute
+        formula_ids: Set[UUID] = {formula_attribute.get(row) for row in rows}
+        formulas_instance_by_def_id = await self._get_report_formula_nodes(
+            project_details.id, formula_ids
+        )
+
         for row in rows:
-            element_id = element_attribute.get(row)
-            formula_id = formula_attribute.get(row)
-            cached_formulas = formulas_result_by_formula_id[formula_id]
+            element_id = UUID(element_attribute.get(row))
+            formula_id = UUID(formula_attribute.get(row))
 
-            for cached_formula in cached_formulas:
-                new_row = dict(row)
-                new_row["formula"] = cached_formula.report_dict
-                group_id = "/".join(
-                    attribute_bucket.get(row)
-                    for attribute_bucket in report_definition.structure.group_by
-                )
+            assert (
+                formula_id in formulas_instance_by_def_id
+            ), f"Missing formula {formula_id}"
+            formula_instances = formulas_instance_by_def_id[formula_id]
 
+            for formula_instance in formula_instances:
                 new_rows.append(
                     ReportRow(
                         project_id=project_details.id,
                         report_def_id=report_definition.id,
-                        group_digest=sha3_256(group_id),
+                        group_digest="",
                         datasheet_id=project_details.datasheet_id,
-                        node_id=cached_formula.node_id,
-                        formula_id=cached_formula.formula_id,
+                        node_id=formula_instance.node_id,
+                        formula_id=formula_instance.formula_id,
                         element_id=element_id,
                         order_index=0,
                         child_reference_id=zero_uuid(),
-                        row=row,
+                        row={**row, "formula": formula_instance.report_dict},
                     )
                 )
 
+        return new_rows
+
+    async def _fill_datasheet_element_in_rows(
+        self, report_rows: List[ReportRow], project_details: ProjectDetails
+    ):
         old_rows = await self.report_row_service.find_by(
             ReportRowFilter(project_id=project_details.id)
         )
@@ -367,15 +393,15 @@ class ReportLinking:
 
         missing_elements_for_rows: Dict[UUID, List[int]] = defaultdict(list)
 
-        for index, new_row in enumerate(new_rows):
-            formula_cache_id = f"{new_row.formula_id}/{new_row.node_id}"
+        for index, report_row in enumerate(report_rows):
+            formula_cache_id = f"{report_row.formula_id}/{report_row.node_id}"
             old_row = old_row_by_formula_cache.get(formula_cache_id)
 
             if not old_row is None:
-                new_row.child_reference_id = old_row.child_reference_id
-                new_row["datasheet_element"] = old_row["datasheet_element"]
+                report_row.child_reference_id = old_row.child_reference_id
+                report_row.row["datasheet_element"] = old_row["datasheet_element"]
             else:
-                missing_elements_for_rows[new_row.element_id].append(index)
+                missing_elements_for_rows[report_row.element_id].append(index)
 
         missing_elements = await self.datasheet_element_plucker.pluck_subressources(
             DatasheetElementFilter(
@@ -383,28 +409,50 @@ class ReportLinking:
                 child_element_reference=zero_uuid(),
             ),
             lambda ids: DatasheetElementPluckFilter(element_ids=ids),
-            missing_elements_for_rows.keys(),
+            set(missing_elements_for_rows.keys()),
         )
 
+        assert len(missing_elements) == len(
+            missing_elements_for_rows
+        ), f"{len(missing_elements)} != {len(missing_elements_for_rows)}"
         for missing_element in missing_elements:
-            for row_index in missing_elements_for_rows[missing_element.element_id]:
-                new_rows[row_index]["datasheet_element"] = missing_element.report_dict
+            for row_index in missing_elements_for_rows[missing_element.element_def_id]:
+                report_rows[row_index].row[
+                    "datasheet_element"
+                ] = missing_element.report_dict
 
-        for new_row in new_rows:
+    def _fill_row_columns(
+        self, report_rows: List[ReportRow], report_definition: ReportDefinition
+    ):
+        for report_row in report_rows:
             columns = {}
-            new_row["columns"] = columns
+            report_row.row["columns"] = columns
 
             for column in report_definition.structure.columns:
-                columns[column.name] = self.evaluate(column.expression, new_row)
+                columns[column.name] = self._evaluate(column.expression, report_row.row)
 
-        def get_row_order_tuple(row: ReportRow) -> list:
+            group_id = "/".join(
+                attribute_bucket.get(report_row.row)
+                for attribute_bucket in report_definition.structure.group_by
+            )
+
+            report_row.group_digest = sha3_256(group_id.encode("utf8")).hexdigest()
+
+    def _fill_row_order(
+        self, report_rows: List[ReportRow], report_definition: ReportDefinition
+    ):
+        def get_row_order_tuple(report_row: ReportRow) -> list:
             ordering = []
             for attribute_bucket in report_definition.structure.order_by:
-                value = attribute_bucket.get(row)
+                value = attribute_bucket.get(report_row.row)
                 ordering.append(value)
 
             return ordering
 
-        new_rows.sort(key=get_row_order_tuple)
+        report_rows.sort(key=get_row_order_tuple)
 
-        return new_rows
+        for index, report_row in enumerate(report_rows):
+            report_row.order_index = index
+
+    def _evaluate(self, expression, row):
+        return ""

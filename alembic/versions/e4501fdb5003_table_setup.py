@@ -180,7 +180,7 @@ def create_project_tables():
     )
 
     op.create_table(
-        "project_node_formula_cache",
+        "project_formula_instance",
         Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("node_id", postgresql.UUID(), nullable=False, primary_key=True),

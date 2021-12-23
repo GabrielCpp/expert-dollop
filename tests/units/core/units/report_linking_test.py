@@ -1,4 +1,7 @@
+from pydantic.main import BaseModel
+from pydantic.tools import parse_file_as
 import pytest
+from uuid import UUID
 from tests.fixtures.mock_interface_utils import (
     StrictInterfaceSetup,
     compare_per_arg,
@@ -138,42 +141,35 @@ datasheet_seed = DatasheetSeed(
 )
 
 
-@pytest.mark.asyncio
-async def test_given_report_definition():
-    datasheet_fixture = DatasheetInstanceFactory.build(datasheet_seed)
-    project_fixture = ProjectInstanceFactory.build(
-        project_seed,
-        default_datasheet_id=datasheet_fixture.datasheet.id,
-        datasheet_def_id=datasheet_fixture.datasheet_definition.id,
-    )
-    report_definition = ReportDefinitionFactory(
-        project_def_id=project_fixture.project_definition.id,
+def make_general_report(project_def_id: UUID) -> ReportDefinition:
+    return ReportDefinitionFactory(
+        project_def_id=project_def_id,
         name="general_report",
         structure=ReportStructure(
             columns=[
                 ReportColumn(
-                    name="get_element_first_level_value( floor_description_join.value ) or floor_description",
-                    expression="stage",
+                    name="stage",
+                    expression="floot.translation",
                 ),
                 ReportColumn(
                     name="substage_description",
-                    expression="substage_description",
+                    expression="substage.translation",
                 ),
                 ReportColumn(
                     name="abstract_product_description",
-                    expression="view_joined_datasheet.name",
+                    expression="abstractproduct.translation",
                 ),
                 ReportColumn(
                     name="cost_per_unit",
-                    expression="CONCAT( TRUNCATE( view_joined_datasheet.price, 2 ), ' $' )",
+                    expression="format_currency(row['abstractproduct']['price'], 2, 'truncate')",
                 ),
                 ReportColumn(
                     name="cost",
-                    expression="CONCAT( TRUNCATE( TRUNCATE( SUM( get_element_dec_value( project_formula.value ) * post_transform_factor ), 2)  * view_joined_datasheet.price, 2), ' $' )",
+                    expression="format_currency( round( sum(row['formula']['value'] * post_transform_factor for row in rows), 2, 'truncate')  * row['abstractproduct']['price'], 2, 'truncate')",
                 ),
                 ReportColumn(
                     name="order_form_category_description",
-                    expression="order_form_category_description",
+                    expression="orderformcategory.translation",
                 ),
             ],
             datasheet_selection_alias="abstractproduct",
@@ -228,10 +224,10 @@ async def test_given_report_definition():
                 bucket_name="substage", attribute_name="datasheet_element"
             ),
             group_by=[
-                AttributeBucket("stage", "translation"),
-                AttributeBucket("substage", "translation"),
-                AttributeBucket("abstractproduct", "translation"),
-                AttributeBucket("orderformcategory", "translation"),
+                AttributeBucket("columns", "stage"),
+                AttributeBucket("columns", "substage_description"),
+                AttributeBucket("columns", "abstract_product_description"),
+                AttributeBucket("columns", "order_form_category_description"),
             ],
             order_by=[
                 AttributeBucket("stage", "order_index"),
@@ -239,6 +235,17 @@ async def test_given_report_definition():
             ],
         ),
     )
+
+
+@pytest.mark.asyncio
+async def test_given_report_definition(snapshot):
+    datasheet_fixture = DatasheetInstanceFactory.build(datasheet_seed)
+    project_fixture = ProjectInstanceFactory.build(
+        project_seed,
+        default_datasheet_id=datasheet_fixture.datasheet.id,
+        datasheet_def_id=datasheet_fixture.datasheet_definition.id,
+    )
+    report_definition = make_general_report(project_fixture.project_definition.id)
 
     datasheet_definition_service = StrictInterfaceSetup(DatasheetDefinitionService)
     project_definition_service = StrictInterfaceSetup(ProjectDefinitionService)
@@ -311,5 +318,89 @@ async def test_given_report_definition():
     )
 
     report_buckets = await report_linking.refresh_cache(report_definition)
-    dump_to_file(report_buckets)
-    # report_linking.link_report(report_definition, project_fixture.project, "fr_CA")
+    snapshot.assert_match(dump_snapshot(report_buckets), "report_linking_test.json")
+
+
+from pydantic import BaseModel, parse_file_as
+from typing import List, Dict, Any
+
+
+class ReportDict(BaseModel):
+    __root__: List[Dict[str, Dict[str, Any]]]
+
+
+@pytest.mark.asyncio
+async def test_given_row_cache_should_produce_correct_report():
+    datasheet_fixture = DatasheetInstanceFactory.build(datasheet_seed)
+    project_fixture = ProjectInstanceFactory.build(
+        project_seed,
+        default_datasheet_id=datasheet_fixture.datasheet.id,
+        datasheet_def_id=datasheet_fixture.datasheet_definition.id,
+    )
+
+    report_definition = make_general_report(project_fixture.project_definition.id)
+
+    report_rows_cache = (
+        parse_file_as(
+            ReportDict,
+            "tests/units/core/units/snapshots/report_linking_test/test_given_report_definition/report_linking_test.json",
+        ),
+    )[0].__root__
+
+    report_def_row_cache = StrictInterfaceSetup(ReportDefinitionRowCacheService)
+    report_row_service = StrictInterfaceSetup(ReportRowService)
+    formula_instance_plucker = StrictInterfaceSetup(Plucker)
+    datasheet_element_plucker = StrictInterfaceSetup(Plucker)
+
+    report_def_row_cache.setup(
+        lambda x: x.find_by(
+            ReportDefinitionRowCacheFilter(report_def_id=report_definition.id)
+        ),
+        returns_async=report_rows_cache,
+    )
+
+    formula_instance_plucker.setup(
+        lambda x: x.pluck_subressources(lambda y: True, lambda y: True, lambda y: True),
+        returns_async=project_fixture.formula_instances,
+        compare_method=compare_per_arg,
+    )
+
+    report_row_service.setup(
+        lambda x: x.find_by(ReportRowFilter(project_id=project_fixture.project.id)),
+        returns_async=[],
+    )
+
+    missing_element_ids = {
+        UUID(report_definition.structure.datasheet_attribute.get(report_row_cache))
+        for report_row_cache in report_rows_cache
+    }
+
+    datasheet_element_plucker.setup(
+        lambda x: x.pluck_subressources(
+            DatasheetElementFilter(
+                datasheet_id=datasheet_fixture.datasheet.id,
+                child_element_reference=zero_uuid(),
+            ),
+            lambda y: True,
+            missing_element_ids,
+        ),
+        returns_async=[
+            datasheet_element
+            for datasheet_element in datasheet_fixture.datasheet_elements
+            if datasheet_element.element_def_id in missing_element_ids
+        ],
+        compare_method=compare_per_arg,
+    )
+
+    report_linking = ReportLinking(
+        report_def_row_cache.object,
+        report_row_service.object,
+        formula_instance_plucker.object,
+        datasheet_element_plucker.object,
+    )
+
+    report_rows = await report_linking.link_report(
+        report_definition, project_fixture.project
+    )
+
+    dump_to_file(report_rows)

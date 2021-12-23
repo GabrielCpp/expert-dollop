@@ -1,6 +1,6 @@
 import ast
 from ast import *
-from expert_dollup.core.domains.formula import FieldNode, FormulaCachedResultFilter
+from expert_dollup.core.domains.formula import FieldNode, FormulaInstanceFilter
 from typing import List, Union, Dict
 from math import sqrt
 from uuid import UUID
@@ -8,7 +8,7 @@ from collections import defaultdict
 from expert_dollup.core.domains import (
     Formula,
     FormulaExpression,
-    FormulaCachedResult,
+    FormulaInstance,
     ComputedFormula,
     FormulaDependencyGraph,
     FormulaDependency,
@@ -20,7 +20,7 @@ from expert_dollup.core.domains.project_node import ProjectNode
 from expert_dollup.infra.services import (
     FormulaService,
     ProjectNodeService,
-    FormulaCacheService,
+    FormulaInstanceService,
     ProjectDefinitionNodeService,
 )
 from expert_dollup.core.queries import Plucker
@@ -335,7 +335,7 @@ class FormulaResolver:
         formula_service: FormulaService,
         project_node_service: ProjectNodeService,
         project_definition_node_service: ProjectDefinitionNodeService,
-        formula_cache_service: FormulaCacheService,
+        formula_cache_service: FormulaInstanceService,
         formulas_plucker: Plucker[FormulaService],
         nodes_plucker: Plucker[ProjectNodeService],
     ):
@@ -402,7 +402,7 @@ class FormulaResolver:
 
     async def compute_all_project_formula(
         self, project_id: UUID, project_definition_id: UUID
-    ) -> List[FormulaCachedResult]:
+    ) -> List[FormulaInstance]:
         injector = FormulaInjector()
         formula_id_to_name_map: Dict[UUID, str] = {}
         nodes = await self.project_node_service.get_all_fields(project_id)
@@ -428,7 +428,7 @@ class FormulaResolver:
             injector.add_unit(unit)
 
         cached_results = [
-            FormulaCachedResult(
+            FormulaInstance(
                 project_id=project_id,
                 formula_id=unit.formula_id,
                 node_id=unit.node_id,
@@ -449,7 +449,7 @@ class FormulaResolver:
             return SafeguardDivision().visit(formula_ast)
 
         def build_computed_formula(
-            result: FormulaCachedResult,
+            result: FormulaInstance,
             formulas_by_id: Dict[UUID, Formula],
             nodes_by_id: Dict[UUID, ProjectNode],
         ):
@@ -465,7 +465,7 @@ class FormulaResolver:
             )
 
         results = await self.formula_cache_service.find_by(
-            FormulaCachedResultFilter(project_id=project_id)
+            FormulaInstanceFilter(project_id=project_id)
         )
 
         formulas = await self.formulas_plucker.plucks(

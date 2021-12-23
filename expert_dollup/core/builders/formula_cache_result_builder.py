@@ -13,8 +13,8 @@ class FormulaCacheResultBuilder:
         self,
         project_def_id: UUID,
         nodes: List[ProjectNode],
-    ) -> List[FormulaCachedResult]:
-        formulas_result: List[FormulaCachedResult] = []
+    ) -> List[FormulaInstance]:
+        formulas_result: List[FormulaInstance] = []
         nodes_by_type_id: Dict[UUID, List[ProjectNode]] = defaultdict(list)
 
         for node in nodes:
@@ -32,7 +32,7 @@ class FormulaCacheResultBuilder:
 
             for node in nodes:
                 formulas_result.append(
-                    FormulaCachedResult(
+                    FormulaInstance(
                         project_id=node.project_id,
                         formula_id=formula.id,
                         node_id=node.id,

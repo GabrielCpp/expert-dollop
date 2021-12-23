@@ -195,12 +195,12 @@ class ProjectDefinitionFormulaDao(BaseModel):
     dependency_graph: FormulaDependencyGraphDao
 
 
-class ProjectFormulaCacheDao(BaseModel):
+class ProjectFormulaInstanceDao(BaseModel):
     class Meta:
         pk = ("project_id", "formula_id", "node_id")
 
     class Config:
-        title = "project_node_formula_cache"
+        title = "project_formula_instance"
 
     project_id: UUID
     formula_id: UUID

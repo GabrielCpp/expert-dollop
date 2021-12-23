@@ -32,7 +32,7 @@ class Formula(FormulaExpression):
 
 
 @dataclass
-class FormulaCachedResult:
+class FormulaInstance:
     project_id: UUID
     formula_id: UUID
     node_id: UUID
@@ -57,7 +57,7 @@ class FieldNode:
 @dataclass
 class ComputedFormula:
     formula: Formula
-    result: FormulaCachedResult
+    result: FormulaInstance
     node: ProjectNode
     final_ast: AST
 
@@ -76,7 +76,7 @@ class FormulaPluckFilter(QueryFilter):
     attached_to_type_ids: Optional[UUID]
 
 
-class FormulaCachedResultFilter(QueryFilter):
+class FormulaInstanceFilter(QueryFilter):
     project_id: UUID
 
 

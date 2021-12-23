@@ -6,7 +6,7 @@ from .project_node_meta_service import ProjectNodeMetaService
 from .translation_service import TranslationService
 from .ressource_service import RessourceService
 from .formula_service import FormulaService
-from .formula_cache_service import FormulaCacheService
+from .formula_instance_service import FormulaInstanceService
 from .datasheet_definition_service import DatasheetDefinitionService
 from .datasheet_definition_label_collection_service import (
     LabelCollectionService,

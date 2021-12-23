@@ -47,12 +47,12 @@ from .ressource import Ressource
 from .formula import (
     Formula,
     FormulaExpression,
-    FormulaCachedResult,
+    FormulaInstance,
     ComputedFormula,
     FieldNode,
     FormulaFilter,
     FormulaPluckFilter,
-    FormulaCachedResultFilter,
+    FormulaInstanceFilter,
     FormulaCachePluckFilter,
     FormulaDependencyGraph,
     FormulaDependency,
@@ -97,5 +97,8 @@ from .report_definition import (
     ReportInitialSelection,
     ReportRowDict,
 )
-from .report_definition_row_cache import ReportDefinitionRowCache, ReportCacheFilter
+from .report_definition_row_cache import (
+    ReportDefinitionRowCache,
+    ReportDefinitionRowCacheFilter,
+)
 from .report_row import ReportRow, ReportRowFilter

@@ -18,6 +18,10 @@ class DatasheetElement:
     original_datasheet_id: UUID
     creation_date_utc: datetime
 
+    @property
+    def report_dict(self) -> dict:
+        return {**self.properties, "original_datasheet_id": self.original_datasheet_id}
+
 
 @dataclass(init=False)
 class DatasheetElementId(QueryFilter):

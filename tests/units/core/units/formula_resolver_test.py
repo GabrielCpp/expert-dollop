@@ -93,7 +93,7 @@ async def test_given_formula_instances_should_compute_collection():
     formula_service = StrictInterfaceSetup(FormulaService)
     project_node_service = StrictInterfaceSetup(ProjectNodeService)
     project_definition_node_service = StrictInterfaceSetup(ProjectNodeService)
-    formula_cache_service = StrictInterfaceSetup(FormulaCacheService)
+    formula_cache_service = StrictInterfaceSetup(FormulaInstanceService)
     formulas_plucker = StrictInterfaceSetup(Plucker)
     nodes_plucker = StrictInterfaceSetup(Plucker)
 
@@ -105,8 +105,8 @@ async def test_given_formula_instances_should_compute_collection():
     )
 
     formula_cache_service.setup(
-        lambda x: x.find_by(FormulaCachedResultFilter(project_id=fixture.project.id)),
-        returns_async=fixture.formulas_cache_result,
+        lambda x: x.find_by(FormulaInstanceFilter(project_id=fixture.project.id)),
+        returns_async=fixture.formula_instances,
     )
 
     formula_cache_service.setup(
@@ -118,14 +118,14 @@ async def test_given_formula_instances_should_compute_collection():
     formulas_plucker.setup(
         lambda x: x.plucks(
             lambda _: True,
-            list(set(c.formula_id for c in fixture.formulas_cache_result)),
+            list(set(c.formula_id for c in fixture.formula_instances)),
         ),
         returns_async=fixture.formulas,
     )
 
     nodes_plucker.setup(
         lambda x: x.plucks(
-            lambda _: True, [c.node_id for c in fixture.formulas_cache_result]
+            lambda _: True, [c.node_id for c in fixture.formula_instances]
         ),
         returns_async=fixture.nodes,
     )
@@ -144,35 +144,35 @@ async def test_given_formula_instances_should_compute_collection():
     )
 
     assert results == [
-        FormulaCachedResult(
+        FormulaInstance(
             project_id=UUID("10b75052-eb7b-8984-b934-6eae1d6feecc"),
             formula_id=UUID("f1f1e0ff-2344-48bc-e757-8c9dcd3c671e"),
             node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
             calculation_details="<fieldB, 2> * sum(<fieldA, 12>)",
             result=24,
         ),
-        FormulaCachedResult(
+        FormulaInstance(
             project_id=UUID("10b75052-eb7b-8984-b934-6eae1d6feecc"),
             formula_id=UUID("b9af5d87-31a6-3603-85d0-1c849c9f4b44"),
             node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
             calculation_details="<fieldB, 2> * sum(<sectionA_formula, 6>)",
             result=12,
         ),
-        FormulaCachedResult(
+        FormulaInstance(
             project_id=UUID("10b75052-eb7b-8984-b934-6eae1d6feecc"),
             formula_id=UUID("cbaba831-5e3a-aa8b-a7a5-60234fe98b14"),
             node_id=UUID("3951ecfd-e673-f1f3-9618-55470aabd2ca"),
             calculation_details="<fieldA, 5> - 2",
             result=3,
         ),
-        FormulaCachedResult(
+        FormulaInstance(
             project_id=UUID("10b75052-eb7b-8984-b934-6eae1d6feecc"),
             formula_id=UUID("cbaba831-5e3a-aa8b-a7a5-60234fe98b14"),
             node_id=UUID("9cb49761-6037-097e-6769-64645ffd1679"),
             calculation_details="<fieldA, 4> - 2",
             result=2,
         ),
-        FormulaCachedResult(
+        FormulaInstance(
             project_id=UUID("10b75052-eb7b-8984-b934-6eae1d6feecc"),
             formula_id=UUID("cbaba831-5e3a-aa8b-a7a5-60234fe98b14"),
             node_id=UUID("ba454054-0eac-b387-bdfa-da917b569de5"),
