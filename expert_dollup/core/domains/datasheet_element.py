@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Optional, Dict, Union
+from typing import Optional, Dict, Union, List
 from dataclasses import dataclass
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
@@ -33,3 +33,7 @@ class DatasheetElementFilter(QueryFilter):
     properties: Optional[Dict[str, Union[float, str, bool]]]
     original_datasheet_id: Optional[UUID]
     creation_date_utc: Optional[datetime]
+
+
+class DatasheetElementPluckFilter(QueryFilter):
+    element_def_ids: List[UUID]

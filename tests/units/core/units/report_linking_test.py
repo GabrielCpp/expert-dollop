@@ -149,33 +149,33 @@ async def test_given_report_definition():
     report_definition = ReportDefinitionFactory(
         project_def_id=project_fixture.project_definition.id,
         name="general_report",
-        columns=[
-            ReportColumn(
-                name="get_element_first_level_value( floor_description_join.value ) or floor_description",
-                expression="stage",
-            ),
-            ReportColumn(
-                name="substage_description",
-                expression="substage_description",
-            ),
-            ReportColumn(
-                name="abstract_product_description",
-                expression="view_joined_datasheet.name",
-            ),
-            ReportColumn(
-                name="cost_per_unit",
-                expression="CONCAT( TRUNCATE( view_joined_datasheet.price, 2 ), ' $' )",
-            ),
-            ReportColumn(
-                name="cost",
-                expression="CONCAT( TRUNCATE( TRUNCATE( SUM( get_element_dec_value( project_formula.value ) * post_transform_factor ), 2)  * view_joined_datasheet.price, 2), ' $' )",
-            ),
-            ReportColumn(
-                name="order_form_category_description",
-                expression="order_form_category_description",
-            ),
-        ],
         structure=ReportStructure(
+            columns=[
+                ReportColumn(
+                    name="get_element_first_level_value( floor_description_join.value ) or floor_description",
+                    expression="stage",
+                ),
+                ReportColumn(
+                    name="substage_description",
+                    expression="substage_description",
+                ),
+                ReportColumn(
+                    name="abstract_product_description",
+                    expression="view_joined_datasheet.name",
+                ),
+                ReportColumn(
+                    name="cost_per_unit",
+                    expression="CONCAT( TRUNCATE( view_joined_datasheet.price, 2 ), ' $' )",
+                ),
+                ReportColumn(
+                    name="cost",
+                    expression="CONCAT( TRUNCATE( TRUNCATE( SUM( get_element_dec_value( project_formula.value ) * post_transform_factor ), 2)  * view_joined_datasheet.price, 2), ' $' )",
+                ),
+                ReportColumn(
+                    name="order_form_category_description",
+                    expression="order_form_category_description",
+                ),
+            ],
             datasheet_selection_alias="abstractproduct",
             joins_cache=[
                 ReportJoin(
@@ -221,14 +221,23 @@ async def test_given_report_definition():
                     alias_name="worksection",
                 ),
             ],
+            formula_attribute=AttributeBucket(
+                bucket_name="substage", attribute_name="formula"
+            ),
+            datasheet_attribute=AttributeBucket(
+                bucket_name="substage", attribute_name="datasheet_element"
+            ),
+            group_by=[
+                AttributeBucket("stage", "translation"),
+                AttributeBucket("substage", "translation"),
+                AttributeBucket("abstractproduct", "translation"),
+                AttributeBucket("orderformcategory", "translation"),
+            ],
+            order_by=[
+                AttributeBucket("stage", "order_index"),
+                AttributeBucket("substage", "order_index"),
+            ],
         ),
-        group_by=[
-            "stage",
-            "substage_description",
-            "abstract_product_description",
-            "order_form_category_description",
-        ],
-        order_by=["stage.order", "substage.order"],
     )
 
     datasheet_definition_service = StrictInterfaceSetup(DatasheetDefinitionService)
@@ -290,7 +299,7 @@ async def test_given_report_definition():
         compare_method=compare_per_arg,
     )
 
-    report_linking = ReportLinking(
+    report_linking = ReportRowCacheBuilder(
         datasheet_definition_service.object,
         project_definition_service.object,
         datasheet_definition_element_service.object,

@@ -46,12 +46,25 @@ class ReportJoinFactory(factory.Factory):
     is_inner_join = True
 
 
+class AttributeBucketFactory(factory.Factory):
+    class Meta:
+        model = AttributeBucket
+
+    bucket_name = "bucket"
+    attribute_name = "attribute"
+
+
 class ReportStructureFactory(factory.Factory):
     class Meta:
         model = ReportStructure
 
     initial_selection = factory.SubFactory(ReportInitialSelectionFactory)
     joins = factory.List([factory.SubFactory(ReportJoinFactory) for _ in range(3)])
+    formula_attribute = factory.SubFactory(AttributeBucketFactory)
+    datasheet_attribute = factory.SubFactory(AttributeBucketFactory)
+    columns = factory.List([])
+    group_by = factory.List([])
+    order_by = factory.List([])
 
 
 class ReportColumnFactory(factory.Factory):
@@ -69,7 +82,4 @@ class ReportDefinitionFactory(factory.Factory):
     id = factory.Faker("uuid4")
     project_def_id = factory.Faker("uuid4")
     name = factory.Sequence(lambda n: f"report_name_{n}")
-    columns = factory.List([])
     structure = factory.SubFactory(ReportStructureFactory)
-    group_by = factory.List([])
-    order_by = factory.List([])

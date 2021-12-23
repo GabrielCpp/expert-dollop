@@ -282,17 +282,6 @@ def create_datasheet_tables():
 
 def create_report_tables():
     op.create_table(
-        "project_report_datasheet_rule",
-        Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("aggregate_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("datashet_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("element_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column(
-            "child_reference_id", postgresql.UUID(), nullable=False, primary_key=True
-        ),
-    )
-
-    op.create_table(
         "report_definition",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("project_def_id", postgresql.UUID(), nullable=False),
@@ -301,17 +290,23 @@ def create_report_tables():
     )
 
     op.create_table(
-        "report_definition_join_cache",
-        Column("digest", String(256), nullable=False, primary_key=True),
-        Column("report_def_id", postgresql.UUID(), nullable=False),
-        Column("aggregate", postgresql.JSON(), nullable=False),
+        "report_definition_row_cache",
+        Column("report_def_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("row_digest", String(256), nullable=False, primary_key=True),
+        Column("row", postgresql.JSON(), nullable=False),
     )
 
     op.create_table(
-        "report",
-        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("aggregate_id", String(256), nullable=False, primary_key=True),
-        Column("report_def_id", postgresql.UUID(), nullable=False),
+        "report_rows",
+        Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("report_def_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("node_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("formula_id", postgresql.UUID(), nullable=False),
+        Column("group_digest", String(256), nullable=False),
+        Column("order_index", Integer, nullable=False),
+        Column("datasheet_id", postgresql.UUID(), nullable=False),
+        Column("element_id", postgresql.UUID(), nullable=False),
+        Column("child_reference_id", postgresql.UUID(), nullable=False),
         Column("row", postgresql.JSON(), nullable=False),
     )
 

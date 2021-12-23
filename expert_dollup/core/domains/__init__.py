@@ -41,6 +41,7 @@ from .translation import (
     TranslationId,
     TranslationRessourceLocaleQuery,
     TranslationFilter,
+    TranslationPluckFilter,
 )
 from .ressource import Ressource
 from .formula import (
@@ -52,6 +53,7 @@ from .formula import (
     FormulaFilter,
     FormulaPluckFilter,
     FormulaCachedResultFilter,
+    FormulaCachePluckFilter,
     FormulaDependencyGraph,
     FormulaDependency,
 )
@@ -82,6 +84,7 @@ from .datasheet_element import (
     DatasheetElement,
     DatasheetElementFilter,
     DatasheetElementId,
+    DatasheetElementPluckFilter,
     zero_uuid,
 )
 from .bounded_node import BoundedNode, BoundedNodeSlice
@@ -89,6 +92,10 @@ from .report_definition import (
     ReportDefinition,
     ReportColumn,
     ReportStructure,
+    AttributeBucket,
     ReportJoin,
     ReportInitialSelection,
+    ReportRowDict,
 )
+from .report_definition_row_cache import ReportDefinitionRowCache, ReportCacheFilter
+from .report_row import ReportRow, ReportRowFilter

@@ -1,5 +1,5 @@
 from uuid import UUID
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import List, Optional, Union
 from ast import AST
 from expert_dollup.shared.database_services import QueryFilter
@@ -39,6 +39,10 @@ class FormulaCachedResult:
     calculation_details: str
     result: Union[str, bool, int, float]
 
+    @property
+    def report_dict(self) -> dict:
+        return asdict(self)
+
 
 @dataclass
 class FieldNode:
@@ -74,3 +78,7 @@ class FormulaPluckFilter(QueryFilter):
 
 class FormulaCachedResultFilter(QueryFilter):
     project_id: UUID
+
+
+class FormulaCachePluckFilter(QueryFilter):
+    formula_ids: List[UUID]

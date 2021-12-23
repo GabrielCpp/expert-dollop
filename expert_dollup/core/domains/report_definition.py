@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from uuid import UUID
-from typing import List
+from typing import List, Dict, Union
+
+ReportRowDict = Dict[str, Dict[str, Union[str, float, bool, int, None]]]
 
 
 @dataclass
@@ -20,12 +22,6 @@ class ReportInitialSelection:
 
 
 @dataclass
-class ReportStructure:
-    datasheet_selection_alias: str
-    joins_cache: List[ReportJoin]
-
-
-@dataclass
 class ReportColumn:
     name: str
     expression: str
@@ -33,11 +29,28 @@ class ReportColumn:
 
 
 @dataclass
+class AttributeBucket:
+    bucket_name: str
+    attribute_name: str
+
+    def get(self, row: ReportRowDict):
+        return row[self.bucket_name][self.attribute_name]
+
+
+@dataclass
+class ReportStructure:
+    datasheet_selection_alias: str
+    formula_attribute: AttributeBucket
+    datasheet_attribute: AttributeBucket
+    joins_cache: List[ReportJoin]
+    columns: List[ReportColumn]
+    group_by: List[AttributeBucket]
+    order_by: List[AttributeBucket]
+
+
+@dataclass
 class ReportDefinition:
     id: UUID
     project_def_id: UUID
     name: str
-    columns: List[ReportColumn]
     structure: ReportStructure
-    group_by: List[str]
-    order_by: List[str]
