@@ -25,7 +25,7 @@ class ReportInitialSelection:
 class ReportColumn:
     name: str
     expression: str
-    is_top_level: bool = False
+    is_visible: bool = True
 
 
 @dataclass

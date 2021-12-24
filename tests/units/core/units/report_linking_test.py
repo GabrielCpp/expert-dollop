@@ -140,6 +140,26 @@ datasheet_seed = DatasheetSeed(
     formulas=project_seed.formulas,
 )
 
+post_transform_factor_snippet = """
+def get_post_transform_factor(unit_id, conversion_factor, special_condition):
+    linear_unit_id = "linear_unit" # 2
+    brick_to_foot = "brick_to_foot" # 11
+    mul_conversion_factor = 1.0
+
+    if (unit_id == linear_unit_id and special_condition) or unit_id != linear_unit_id:
+        mul_conversion_factor = conversion_factor
+
+    if mul_conversion_factor == 0:
+        mul_conversion_factor = 1
+    elif unit_id == brick_to_foot_id:
+        mul_conversion_factor = 1/mul_conversion_factor
+    
+    return round_number(mul_conversion_factor, 8, 'truncate')
+
+
+get_post_transform_factor(row['abstractproduct']['unit_id'], row['datasheet_element']['factor'], row['substage']['special_condition'])
+"""
+
 
 def make_general_report(project_def_id: UUID) -> ReportDefinition:
     return ReportDefinitionFactory(
@@ -148,28 +168,33 @@ def make_general_report(project_def_id: UUID) -> ReportDefinition:
         structure=ReportStructure(
             columns=[
                 ReportColumn(
+                    name="post_transform_factor",
+                    expression=post_transform_factor_snippet,
+                    is_visible=False,
+                ),
+                ReportColumn(
                     name="stage",
-                    expression="floot.translation",
+                    expression="row['floor']['translation']",
                 ),
                 ReportColumn(
                     name="substage_description",
-                    expression="substage.translation",
+                    expression="row['substage']['translation']",
                 ),
                 ReportColumn(
                     name="abstract_product_description",
-                    expression="abstractproduct.translation",
+                    expression="row['abstractproduct']['translation']",
                 ),
                 ReportColumn(
                     name="cost_per_unit",
-                    expression="format_currency(row['abstractproduct']['price'], 2, 'truncate')",
+                    expression="format_currency(row['datasheet_element']['price'], 2, 'truncate')",
                 ),
                 ReportColumn(
                     name="cost",
-                    expression="format_currency( round( sum(row['formula']['value'] * post_transform_factor for row in rows), 2, 'truncate')  * row['abstractproduct']['price'], 2, 'truncate')",
+                    expression="format_currency( round_number( sum(row['formula']['value'] * post_transform_factor for row in rows), 2, 'truncate') * row['datasheet_element']['price'], 2, 'truncate')",
                 ),
                 ReportColumn(
                     name="order_form_category_description",
-                    expression="orderformcategory.translation",
+                    expression="row['orderformcategory']['translation']",
                 ),
             ],
             datasheet_selection_alias="abstractproduct",
@@ -397,6 +422,7 @@ async def test_given_row_cache_should_produce_correct_report():
         report_row_service.object,
         formula_instance_plucker.object,
         datasheet_element_plucker.object,
+        ExpressionEvaluator(),
     )
 
     report_rows = await report_linking.link_report(

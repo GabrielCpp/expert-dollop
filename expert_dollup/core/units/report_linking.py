@@ -1,12 +1,25 @@
+import math
 from typing import List, Dict, Any, Optional, Set
 from expert_dollup.core.domains import *
 from expert_dollup.core.queries import Plucker
+from expert_dollup.core.units.expression_evaluator import ExpressionEvaluator
 from expert_dollup.infra.services import *
 from uuid import UUID
 from functools import lru_cache
 from collections import defaultdict
 from itertools import islice
 from hashlib import sha3_256
+
+
+def round_number(number, digits, method) -> float:
+    assert method == "truncate", "method is the only method supported"
+    stepper = 10.0 ** digits
+    return math.trunc(stepper * number) / stepper
+
+
+def format_currency(number, digits, method) -> str:
+    number_rounded = round_number(number, digits, method)
+    return f"{number_rounded} $"
 
 
 class ReportGenerationError(Exception):
@@ -297,11 +310,13 @@ class ReportLinking:
         report_row_service: ReportRowService,
         formula_instance_plucker: Plucker[FormulaInstanceService],
         datasheet_element_plucker: Plucker[DatasheetElementService],
+        expression_evaluator: ExpressionEvaluator,
     ):
         self.report_def_row_cache = report_def_row_cache
         self.report_row_service = report_row_service
         self.formula_instance_plucker = formula_instance_plucker
         self.datasheet_element_plucker = datasheet_element_plucker
+        self.expression_evaluator = expression_evaluator
 
     async def link_report(
         self,
@@ -424,12 +439,40 @@ class ReportLinking:
     def _fill_row_columns(
         self, report_rows: List[ReportRow], report_definition: ReportDefinition
     ):
+        footprint_columns = [
+            g.attribute_name
+            for g in report_definition.structure.group_by
+            if g.bucket_name == "columns"
+        ]
+
+        columns_by_name = {
+            column.name: column for column in report_definition.structure.columns
+        }
+
+        first_pass_columns = (
+            report_definition.structure.columns
+            if len(footprint_columns) == 0
+            else [columns_by_name[name] for name in footprint_columns]
+        )
+
+        second_pass_column = (
+            []
+            if len(footprint_columns) == 0
+            else [
+                column
+                for column in report_definition.structure.columns
+                if not column.name in columns_by_name
+            ]
+        )
+
         for report_row in report_rows:
             columns = {}
             report_row.row["columns"] = columns
 
-            for column in report_definition.structure.columns:
-                columns[column.name] = self._evaluate(column.expression, report_row.row)
+            for column in first_pass_columns:
+                columns[column.name] = self._evaluate(
+                    column.expression, report_row.row, None
+                )
 
             group_id = "/".join(
                 attribute_bucket.get(report_row.row)
@@ -437,6 +480,21 @@ class ReportLinking:
             )
 
             report_row.group_digest = sha3_256(group_id.encode("utf8")).hexdigest()
+
+        if len(second_pass_column) > 0:
+            rows_by_group = defaultdict(list)
+
+            for report_row in report_rows:
+                rows_by_group[report_row.group_digest].append(report_row)
+
+            for group_report_rows in rows_by_group.values():
+                columns = report_row.row["columns"]
+                rows = [group_report_row.row for group_report_row in group_report_rows]
+
+                for report_row in group_report_rows:
+                    columns[column.name] = self._evaluate(
+                        column.expression, report_row.row, rows
+                    )
 
     def _fill_row_order(
         self, report_rows: List[ReportRow], report_definition: ReportDefinition
@@ -454,5 +512,14 @@ class ReportLinking:
         for index, report_row in enumerate(report_rows):
             report_row.order_index = index
 
-    def _evaluate(self, expression, row):
-        return ""
+    def _evaluate(self, expression, row, rows_group):
+        return self.expression_evaluator.evaluate(
+            expression,
+            {
+                "row": row,
+                "rows": rows_group,
+                "round_number": round_number,
+                "format_currency": format_currency,
+                "sum": sum,
+            },
+        )
