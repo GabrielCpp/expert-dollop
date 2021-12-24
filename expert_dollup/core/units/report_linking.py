@@ -462,6 +462,9 @@ class ReportLinking:
             ]
         )
 
+        if len(second_pass_column) == 0:
+            raise Exception("Group by require at least one aggregate")
+
         for report_row in report_rows:
             columns = {}
             report_row.row["columns"] = columns
@@ -478,22 +481,25 @@ class ReportLinking:
 
             report_row.group_digest = sha3_256(group_id.encode("utf8")).hexdigest()
 
-        if len(second_pass_column) > 0:
-            rows_by_group = defaultdict(list)
+        grouped_rows: List[ReportRow] = []
+        rows_by_group = defaultdict(list)
 
-            for report_row in report_rows:
-                rows_by_group[report_row.group_digest].append(report_row)
+        for report_row in report_rows:
+            rows_by_group[report_row.group_digest].append(report_row)
 
-            for group_report_rows in rows_by_group.values():
-                rows = [group_report_row.row for group_report_row in group_report_rows]
+        for group_report_rows in rows_by_group.values():
+            rows = [group_report_row.row for group_report_row in group_report_rows]
+            report_row = group_report_rows[0]
+            columns = report_row.row["columns"]
 
-                for report_row in group_report_rows:
-                    columns = report_row.row["columns"]
+            for column in second_pass_column:
+                columns[column.name] = self._evaluate(
+                    column.expression, report_row.row, rows
+                )
 
-                    for column in second_pass_column:
-                        columns[column.name] = self._evaluate(
-                            column.expression, report_row.row, rows
-                        )
+            grouped_rows.append(report_row)
+
+        return grouped_rows
 
     def _fill_row_order(
         self, report_rows: List[ReportRow], report_definition: ReportDefinition
@@ -524,5 +530,4 @@ class ReportLinking:
                 },
             )
         except Exception as e:
-            print(row)
             raise Exception(f"Failed to calculate {expression}") from e

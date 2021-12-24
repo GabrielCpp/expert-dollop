@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 from typing import List, Dict, Union
+from expert_dollup.shared.database_services import QueryFilter
 
 ReportRowDict = Dict[str, Dict[str, Union[str, float, bool, int, None]]]
 
@@ -50,3 +51,7 @@ class ReportDefinition:
     project_def_id: UUID
     name: str
     structure: ReportStructure
+
+
+class ReportDefinitionFilter(QueryFilter):
+    project_def_id: UUID

@@ -76,3 +76,11 @@ from .datasheet_element_dto import (
     DatasheetElementPageDto,
     DatasheetElementImportDto,
 )
+from .report_row_dto import ReportRowDto
+from .report_definition_dto import (
+    ReportDefinitionDto,
+    ReportStructureDto,
+    AttributeBucketDto,
+    ReportColumnDto,
+    ReportJoinDto,
+)
