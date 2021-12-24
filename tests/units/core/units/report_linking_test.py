@@ -1,4 +1,5 @@
-from pydantic.main import BaseModel
+from pydantic import BaseModel, parse_file_as
+from typing import List, Dict, Any
 from pydantic.tools import parse_file_as
 import pytest
 from uuid import UUID
@@ -12,6 +13,11 @@ from expert_dollup.core.domains import *
 from expert_dollup.core.queries import *
 from expert_dollup.infra.services import *
 from tests.fixtures import *
+
+
+class ReportDict(BaseModel):
+    __root__: List[Dict[str, Dict[str, Any]]]
+
 
 project_seed = ProjectSeed(
     {
@@ -143,7 +149,7 @@ datasheet_seed = DatasheetSeed(
 post_transform_factor_snippet = """
 def get_post_transform_factor(unit_id, conversion_factor, special_condition):
     linear_unit_id = "linear_unit" # 2
-    brick_to_foot = "brick_to_foot" # 11
+    brick_to_foot_id = "brick_to_foot" # 11
     mul_conversion_factor = 1.0
 
     if (unit_id == linear_unit_id and special_condition) or unit_id != linear_unit_id:
@@ -190,7 +196,7 @@ def make_general_report(project_def_id: UUID) -> ReportDefinition:
                 ),
                 ReportColumn(
                     name="cost",
-                    expression="format_currency( round_number( sum(row['formula']['value'] * post_transform_factor for row in rows), 2, 'truncate') * row['datasheet_element']['price'], 2, 'truncate')",
+                    expression="format_currency( round_number( sum(row['formula']['result'] * row['columns']['post_transform_factor'] for row in rows), 2, 'truncate') * row['datasheet_element']['price'], 2, 'truncate')",
                 ),
                 ReportColumn(
                     name="order_form_category_description",
@@ -347,14 +353,6 @@ async def test_given_report_definition(snapshot):
 
     report_buckets = await report_linking.refresh_cache(report_definition)
     snapshot.assert_match(dump_snapshot(report_buckets), "report_linking_test.json")
-
-
-from pydantic import BaseModel, parse_file_as
-from typing import List, Dict, Any
-
-
-class ReportDict(BaseModel):
-    __root__: List[Dict[str, Dict[str, Any]]]
 
 
 @pytest.mark.asyncio

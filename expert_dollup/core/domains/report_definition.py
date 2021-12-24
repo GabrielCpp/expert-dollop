@@ -13,6 +13,7 @@ class ReportJoin:
     join_on_attribute: str
     alias_name: str
     warn_about_idle_items: bool = True
+    same_cardinality: bool = False
 
 
 @dataclass

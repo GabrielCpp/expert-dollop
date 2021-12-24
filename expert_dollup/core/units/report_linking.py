@@ -158,7 +158,7 @@ class ReportRowCacheBuilder:
             await self._join_on(report_buckets, join, cache)
 
         await self._join_translations(report_buckets)
-        await self._join_formulas(report_buckets, cache)
+        await self._join_formulas(report_buckets, report_definition)
 
         return report_buckets
 
@@ -184,22 +184,10 @@ class ReportRowCacheBuilder:
     async def _join_formulas(
         self,
         report_buckets: List[Dict[str, Dict[str, Any]]],
-        cache: ReportLinkingCache,
+        report_definition: ReportDefinition,
     ):
-        formulas_aggregates = []
-
-        for label_collection in cache.label_collections:
-            for name, schema in label_collection.attributes_schema.items():
-                if isinstance(schema, FormulaAggregate):
-                    formulas_aggregates.append((label_collection.name, name))
-
-        if len(formulas_aggregates) == 0:
-            raise Exception("One formula aggregate required")
-
-        if len(formulas_aggregates) > 1:
-            raise Exception("Only formula aggregate accepted")
-
-        collection_name, attribute_name = formulas_aggregates[0]
+        collection_name = report_definition.structure.formula_attribute.bucket_name
+        attribute_name = report_definition.structure.formula_attribute.attribute_name
         formula_ids = set()
 
         for report_bucket in report_buckets:
@@ -279,6 +267,11 @@ class ReportRowCacheBuilder:
                 raise Exception(f"Expected data {attribute}")
 
             report_bucket[join.alias_name] = labels[0].report_dict
+
+            if len(labels) > 1 and join.same_cardinality:
+                raise Exception(
+                    f"Expected cardinality be unchanged after join on {join}"
+                )
 
             for label in islice(labels, 1):
                 new_bucket = dict(report_bucket)
@@ -439,21 +432,25 @@ class ReportLinking:
     def _fill_row_columns(
         self, report_rows: List[ReportRow], report_definition: ReportDefinition
     ):
-        footprint_columns = [
+        footprint_columns = {
             g.attribute_name
             for g in report_definition.structure.group_by
             if g.bucket_name == "columns"
-        ]
-
-        columns_by_name = {
-            column.name: column for column in report_definition.structure.columns
         }
 
         first_pass_columns = (
             report_definition.structure.columns
             if len(footprint_columns) == 0
-            else [columns_by_name[name] for name in footprint_columns]
+            else [
+                column
+                for column in report_definition.structure.columns
+                if column.name in footprint_columns or not column.is_visible
+            ]
         )
+
+        first_pass_column_names = {
+            first_pass_column.name for first_pass_column in first_pass_columns
+        }
 
         second_pass_column = (
             []
@@ -461,7 +458,7 @@ class ReportLinking:
             else [
                 column
                 for column in report_definition.structure.columns
-                if not column.name in columns_by_name
+                if not column.name in first_pass_column_names
             ]
         )
 
@@ -488,13 +485,15 @@ class ReportLinking:
                 rows_by_group[report_row.group_digest].append(report_row)
 
             for group_report_rows in rows_by_group.values():
-                columns = report_row.row["columns"]
                 rows = [group_report_row.row for group_report_row in group_report_rows]
 
                 for report_row in group_report_rows:
-                    columns[column.name] = self._evaluate(
-                        column.expression, report_row.row, rows
-                    )
+                    columns = report_row.row["columns"]
+
+                    for column in second_pass_column:
+                        columns[column.name] = self._evaluate(
+                            column.expression, report_row.row, rows
+                        )
 
     def _fill_row_order(
         self, report_rows: List[ReportRow], report_definition: ReportDefinition
@@ -513,13 +512,17 @@ class ReportLinking:
             report_row.order_index = index
 
     def _evaluate(self, expression, row, rows_group):
-        return self.expression_evaluator.evaluate(
-            expression,
-            {
-                "row": row,
-                "rows": rows_group,
-                "round_number": round_number,
-                "format_currency": format_currency,
-                "sum": sum,
-            },
-        )
+        try:
+            return self.expression_evaluator.evaluate(
+                expression,
+                {
+                    "row": row,
+                    "rows": rows_group,
+                    "round_number": round_number,
+                    "format_currency": format_currency,
+                    "sum": sum,
+                },
+            )
+        except Exception as e:
+            print(row)
+            raise Exception(f"Failed to calculate {expression}") from e

@@ -13,7 +13,7 @@ class FormulaSeed:
         formula_dependencies: List[str],
         node_dependencies: List[str],
         calculation_details: str = "",
-        result: Optional[float] = None,
+        result: float = 0,
     ):
         self.expression = expression
         self.calculation_details = calculation_details
