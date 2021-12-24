@@ -24,16 +24,6 @@ class ProjectDefinitionNodeFactory(factory.Factory):
     creation_date_utc = factory.Faker("date_time")
 
 
-class ReportInitialSelectionFactory(factory.Factory):
-    class Meta:
-        model = ReportInitialSelection
-
-    from_object_name = "a"
-    from_property_name = "property_a"
-    alias_name = "join_a"
-    distinct = True
-
-
 class ReportJoinFactory(factory.Factory):
     class Meta:
         model = ReportJoin
@@ -58,7 +48,7 @@ class ReportStructureFactory(factory.Factory):
     class Meta:
         model = ReportStructure
 
-    initial_selection = factory.SubFactory(ReportInitialSelectionFactory)
+    datasheet_selection_alias = "datasheet_element"
     joins = factory.List([factory.SubFactory(ReportJoinFactory) for _ in range(3)])
     formula_attribute = factory.SubFactory(AttributeBucketFactory)
     datasheet_attribute = factory.SubFactory(AttributeBucketFactory)

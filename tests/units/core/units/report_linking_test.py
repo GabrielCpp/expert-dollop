@@ -242,6 +242,9 @@ def make_general_report(project_def_id: UUID) -> ReportDefinition:
                     alias_name="worksection",
                 ),
             ],
+            stage_attribute=AttributeBucket(
+                bucket_name="columns", attribute_name="stage"
+            ),
             formula_attribute=AttributeBucket(
                 bucket_name="substage", attribute_name="formula"
             ),

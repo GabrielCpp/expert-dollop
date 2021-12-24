@@ -16,12 +16,6 @@ class ReportJoin:
 
 
 @dataclass
-class ReportInitialSelection:
-    from_object_name: str
-    alias_name: str
-
-
-@dataclass
 class ReportColumn:
     name: str
     expression: str
@@ -42,6 +36,7 @@ class ReportStructure:
     datasheet_selection_alias: str
     formula_attribute: AttributeBucket
     datasheet_attribute: AttributeBucket
+    stage_attribute: AttributeBucket
     joins_cache: List[ReportJoin]
     columns: List[ReportColumn]
     group_by: List[AttributeBucket]

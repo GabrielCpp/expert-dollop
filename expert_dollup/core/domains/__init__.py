@@ -94,7 +94,6 @@ from .report_definition import (
     ReportStructure,
     AttributeBucket,
     ReportJoin,
-    ReportInitialSelection,
     ReportRowDict,
 )
 from .report_definition_row_cache import (
