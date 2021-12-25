@@ -332,11 +332,19 @@ def map_int_field_value_to_dto(src: int, mapper: Mapper) -> IntFieldValueDto:
 def map_decimal_field_value_from_dto(
     src: DecimalFieldValueDto, mapper: Mapper
 ) -> float:
-    return src.integer
+    return src.numeric
 
 
 def map_decimal_field_value_to_dto(src: float, mapper: Mapper) -> DecimalFieldValueDto:
-    return DecimalFieldValueDto(integer=src)
+    return DecimalFieldValueDto(numeric=src)
+
+
+def map_reference_id_from_dto(src: ReferenceIdDto, mapper: Mapper) -> UUID:
+    return src.uuid
+
+
+def map_reference_id_to_dto(src: UUID, mapper: Mapper) -> ReferenceIdDto:
+    return ReferenceIdDto(uuid=src)
 
 
 def map_value_union_from_dto(src: ValueUnionDto, mapper: Mapper) -> ValueUnion:
@@ -659,6 +667,54 @@ def map_label_collection_to_dto(
     )
 
 
+def map_static_property_from_dto(
+    src: StaticPropertyDto, mapper: Mapper
+) -> StaticProperty:
+    return StaticProperty(json_schema=src.json_schema)
+
+
+def map_static_property_to_dto(
+    src: StaticProperty, mapper: Mapper
+) -> StaticPropertyDto:
+    return StaticPropertyDto(json_schema=src.json_schema)
+
+
+def map_collection_aggregate_from_dto(
+    src: CollectionAggregateDto, mapper: Mapper
+) -> CollectionAggregate:
+    return CollectionAggregate(from_collection=src.from_collection)
+
+
+def map_collection_aggregate_to_dto(
+    src: CollectionAggregate, mapper: Mapper
+) -> CollectionAggregateDto:
+    return CollectionAggregateDto(from_collection=src.from_collection)
+
+
+def map_datasheet_aggregate_from_dto(
+    src: DatasheetAggregateDto, mapper: Mapper
+) -> DatasheetAggregate:
+    return DatasheetAggregate(from_datasheet=src.from_datasheet)
+
+
+def map_datasheet_aggregate_to_dto(
+    src: DatasheetAggregate, mapper: Mapper
+) -> DatasheetAggregateDto:
+    return DatasheetAggregateDto(from_datasheet=src.from_datasheet)
+
+
+def map_formula_aggregate_from_dto(
+    src: FormulaAggregateDto, mapper: Mapper
+) -> FormulaAggregate:
+    return FormulaAggregate(from_formula=src.from_formula)
+
+
+def map_formula_aggregate_to_dto(
+    src: FormulaAggregate, mapper: Mapper
+) -> FormulaAggregateDto:
+    return FormulaAggregateDto(from_formula=src.from_formula)
+
+
 label_attribute_value_dto_mappings = RevervibleUnionMapping(
     LabelAttributeValueDto,
     LabelAttributeUnion,
@@ -784,4 +840,120 @@ def map_datasheet_clone_target_from_dto(
 ) -> DatasheetCloneTarget:
     return DatasheetCloneTarget(
         target_datasheet_id=src.target_datasheet_id, new_name=src.new_name
+    )
+
+
+def map_measure_unit_from_dto(src: MeasureUnitDto, mapper: Mapper) -> MeasureUnit:
+    return MeasureUnit(id=src.id)
+
+
+def map_measure_unit_to_dto(src: MeasureUnit, mapper: Mapper) -> MeasureUnitDto:
+    return MeasureUnitDto(id=src.id)
+
+
+def map_report_definition_from_dto(
+    src: ReportDefinitionDto, mapper: Mapper
+) -> ReportDefinition:
+    return ReportDefinition(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        name=src.name,
+        structure=mapper.map(src.structure, ReportStructure),
+    )
+
+
+def map_report_definition_to_dto(
+    src: ReportDefinition, mapper: Mapper
+) -> ReportDefinitionDto:
+    return ReportDefinitionDto(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        name=src.name,
+        structure=mapper.map(src.structure, ReportDefinitionDto),
+    )
+
+
+def map_report_structure_from_dto(
+    src: ReportStructureDto, mapper: Mapper
+) -> ReportStructure:
+    return ReportStructure(
+        datasheet_selection_alias=src.datasheet_selection_alias,
+        formula_attribute=mapper.map(src.formula_attribute, AttributeBucket),
+        datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucket),
+        stage_attribute=mapper.map(src.stage_attribute, AttributeBucket),
+        joins_cache=mapper.map_many(src.joins_cache, ReportJoin),
+        columns=mapper.map_many(src.columns, ReportColumn),
+        group_by=mapper.map_many(src.group_by, AttributeBucket),
+        order_by=mapper.map_many(src.order_by, AttributeBucket),
+    )
+
+
+def map_report_structure_to_dto(
+    src: ReportStructure, mapper: Mapper
+) -> ReportStructureDto:
+    return ReportStructureDto(
+        datasheet_selection_alias=src.datasheet_selection_alias,
+        formula_attribute=mapper.map(src.formula_attribute, AttributeBucketDto),
+        datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucketDto),
+        stage_attribute=mapper.map(src.stage_attribute, AttributeBucketDto),
+        joins_cache=mapper.map_many(src.joins_cache, ReportJoinDto),
+        columns=mapper.map_many(src.columns, ReportColumnDto),
+        group_by=mapper.map_many(src.group_by, AttributeBucketDto),
+        order_by=mapper.map_many(src.order_by, AttributeBucketDto),
+    )
+
+
+def map_attribute_bucket_from_dto(
+    src: AttributeBucketDto, mapper: Mapper
+) -> AttributeBucket:
+    return AttributeBucket(
+        bucket_name=src.bucket_name, attribute_name=src.attribute_name
+    )
+
+
+def map_attribute_bucket_to_dto(
+    src: AttributeBucket, mapper: Mapper
+) -> AttributeBucketDto:
+    return AttributeBucketDto(
+        bucket_name=src.bucket_name, attribute_name=src.attribute_name
+    )
+
+
+def map_report_join_from_dto(src: ReportJoinDto, mapper: Mapper) -> ReportJoin:
+    return ReportJoin(
+        from_object_name=src.from_object_name,
+        from_property_name=src.from_property_name,
+        join_on_collection=src.join_on_collection,
+        join_on_attribute=src.join_on_attribute,
+        alias_name=src.alias_name,
+        warn_about_idle_items=src.warn_about_idle_items,
+        same_cardinality=src.same_cardinality,
+    )
+
+
+def map_report_join_to_dto(src: ReportJoin, mapper: Mapper) -> ReportJoinDto:
+    return ReportJoinDto(
+        from_object_name=src.from_object_name,
+        from_property_name=src.from_property_name,
+        join_on_collection=src.join_on_collection,
+        join_on_attribute=src.join_on_attribute,
+        alias_name=src.alias_name,
+        warn_about_idle_items=src.warn_about_idle_items,
+        same_cardinality=src.same_cardinality,
+    )
+
+
+def map_report_column_from_dto(src: ReportColumnDto, mapper: Mapper) -> ReportColumn:
+    return ReportColumn(
+        name=src.name,
+        expression=src.expression,
+        is_visible=src.is_visible,
+    )
+
+
+def map_report_column_to_dto(src: ReportColumn, mapper: Mapper) -> ReportColumnDto:
+    return ReportColumnDto(
+        name=src.name,
+        expression=src.expression,
+        is_visible=src.is_visible,
     )

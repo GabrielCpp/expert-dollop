@@ -1,5 +1,6 @@
 from typing import List
 from uuid import UUID
+from expert_dollup.app.dtos.dynamic_primitive import ReferenceIdDto
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import (
     Mapper,
@@ -681,6 +682,54 @@ def map_datasheet_definition_label_collection_to_dao(
     )
 
 
+def map_static_property_from_dao(
+    src: StaticPropertyDao, mapper: Mapper
+) -> StaticProperty:
+    return StaticProperty(json_schema=src.json_schema)
+
+
+def map_static_property_to_dao(
+    src: StaticProperty, mapper: Mapper
+) -> StaticPropertyDao:
+    return StaticPropertyDao(json_schema=src.json_schema)
+
+
+def map_collection_aggregate_from_dao(
+    src: CollectionAggregateDao, mapper: Mapper
+) -> CollectionAggregate:
+    return CollectionAggregate(from_collection=src.from_collection)
+
+
+def map_collection_aggregate_to_dao(
+    src: CollectionAggregate, mapper: Mapper
+) -> CollectionAggregateDao:
+    return CollectionAggregateDao(from_collection=src.from_collection)
+
+
+def map_datasheet_aggregate_from_dao(
+    src: DatasheetAggregateDao, mapper: Mapper
+) -> DatasheetAggregate:
+    return DatasheetAggregate(from_datasheet=src.from_datasheet)
+
+
+def map_datasheet_aggregate_to_dao(
+    src: DatasheetAggregate, mapper: Mapper
+) -> DatasheetAggregateDao:
+    return DatasheetAggregateDao(from_datasheet=src.from_datasheet)
+
+
+def map_formula_aggregate_from_dao(
+    src: FormulaAggregateDao, mapper: Mapper
+) -> FormulaAggregate:
+    return FormulaAggregate(from_formula=src.from_formula)
+
+
+def map_formula_aggregate_to_dao(
+    src: FormulaAggregate, mapper: Mapper
+) -> FormulaAggregateDao:
+    return FormulaAggregateDao(from_formula=src.from_formula)
+
+
 label_attribute_dao_mappings = RevervibleUnionMapping(
     LabelAttributeDaoUnion,
     LabelAttributeUnion,
@@ -714,6 +763,30 @@ def map_datasheet_definition_label_from_dao(src: LabelDao, mapper: Mapper) -> La
             src.attributes, label_attribute_dao_mappings.from_origin
         ),
     )
+
+
+def map_strict_bool_to_dao(src: bool, mapper: Mapper) -> StrictBool:
+    return StrictBool(src)
+
+
+def map_strict_int_to_dao(src: int, mapper: Mapper) -> StrictInt:
+    return StrictInt(src)
+
+
+def map_strict_str_to_dao(src: str, mapper: Mapper) -> StrictStr:
+    return StrictStr(src)
+
+
+def map_strict_float_to_dao(src: float, mapper: Mapper) -> StrictFloat:
+    return StrictFloat(src)
+
+
+def map_reference_id_to_dao(src: UUID, mapper: Mapper) -> ReferenceIdDao:
+    return ReferenceIdDao(uuid=src)
+
+
+def map_reference_id_from_dao(src: ReferenceIdDao, mapper: Mapper) -> UUID:
+    return src.uuid
 
 
 def map_datasheet_to_dao(src: Datasheet, mapper: Mapper) -> DatasheetDao:
@@ -873,6 +946,25 @@ def map_formula_cached_result_filter(
     )
 
 
+def map_measure_unit_from_dao(src: MeasureUnitDao, mapper: Mapper) -> MeasureUnit:
+    return MeasureUnit(id=src.id)
+
+
+def map_measure_unit_to_dao(src: MeasureUnit, mapper: Mapper) -> MeasureUnitDao:
+    return MeasureUnitDao(id=src.id)
+
+
+def map_report_definition_from_dao(
+    src: ReportDefinitionDao, mapper: Mapper
+) -> ReportDefinition:
+    return ReportDefinition(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        name=src.name,
+        structure=mapper.map(src.structure, ReportStructure),
+    )
+
+
 def map_report_definition_to_dao(
     src: ReportDefinition, mapper: Mapper
 ) -> ReportDefinitionDao:
@@ -880,19 +972,91 @@ def map_report_definition_to_dao(
         id=src.id,
         project_def_id=src.project_def_id,
         name=src.name,
-        structure=ReportStructureDao(
-            initial_selection=ReportJoinDao(
-                to_object_name=src.structure.initial_selection.to_object_name,
-                from_object_name=src.structure.initial_selection.from_object_name,
-                join_on_property_name=src.structure.initial_selection.join_on_property_name,
-            ),
-            joins=[
-                ReportJoinDao(
-                    to_object_name=j.to_object_name,
-                    from_object_name=j.from_object_name,
-                    join_on_property_name=j.join_on_property_name,
-                )
-                for j in src.structure.joins
-            ],
-        ),
+        structure=mapper.map(src.structure, ReportStructureDao),
+    )
+
+
+def map_report_structure_from_dao(
+    src: ReportStructureDao, mapper: Mapper
+) -> ReportStructure:
+    return ReportStructure(
+        datasheet_selection_alias=src.datasheet_selection_alias,
+        formula_attribute=mapper.map(src.formula_attribute, AttributeBucket),
+        datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucket),
+        stage_attribute=mapper.map(src.stage_attribute, AttributeBucket),
+        joins_cache=mapper.map_many(src.joins_cache, ReportJoin),
+        columns=mapper.map_many(src.columns, ReportColumn),
+        group_by=mapper.map_many(src.group_by, AttributeBucket),
+        order_by=mapper.map_many(src.order_by, AttributeBucket),
+    )
+
+
+def map_report_structure_to_dao(
+    src: ReportStructure, mapper: Mapper
+) -> ReportStructureDao:
+    return ReportStructureDao(
+        datasheet_selection_alias=src.datasheet_selection_alias,
+        formula_attribute=mapper.map(src.formula_attribute, AttributeBucketDao),
+        datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucketDao),
+        stage_attribute=mapper.map(src.stage_attribute, AttributeBucketDao),
+        joins_cache=mapper.map_many(src.joins_cache, ReportJoinDao),
+        columns=mapper.map_many(src.columns, ReportColumnDao),
+        group_by=mapper.map_many(src.group_by, AttributeBucketDao),
+        order_by=mapper.map_many(src.order_by, AttributeBucketDao),
+    )
+
+
+def map_attribute_bucket_from_dao(
+    src: AttributeBucketDao, mapper: Mapper
+) -> AttributeBucket:
+    return AttributeBucket(
+        bucket_name=src.bucket_name, attribute_name=src.attribute_name
+    )
+
+
+def map_attribute_bucket_to_dao(
+    src: AttributeBucket, mapper: Mapper
+) -> AttributeBucketDao:
+    return AttributeBucketDao(
+        bucket_name=src.bucket_name, attribute_name=src.attribute_name
+    )
+
+
+def map_report_join_from_dao(src: ReportJoinDao, mapper: Mapper) -> ReportJoin:
+    return ReportJoin(
+        from_object_name=src.from_object_name,
+        from_property_name=src.from_property_name,
+        join_on_collection=src.join_on_collection,
+        join_on_attribute=src.join_on_attribute,
+        alias_name=src.alias_name,
+        warn_about_idle_items=src.warn_about_idle_items,
+        same_cardinality=src.same_cardinality,
+    )
+
+
+def map_report_join_to_dao(src: ReportJoin, mapper: Mapper) -> ReportJoinDao:
+    return ReportJoinDao(
+        from_object_name=src.from_object_name,
+        from_property_name=src.from_property_name,
+        join_on_collection=src.join_on_collection,
+        join_on_attribute=src.join_on_attribute,
+        alias_name=src.alias_name,
+        warn_about_idle_items=src.warn_about_idle_items,
+        same_cardinality=src.same_cardinality,
+    )
+
+
+def map_report_column_from_dao(src: ReportColumnDao, mapper: Mapper) -> ReportColumn:
+    return ReportColumn(
+        name=src.name,
+        expression=src.expression,
+        is_visible=src.is_visible,
+    )
+
+
+def map_report_column_to_dao(src: ReportColumn, mapper: Mapper) -> ReportColumnDao:
+    return ReportColumnDao(
+        name=src.name,
+        expression=src.expression,
+        is_visible=src.is_visible,
     )

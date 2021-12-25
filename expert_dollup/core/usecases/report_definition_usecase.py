@@ -1,5 +1,6 @@
 from uuid import UUID
 from expert_dollup.core.units import ReportRowCacheBuilder
+from expert_dollup.core.domains import *
 from expert_dollup.infra.services import *
 
 
@@ -17,3 +18,6 @@ class ReportDefinitionUseCase:
             report_definition_id
         )
         await self.report_row_cache_builder.refresh_cache(report_definition)
+
+    async def add(self, report_definition: ReportDefinition):
+        await self.report_definition_service.insert(report_definition)

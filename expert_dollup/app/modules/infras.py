@@ -33,17 +33,16 @@ def bind_validators(binder: Binder) -> None:
     )
 
 
+def get_classes(m):
+    return [class_type for class_type in m.__dict__.values() if isclass(class_type)]
+
+
 def bind_queries(binder: Binder) -> None:
-
-    binder.bind(
-        core_queries.Plucker[services.ProjectNodeService],
-        factory_of(queries.PluckQuery, service=services.ProjectNodeService),
-    )
-
-    binder.bind(
-        core_queries.Plucker[services.FormulaService],
-        factory_of(queries.PluckQuery, service=services.FormulaService),
-    )
+    for service_type in get_classes(services):
+        binder.bind(
+            core_queries.Plucker[service_type],
+            factory_of(queries.PluckQuery, service=service_type),
+        )
 
 
 def bind_providers(binder: Binder) -> None:

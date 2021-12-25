@@ -1,23 +1,17 @@
 from uuid import UUID, uuid4
-from typing import Awaitable, Dict, Union, Optional
-from dataclasses import asdict
+from typing import List
 from expert_dollup.shared.database_services import Page
-from expert_dollup.core.exceptions import ValidationError, InvalidUsageError
 from expert_dollup.core.domains import (
     Datasheet,
     DatasheetElement,
     DatasheetFilter,
     DatasheetElementFilter,
-    DatasheetElementId,
-    DatasheetDefinitionElement,
-    DatasheetDefinition,
     DatasheetCloneTarget,
 )
 from expert_dollup.infra.services import (
     DatasheetService,
     DatasheetDefinitionElementService,
     DatasheetElementService,
-    DatasheetDefinitionService,
 )
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
 from expert_dollup.shared.starlette_injection import Clock
@@ -38,7 +32,7 @@ class DatasheetUseCase:
         self.schema_validator = schema_validator
         self.clock = clock
 
-    async def find_by_id(self, datasheet_id: UUID) -> Awaitable[Datasheet]:
+    async def find_by_id(self, datasheet_id: UUID) -> Datasheet:
         return await self.datasheet_service.find_by_id(datasheet_id)
 
     async def clone(self, datasheet_clone_target: DatasheetCloneTarget):
@@ -93,7 +87,7 @@ class DatasheetUseCase:
 
         return cloned_datasheet
 
-    async def add(self, datasheet: Datasheet) -> Awaitable[Datasheet]:
+    async def add(self, datasheet: Datasheet) -> Datasheet:
         await self.datasheet_service.insert(datasheet)
         definition_elements = await self.datasheet_definition_element_service.find_all()
         elements = [
@@ -114,13 +108,11 @@ class DatasheetUseCase:
         await self.datasheet_element_service.insert_many(elements)
         return await self.datasheet_service.find_by_id(datasheet.id)
 
-    async def update(
-        self, datasheet_id: UUID, updates: DatasheetFilter
-    ) -> Awaitable[Datasheet]:
+    async def update(self, datasheet_id: UUID, updates: DatasheetFilter) -> Datasheet:
         await self.datasheet_service.update(updates, DatasheetFilter(id=datasheet_id))
         return await self.datasheet_service.find_by_id(datasheet_id)
 
-    async def delete_by_id(self, datasheet_id: UUID) -> Awaitable:
+    async def delete_by_id(self, datasheet_id: UUID) -> None:
         await self.datasheet_element_service.delete_by(
             DatasheetElementFilter(datasheet_id=datasheet_id)
         )

@@ -210,16 +210,6 @@ class ProjectFormulaInstanceDao(BaseModel):
     last_modified_date_utc: datetime
 
 
-class UnitDao(BaseModel):
-    class Meta:
-        pk = "id"
-
-    class Config:
-        title = "unit"
-
-    id: str = Field(max_length=16)
-
-
 class ElementPropertySchemaDao(BaseModel):
     value_validator: JsonSchemaDao
 
@@ -248,12 +238,15 @@ class FormulaAggregateDao(BaseModel):
     from_formula: str
 
 
-class StaticProperty(BaseModel):
+class StaticPropertyDao(BaseModel):
     json_schema: JsonSchemaDao
 
 
 LabelAttributeSchemaDaoUnion = Union[
-    StaticProperty, CollectionAggregateDao, DatasheetAggregateDao, FormulaAggregateDao
+    StaticPropertyDao,
+    CollectionAggregateDao,
+    DatasheetAggregateDao,
+    FormulaAggregateDao,
 ]
 
 
@@ -337,14 +330,35 @@ class DatasheetElementDao(BaseModel):
 
 
 class ReportJoinDao(BaseModel):
-    to_object_name: str
     from_object_name: str
-    join_on_property_name: str
+    from_property_name: str
+    join_on_collection: str
+    join_on_attribute: str
+    alias_name: str
+    warn_about_idle_items: bool
+    same_cardinality: bool
+
+
+class AttributeBucketDao(BaseModel):
+    bucket_name: str
+    attribute_name: str
+
+
+class ReportColumnDao(BaseModel):
+    name: str
+    expression: str
+    is_visible: bool
 
 
 class ReportStructureDao(BaseModel):
-    initial_selection: ReportJoinDao
-    joins: List[ReportJoinDao]
+    datasheet_selection_alias: str
+    formula_attribute: AttributeBucketDao
+    datasheet_attribute: AttributeBucketDao
+    stage_attribute: AttributeBucketDao
+    joins_cache: List[ReportJoinDao]
+    columns: List[ReportColumnDao]
+    group_by: List[AttributeBucketDao]
+    order_by: List[AttributeBucketDao]
 
 
 class ReportDefinitionDao(BaseModel):
@@ -391,3 +405,13 @@ class ReportRowDao(BaseModel):
     row: Dict[
         str, Dict[str, Union[StrictStr, StrictFloat, StrictBool, StrictInt, None]]
     ]
+
+
+class MeasureUnitDao(BaseModel):
+    class Meta:
+        pk = "id"
+
+    class Config:
+        title = "unit"
+
+    id: str = Field(max_length=16)

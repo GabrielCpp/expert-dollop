@@ -18,3 +18,4 @@ from .datasheet_element_service import DatasheetElementService
 from .report_definition_service import ReportDefinitionService
 from .report_row_service import ReportRowService
 from .report_definition_row_cache_service import ReportDefinitionRowCacheService
+from .measure_unit_service import MeasureUnitService
