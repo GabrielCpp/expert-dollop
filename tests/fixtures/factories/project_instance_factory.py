@@ -359,13 +359,15 @@ class ProjectInstanceFactory:
                 dependency_graph=FormulaDependencyGraph(
                     formulas=[
                         FormulaDependency(
-                            target_type_id=formulas_by_name[dependant_name].id
+                            target_type_id=formulas_by_name[dependant_name].id,
+                            name=dependant_name,
                         )
                         for dependant_name in formula_seed.formula_dependencies
                     ],
                     nodes=[
                         FormulaDependency(
-                            target_type_id=project_seed.definitions[dependant_name].id
+                            target_type_id=project_seed.definitions[dependant_name].id,
+                            name=dependant_name,
                         )
                         for dependant_name in formula_seed.node_dependencies
                     ],

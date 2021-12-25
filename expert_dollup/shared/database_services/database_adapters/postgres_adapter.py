@@ -244,16 +244,25 @@ class PostgresConnection(DbConnection):
             table = Table(table_name, self.metadata, *columns)
             self.tables[dao_type] = table
 
-    async def truncate_db(self):
+    async def truncate_db(self, tables: Optional[List[str]] = None):
         engine = create_engine(self.connection_string)
-        meta = MetaData()
-        meta.reflect(bind=engine)
         con = engine.connect()
         trans = con.begin()
-        for table in meta.sorted_tables:
-            con.execute(f'ALTER TABLE "{table.name}" DISABLE TRIGGER ALL;')
-            con.execute(table.delete())
-            con.execute(f'ALTER TABLE "{table.name}" ENABLE TRIGGER ALL;')
+
+        if tables is None:
+            meta = MetaData()
+            meta.reflect(bind=engine)
+
+            for table in meta.sorted_tables:
+                con.execute(f'ALTER TABLE "{table.name}" DISABLE TRIGGER ALL;')
+                con.execute(table.delete())
+                con.execute(f'ALTER TABLE "{table.name}" ENABLE TRIGGER ALL;')
+        else:
+            for table in tables:
+                con.execute(f'ALTER TABLE "{table}" DISABLE TRIGGER ALL;')
+                con.execute(f"DELETE FROM {table};")
+                con.execute(f'ALTER TABLE "{table}" ENABLE TRIGGER ALL;')
+
         trans.commit()
 
     async def drop_db(self):
@@ -359,6 +368,9 @@ class PostgresQueryBuilder(QueryBuilder):
         filter_fields = self._mapper.map(pluck_filter, dict, pluck_filter.__class__)
 
         for name, values in filter_fields.items():
+            assert (
+                len(values) <= 1000
+            ), f"Len of batch must be less than 1000, now {len(values)}"
             where_filter = getattr(self._table.c, name).in_(values)
             self._conditions.append(where_filter)
 

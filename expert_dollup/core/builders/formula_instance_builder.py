@@ -5,7 +5,7 @@ from expert_dollup.infra.services import FormulaService
 from expert_dollup.core.domains.formula import *
 
 
-class FormulaCacheResultBuilder:
+class FormulaInstanceBuilder:
     def __init__(self, formula_plucker: Plucker[FormulaService]):
         self.formula_plucker = formula_plucker
 

@@ -11,6 +11,8 @@ from expert_dollup.shared.automapping import Mapper
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.usecases import *
+from expert_dollup.core.builders import *
+from expert_dollup.core.logits import *
 from expert_dollup.infra.services import *
 
 router = APIRouter()
@@ -69,15 +71,43 @@ class MapProjectNodeMetaImportToDomain:
                 definition.id: definition for definition in definitions
             }
 
+        defs = self.node_by_project_id[project_id]
+
         return [
             ProjectNodeMeta(
                 project_id=model.project_id,
                 type_id=model.type_id,
                 state=ProjectNodeMetaState(**model.state.dict()),
-                definition=self.node_by_project_id[project_id][model.type_id],
+                definition=defs[model.type_id],
             )
             for model in models
         ]
+
+
+class RecreateFormulaCacheDto(BaseModel):
+    project_def_id: UUID
+    project_id: UUID
+
+
+class RecreateFormulaCacheAction:
+    def __init__(self):
+        self.dto = RecreateFormulaCacheDto
+
+    async def __call__(self, injector: Injector, ressource_specs: List[BaseModel]):
+        formula_instance_builder = injector.get(FormulaInstanceBuilder)
+        project_node_service = injector.get(ProjectNodeService)
+        formula_instance_service = injector.get(FormulaInstanceService)
+
+        for refresh_action in ressource_specs:
+            nodes = await project_node_service.find_by(
+                ProjectNodeFilter(project_id=refresh_action.project_id)
+            )
+
+            formula_instances = await formula_instance_builder.build(
+                refresh_action.project_def_id, nodes
+            )
+
+            await formula_instance_service.insert_many(formula_instances)
 
 
 ressources = {
@@ -134,6 +164,7 @@ ressources = {
         dto=FormulaExpressionDto,
         domain=FormulaExpression,
         usecase=FormulaUseCase,
+        method="add_many",
     ),
     "/api/unit": RessourceLoader(
         dto=MeasureUnitDto,
@@ -165,6 +196,7 @@ ressources = {
         method="insert_many",
         perform_complex_mapping=MapProjectNodeMetaImportToDomain(),
     ),
+    "/api/recreate_formula_cache": RecreateFormulaCacheAction(),
 }
 
 
@@ -181,6 +213,11 @@ async def import_definitiown_set(
             return
 
         ressource_loader = ressources[ressource_type]
+
+        if callable(ressource_loader):
+            await ressource_loader(injector, ressource_specs)
+            return
+
         usecase = injector.get(ressource_loader.usecase)
         do_import = getattr(usecase, ressource_loader.method)
         ressources_domain = await ressource_loader.do_mapping(

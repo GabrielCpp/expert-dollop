@@ -6,7 +6,7 @@ from expert_dollup.infra.services import (
     ProjectNodeService,
     ProjectDefinitionNodeService,
 )
-from .formula_cache_result_builder import FormulaCacheResultBuilder
+from .formula_instance_builder import FormulaInstanceBuilder
 
 
 class ProjectNodeSliceBuilder:
@@ -14,7 +14,7 @@ class ProjectNodeSliceBuilder:
         self,
         project_node_service: ProjectNodeService,
         project_definition_node_service: ProjectDefinitionNodeService,
-        formula_cache_result_builder: FormulaCacheResultBuilder,
+        formula_cache_result_builder: FormulaInstanceBuilder,
     ):
         self.project_node_service = project_node_service
         self.project_definition_node_service = project_definition_node_service

@@ -480,11 +480,15 @@ def map_formula_to_dao(src: Formula, mapper: Mapper) -> ProjectDefinitionFormula
         expression=src.expression,
         dependency_graph=FormulaDependencyGraphDao(
             formulas=[
-                FormulaDependencyDao(target_type_id=dependency.target_type_id)
+                FormulaDependencyDao(
+                    target_type_id=dependency.target_type_id, name=dependency.name
+                )
                 for dependency in src.dependency_graph.formulas
             ],
             nodes=[
-                FormulaDependencyDao(target_type_id=dependency.target_type_id)
+                FormulaDependencyDao(
+                    target_type_id=dependency.target_type_id, name=dependency.name
+                )
                 for dependency in src.dependency_graph.nodes
             ],
         ),
@@ -500,11 +504,15 @@ def map_formula_from_dao(src: ProjectDefinitionFormulaDao, mapper: Mapper) -> Fo
         expression=src.expression,
         dependency_graph=FormulaDependencyGraph(
             formulas=[
-                FormulaDependency(target_type_id=dependency.target_type_id)
+                FormulaDependency(
+                    target_type_id=dependency.target_type_id, name=dependency.name
+                )
                 for dependency in src.dependency_graph.formulas
             ],
             nodes=[
-                FormulaDependency(target_type_id=dependency.target_type_id)
+                FormulaDependency(
+                    target_type_id=dependency.target_type_id, name=dependency.name
+                )
                 for dependency in src.dependency_graph.nodes
             ],
         ),

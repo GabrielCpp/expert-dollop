@@ -18,7 +18,7 @@ from expert_dollup.core.domains import (
 
 
 from expert_dollup.infra.services import *
-from .formula_cache_result_builder import FormulaCacheResultBuilder
+from .formula_instance_builder import FormulaInstanceBuilder
 
 
 class TriggerHandler:
@@ -46,7 +46,7 @@ class ProjectBuilder:
         project_node_meta_service: ProjectNodeMetaService,
         project_definition_node_service: ProjectDefinitionNodeService,
         ressource_builder: RessourceBuilder,
-        formula_cache_result_builder: FormulaCacheResultBuilder,
+        formula_cache_result_builder: FormulaInstanceBuilder,
     ):
         self.project_definition_node_service = project_definition_node_service
         self.project_node_meta_service = project_node_meta_service

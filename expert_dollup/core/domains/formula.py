@@ -9,6 +9,7 @@ from .project_node import ProjectNode
 @dataclass
 class FormulaDependency:
     target_type_id: UUID
+    name: str
 
 
 @dataclass

@@ -21,12 +21,12 @@ class PluckQuery(Plucker):
         if current_batch:
             yield current_batch
 
-    def __init__(self, service: CollectionService[Domain], batch_size: int = 100):
+    def __init__(self, service: CollectionService[Domain]):
         self.service = service
-        self.batch_size = batch_size
+        self.batch_size = 1000
 
     async def pluck_batches(
-        self, build_pluck_filter: QueryFilter, *ids_lists: List[List[UUID]]
+        self, build_pluck_filter: QueryFilter, *ids_lists: List[UUID]
     ) -> List[Domain]:
 
         for args in zip(*[PluckQuery.batch(ids, self.batch_size) for ids in ids_lists]):
@@ -36,9 +36,7 @@ class PluckQuery(Plucker):
             results = await self.service.find_by(query)
             yield results
 
-    async def plucks(
-        self, build_pluck_filter: QueryFilter, *ids_lists: List[List[UUID]]
-    ):
+    async def plucks(self, build_pluck_filter: QueryFilter, *ids_lists: List[UUID]):
         all_results = []
 
         async for batch_results in self.pluck_batches(build_pluck_filter, *ids_lists):

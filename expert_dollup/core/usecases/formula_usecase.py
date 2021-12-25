@@ -1,8 +1,12 @@
+from typing import List
 from uuid import UUID
-from expert_dollup.core.domains import Formula
-from expert_dollup.core.domains.formula import FormulaExpression
+from expert_dollup.core.domains import Formula, FormulaInstance, FormulaExpression
 from expert_dollup.core.units import FormulaResolver
-from expert_dollup.infra.services import FormulaService, ProjectService
+from expert_dollup.infra.services import (
+    FormulaService,
+    ProjectService,
+    FormulaInstanceService,
+)
 
 
 class FormulaUseCase:
@@ -11,10 +15,12 @@ class FormulaUseCase:
         formula_service: FormulaService,
         formula_resolver: FormulaResolver,
         project_service: ProjectService,
+        formula_instance_service: FormulaInstanceService,
     ):
         self.formula_service = formula_service
         self.formula_resolver = formula_resolver
         self.project_service = project_service
+        self.formula_instance_service = formula_instance_service
 
     async def find_by_id(self, formula_id: UUID) -> Formula:
         return await self.formula_service.find_by_id(formula_id)
@@ -28,11 +34,16 @@ class FormulaUseCase:
 
         return formula
 
+    async def add_many(self, formula_expressions: List[FormulaExpression]):
+        formulas = await self.formula_resolver.parse_many(formula_expressions)
+        await self.formula_service.insert_many(formulas)
+
     async def delete_by_id(self, formula_id: UUID, remove_recursively: bool):
         await self.formula_service.find_by_id(formula_id)
 
-    async def compute_project_formulas(self, project_id):
+    async def compute_project_formulas(self, project_id) -> List[FormulaInstance]:
         project = await self.project_service.find_by_id(project_id)
-        await self.formula_resolver.compute_all_project_formula(
+        instances = await self.formula_resolver.compute_all_project_formula(
             project_id, project.project_def_id
         )
+        return instances

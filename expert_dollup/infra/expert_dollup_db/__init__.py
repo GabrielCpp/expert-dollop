@@ -173,6 +173,7 @@ class SettingDao(BaseModel):
 
 class FormulaDependencyDao(BaseModel):
     target_type_id: UUID
+    name: str
 
 
 class FormulaDependencyGraphDao(BaseModel):
