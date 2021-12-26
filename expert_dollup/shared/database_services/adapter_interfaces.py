@@ -120,6 +120,10 @@ class CollectionService(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
+    async def upserts(self, domains: List[Domain]) -> None:
+        pass
+
+    @abstractmethod
     async def find_all(self, limit: int = 1000) -> List[Domain]:
         pass
 

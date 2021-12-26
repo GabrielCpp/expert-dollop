@@ -1,5 +1,3 @@
-import json
-import dataclasses
 from typing import (
     List,
     TypeVar,
@@ -9,15 +7,13 @@ from typing import (
     Type,
     Tuple,
     Union,
-    Set,
-    Any,
 )
 from pydantic import BaseModel, ConstrainedStr
 from pydantic.fields import ModelField
 from dataclasses import dataclass
 from inspect import isclass
 from uuid import UUID
-from datetime import datetime, date
+from datetime import datetime
 from databases import Database
 from databases.backends.postgres import PostgresBackend
 from sqlalchemy import (
@@ -33,10 +29,8 @@ from sqlalchemy import (
     String,
     Boolean,
     DateTime,
-    Text,
     Integer,
 )
-from sqlalchemy import schema
 from sqlalchemy.schema import FetchedValue
 from sqlalchemy.sql import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -52,33 +46,8 @@ from ..adapter_interfaces import (
 from ..page import Page
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
-
-
-class ExtraEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, UUID):
-            return str(obj)
-
-        if dataclasses.is_dataclass(obj):
-            return dataclasses.asdict(obj)
-
-        if isinstance(obj, (date, datetime)):
-            return obj.isoformat()
-
-        if isinstance(obj, BaseModel):
-            return obj.dict()
-
-        return json.JSONEncoder.default(self, obj)
-
-
-class JsonSerializer:
-    @staticmethod
-    def encode(x: str) -> Any:
-        return json.dumps(x, indent=2, sort_keys=True, cls=ExtraEncoder)
-
-    @staticmethod
-    def decode(x: str):
-        return json.loads(x)
+from ..batch_helper import batch
+from ..json_serializer import JsonSerializer
 
 
 NoneType = type(None)
@@ -459,6 +428,22 @@ class PostgresTableService(CollectionService[Domain]):
             await self._insert_many_raw(dicts)
         else:
             query = pg_insert(self._table, dicts)
+            await self._database.execute(query=query)
+
+    async def upserts(self, domains: List[Domain]) -> None:
+        if len(domains) == 0:
+            return
+
+        dicts = self._map_many_to_dict(domains)
+        constraint = f"{self._table.name}_pkey"
+
+        for items in batch(dicts, 1000):
+            query = pg_insert(self._table, items)
+            set_ = {c.name: c for c in query.excluded if not c.primary_key}
+            query = query.on_conflict_do_update(
+                constraint=constraint,
+                set_=set_,
+            )
             await self._database.execute(query=query)
 
     async def find_all(self, limit: int = 1000) -> List[Domain]:

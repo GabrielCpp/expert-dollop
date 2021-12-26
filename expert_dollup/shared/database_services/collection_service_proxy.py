@@ -31,6 +31,9 @@ class CollectionServiceProxy(CollectionService[Domain]):
     async def insert_many(self, domains: List[Domain]):
         return await self._impl.insert_many(domains)
 
+    async def upserts(self, domains: List[Domain]) -> None:
+        await self._impl.upserts(domains)
+
     async def find_all(self, limit: int = 1000) -> List[Domain]:
         return await self._impl.find_all(limit)
 

@@ -89,11 +89,6 @@ class AstVirtualMachine:
 
             raise Exception("Unsupported BoolOp")
 
-        if isinstance(node, ast.Attribute):
-            print(node.value)
-            print(node.attr)
-            assert False
-
         if isinstance(node, ast.Expr):
             return self.compute(node.value, scope)
 
@@ -139,7 +134,6 @@ class AstVirtualMachine:
                 return left - right
 
             if isinstance(node.op, ast.Mult):
-                print(left, right)
                 return left * right
 
             if isinstance(node.op, ast.Div):
