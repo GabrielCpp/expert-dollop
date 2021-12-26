@@ -48,7 +48,6 @@ from .formula import (
     Formula,
     FormulaExpression,
     FormulaInstance,
-    ComputedFormula,
     FieldNode,
     FormulaFilter,
     FormulaPluckFilter,
@@ -56,6 +55,7 @@ from .formula import (
     FormulaCachePluckFilter,
     FormulaDependencyGraph,
     FormulaDependency,
+    AstNode,
 )
 
 from .datasheet_definition import DatasheetDefinition, ElementPropertySchema

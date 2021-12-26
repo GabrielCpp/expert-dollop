@@ -1,19 +1,15 @@
 import ast
-from ast import *
-from expert_dollup.core.domains.formula import FieldNode, FormulaInstanceFilter
-from typing import List, Union, Dict
-from math import sqrt
+from functools import cached_property
+from expert_dollup.core.domains.formula import FormulaInstanceFilter
+from typing import List, Union, Dict, Set
 from uuid import UUID
 from collections import defaultdict
 from expert_dollup.core.domains import (
     Formula,
     FormulaExpression,
     FormulaInstance,
-    ComputedFormula,
     FormulaDependencyGraph,
     FormulaDependency,
-    FormulaPluckFilter,
-    NodePluckFilter,
 )
 from expert_dollup.core.domains.project_definition_node import ValueUnion
 from expert_dollup.core.domains.project_node import ProjectNode
@@ -25,13 +21,7 @@ from expert_dollup.infra.services import (
 )
 from expert_dollup.core.queries import Plucker
 from expert_dollup.core.logits import FormulaVisitor
-
-
-def safe_div(a, b):
-    if b == 0:
-        return 0
-
-    return a / b
+import expert_dollup.core.logits.formula_processor as formula_processor
 
 
 class FormulaInjector:
@@ -74,178 +64,51 @@ class FormulaInjector:
 class FormulaUnit:
     def __init__(
         self,
-        computed_formula: ComputedFormula,
+        formula_instance: FormulaInstance,
+        final_ast: dict,
         formula_injector: FormulaInjector,
     ):
-        self._computed_formula = computed_formula
+        self._formula_instance = formula_instance
+        self._final_ast = final_ast
         self._formula_injector = formula_injector
 
     @property
     def dependencies(self) -> List[str]:
-        merged_dependencies = []
-
-        for dependency in self._computed_formula.formula.dependency_graph.formulas:
-            merged_dependencies.append(dependency.name)
-
-        for dependency in self._computed_formula.formula.dependency_graph.nodes:
-            merged_dependencies.append(dependency.name)
-
-        return merged_dependencies
+        return self._formula_instance.formula_dependencies
 
     @property
     def node_id(self) -> UUID:
-        return self._computed_formula.result.node_id
+        return self._formula_instance.node_id
 
     @property
     def path(self) -> List[UUID]:
-        return self._computed_formula.node.path
+        return self._formula_instance.node_path
 
     @property
     def name(self) -> str:
-        return self._computed_formula.formula.name
-
-    @property
-    def expression_body(self) -> AST:
-        return self._computed_formula.final_ast.body[0]
+        return self._formula_instance.formula_name
 
     @property
     def formula_id(self) -> UUID:
-        return self._computed_formula.result.formula_id
+        return self._formula_instance.formula_id
 
-    @property
-    def value(self):
+    @cached_property
+    def computed(self) -> FormulaInstance:
         self.units = {
             name: self._formula_injector.get_unit(self.node_id, self.path, name)
             for name in self.dependencies
         }
 
-        result, calculation_details = self._compute(self.expression_body)
-        self.calculation_details = calculation_details
+        result, calculation_details = formula_processor.dispatch(self._final_ast, self)
 
-        return result
+        self._formula_instance.result = result
+        self._formula_instance.calculation_details = calculation_details
 
-    def _compute(self, node):
-        if isinstance(node, ast.Expr):
-            return self._compute(node.value)
+        return self._formula_instance
 
-        if isinstance(node, ast.Name):
-            assert (
-                node.id in self.units
-            ), f"{node.id} not part of formula {self.name} which contains {self.units.keys()}"
-            values = self.units[node.id]
-
-            if len(values) == 1:
-                return values[0].value, f"<{node.id}, {values[0].value}>"
-
-            sum_result = sum(unit.value for unit in self.units[node.id])
-
-            return sum_result, f"sum(<{node.id}, {sum_result}>)"
-
-        if isinstance(node, ast.Constant):
-            return node.value, f"{node.value}"
-
-        if isinstance(node, ast.Num):
-            return node.n, f"{node.n}"
-
-        if isinstance(node, ast.Str):
-            return node.s, f"{node.s}"
-
-        if isinstance(node, ast.UnaryOp):
-            operand = self._compute(node.operand)
-
-            if isinstance(node.op, ast.UAdd):
-                return +operand, f"+{operand}"
-
-            if isinstance(node.op, ast.USub):
-                return -operand, f"-{operand}"
-
-            if isinstance(node.op, ast.Not):
-                return not operand, f"!{operand}"
-
-            raise Exception("Unsupported unary op")
-
-        if isinstance(node, ast.BinOp):
-            left, left_details = self._compute(node.left)
-            right, right_details = self._compute(node.right)
-
-            if isinstance(node.op, ast.Add):
-                return left + right, f"{left_details} + {right_details}"
-
-            if isinstance(node.op, ast.Sub):
-                return left - right, f"{left_details} - {right_details}"
-
-            if isinstance(node.op, ast.Mult):
-                return left * right, f"{left_details} * {right_details}"
-
-            if isinstance(node.op, ast.Div):
-                return (
-                    safe_div(left, right),
-                    f"safe_div({left_details}, {right_details})",
-                )
-
-            raise Exception("Unsupported binary op")
-
-        if isinstance(node, ast.Compare):
-            left, left_details = self._compute(node.left)
-            result = left
-            details = f"{left_details}"
-
-            for comparator, op in zip(node.comparators, node.ops):
-                right, right_details = self._compute(comparator)
-
-                if isinstance(op, ast.Eq):
-                    result = left == right
-                    details = details + f" == {right_details}"
-
-                elif isinstance(op, ast.NotEq):
-                    result = left != right
-                    details = details + f" != {right_details}"
-
-                elif isinstance(op, ast.Lt):
-                    result = left < right
-                    details = details + f" < {right_details}"
-
-                elif isinstance(op, ast.LtE):
-                    result = left <= right
-                    details = details + f" <= {right_details}"
-
-                elif isinstance(op, ast.Gt):
-                    result = left > right
-                    details = details + f" > {right_details}"
-
-                elif isinstance(op, ast.GtE):
-                    result = left >= right
-                    details = details + f" >= {right_details}"
-                else:
-                    raise Exception("Unssuported comparator")
-
-                left = right
-
-            return result, details
-
-        if isinstance(node, ast.Call):
-            if not isinstance(node.func, ast.Name):
-                raise Exception("Functino only support direct reference")
-
-            args = []
-            details = []
-
-            for arg in node.args:
-                result, calculation_details = self._compute(arg)
-                args.append(result)
-                details.append(calculation_details)
-
-            details_str = ", ".join(details)
-
-            if node.func.id == "safe_div":
-                return safe_div(*args), f"safe_div({details_str})"
-
-            if node.func.id == "sqrt":
-                return sqrt(*args), f"sqrt({details_str})"
-
-            raise Exception(f"Unknown function {node.func.id}")
-
-        raise Exception(f"Unsupported node {type(node)}")
+    @property
+    def value(self):
+        return self.computed.result
 
 
 class FieldUnit:
@@ -269,35 +132,20 @@ class FieldUnit:
         return self._node.type_name
 
 
-class SafeguardDivision(ast.NodeTransformer):
-    def visit_BinOp(self, node: BinOp):
-        if isinstance(node.op, Div):
-            return Call(
-                func=ast.Name(id="safe_div", ctx=ast.Load()),
-                args=[
-                    self.generic_visit(node.left),
-                    self.generic_visit(node.right),
-                ],
-                keywords=[],
-            )
-
-        return self.generic_visit(node)
-
-
 class FormulaResolver:
     def __init__(
         self,
         formula_service: FormulaService,
         project_node_service: ProjectNodeService,
         project_definition_node_service: ProjectDefinitionNodeService,
-        formula_cache_service: FormulaInstanceService,
+        formula_instance_service: FormulaInstanceService,
         formulas_plucker: Plucker[FormulaService],
         nodes_plucker: Plucker[ProjectNodeService],
     ):
         self.formula_service = formula_service
         self.project_node_service = project_node_service
         self.project_definition_node_service = project_definition_node_service
-        self.formula_cache_service = formula_cache_service
+        self.formula_instance_service = formula_instance_service
         self.formulas_plucker = formulas_plucker
         self.nodes_plucker = nodes_plucker
 
@@ -362,6 +210,9 @@ class FormulaResolver:
                 attached_to_type_id=formula_expression.attached_to_type_id,
                 name=formula_expression.name,
                 expression=formula_expression.expression,
+                final_ast=formula_processor.serialize_post_processed_expression(
+                    formula_expression.expression
+                ),
                 dependency_graph=FormulaDependencyGraph(
                     formulas=[
                         FormulaDependency(
@@ -427,6 +278,9 @@ class FormulaResolver:
             attached_to_type_id=formula_expression.attached_to_type_id,
             name=formula_expression.name,
             expression=formula_expression.expression,
+            final_ast=formula_processor.serialize_post_processed_expression(
+                formula_expression.expression
+            ),
             dependency_graph=FormulaDependencyGraph(
                 formulas=[
                     FormulaDependency(target_type_id=formula_id, name=name)
@@ -442,7 +296,7 @@ class FormulaResolver:
         return formula
 
     async def compute_all_project_formula(
-        self, project_id: UUID, project_definition_id: UUID
+        self, project_id: UUID, project_def_id: UUID
     ) -> List[FormulaInstance]:
         injector = FormulaInjector()
         nodes = await self.project_node_service.get_all_fields(project_id)
@@ -450,72 +304,25 @@ class FormulaResolver:
         for node in nodes:
             injector.add_unit(FieldUnit(node))
 
-        computed_formulas = await self.get_all_project_formula_ast(
-            project_id, project_definition_id
-        )
-
-        for computed_formula in computed_formulas:
-            unit = FormulaUnit(
-                computed_formula,
-                injector,
-            )
-            injector.add_unit(unit)
-
-        cached_results = [
-            FormulaInstance(
-                project_id=project_id,
-                formula_id=unit.formula_id,
-                node_id=unit.node_id,
-                result=unit.value,
-                calculation_details=unit.calculation_details,
-            )
-            for unit in injector.units
-        ]
-
-        await self.formula_cache_service.repopulate(project_id, cached_results)
-
-        return cached_results
-
-    async def get_all_project_formula_ast(
-        self, project_id: UUID, project_definition_id: UUID
-    ) -> List[ComputedFormula]:
-        def post_process_ast(formula_ast: AST):
-            return SafeguardDivision().visit(formula_ast)
-
-        def build_computed_formula(
-            result: FormulaInstance,
-            formulas_by_id: Dict[UUID, Formula],
-            nodes_by_id: Dict[UUID, ProjectNode],
-        ):
-            formula = formulas_by_id[result.formula_id]
-            node = nodes_by_id[result.node_id]
-            final_ast = post_process_ast(ast.parse(formula.expression))
-
-            return ComputedFormula(
-                formula=formula,
-                result=result,
-                node=node,
-                final_ast=final_ast,
-            )
-
-        results = await self.formula_cache_service.find_by(
+        formula_instances = await self.formula_instance_service.find_by(
             FormulaInstanceFilter(project_id=project_id)
         )
 
-        formulas = await self.formulas_plucker.plucks(
-            lambda ids: FormulaPluckFilter(ids=ids),
-            list(set(result.formula_id for result in results)),
+        formula_final_ast_by_formula_id = (
+            await self.formula_service.find_formula_final_ast_by_formula_id(
+                project_def_id
+            )
         )
 
-        formulas_by_id = {formula.id: formula for formula in formulas}
+        for formula_instance in formula_instances:
+            injector.add_unit(
+                FormulaUnit(
+                    formula_instance,
+                    formula_final_ast_by_formula_id[formula_instance.formula_id],
+                    injector,
+                )
+            )
 
-        nodes = await self.nodes_plucker.plucks(
-            lambda ids: NodePluckFilter(ids=ids),
-            [result.node_id for result in results],
-        )
-        nodes_by_id = {node.id: node for node in nodes}
+        cached_results = [unit.computed for unit in injector.units]
 
-        return [
-            build_computed_formula(result, formulas_by_id, nodes_by_id)
-            for result in results
-        ]
+        return cached_results

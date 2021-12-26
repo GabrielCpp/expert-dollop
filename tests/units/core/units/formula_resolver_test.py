@@ -93,7 +93,7 @@ async def test_given_formula_instances_should_compute_collection():
     formula_service = StrictInterfaceSetup(FormulaService)
     project_node_service = StrictInterfaceSetup(ProjectNodeService)
     project_definition_node_service = StrictInterfaceSetup(ProjectNodeService)
-    formula_cache_service = StrictInterfaceSetup(FormulaInstanceService)
+    formula_instance_service = StrictInterfaceSetup(FormulaInstanceService)
     formulas_plucker = StrictInterfaceSetup(Plucker)
     nodes_plucker = StrictInterfaceSetup(Plucker)
 
@@ -104,12 +104,12 @@ async def test_given_formula_instances_should_compute_collection():
         lambda x: x.get_all_fields(fixture.project.id), returns_async=fields
     )
 
-    formula_cache_service.setup(
+    formula_instance_service.setup(
         lambda x: x.find_by(FormulaInstanceFilter(project_id=fixture.project.id)),
         returns_async=fixture.formula_instances,
     )
 
-    formula_cache_service.setup(
+    formula_instance_service.setup(
         lambda x: x.repopulate(fixture.project.id, lambda _: True),
         returns_async=None,
         compare_method=compare_per_arg,
@@ -134,7 +134,7 @@ async def test_given_formula_instances_should_compute_collection():
         formula_service.object,
         project_node_service.object,
         project_definition_node_service.object,
-        formula_cache_service.object,
+        formula_instance_service.object,
         formulas_plucker.object,
         nodes_plucker.object,
     )

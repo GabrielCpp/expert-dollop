@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import UUID
 from .helpers import make_uuid
 from expert_dollup.core.domains import *
+from expert_dollup.core.logits import serialize_post_processed_expression
 
 
 class FormulaSeed:
@@ -356,6 +357,7 @@ class ProjectInstanceFactory:
                 attached_to_type_id=formula_seed.node.definition.id,
                 expression=formula_seed.expression,
                 name=formula_seed.name,
+                final_ast=serialize_post_processed_expression(formula_seed.expression),
                 dependency_graph=FormulaDependencyGraph(
                     formulas=[
                         FormulaDependency(
@@ -381,6 +383,12 @@ class ProjectInstanceFactory:
                 project_id=project.id,
                 formula_id=formula_instance.id,
                 node_id=formula_instance.node.id,
+                node_path=formula_instance.path,
+                formula_name=formula_instance.name,
+                formula_dependencies=[
+                    *formula_instance.formula_dependencies,
+                    *formula_instance.node_dependencies,
+                ],
                 calculation_details=formula_instance.calculation_details,
                 result=formula_instance.result,
             )

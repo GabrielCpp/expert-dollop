@@ -42,8 +42,9 @@ class FormulaUseCase:
         await self.formula_service.find_by_id(formula_id)
 
     async def compute_project_formulas(self, project_id) -> List[FormulaInstance]:
-        project = await self.project_service.find_by_id(project_id)
+        project_details = await self.project_service.find_by_id(project_id)
         instances = await self.formula_resolver.compute_all_project_formula(
-            project_id, project.project_def_id
+            project_id, project_details.project_def_id
         )
+        await self.formula_instance_service.repopulate(project_id, instances)
         return instances

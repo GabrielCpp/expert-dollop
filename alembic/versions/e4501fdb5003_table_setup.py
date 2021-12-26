@@ -115,6 +115,7 @@ def create_project_definition_tables():
         Column("attached_to_type_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
         Column("expression", String, nullable=False),
+        Column("final_ast", postgresql.JSON(), nullable=False),
         Column("dependency_graph", postgresql.JSON(), nullable=False),
     )
 
@@ -184,6 +185,9 @@ def create_project_tables():
         Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("node_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("node_path", String, nullable=False),
+        Column("formula_name", String, nullable=False),
+        Column("formula_dependencies", postgresql.JSON(), nullable=False),
         Column("calculation_details", String, nullable=False),
         Column("result", postgresql.JSON(), nullable=False),
         Column("last_modified_date_utc", DateTime(timezone=True), nullable=False),

@@ -1,8 +1,10 @@
 from typing import List, Dict
+from uuid import UUID
 from collections import defaultdict
 from expert_dollup.core.queries import Plucker
 from expert_dollup.infra.services import FormulaService
-from expert_dollup.core.domains.formula import *
+from expert_dollup.core.domains import *
+from expert_dollup.core.logits import serialize_post_processed_expression
 
 
 class FormulaInstanceBuilder:
@@ -36,6 +38,9 @@ class FormulaInstanceBuilder:
                         project_id=node.project_id,
                         formula_id=formula.id,
                         node_id=node.id,
+                        node_path=node.path,
+                        formula_name=formula.name,
+                        formula_dependencies=formula.dependency_graph.dependencies,
                         calculation_details="<was not calculated yet>",
                         result=0,
                     )

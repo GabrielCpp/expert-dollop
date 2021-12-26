@@ -50,11 +50,11 @@ class PluckQuery(Plucker):
         build_pluck_filter: QueryFilter,
         *ids_lists: List[List[UUID]]
     ) -> List[Domain]:
-        builder = self.service.get_builder().find_by(ressource_filter)
+
         all_results = []
 
         async for batch_results in self._pluck_by_batch(
-            builder, build_pluck_filter, *ids_lists
+            ressource_filter, build_pluck_filter, *ids_lists
         ):
             all_results.extend(batch_results)
 
@@ -62,13 +62,18 @@ class PluckQuery(Plucker):
 
     async def _pluck_by_batch(
         self,
-        builder: QueryBuilder,
+        ressource_filter: QueryFilter,
         build_pluck_filter: QueryFilter,
         *ids_lists: List[List[UUID]]
     ):
         for args in zip(*[PluckQuery.batch(ids, self.batch_size) for ids in ids_lists]):
-
             pluck_filter = build_pluck_filter(*args)
-            query = builder.pluck(pluck_filter).finalize()
+            query = (
+                self.service.get_builder()
+                .find_by(ressource_filter)
+                .pluck(pluck_filter)
+                .finalize()
+            )
+
             results = await self.service.find_by(query)
             yield results

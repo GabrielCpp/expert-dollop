@@ -1,9 +1,7 @@
 from uuid import UUID
-from dataclasses import dataclass, asdict
-from typing import List, Optional, Union
-from ast import AST
+from dataclasses import dataclass, asdict, field
+from typing import List, Optional, Union, Dict
 from expert_dollup.shared.database_services import QueryFilter
-from .project_node import ProjectNode
 
 
 @dataclass
@@ -16,6 +14,29 @@ class FormulaDependency:
 class FormulaDependencyGraph:
     formulas: List[FormulaDependency]
     nodes: List[FormulaDependency]
+
+    @property
+    def dependencies(self) -> List[str]:
+        dependencies_concat: List[str] = []
+
+        for formula in self.formulas:
+            dependencies_concat.append(formula.name)
+
+        for node in self.nodes:
+            dependencies_concat.append(node.name)
+
+        return dependencies_concat
+
+
+@dataclass
+class AstNode:
+    kind: str
+    values: Dict[str, Union[str, bool, int, float]] = field(default_factory=dict)
+    properties: Dict[str, "AstNode"] = field(default_factory=dict)
+    children: Dict[str, List["AstNode"]] = field(default_factory=dict)
+
+    def dict(self) -> dict:
+        return asdict(self)
 
 
 @dataclass
@@ -30,6 +51,7 @@ class FormulaExpression:
 @dataclass
 class Formula(FormulaExpression):
     dependency_graph: FormulaDependencyGraph
+    final_ast: dict
 
 
 @dataclass
@@ -37,6 +59,9 @@ class FormulaInstance:
     project_id: UUID
     formula_id: UUID
     node_id: UUID
+    node_path: List[UUID]
+    formula_name: str
+    formula_dependencies: List[str]
     calculation_details: str
     result: Union[str, bool, int, float]
 
@@ -53,14 +78,6 @@ class FieldNode:
     type_id: UUID
     type_path: List[UUID]
     expression: Union[str, int, float, bool]
-
-
-@dataclass
-class ComputedFormula:
-    formula: Formula
-    result: FormulaInstance
-    node: ProjectNode
-    final_ast: AST
 
 
 class FormulaFilter(QueryFilter):

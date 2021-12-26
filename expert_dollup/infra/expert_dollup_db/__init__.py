@@ -193,6 +193,7 @@ class ProjectDefinitionFormulaDao(BaseModel):
     attached_to_type_id: UUID
     name: str
     expression: str
+    final_ast: dict
     dependency_graph: FormulaDependencyGraphDao
 
 
@@ -206,6 +207,9 @@ class ProjectFormulaInstanceDao(BaseModel):
     project_id: UUID
     formula_id: UUID
     node_id: UUID
+    node_path: str
+    formula_name: str
+    formula_dependencies: List[str]
     calculation_details: str
     result: Union[int, str, float, bool]
     last_modified_date_utc: datetime

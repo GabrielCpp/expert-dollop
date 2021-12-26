@@ -478,6 +478,7 @@ def map_formula_to_dao(src: Formula, mapper: Mapper) -> ProjectDefinitionFormula
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
+        final_ast=src.final_ast,
         dependency_graph=FormulaDependencyGraphDao(
             formulas=[
                 FormulaDependencyDao(
@@ -502,6 +503,7 @@ def map_formula_from_dao(src: ProjectDefinitionFormulaDao, mapper: Mapper) -> Fo
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
+        final_ast=src.final_ast,
         dependency_graph=FormulaDependencyGraph(
             formulas=[
                 FormulaDependency(
@@ -519,26 +521,32 @@ def map_formula_from_dao(src: ProjectDefinitionFormulaDao, mapper: Mapper) -> Fo
     )
 
 
-def map_formula_cache_result_to_dao(
+def map_formula_instance_to_dao(
     src: FormulaInstance, mapper: Mapper
 ) -> ProjectFormulaInstanceDao:
     return ProjectFormulaInstanceDao(
         project_id=src.project_id,
         formula_id=src.formula_id,
         node_id=src.node_id,
+        node_path=join_uuid_path(src.node_path),
+        formula_name=src.formula_name,
+        formula_dependencies=src.formula_dependencies,
         calculation_details=src.calculation_details,
         result=src.result,
         last_modified_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
-def map_formula_cache_result_from_dao(
+def map_formula_instance_from_dao(
     src: ProjectFormulaInstanceDao, mapper: Mapper
 ) -> FormulaInstance:
     return FormulaInstance(
         project_id=src.project_id,
         formula_id=src.formula_id,
         node_id=src.node_id,
+        node_path=split_uuid_path(src.node_path),
+        formula_name=src.formula_name,
+        formula_dependencies=src.formula_dependencies,
         calculation_details=src.calculation_details,
         result=src.result,
     )
