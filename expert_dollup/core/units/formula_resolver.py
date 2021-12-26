@@ -71,6 +71,7 @@ class FormulaUnit:
         self._formula_instance = formula_instance
         self._final_ast = final_ast
         self._formula_injector = formula_injector
+        self._touched = None
 
     @property
     def dependencies(self) -> List[str]:
@@ -101,10 +102,22 @@ class FormulaUnit:
 
         result, calculation_details = formula_processor.dispatch(self._final_ast, self)
 
-        self._formula_instance.result = result
-        self._formula_instance.calculation_details = calculation_details
+        if result != self._formula_instance.result:
+            self._formula_instance.result = result
+            self._touched = True
+
+        if self._formula_instance.calculation_details != calculation_details:
+            self._formula_instance.calculation_details = calculation_details
+            self._touched = True
 
         return self._formula_instance
+
+    @property
+    def touched(self) -> bool:
+        if self._touched is None:
+            self.computed
+
+        return self._touched
 
     @property
     def value(self):
@@ -323,6 +336,6 @@ class FormulaResolver:
                 )
             )
 
-        cached_results = [unit.computed for unit in injector.units]
+        updated_instances = [unit.computed for unit in injector.units]
 
-        return cached_results
+        return updated_instances
