@@ -3,7 +3,8 @@ from uuid import UUID
 from typing import List, Dict, Union
 from expert_dollup.shared.database_services import QueryFilter
 
-ReportRowDict = Dict[str, Dict[str, Union[str, float, bool, int, None]]]
+ReportColumnDict = Dict[str, Union[str, float, bool, int, UUID, List[UUID], None]]
+ReportRowDict = Dict[str, ReportColumnDict]
 
 
 @dataclass
@@ -15,6 +16,7 @@ class ReportJoin:
     alias_name: str
     warn_about_idle_items: bool = True
     same_cardinality: bool = False
+    allow_dicard_element: bool = False
 
 
 @dataclass

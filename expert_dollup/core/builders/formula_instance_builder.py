@@ -40,10 +40,57 @@ class FormulaInstanceBuilder:
                         node_id=node.id,
                         node_path=node.path,
                         formula_name=formula.name,
-                        formula_dependencies=formula.dependency_graph.dependencies,
                         calculation_details="<was not calculated yet>",
                         result=0,
                     )
                 )
+
+        return formulas_result
+
+    def build_with_fields(
+        self, formulas: List[Formula], nodes: List[ProjectNode]
+    ) -> List[FormulaInstance]:
+        formulas_result: List[FormulaInstance] = []
+        parent_node_by_type_id = defaultdict(list)
+        project_id = nodes[0].project_id
+        done_nodes = set()
+        skipped_formulas = set()
+
+        for node in nodes:
+            assert node.project_id == project_id
+            assert len(node.path) == 4
+
+            for index in range(0, len(node.path)):
+                node_id = node.path[index]
+
+                if node_id in done_nodes:
+                    continue
+
+                done_nodes.add(node_id)
+                parent_node_by_type_id[node.type_path[index]].append(
+                    (node_id, [] if index == 0 else node.path[0:index])
+                )
+
+        for formula in formulas:
+            if not formula.attached_to_type_id in parent_node_by_type_id:
+                skipped_formulas.add(formula.attached_to_type_id)
+                continue
+
+            parent_nodes = parent_node_by_type_id[formula.attached_to_type_id]
+
+            for node_id, node_path in parent_nodes:
+                formulas_result.append(
+                    FormulaInstance(
+                        project_id=project_id,
+                        formula_id=formula.id,
+                        node_id=node_id,
+                        node_path=node_path,
+                        formula_name=formula.name,
+                        calculation_details="<was not calculated yet>",
+                        result=0,
+                    )
+                )
+
+        print(skipped_formulas)
 
         return formulas_result

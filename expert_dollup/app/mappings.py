@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from uuid import UUID, uuid4
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import Mapper, RevervibleUnionMapping
@@ -928,6 +927,7 @@ def map_report_join_from_dto(src: ReportJoinDto, mapper: Mapper) -> ReportJoin:
         alias_name=src.alias_name,
         warn_about_idle_items=src.warn_about_idle_items,
         same_cardinality=src.same_cardinality,
+        allow_dicard_element=src.allow_dicard_element,
     )
 
 
@@ -956,4 +956,19 @@ def map_report_column_to_dto(src: ReportColumn, mapper: Mapper) -> ReportColumnD
         name=src.name,
         expression=src.expression,
         is_visible=src.is_visible,
+    )
+
+
+def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportRowDto:
+    return ReportRowDto(
+        project_id=src.project_id,
+        report_def_id=src.report_def_id,
+        node_id=src.node_id,
+        formula_id=src.formula_id,
+        group_digest=src.group_digest,
+        order_index=src.order_index,
+        datasheet_id=src.datasheet_id,
+        element_id=src.element_id,
+        child_reference_id=src.child_reference_id,
+        row=src.row,
     )

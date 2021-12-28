@@ -84,30 +84,46 @@ class MapProjectNodeMetaImportToDomain:
         ]
 
 
+class DedupTranslations:
+    def clear(self):
+        self.node_by_project_id = {}
+
+    async def __call__(
+        self, injector: Injector, models: List[ProjectNodeMetaImport]
+    ) -> List[ProjectNodeMeta]:
+        if len(models) == 0:
+            return
+
+        mapper = injector.get(Mapper)
+        translations = mapper.map_many(models, Translation)
+
+        seen = {}
+        translations = [
+            seen.setdefault(
+                (
+                    translation.ressource_id,
+                    translation.scope,
+                    translation.locale,
+                    translation.name,
+                ),
+                translation,
+            )
+            for translation in translations
+            if not (
+                translation.ressource_id,
+                translation.scope,
+                translation.locale,
+                translation.name,
+            )
+            in seen
+        ]
+
+        return translations
+
+
 class RecreateFormulaCacheDto(BaseModel):
     project_def_id: UUID
     project_id: UUID
-
-
-class RecreateFormulaCacheAction:
-    def __init__(self):
-        self.dto = RecreateFormulaCacheDto
-
-    async def __call__(self, injector: Injector, ressource_specs: List[BaseModel]):
-        formula_instance_builder = injector.get(FormulaInstanceBuilder)
-        project_node_service = injector.get(ProjectNodeService)
-        formula_instance_service = injector.get(FormulaInstanceService)
-
-        for refresh_action in ressource_specs:
-            nodes = await project_node_service.find_by(
-                ProjectNodeFilter(project_id=refresh_action.project_id)
-            )
-
-            formula_instances = await formula_instance_builder.build(
-                refresh_action.project_def_id, nodes
-            )
-
-            await formula_instance_service.insert_many(formula_instances)
 
 
 ressources = {
@@ -144,6 +160,7 @@ ressources = {
         domain=Translation,
         usecase=TranslationService,
         method="insert_many",
+        perform_complex_mapping=DedupTranslations(),
     ),
     "/api/datasheet_definition_element": RessourceLoader(
         dto=DatasheetDefinitionElementDto,
@@ -196,7 +213,6 @@ ressources = {
         method="insert_many",
         perform_complex_mapping=MapProjectNodeMetaImportToDomain(),
     ),
-    "/api/recreate_formula_cache": RecreateFormulaCacheAction(),
 }
 
 
@@ -219,12 +235,13 @@ async def import_definitiown_set(
             return
 
         usecase = injector.get(ressource_loader.usecase)
-        do_import = getattr(usecase, ressource_loader.method)
+        method_name = ressource_loader.method
+        do_import = getattr(usecase, method_name)
         ressources_domain = await ressource_loader.do_mapping(
             injector, mapper, ressource_specs
         )
 
-        if ressource_loader.method.endswith("many"):
+        if method_name.endswith("many") or method_name.endswith("s"):
             await do_import(ressources_domain)
         else:
             for ressource_domain in ressources_domain:

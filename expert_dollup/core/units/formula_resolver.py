@@ -1,6 +1,6 @@
 import ast
 from functools import cached_property
-from expert_dollup.core.domains.formula import FormulaInstanceFilter
+from expert_dollup.core.domains.formula import FormulaFilter, FormulaInstanceFilter
 from typing import List, Union, Dict, Set
 from uuid import UUID
 from collections import defaultdict
@@ -16,9 +16,9 @@ from expert_dollup.core.domains.project_node import ProjectNode
 from expert_dollup.infra.services import (
     FormulaService,
     ProjectNodeService,
-    FormulaInstanceService,
     ProjectDefinitionNodeService,
 )
+from expert_dollup.core.builders import FormulaInstanceBuilder
 from expert_dollup.core.queries import Plucker
 from expert_dollup.core.logits import FormulaVisitor
 import expert_dollup.core.logits.formula_processor as formula_processor
@@ -65,17 +65,19 @@ class FormulaUnit:
     def __init__(
         self,
         formula_instance: FormulaInstance,
+        formula_dependencies: List[str],
         final_ast: dict,
         formula_injector: FormulaInjector,
     ):
         self._formula_instance = formula_instance
+        self._formula_dependencies = formula_dependencies
         self._final_ast = final_ast
         self._formula_injector = formula_injector
         self._touched = None
 
     @property
     def dependencies(self) -> List[str]:
-        return self._formula_instance.formula_dependencies
+        return self._formula_dependencies
 
     @property
     def node_id(self) -> UUID:
@@ -151,14 +153,14 @@ class FormulaResolver:
         formula_service: FormulaService,
         project_node_service: ProjectNodeService,
         project_definition_node_service: ProjectDefinitionNodeService,
-        formula_instance_service: FormulaInstanceService,
+        formula_instance_builder: FormulaInstanceBuilder,
         formulas_plucker: Plucker[FormulaService],
         nodes_plucker: Plucker[ProjectNodeService],
     ):
         self.formula_service = formula_service
         self.project_node_service = project_node_service
         self.project_definition_node_service = project_definition_node_service
-        self.formula_instance_service = formula_instance_service
+        self.formula_instance_builder = formula_instance_builder
         self.formulas_plucker = formulas_plucker
         self.nodes_plucker = nodes_plucker
 
@@ -317,21 +319,23 @@ class FormulaResolver:
         for node in nodes:
             injector.add_unit(FieldUnit(node))
 
-        formula_instances = await self.formula_instance_service.find_by(
-            FormulaInstanceFilter(project_id=project_id)
+        formulas = await self.formula_service.find_by(
+            FormulaFilter(project_def_id=project_def_id)
         )
 
-        formula_final_ast_by_formula_id = (
-            await self.formula_service.find_formula_final_ast_by_formula_id(
-                project_def_id
-            )
+        formula_by_id = {formula.id: formula for formula in formulas}
+
+        formula_instances = self.formula_instance_builder.build_with_fields(
+            formulas, nodes
         )
 
         for formula_instance in formula_instances:
+            formula = formula_by_id[formula_instance.formula_id]
             injector.add_unit(
                 FormulaUnit(
                     formula_instance,
-                    formula_final_ast_by_formula_id[formula_instance.formula_id],
+                    formula.dependency_graph.dependencies,
+                    formula.final_ast,
                     injector,
                 )
             )

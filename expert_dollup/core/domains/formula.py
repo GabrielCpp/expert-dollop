@@ -61,7 +61,6 @@ class FormulaInstance:
     node_id: UUID
     node_path: List[UUID]
     formula_name: str
-    formula_dependencies: List[str]
     calculation_details: str
     result: Union[str, bool, int, float]
 

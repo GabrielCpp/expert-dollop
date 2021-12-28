@@ -180,19 +180,6 @@ def create_project_tables():
         ["display_query_internal_id"],
     )
 
-    op.create_table(
-        "project_formula_instance",
-        Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("node_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("node_path", String, nullable=False),
-        Column("formula_name", String, nullable=False),
-        Column("formula_dependencies", postgresql.JSON(), nullable=False),
-        Column("calculation_details", String, nullable=False),
-        Column("result", postgresql.JSON(), nullable=False),
-        Column("last_modified_date_utc", DateTime(timezone=True), nullable=False),
-    )
-
 
 def create_datasheet_tables():
     op.create_table(
@@ -291,13 +278,6 @@ def create_report_tables():
         Column("project_def_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
         Column("structure", postgresql.JSON(), nullable=False),
-    )
-
-    op.create_table(
-        "report_definition_row_cache",
-        Column("report_def_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("row_digest", String(256), nullable=False, primary_key=True),
-        Column("row", postgresql.JSON(), nullable=False),
     )
 
     op.create_table(

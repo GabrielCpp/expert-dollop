@@ -385,10 +385,6 @@ class ProjectInstanceFactory:
                 node_id=formula_instance.node.id,
                 node_path=formula_instance.path,
                 formula_name=formula_instance.name,
-                formula_dependencies=[
-                    *formula_instance.formula_dependencies,
-                    *formula_instance.node_dependencies,
-                ],
                 calculation_details=formula_instance.calculation_details,
                 result=formula_instance.result,
             )

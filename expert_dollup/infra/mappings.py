@@ -530,10 +530,8 @@ def map_formula_instance_to_dao(
         node_id=src.node_id,
         node_path=join_uuid_path(src.node_path),
         formula_name=src.formula_name,
-        formula_dependencies=src.formula_dependencies,
         calculation_details=src.calculation_details,
         result=src.result,
-        last_modified_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
@@ -546,7 +544,6 @@ def map_formula_instance_from_dao(
         node_id=src.node_id,
         node_path=split_uuid_path(src.node_path),
         formula_name=src.formula_name,
-        formula_dependencies=src.formula_dependencies,
         calculation_details=src.calculation_details,
         result=src.result,
     )
@@ -754,6 +751,10 @@ label_attribute_dao_mappings = RevervibleUnionMapping(
         StrictInt: int,
         StrictStr: str,
         StrictFloat: float,
+        float: float,
+        int: int,
+        str: str,
+        bool: bool,
         ReferenceIdDao: UUID,
     },
 )
@@ -1047,6 +1048,7 @@ def map_report_join_from_dao(src: ReportJoinDao, mapper: Mapper) -> ReportJoin:
         alias_name=src.alias_name,
         warn_about_idle_items=src.warn_about_idle_items,
         same_cardinality=src.same_cardinality,
+        allow_dicard_element=src.allow_dicard_element,
     )
 
 
@@ -1059,6 +1061,7 @@ def map_report_join_to_dao(src: ReportJoin, mapper: Mapper) -> ReportJoinDao:
         alias_name=src.alias_name,
         warn_about_idle_items=src.warn_about_idle_items,
         same_cardinality=src.same_cardinality,
+        allow_dicard_element=src.allow_dicard_element,
     )
 
 
@@ -1075,4 +1078,62 @@ def map_report_column_to_dao(src: ReportColumn, mapper: Mapper) -> ReportColumnD
         name=src.name,
         expression=src.expression,
         is_visible=src.is_visible,
+    )
+
+
+def map_label_collection_filter(src: LabelCollectionFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "id": ("id", None),
+            "datasheet_definition_id": ("datasheet_definition_id", None),
+            "name": ("name", None),
+        },
+    )
+
+
+def map_label_filter(src: LabelFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "id": ("id", None),
+            "label_collection_id": ("label_collection_id", None),
+        },
+    )
+
+
+def map_translation_pluck_filter_to_dict(
+    src: TranslationPluckFilter, mapper: Mapper
+) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "scopes": ("scope", None),
+        },
+    )
+
+
+def map_report_row_filter(src: ReportRowFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "project_id": ("project_id", None),
+            "report_def_id": ("report_def_id", None),
+            "group_digest": ("group_digest", None),
+            "order_index": ("order_index", None),
+            "datasheet_id": ("datasheet_id", None),
+            "element_id": ("element_id", None),
+            "child_reference_id": ("child_reference_id", None),
+        },
+    )
+
+
+def map_datasheet_element_pluck_filter(
+    src: DatasheetElementPluckFilter, mapper: Mapper
+) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "element_def_ids": ("element_def_id", None),
+        },
     )

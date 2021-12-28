@@ -27,7 +27,6 @@ async def dal() -> DbConnection:
     force_rollback = os.getenv("FORCE_ROLLBACK", True) in [True, "True"]
     connection = create_connection(DATABASE_URL, daos, force_rollback=False)
 
-    await connection.truncate_db()
     await connection.connect()
     yield connection
 

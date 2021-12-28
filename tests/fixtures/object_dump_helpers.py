@@ -43,6 +43,8 @@ def dump_to_file(json_serializable):
             json_serializable, outfile, indent=2, sort_keys=True, cls=ExtraEncoder
         )
 
+        os.fsync(outfile)
+
 
 def dump_snapshot(json_serializable) -> str:
     return json.dumps(json_serializable, indent=2, sort_keys=True, cls=ExtraEncoder)

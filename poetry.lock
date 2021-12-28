@@ -782,6 +782,17 @@ python-versions = "*"
 six = ">=1.4.0"
 
 [[package]]
+name = "python-stopwatch"
+version = "1.0.4"
+description = "A simple stopwatch for measuring code performance"
+category = "dev"
+optional = false
+python-versions = ">=3.4"
+
+[package.dependencies]
+termcolor = "*"
+
+[[package]]
 name = "regex"
 version = "2021.10.8"
 description = "Alternative regular expression module, to replace re."
@@ -871,6 +882,14 @@ docs = ["furo", "sphinx", "sphinx-toolbox", "twisted"]
 tests = ["coverage", "freezegun (>=0.2.8)", "pretend", "pytest-asyncio", "pytest-randomly", "pytest (>=6.0)", "simplejson"]
 
 [[package]]
+name = "termcolor"
+version = "1.1.0"
+description = "ANSII Color formatting for output in terminal."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "text-unidecode"
 version = "1.3"
 description = "The most basic Text::Unidecode port"
@@ -957,7 +976,7 @@ postgres = ["databases", "sqlalchemy"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8.0"
-content-hash = "7e1d54a6a92b9ec9304b9c94b04bfb47fd7c08e66aee51d9450367214e978d26"
+content-hash = "77ccc2fed4f0f7b0967c4d3172c76227bcd8760e4627c9490c2e2ea61067d51c"
 
 [metadata.files]
 alembic = [
@@ -1572,6 +1591,10 @@ python-dotenv = [
 python-multipart = [
     {file = "python-multipart-0.0.5.tar.gz", hash = "sha256:f7bb5f611fc600d15fa47b3974c8aa16e93724513b49b5f95c81e6624c83fa43"},
 ]
+python-stopwatch = [
+    {file = "python-stopwatch-1.0.4.tar.gz", hash = "sha256:115c4a8d485932754162094b55a8b60253b321c555b0180c111bafa31a8be57e"},
+    {file = "python_stopwatch-1.0.4-py3-none-any.whl", hash = "sha256:9a28ba22b54f067403ee30f105619384928f69e5d381ffcb29f7985b22b0f3f4"},
+]
 regex = [
     {file = "regex-2021.10.8-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:981c786293a3115bc14c103086ae54e5ee50ca57f4c02ce7cf1b60318d1e8072"},
     {file = "regex-2021.10.8-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:51feefd58ac38eb91a21921b047da8644155e5678e9066af7bcb30ee0dca7361"},
@@ -1670,6 +1693,9 @@ starlette = [
 structlog = [
     {file = "structlog-20.2.0-py2.py3-none-any.whl", hash = "sha256:33dd6bd5f49355e52c1c61bb6a4f20d0b48ce0328cc4a45fe872d38b97a05ccd"},
     {file = "structlog-20.2.0.tar.gz", hash = "sha256:af79dfa547d104af8d60f86eac12fb54825f54a46bc998e4504ef66177103174"},
+]
+termcolor = [
+    {file = "termcolor-1.1.0.tar.gz", hash = "sha256:1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"},
 ]
 text-unidecode = [
     {file = "text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"},

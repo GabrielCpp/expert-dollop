@@ -64,10 +64,13 @@ class Mapper:
         if isinstance(to_type, dict):
             if not from_type in to_type:
                 raise MapingError(
-                    f"Mapping for type union must be among provided types {','.join(list(to_type.keys()))}"
+                    f"Mapping for type {str(from_type)} union must be among provided types {','.join(str(t) for t in to_type.keys())}"
                 )
 
             to_type = to_type[from_type]
+
+        if from_type is to_type:
+            return instance
 
         object_mapper = submapper.get(to_type)
 

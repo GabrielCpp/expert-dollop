@@ -113,6 +113,15 @@ class ReportLinkingCache:
         return labels
 
 
+from dataclasses import dataclass
+
+
+@dataclass
+class ReportCache:
+    rows: List[ReportRowDict]
+    warnings: List[str]
+
+
 class ReportRowCacheBuilder:
     def __init__(
         self,
@@ -136,7 +145,7 @@ class ReportRowCacheBuilder:
 
     async def refresh_cache(
         self, report_definition: ReportDefinition
-    ) -> List[Dict[str, Dict[str, Any]]]:
+    ) -> List[ReportRowDict]:
         cache = ReportLinkingCache(
             self.datasheet_definition_service,
             self.project_definition_service,
@@ -155,7 +164,7 @@ class ReportRowCacheBuilder:
         ]
 
         for join in report_definition.structure.joins_cache:
-            await self._join_on(report_buckets, join, cache)
+            report_buckets = await self._join_on(report_buckets, join, cache)
 
         await self._join_translations(report_buckets)
         await self._join_formulas(report_buckets, report_definition)
@@ -178,8 +187,18 @@ class ReportRowCacheBuilder:
             translations_name_by_scope[translation.scope] = translation.name
 
         for report_bucket in report_buckets:
-            for row in report_bucket.values():
-                row["translation"] = translations_name_by_scope[row["id"]]
+            for bucket_name, row in report_bucket.items():
+                translation_name = "<Missing translation>"
+                target_id = row["id"]
+
+                if target_id in translations_name_by_scope:
+                    translation_name = translations_name_by_scope[target_id]
+                else:
+                    print(
+                        f"Missing translation for {target_id} in bucket {bucket_name}"
+                    )
+
+                row["translation"] = translation_name
 
     async def _join_formulas(
         self,
@@ -264,9 +283,14 @@ class ReportRowCacheBuilder:
             labels = self._match_attributes(attribute, attributes_to_label)
 
             if len(labels) == 0:
-                raise Exception(f"Expected data {attribute}")
+                print(f"Discarding attribute {attribute} for {join}")
+                if join.allow_dicard_element:
+                    continue
+
+                raise Exception(f"Expected data {attribute} for {join}")
 
             report_bucket[join.alias_name] = labels[0].report_dict
+            new_buckets.append(report_bucket)
 
             if len(labels) > 1 and join.same_cardinality:
                 raise Exception(
@@ -278,7 +302,7 @@ class ReportRowCacheBuilder:
                 new_bucket[join.alias_name] = label.report_dict
                 new_buckets.append(new_bucket)
 
-        report_buckets.extend(new_buckets)
+        return new_buckets
 
     def _match_attributes(self, attributes, attributes_to_label):
         if isinstance(attributes, list):
@@ -301,13 +325,13 @@ class ReportLinking:
         self,
         report_def_row_cache: ReportDefinitionRowCacheService,
         report_row_service: ReportRowService,
-        formula_instance_plucker: Plucker[FormulaInstanceService],
+        formula_instance_service: FormulaInstanceService,
         datasheet_element_plucker: Plucker[DatasheetElementService],
         expression_evaluator: ExpressionEvaluator,
     ):
         self.report_def_row_cache = report_def_row_cache
+        self.formula_instance_service = formula_instance_service
         self.report_row_service = report_row_service
-        self.formula_instance_plucker = formula_instance_plucker
         self.datasheet_element_plucker = datasheet_element_plucker
         self.expression_evaluator = expression_evaluator
 
@@ -316,10 +340,7 @@ class ReportLinking:
         report_definition: ReportDefinition,
         project_details: ProjectDetails,
     ) -> List[ReportRow]:
-        rows = await self.report_def_row_cache.find_by(
-            ReportDefinitionRowCacheFilter(report_def_id=report_definition.id)
-        )
-
+        rows = await self.report_def_row_cache.load(report_definition.id)
         new_rows = await self._join_row_cache_with_formula_instances(
             rows, project_details, report_definition
         )
@@ -332,10 +353,8 @@ class ReportLinking:
     async def _get_report_formula_nodes(
         self, project_id: UUID, formula_ids: Set[UUID]
     ) -> Dict[UUID, List[FormulaInstance]]:
-        formula_instances = await self.formula_instance_plucker.pluck_subressources(
-            FormulaInstanceFilter(project_id=project_id),
-            lambda ids: FormulaCachePluckFilter(formula_ids=ids),
-            formula_ids,
+        formula_instances = await self.formula_instance_service.load_instances(
+            project_id
         )
 
         formulas_instance_by_def_id: Dict[UUID, List[FormulaInstance]] = defaultdict(
@@ -416,7 +435,7 @@ class ReportLinking:
                 datasheet_id=project_details.datasheet_id,
                 child_element_reference=zero_uuid(),
             ),
-            lambda ids: DatasheetElementPluckFilter(element_ids=ids),
+            lambda ids: DatasheetElementPluckFilter(element_def_ids=ids),
             set(missing_elements_for_rows.keys()),
         )
 

@@ -7,7 +7,7 @@ router = APIRouter()
 
 
 @router.post("/report_definition/{report_definition_id}/refresh_cache")
-async def refresh_Report_definition_rows_cache(
+async def refresh_report_definition_rows_cache(
     report_definition_id: UUID,
     usecase=Depends(Inject(ReportDefinitionUseCase)),
 ):

@@ -46,5 +46,7 @@ class FormulaUseCase:
         instances = await self.formula_resolver.compute_all_project_formula(
             project_id, project_details.project_def_id
         )
-        await self.formula_instance_service.upserts(instances)
+
+        await self.formula_instance_service.save_instances(project_id, instances)
+
         return instances

@@ -198,21 +198,13 @@ class ProjectDefinitionFormulaDao(BaseModel):
 
 
 class ProjectFormulaInstanceDao(BaseModel):
-    class Meta:
-        pk = ("project_id", "formula_id", "node_id")
-
-    class Config:
-        title = "project_formula_instance"
-
     project_id: UUID
     formula_id: UUID
     node_id: UUID
     node_path: str
     formula_name: str
-    formula_dependencies: List[str]
     calculation_details: str
     result: Union[int, str, float, bool]
-    last_modified_date_utc: datetime
 
 
 class ElementPropertySchemaDao(BaseModel):
@@ -342,6 +334,7 @@ class ReportJoinDao(BaseModel):
     alias_name: str
     warn_about_idle_items: bool
     same_cardinality: bool
+    allow_dicard_element: bool
 
 
 class AttributeBucketDao(BaseModel):
@@ -380,12 +373,6 @@ class ReportDefinitionDao(BaseModel):
 
 
 class ReportDefinitionRowCacheDao(BaseModel):
-    class Meta:
-        pk = ("report_def_id", "row_digest")
-
-    class Config:
-        title = "report_definition_row_cache"
-
     report_def_id: UUID
     row_digest: str
     row: Dict[str, Dict[str, Union[str, float, bool, int, None]]]

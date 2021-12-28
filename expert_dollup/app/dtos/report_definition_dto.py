@@ -2,7 +2,8 @@ from uuid import UUID
 from typing import List, Dict, Union
 from expert_dollup.shared.starlette_injection import CamelModel
 
-ReportRowDictDto = Dict[str, Dict[str, Union[str, float, bool, int, None]]]
+ReportColumnDictDto = Dict[str, Union[str, float, bool, int, UUID, List[UUID], None]]
+ReportRowDictDto = Dict[str, ReportColumnDictDto]
 
 
 class ReportJoinDto(CamelModel):
@@ -11,8 +12,9 @@ class ReportJoinDto(CamelModel):
     join_on_collection: str
     join_on_attribute: str
     alias_name: str
-    warn_about_idle_items: bool = True
-    same_cardinality: bool = False
+    warn_about_idle_items: bool
+    same_cardinality: bool
+    allow_dicard_element: bool
 
 
 class ReportColumnDto(CamelModel):

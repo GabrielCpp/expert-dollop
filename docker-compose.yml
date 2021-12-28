@@ -25,6 +25,7 @@ services:
       - 8080:8080
     networks:
       - backend
+  
   firebase:
       build:
           context: .
@@ -36,6 +37,15 @@ services:
           - firebase_data:/opt/data
       networks:
           - backend
+
+  cloud-storage:
+    container_name: cloud-storage
+    image: fsouza/fake-gcs-server
+    restart: always
+    ports:
+    - 4443:4443
+    networks:
+      - backend
 volumes:
   firebase_data:
     name: firebase_data
