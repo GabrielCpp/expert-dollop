@@ -29,9 +29,7 @@ WORKDIR /usr/app
 COPY --chown=python:python --from=build /usr/app/.venv ./venv
 COPY --chown=python:python expert_dollup ./expert_dollup
 
-RUN python3 -m venv /usr/app/venv
 ENV PATH="/usr/app/venv/bin:$PATH"
-
 CMD [ "python", "-m", "uvicorn", "--host", "0.0.0.0:5000", "expert_dollup.main:app" ]
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD curl -f https://localhost:5000/health
 
