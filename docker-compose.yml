@@ -40,12 +40,16 @@ services:
 
   cloud-storage:
     container_name: cloud-storage
-    image: fsouza/fake-gcs-server
+    build:
+        context: .
+        dockerfile: cloud_storage.dockerfile
     restart: always
     ports:
-    - 4443:4443
+    - 8888:8888
     networks:
       - backend
+    volumes:
+    - ${PWD}/storage_data:/data
 volumes:
   firebase_data:
     name: firebase_data

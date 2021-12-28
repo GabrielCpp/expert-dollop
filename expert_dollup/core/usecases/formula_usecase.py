@@ -1,11 +1,17 @@
 from typing import List
 from uuid import UUID
-from expert_dollup.core.domains import Formula, FormulaInstance, FormulaExpression
+from expert_dollup.core.domains import (
+    Formula,
+    FormulaInstance,
+    FormulaExpression,
+    FormulaInstanceCache,
+    FormulaInstanceCacheKey,
+)
+from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.units import FormulaResolver
 from expert_dollup.infra.services import (
     FormulaService,
     ProjectService,
-    FormulaInstanceService,
 )
 
 
@@ -15,7 +21,9 @@ class FormulaUseCase:
         formula_service: FormulaService,
         formula_resolver: FormulaResolver,
         project_service: ProjectService,
-        formula_instance_service: FormulaInstanceService,
+        formula_instance_service: ObjectStorage[
+            FormulaInstanceCache, FormulaInstanceCacheKey
+        ],
     ):
         self.formula_service = formula_service
         self.formula_resolver = formula_resolver
@@ -47,6 +55,8 @@ class FormulaUseCase:
             project_id, project_details.project_def_id
         )
 
-        await self.formula_instance_service.save_instances(project_id, instances)
+        await self.formula_instance_service.save(
+            FormulaInstanceCacheKey(project_id=project_id), instances
+        )
 
         return instances

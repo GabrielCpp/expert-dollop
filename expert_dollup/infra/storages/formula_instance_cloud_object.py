@@ -1,24 +1,32 @@
 from uuid import UUID
 from typing import List
-from expert_dollup.infra.expert_dollup_db import ProjectFormulaInstanceDao
-from expert_dollup.core.domains import FormulaInstance
 import gzip
 import struct
+from io import BytesIO
+from expert_dollup.core.domains import FormulaInstance
+from expert_dollup.infra.expert_dollup_storage import ExpertDollupStorage
+from expert_dollup.core.object_storage import ObjectStorage
+from expert_dollup.core.domains import FormulaInstanceCache, FormulaInstanceCacheKey
 
 
 def read_from(format, f):
     return struct.unpack(format, f.read(struct.calcsize(format)))[0]
 
 
-class FormulaInstanceService:
-    def __init__(self):
-        pass
+class FormulaInstanceCloudObject(
+    ObjectStorage[FormulaInstanceCache, FormulaInstanceCacheKey]
+):
+    def __init__(self, storage: ExpertDollupStorage):
+        self.storage = storage
 
-    async def load_instances(self, project_id: UUID):
+    async def load(self, ctx: FormulaInstanceCacheKey) -> FormulaInstanceCache:
         instances = []
         null_uuid = UUID(int=0)
+        path = f"projects/{ctx.project_id}/formula_instance.raw.gzip"
+        initial_bytes = await self.storage.download_binary(path)
+        inbytes = BytesIO(initial_bytes)
 
-        with gzip.open("./instances.jsonl.gzip", "rb") as f:
+        with gzip.GzipFile(fileobj=inbytes, mode="rb") as f:
             instance_count = read_from("H", f)
 
             for _ in range(0, instance_count):
@@ -56,7 +64,7 @@ class FormulaInstanceService:
                         formula_id=formula_id,
                         formula_name=formula_name,
                         node_id=node_id,
-                        project_id=project_id,
+                        project_id=ctx.project_id,
                         result=value,
                         node_path=node_path,
                     )
@@ -64,10 +72,11 @@ class FormulaInstanceService:
 
         return instances
 
-    async def save_instances(self, project_id: UUID, instances: List[FormulaInstance]):
+    async def save(self, ctx: FormulaInstanceCacheKey, instances: FormulaInstanceCache):
         null_uuid = UUID(int=0)
+        outbytes = BytesIO()
 
-        with gzip.GzipFile("./instances.jsonl.gzip", compresslevel=9, mode="wb") as f:
+        with gzip.GzipFile(fileobj=outbytes, compresslevel=9, mode="wb") as f:
             f.write(struct.pack("H", len(instances)))
 
             for instance in instances:
@@ -101,3 +110,8 @@ class FormulaInstanceService:
                     f.write(struct.pack("B", ord("S")))
                     f.write(struct.pack("L", len(instance.result)))
                     f.write(instance.result.encode("utf8"))
+
+        outbytes.seek(0)
+        output_bytes = outbytes.read()
+        path = f"projects/{ctx.project_id}/formula_instance.raw.gzip"
+        await self.storage.upload_binary(path, output_bytes)

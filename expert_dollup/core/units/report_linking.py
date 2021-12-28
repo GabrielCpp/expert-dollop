@@ -1,6 +1,7 @@
 import math
 from typing import List, Dict, Any, Optional, Set
 from expert_dollup.core.domains import *
+from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.queries import Plucker
 from expert_dollup.core.units.expression_evaluator import ExpressionEvaluator
 from expert_dollup.infra.services import *
@@ -323,9 +324,11 @@ class ReportRowCacheBuilder:
 class ReportLinking:
     def __init__(
         self,
-        report_def_row_cache: ReportDefinitionRowCacheService,
+        report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
         report_row_service: ReportRowService,
-        formula_instance_service: FormulaInstanceService,
+        formula_instance_service: ObjectStorage[
+            FormulaInstanceCache, FormulaInstanceCacheKey
+        ],
         datasheet_element_plucker: Plucker[DatasheetElementService],
         expression_evaluator: ExpressionEvaluator,
     ):
@@ -340,7 +343,12 @@ class ReportLinking:
         report_definition: ReportDefinition,
         project_details: ProjectDetails,
     ) -> List[ReportRow]:
-        rows = await self.report_def_row_cache.load(report_definition.id)
+        rows = await self.report_def_row_cache.load(
+            ReportRowKey(
+                project_def_id=report_definition.project_def_id,
+                report_definition_id=report_definition.id,
+            )
+        )
         new_rows = await self._join_row_cache_with_formula_instances(
             rows, project_details, report_definition
         )
@@ -353,10 +361,9 @@ class ReportLinking:
     async def _get_report_formula_nodes(
         self, project_id: UUID, formula_ids: Set[UUID]
     ) -> Dict[UUID, List[FormulaInstance]]:
-        formula_instances = await self.formula_instance_service.load_instances(
-            project_id
+        formula_instances = await self.formula_instance_service.load(
+            FormulaInstanceCacheKey(project_id=project_id)
         )
-
         formulas_instance_by_def_id: Dict[UUID, List[FormulaInstance]] = defaultdict(
             list
         )

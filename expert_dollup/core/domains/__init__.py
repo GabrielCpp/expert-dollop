@@ -48,6 +48,8 @@ from .formula import (
     Formula,
     FormulaExpression,
     FormulaInstance,
+    FormulaInstanceCacheKey,
+    FormulaInstanceCache,
     FieldNode,
     FormulaFilter,
     FormulaPluckFilter,
@@ -95,6 +97,8 @@ from .report_definition import (
     AttributeBucket,
     ReportJoin,
     ReportRowDict,
+    ReportRowsCache,
+    ReportRowKey,
     ReportDefinitionFilter,
 )
 from .report_definition_row_cache import (

@@ -1,4 +1,5 @@
 from uuid import UUID
+from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.units import ReportRowCacheBuilder
 from expert_dollup.core.domains import *
 from expert_dollup.infra.services import *
@@ -9,7 +10,9 @@ class ReportDefinitionUseCase:
         self,
         report_definition_service: ReportDefinitionService,
         report_row_cache_builder: ReportRowCacheBuilder,
-        report_definition_row_cache_service: ReportDefinitionRowCacheService,
+        report_definition_row_cache_service: ObjectStorage[
+            ReportRowsCache, ReportRowKey
+        ],
     ):
         self.report_definition_service = report_definition_service
         self.report_row_cache_builder = report_row_cache_builder
@@ -23,7 +26,11 @@ class ReportDefinitionUseCase:
             report_definition
         )
         await self.report_definition_row_cache_service.save(
-            report_definition_id, report_cached_rows
+            ReportRowKey(
+                project_def_id=report_definition.project_def_id,
+                report_definition_id=report_definition_id,
+            ),
+            report_cached_rows,
         )
 
     async def add(self, report_definition: ReportDefinition):

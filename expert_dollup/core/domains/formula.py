@@ -69,6 +69,14 @@ class FormulaInstance:
         return asdict(self)
 
 
+FormulaInstanceCache = List[FormulaInstance]
+
+
+@dataclass
+class FormulaInstanceCacheKey:
+    project_id: UUID
+
+
 @dataclass
 class FieldNode:
     id: UUID

@@ -21,6 +21,7 @@ mypy-extensions = "^0.4.3"
 databases = { extras = ["postgresql"], version = "^0.4.1", optional = true }
 sqlalchemy = { version = "^1.3.20", optional = true }
 google-cloud-firestore = {version = "^2.3.4", optional = true}
+google-cloud-storage = "^1.43.0"
 
 [tool.poetry.extras]
 postgres = ["databases", "sqlalchemy"]

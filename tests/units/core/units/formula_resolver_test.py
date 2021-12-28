@@ -1,5 +1,6 @@
 import pytest
 from uuid import UUID
+from expert_dollup.core.object_storage import ObjectStorage
 from tests.fixtures.mock_interface_utils import StrictInterfaceSetup, compare_per_arg
 from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
@@ -93,7 +94,9 @@ async def test_given_formula_instances_should_compute_collection():
     formula_service = StrictInterfaceSetup(FormulaService)
     project_node_service = StrictInterfaceSetup(ProjectNodeService)
     project_definition_node_service = StrictInterfaceSetup(ProjectNodeService)
-    formula_instance_service = StrictInterfaceSetup(FormulaInstanceService)
+    formula_instance_service = StrictInterfaceSetup(
+        ObjectStorage[FormulaInstanceCache, FormulaInstanceCacheKey]
+    )
     formulas_plucker = StrictInterfaceSetup(Plucker)
     nodes_plucker = StrictInterfaceSetup(Plucker)
 

@@ -3,6 +3,7 @@ from typing import List, Dict, Any
 from pydantic.tools import parse_file_as
 import pytest
 from uuid import UUID
+from expert_dollup.core.object_storage import ObjectStorage
 from tests.fixtures.mock_interface_utils import (
     StrictInterfaceSetup,
     compare_per_arg,
@@ -19,6 +20,90 @@ class ReportDict(BaseModel):
     __root__: List[Dict[str, Dict[str, Any]]]
 
 
+"""
+CREATE FUNCTION get_room_floor(
+	project_id BINARY(16),
+    root_section_id BINARY(16),
+	floor_name VARCHAR(64) CHARSET UTF8 COLLATE utf8_unicode_ci,
+    locale VARCHAR(5) CHARSET UTF8 COLLATE utf8_unicode_ci
+)
+RETURNS VARCHAR(64) CHARSET UTF8 COLLATE utf8_unicode_ci
+DETERMINISTIC
+BEGIN
+	IF floor_name = 'pmctp ' THEN
+		RETURN (
+			SELECT floortranslation.description
+			FROM project_container_definition AS field_def
+			INNER JOIN project_container AS field
+			ON 
+				field.project_id = project_id AND
+				field.root_section_id = root_section_id AND
+				field.type_id = field_def.id AND
+                field.level = field_level()
+			INNER JOIN floortranslation
+			ON 
+				floortranslation.owner_id = (
+					CASE get_element_dec_value( field.value )
+                    -- Quatrième
+                    WHEN 5 THEN 11
+                    -- Cinquième
+                    WHEN 6 THEN 12
+                    -- Sixième
+                    WHEN 7 THEN 13
+                    -- Garage
+                    WHEN 8 THEN 6
+					ELSE get_element_dec_value( field.value )
+					END
+				) AND
+				floortranslation.locale = locale
+			WHERE field_def.name = 'pmccu_choice'
+        );
+    END IF;
+    
+    RETURN floor_name;
+END//
+
+CREATE FUNCTION get_room_floor_index(
+	project_id BINARY(16),
+    root_section_id BINARY(16),
+	floor_name VARCHAR(64) CHARSET UTF8 COLLATE utf8_unicode_ci
+)
+RETURNS VARCHAR(64) CHARSET UTF8 COLLATE utf8_unicode_ci
+DETERMINISTIC
+BEGIN
+	IF floor_name = 'pmctp ' THEN
+		RETURN (
+			SELECT floor.order_index
+			FROM project_container_definition AS field_def
+			INNER JOIN project_container AS field
+			ON 
+				field.project_id = project_id AND
+				field.root_section_id = root_section_id AND
+				field.type_id = field_def.id AND
+        field.level = field_level()
+			INNER JOIN floor
+			ON 
+				floor.id = (
+					CASE get_element_dec_value( field.value )
+                    -- Quatrième
+                    WHEN 5 THEN 11
+                    -- Cinquième
+                    WHEN 6 THEN 12
+                    -- Sixième
+                    WHEN 7 THEN 13
+                    -- Garage
+                    WHEN 8 THEN 6
+					ELSE get_element_dec_value( field.value )
+					END
+				)
+			WHERE field_def.name = 'pmccu_choice'
+        );
+    END IF;
+    
+    RETURN NULL;
+END//
+
+"""
 project_seed = ProjectSeed(
     {
         "rootA": DefNodeSeed(
@@ -373,7 +458,9 @@ async def test_given_row_cache_should_produce_correct_report():
         ),
     )[0].__root__
 
-    report_def_row_cache = StrictInterfaceSetup(ReportDefinitionRowCacheService)
+    report_def_row_cache = StrictInterfaceSetup(
+        ObjectStorage[ReportRowsCache, ReportRowKey]
+    )
     report_row_service = StrictInterfaceSetup(ReportRowService)
     formula_instance_plucker = StrictInterfaceSetup(Plucker)
     datasheet_element_plucker = StrictInterfaceSetup(Plucker)

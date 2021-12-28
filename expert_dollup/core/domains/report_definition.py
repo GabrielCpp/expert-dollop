@@ -5,6 +5,13 @@ from expert_dollup.shared.database_services import QueryFilter
 
 ReportColumnDict = Dict[str, Union[str, float, bool, int, UUID, List[UUID], None]]
 ReportRowDict = Dict[str, ReportColumnDict]
+ReportRowsCache = List[ReportRowDict]
+
+
+@dataclass
+class ReportRowKey:
+    project_def_id: UUID
+    report_definition_id: UUID
 
 
 @dataclass
