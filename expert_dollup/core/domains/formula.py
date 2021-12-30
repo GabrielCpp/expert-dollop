@@ -55,12 +55,11 @@ class Formula(FormulaExpression):
 
 
 @dataclass
-class FormulaInstance:
-    project_id: UUID
-    formula_id: UUID
+class UnitInstance:
+    formula_id: Optional[UUID]
     node_id: UUID
-    node_path: List[UUID]
-    formula_name: str
+    path: List[UUID]
+    name: str
     calculation_details: str
     result: Union[str, bool, int, float]
 
@@ -69,11 +68,11 @@ class FormulaInstance:
         return asdict(self)
 
 
-FormulaInstanceCache = List[FormulaInstance]
+UnitInstanceCache = List[UnitInstance]
 
 
 @dataclass
-class FormulaInstanceCacheKey:
+class UnitInstanceCacheKey:
     project_id: UUID
 
 
@@ -99,10 +98,6 @@ class FormulaPluckFilter(QueryFilter):
     ids: Optional[List[UUID]]
     names: Optional[List[str]]
     attached_to_type_ids: Optional[UUID]
-
-
-class FormulaInstanceFilter(QueryFilter):
-    project_id: UUID
 
 
 class FormulaCachePluckFilter(QueryFilter):

@@ -7,7 +7,7 @@ from expert_dollup.core.domains import *
 from expert_dollup.core.logits import serialize_post_processed_expression
 
 
-class FormulaInstanceBuilder:
+class UnitInstanceBuilder:
     def __init__(self, formula_plucker: Plucker[FormulaService]):
         self.formula_plucker = formula_plucker
 
@@ -15,8 +15,8 @@ class FormulaInstanceBuilder:
         self,
         project_def_id: UUID,
         nodes: List[ProjectNode],
-    ) -> List[FormulaInstance]:
-        formulas_result: List[FormulaInstance] = []
+    ) -> List[UnitInstance]:
+        formulas_result: List[UnitInstance] = []
         nodes_by_type_id: Dict[UUID, List[ProjectNode]] = defaultdict(list)
 
         for node in nodes:
@@ -34,12 +34,11 @@ class FormulaInstanceBuilder:
 
             for node in nodes:
                 formulas_result.append(
-                    FormulaInstance(
-                        project_id=node.project_id,
+                    UnitInstance(
                         formula_id=formula.id,
                         node_id=node.id,
-                        node_path=node.path,
-                        formula_name=formula.name,
+                        path=node.path,
+                        name=formula.name,
                         calculation_details="<was not calculated yet>",
                         result=0,
                     )
@@ -49,8 +48,8 @@ class FormulaInstanceBuilder:
 
     def build_with_fields(
         self, formulas: List[Formula], nodes: List[ProjectNode]
-    ) -> List[FormulaInstance]:
-        formulas_result: List[FormulaInstance] = []
+    ) -> List[UnitInstance]:
+        formulas_result: List[UnitInstance] = []
         parent_node_by_type_id = defaultdict(list)
         project_id = nodes[0].project_id
         done_nodes = set()
@@ -80,17 +79,16 @@ class FormulaInstanceBuilder:
 
             for node_id, node_path in parent_nodes:
                 formulas_result.append(
-                    FormulaInstance(
-                        project_id=project_id,
+                    UnitInstance(
                         formula_id=formula.id,
                         node_id=node_id,
-                        node_path=node_path,
-                        formula_name=formula.name,
+                        path=node_path,
+                        name=formula.name,
                         calculation_details="<was not calculated yet>",
                         result=0,
                     )
                 )
 
-        print(skipped_formulas)
+        assert len(skipped_formulas) == 0, f"Missing formulas: {skipped_formulas}"
 
         return formulas_result

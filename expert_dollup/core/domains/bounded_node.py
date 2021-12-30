@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List
 from .project_node import ProjectNode
 from .project_definition import ProjectDefinition
-from .formula import FormulaInstance
+from .formula import UnitInstance
 
 
 @dataclass
@@ -14,4 +14,4 @@ class BoundedNode:
 @dataclass
 class BoundedNodeSlice:
     bounded_nodes: List[BoundedNode]
-    formulas_result: List[FormulaInstance]
+    unit_instances: List[UnitInstance]

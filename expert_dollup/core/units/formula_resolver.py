@@ -1,150 +1,28 @@
 import ast
-from functools import cached_property
-from expert_dollup.core.domains.formula import FormulaFilter, FormulaInstanceFilter
-from typing import List, Union, Dict, Set
+from expert_dollup.core.domains.formula import FormulaFilter
+from typing import List, Dict, Set
 from uuid import UUID
-from collections import defaultdict
 from expert_dollup.core.domains import (
     Formula,
     FormulaExpression,
-    FormulaInstance,
     FormulaDependencyGraph,
     FormulaDependency,
+    UnitInstanceCache,
 )
-from expert_dollup.core.domains.project_definition_node import ValueUnion
-from expert_dollup.core.domains.project_node import ProjectNode
 from expert_dollup.infra.services import (
     FormulaService,
     ProjectNodeService,
     ProjectDefinitionNodeService,
 )
-from expert_dollup.core.builders import FormulaInstanceBuilder
+from expert_dollup.core.builders import UnitInstanceBuilder
 from expert_dollup.core.queries import Plucker
-from expert_dollup.core.logits import FormulaVisitor
+from expert_dollup.core.logits import (
+    FormulaVisitor,
+    FormulaInjector,
+    FormulaUnit,
+    FieldUnit,
+)
 import expert_dollup.core.logits.formula_processor as formula_processor
-
-
-class FormulaInjector:
-    def __init__(self):
-        self.unit_map: Dict[str, List[Union["FormulaUnit", "FieldUnit"]]] = defaultdict(
-            list
-        )
-        self.units: List["FormulaUnit"] = []
-
-    def add_unit(self, unit: Union["FormulaUnit", "FieldUnit"]) -> None:
-        for item in unit.path:
-            self.unit_map[f"{item}.{unit.name}"].append(unit)
-
-        self.unit_map[unit.name].append(unit)
-        self.unit_map[f"{unit.node_id}.{unit.name}"].append(unit)
-
-        if isinstance(unit, FormulaUnit):
-            self.units.append(unit)
-
-    def get_unit(
-        self, node_id: UUID, path: List[UUID], name: str
-    ) -> List[Union["FormulaUnit", "FieldUnit"]]:
-        unit_id = f"{node_id}.{name}"
-
-        if unit_id in self.unit_map:
-            return self.unit_map[unit_id]
-
-        for id in reversed(path):
-            unit_id = f"{id}.{name}"
-
-            if unit_id in self.unit_map:
-                return self.unit_map[unit_id]
-
-        if name in self.unit_map:
-            return self.unit_map[name]
-
-        return []
-
-
-class FormulaUnit:
-    def __init__(
-        self,
-        formula_instance: FormulaInstance,
-        formula_dependencies: List[str],
-        final_ast: dict,
-        formula_injector: FormulaInjector,
-    ):
-        self._formula_instance = formula_instance
-        self._formula_dependencies = formula_dependencies
-        self._final_ast = final_ast
-        self._formula_injector = formula_injector
-        self._touched = None
-
-    @property
-    def dependencies(self) -> List[str]:
-        return self._formula_dependencies
-
-    @property
-    def node_id(self) -> UUID:
-        return self._formula_instance.node_id
-
-    @property
-    def path(self) -> List[UUID]:
-        return self._formula_instance.node_path
-
-    @property
-    def name(self) -> str:
-        return self._formula_instance.formula_name
-
-    @property
-    def formula_id(self) -> UUID:
-        return self._formula_instance.formula_id
-
-    @cached_property
-    def computed(self) -> FormulaInstance:
-        self.units = {
-            name: self._formula_injector.get_unit(self.node_id, self.path, name)
-            for name in self.dependencies
-        }
-
-        result, calculation_details = formula_processor.dispatch(self._final_ast, self)
-
-        if result != self._formula_instance.result:
-            self._formula_instance.result = result
-            self._touched = True
-
-        if self._formula_instance.calculation_details != calculation_details:
-            self._formula_instance.calculation_details = calculation_details
-            self._touched = True
-
-        return self._formula_instance
-
-    @property
-    def touched(self) -> bool:
-        if self._touched is None:
-            self.computed
-
-        return self._touched
-
-    @property
-    def value(self):
-        return self.computed.result
-
-
-class FieldUnit:
-    def __init__(self, node: ProjectNode):
-        self._node = node
-
-    @property
-    def value(self) -> ValueUnion:
-        return self._node.value
-
-    @property
-    def node_id(self) -> UUID:
-        return self._node.id
-
-    @property
-    def path(self) -> List[UUID]:
-        return self._node.path
-
-    @property
-    def name(self) -> str:
-        return self._node.type_name
 
 
 class FormulaResolver:
@@ -153,24 +31,18 @@ class FormulaResolver:
         formula_service: FormulaService,
         project_node_service: ProjectNodeService,
         project_definition_node_service: ProjectDefinitionNodeService,
-        formula_instance_builder: FormulaInstanceBuilder,
+        unit_instance_builder: UnitInstanceBuilder,
         formulas_plucker: Plucker[FormulaService],
         nodes_plucker: Plucker[ProjectNodeService],
     ):
         self.formula_service = formula_service
         self.project_node_service = project_node_service
         self.project_definition_node_service = project_definition_node_service
-        self.formula_instance_builder = formula_instance_builder
+        self.unit_instance_builder = unit_instance_builder
         self.formulas_plucker = formulas_plucker
         self.nodes_plucker = nodes_plucker
 
     async def parse_many(self, formula_expressions: List[FormulaExpression]) -> Formula:
-        def get_names(expression: str):
-            formula_ast = ast.parse(expression)
-            visitor = FormulaVisitor()
-            visitor.visit(formula_ast)
-            return visitor
-
         project_def_id = formula_expressions[0].project_def_id
         for formula_expression in formula_expressions:
             if formula_expression.project_def_id != project_def_id:
@@ -194,7 +66,9 @@ class FormulaResolver:
             formulas_id_by_name[formula_expression.name] = formula_expression.id
 
         formula_dependencies: Dict[str, Set[str]] = {
-            formula_expression.name: get_names(formula_expression.expression)
+            formula_expression.name: FormulaVisitor.get_names(
+                formula_expression.expression
+            ).var_names
             for formula_expression in formula_expressions
         }
 
@@ -255,9 +129,7 @@ class FormulaResolver:
         return formulas
 
     async def parse(self, formula_expression: FormulaExpression) -> Formula:
-        formula_ast = ast.parse(formula_expression.expression)
-        visitor = FormulaVisitor()
-        visitor.visit(formula_ast)
+        visitor = FormulaVisitor.get_names(formula_expression)
 
         if formula_expression.name in visitor.var_names:
             raise Exception(f"Formua {formula_expression.name} is self dependant")
@@ -312,7 +184,7 @@ class FormulaResolver:
 
     async def compute_all_project_formula(
         self, project_id: UUID, project_def_id: UUID
-    ) -> List[FormulaInstance]:
+    ) -> UnitInstanceCache:
         injector = FormulaInjector()
         nodes = await self.project_node_service.get_all_fields(project_id)
 
@@ -325,11 +197,9 @@ class FormulaResolver:
 
         formula_by_id = {formula.id: formula for formula in formulas}
 
-        formula_instances = self.formula_instance_builder.build_with_fields(
-            formulas, nodes
-        )
+        unit_instances = self.unit_instance_builder.build_with_fields(formulas, nodes)
 
-        for formula_instance in formula_instances:
+        for formula_instance in unit_instances:
             formula = formula_by_id[formula_instance.formula_id]
             injector.add_unit(
                 FormulaUnit(

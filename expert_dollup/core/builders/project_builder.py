@@ -18,7 +18,7 @@ from expert_dollup.core.domains import (
 
 
 from expert_dollup.infra.services import *
-from .formula_instance_builder import FormulaInstanceBuilder
+from .unit_instance_builder import UnitInstanceBuilder
 
 
 class TriggerHandler:
@@ -46,13 +46,13 @@ class ProjectBuilder:
         project_node_meta_service: ProjectNodeMetaService,
         project_definition_node_service: ProjectDefinitionNodeService,
         ressource_builder: RessourceBuilder,
-        formula_cache_result_builder: FormulaInstanceBuilder,
+        unit_instance_builder: UnitInstanceBuilder,
     ):
         self.project_definition_node_service = project_definition_node_service
         self.project_node_meta_service = project_node_meta_service
         self.ressource_builder = ressource_builder
         self.project_node_service = project_node_service
-        self.formula_cache_result_builder = formula_cache_result_builder
+        self.unit_instance_builder = unit_instance_builder
 
     async def build_new(self, project_details: ProjectDetails) -> Project:
         node_definitions = await self.project_definition_node_service.find_by(
@@ -108,7 +108,7 @@ class ProjectBuilder:
             details=project_details,
             nodes=nodes,
             metas=node_metas,
-            formulas_result=await self.formula_cache_result_builder.build(
+            formulas_result=await self.unit_instance_builder.build(
                 project_details.project_def_id, nodes
             ),
             ressource=self.ressource_builder.build(
@@ -140,7 +140,7 @@ class ProjectBuilder:
             nodes=cloned_nodes,
             metas=cloned_metas,
             ressource=ressource,
-            formulas_result=await self.formula_cache_result_builder.build(
+            formulas_result=await self.unit_instance_builder.build(
                 project_details.project_def_id, cloned_nodes
             ),
         )

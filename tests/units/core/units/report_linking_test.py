@@ -233,8 +233,8 @@ datasheet_seed = DatasheetSeed(
 
 post_transform_factor_snippet = """
 def get_post_transform_factor(unit_id, conversion_factor, special_condition):
-    linear_unit_id = "linear_unit" # 2
-    brick_to_foot_id = "brick_to_foot" # 11
+    linear_unit_id = "linearunit" # 2
+    brick_to_foot_id = "bricktofoot" # 11
     mul_conversion_factor = 1.0
 
     if (unit_id == linear_unit_id and special_condition) or unit_id != linear_unit_id:
@@ -242,7 +242,7 @@ def get_post_transform_factor(unit_id, conversion_factor, special_condition):
 
     if mul_conversion_factor == 0:
         mul_conversion_factor = 1
-    elif unit_id == brick_to_foot_id:
+    elif unit_id != brick_to_foot_id:
         mul_conversion_factor = 1/mul_conversion_factor
     
     return round_number(mul_conversion_factor, 8, 'truncate')
@@ -278,6 +278,10 @@ def make_general_report(project_def_id: UUID) -> ReportDefinition:
                 ReportColumn(
                     name="cost_per_unit",
                     expression="format_currency(row['datasheet_element']['price'], 2, 'truncate')",
+                ),
+                ReportColumn(
+                    name="result",
+                    expression="sum(row['formula']['result'] * row['columns']['post_transform_factor'] for row in rows)",
                 ),
                 ReportColumn(
                     name="cost",

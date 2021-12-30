@@ -1,6 +1,6 @@
 from uuid import UUID
 from expert_dollup.shared.starlette_injection import CamelModel
-from .report_definition_dto import ReportRowDictDto
+from .report_definition_dto import ReportRowDictDto, ReportColumnDictDto
 
 
 class ReportRowDto(CamelModel):
@@ -14,3 +14,12 @@ class ReportRowDto(CamelModel):
     element_id: UUID
     child_reference_id: UUID
     row: ReportRowDictDto
+
+
+class ReportLightRowDto(CamelModel):
+    node_id: UUID
+    formula_id: UUID
+    order_index: int
+    element_id: UUID
+    child_reference_id: UUID
+    columns: ReportColumnDictDto

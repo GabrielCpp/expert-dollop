@@ -16,6 +16,7 @@ from expert_dollup.core.utils.path_transform import (
 
 from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.core.domains import *
+from expert_dollup.infra.expert_dollup_storage import *
 
 
 def get_display_query_id(global_id: UUID, path: List[UUID]) -> str:
@@ -521,29 +522,23 @@ def map_formula_from_dao(src: ProjectDefinitionFormulaDao, mapper: Mapper) -> Fo
     )
 
 
-def map_formula_instance_to_dao(
-    src: FormulaInstance, mapper: Mapper
-) -> ProjectFormulaInstanceDao:
-    return ProjectFormulaInstanceDao(
-        project_id=src.project_id,
+def map_formula_instance_to_dao(src: UnitInstance, mapper: Mapper) -> UnitInstanceDao:
+    return UnitInstanceDao(
         formula_id=src.formula_id,
         node_id=src.node_id,
-        node_path=join_uuid_path(src.node_path),
-        formula_name=src.formula_name,
+        path=src.path,
+        name=src.name,
         calculation_details=src.calculation_details,
         result=src.result,
     )
 
 
-def map_formula_instance_from_dao(
-    src: ProjectFormulaInstanceDao, mapper: Mapper
-) -> FormulaInstance:
-    return FormulaInstance(
-        project_id=src.project_id,
+def map_formula_instance_from_dao(src: UnitInstanceDao, mapper: Mapper) -> UnitInstance:
+    return UnitInstanceDao(
         formula_id=src.formula_id,
         node_id=src.node_id,
-        node_path=split_uuid_path(src.node_path),
-        formula_name=src.formula_name,
+        path=src.path,
+        name=src.name,
         calculation_details=src.calculation_details,
         result=src.result,
     )
@@ -949,17 +944,6 @@ def map_node_pluck_filter(src: NodePluckFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
         {"ids": ("id", None)},
-    )
-
-
-def map_formula_cached_result_filter(
-    src: FormulaInstanceFilter, mapper: Mapper
-) -> dict:
-    return map_dict_keys(
-        src.args,
-        {
-            "project_id": ("project_id", None),
-        },
     )
 
 

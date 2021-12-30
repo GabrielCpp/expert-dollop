@@ -6,7 +6,7 @@ from expert_dollup.infra.services import (
     ProjectNodeService,
     ProjectDefinitionNodeService,
 )
-from .formula_instance_builder import FormulaInstanceBuilder
+from .unit_instance_builder import UnitInstanceBuilder
 
 
 class ProjectNodeSliceBuilder:
@@ -14,11 +14,11 @@ class ProjectNodeSliceBuilder:
         self,
         project_node_service: ProjectNodeService,
         project_definition_node_service: ProjectDefinitionNodeService,
-        formula_cache_result_builder: FormulaInstanceBuilder,
+        unit_instance_builder: UnitInstanceBuilder,
     ):
         self.project_node_service = project_node_service
         self.project_definition_node_service = project_definition_node_service
-        self.formula_cache_result_builder = formula_cache_result_builder
+        self.unit_instance_builder = unit_instance_builder
 
     async def build_collection(
         self,
@@ -80,13 +80,13 @@ class ProjectNodeSliceBuilder:
             ]
         ]
 
-        formulas_result = await self.formula_cache_result_builder.build(
+        unit_instances = await self.unit_instance_builder.build(
             project_details.project_def_id,
             [bounded_node.node for bounded_node in bounded_nodes],
         )
 
         return BoundedNodeSlice(
-            bounded_nodes=bounded_nodes, formulas_result=formulas_result
+            bounded_nodes=bounded_nodes, unit_instances=unit_instances
         )
 
     async def clone(self, project_id: UUID, node_id: UUID):
@@ -131,11 +131,11 @@ class ProjectNodeSliceBuilder:
             )
         ]
 
-        formulas_result = await self.formula_cache_result_builder.build(
+        unit_instances = await self.unit_instance_builder.build(
             root_def_node.project_def_id,
             [bounded_node.node for bounded_node in bounded_nodes],
         )
 
         return BoundedNodeSlice(
-            bounded_nodes=bounded_nodes, formulas_result=formulas_result
+            bounded_nodes=bounded_nodes, unit_instances=unit_instances
         )

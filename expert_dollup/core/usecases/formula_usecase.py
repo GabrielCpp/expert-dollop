@@ -2,10 +2,9 @@ from typing import List
 from uuid import UUID
 from expert_dollup.core.domains import (
     Formula,
-    FormulaInstance,
     FormulaExpression,
-    FormulaInstanceCache,
-    FormulaInstanceCacheKey,
+    UnitInstanceCache,
+    UnitInstanceCacheKey,
 )
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.units import FormulaResolver
@@ -22,7 +21,7 @@ class FormulaUseCase:
         formula_resolver: FormulaResolver,
         project_service: ProjectService,
         formula_instance_service: ObjectStorage[
-            FormulaInstanceCache, FormulaInstanceCacheKey
+            UnitInstanceCache, UnitInstanceCacheKey
         ],
     ):
         self.formula_service = formula_service
@@ -49,14 +48,12 @@ class FormulaUseCase:
     async def delete_by_id(self, formula_id: UUID, remove_recursively: bool):
         await self.formula_service.find_by_id(formula_id)
 
-    async def compute_project_formulas(self, project_id) -> List[FormulaInstance]:
+    async def compute_project_formulas(self, project_id) -> UnitInstanceCache:
         project_details = await self.project_service.find_by_id(project_id)
         instances = await self.formula_resolver.compute_all_project_formula(
             project_id, project_details.project_def_id
         )
-
         await self.formula_instance_service.save(
-            FormulaInstanceCacheKey(project_id=project_id), instances
+            UnitInstanceCacheKey(project_id=project_id), instances
         )
-
         return instances

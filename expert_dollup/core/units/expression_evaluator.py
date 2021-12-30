@@ -29,17 +29,16 @@ class AstVirtualMachine:
             return _compute_function
 
         if isinstance(node, ast.GeneratorExp):
+            elements = self.compute(node.generators[0].iter, scope)
+            target = self.compute(node.generators[0].target, scope)
+            values = []
 
-            def _compute_generator():
-                elements = self.compute(node.generators[0].iter, scope)
-                target = self.compute(node.generators[0].target, scope)
+            for element in elements:
+                scope[target] = element
+                value = self.compute(node.elt, scope)
+                values.append(value)
 
-                for element in elements:
-                    scope[target] = element
-                    value = self.compute(node.elt, scope)
-                    yield value
-
-            return _compute_generator()
+            return values
 
         if isinstance(node, ast.If):
             result = self.compute(node.test, scope)

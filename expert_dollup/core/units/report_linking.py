@@ -1,15 +1,16 @@
 import math
-from typing import List, Dict, Any, Optional, Set
-from expert_dollup.core.domains import *
-from expert_dollup.core.object_storage import ObjectStorage
-from expert_dollup.core.queries import Plucker
-from expert_dollup.core.units.expression_evaluator import ExpressionEvaluator
-from expert_dollup.infra.services import *
+from typing import List, Dict, Any, Optional
 from uuid import UUID
 from functools import lru_cache
 from collections import defaultdict
-from itertools import islice
+from itertools import islice, groupby
 from hashlib import sha3_256
+from expert_dollup.core.object_storage import ObjectStorage
+from expert_dollup.core.queries import Plucker
+from expert_dollup.core.domains import *
+from expert_dollup.infra.services import *
+from expert_dollup.core.logits import FormulaInjector, FrozenUnit
+from .expression_evaluator import ExpressionEvaluator
 
 
 def round_number(number, digits, method) -> float:
@@ -92,13 +93,6 @@ class ReportLinkingCache:
             LabelCollectionFilter(datasheet_definition_id=self._datasheet_definition.id)
         )
 
-    async def get_datasheet_definition_elements(self):
-        return await self.datasheet_definition_element_service.find_by(
-            DatasheetDefinitionElementFilter(
-                datasheet_def_id=self.datasheet_definition.id
-            )
-        )
-
     async def get_labels(
         self,
         label_collection: LabelCollection,
@@ -123,6 +117,10 @@ class ReportCache:
     warnings: List[str]
 
 
+from hashlib import sha256
+from expert_dollup.shared.database_services import JsonSerializer
+
+
 class ReportRowCacheBuilder:
     def __init__(
         self,
@@ -137,7 +135,7 @@ class ReportRowCacheBuilder:
     ):
         self.datasheet_definition_service = datasheet_definition_service
         self.project_definition_service = project_definition_service
-        self.datasheet_definition_element = datasheet_definition_element_service
+        self.datasheet_definition_element_service = datasheet_definition_element_service
         self.report_definition_service = report_definition_service
         self.label_collection_service = label_collection_service
         self.label_service = label_service
@@ -150,25 +148,53 @@ class ReportRowCacheBuilder:
         cache = ReportLinkingCache(
             self.datasheet_definition_service,
             self.project_definition_service,
-            self.datasheet_definition_element,
+            self.datasheet_definition_element_service,
             self.report_definition_service,
             self.label_collection_service,
             self.label_service,
         )
 
         await cache.load_report_project_ressources(report_definition.project_def_id)
-        elements = await cache.get_datasheet_definition_elements()
-
-        selection_alias = report_definition.structure.datasheet_selection_alias
-        report_buckets = [
-            {selection_alias: element.report_dict} for element in elements
-        ]
+        report_buckets = await self._build_from_datasheet_elements(
+            report_definition, cache
+        )
 
         for join in report_definition.structure.joins_cache:
             report_buckets = await self._join_on(report_buckets, join, cache)
 
         await self._join_translations(report_buckets)
         await self._join_formulas(report_buckets, report_definition)
+        report_buckets = self._distinct_rows(report_buckets)
+
+        return report_buckets
+
+    def _distinct_rows(self, report_buckets):
+        fingerprints = (
+            sha256(JsonSerializer.encode(row, indent=None).encode("utf8")).hexdigest()
+            for row in report_buckets
+        )
+        seen = {}
+        filtered_bucket = [
+            seen.setdefault(fingerprint, row)
+            for fingerprint, row in zip(fingerprints, report_buckets)
+            if not fingerprint in seen
+        ]
+
+        return filtered_bucket
+
+    async def _build_from_datasheet_elements(
+        self, report_definition: ReportDefinition, cache: ReportLinkingCache
+    ):
+        selection_alias = report_definition.structure.datasheet_selection_alias
+        elements = await self.datasheet_definition_element_service.find_by(
+            DatasheetDefinitionElementFilter(
+                datasheet_def_id=cache.datasheet_definition.id
+            )
+        )
+
+        report_buckets = [
+            {selection_alias: element.report_dict} for element in elements
+        ]
 
         return report_buckets
 
@@ -321,19 +347,28 @@ class ReportRowCacheBuilder:
         return []
 
 
+from stopwatch import Stopwatch
+
+
+@dataclass
+class LinkingData:
+    report_definition: ReportDefinition
+    project_details: ProjectDetails
+    unit_instances: UnitInstanceCache
+    injector: FormulaInjector
+
+
 class ReportLinking:
     def __init__(
         self,
         report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
         report_row_service: ReportRowService,
-        formula_instance_service: ObjectStorage[
-            FormulaInstanceCache, FormulaInstanceCacheKey
-        ],
+        unit_instance_service: ObjectStorage[UnitInstanceCache, UnitInstanceCacheKey],
         datasheet_element_plucker: Plucker[DatasheetElementService],
         expression_evaluator: ExpressionEvaluator,
     ):
         self.report_def_row_cache = report_def_row_cache
-        self.formula_instance_service = formula_instance_service
+        self.unit_instance_service = unit_instance_service
         self.report_row_service = report_row_service
         self.datasheet_element_plucker = datasheet_element_plucker
         self.expression_evaluator = expression_evaluator
@@ -343,71 +378,100 @@ class ReportLinking:
         report_definition: ReportDefinition,
         project_details: ProjectDetails,
     ) -> List[ReportRow]:
-        rows = await self.report_def_row_cache.load(
-            ReportRowKey(
-                project_def_id=report_definition.project_def_id,
-                report_definition_id=report_definition.id,
+        from tests.fixtures import dump_to_file
+
+        linking_data = await self._preload_data(report_definition, project_details)
+
+        with Stopwatch("self.report_def_row_cache.load") as w:
+            rows = await self.report_def_row_cache.load(
+                ReportRowKey(
+                    project_def_id=report_definition.project_def_id,
+                    report_definition_id=report_definition.id,
+                )
             )
-        )
-        new_rows = await self._join_row_cache_with_formula_instances(
-            rows, project_details, report_definition
-        )
-        await self._fill_datasheet_element_in_rows(new_rows, project_details)
-        self._fill_row_columns(new_rows, report_definition)
-        self._fill_row_order(new_rows, report_definition)
+            print(w.report())
 
-        return new_rows
+        dump_to_file(rows)
 
-    async def _get_report_formula_nodes(
-        self, project_id: UUID, formula_ids: Set[UUID]
-    ) -> Dict[UUID, List[FormulaInstance]]:
-        formula_instances = await self.formula_instance_service.load(
-            FormulaInstanceCacheKey(project_id=project_id)
-        )
-        formulas_instance_by_def_id: Dict[UUID, List[FormulaInstance]] = defaultdict(
-            list
-        )
-
-        for formula_result in formula_instances:
-            formulas_instance_by_def_id[formula_result.formula_id].append(
-                formula_result
+        with Stopwatch("self._join_row_cache_with_unit_instances") as w:
+            new_rows = await self._join_row_cache_with_unit_instances(
+                rows, linking_data
             )
 
-        return formulas_instance_by_def_id
+        dump_to_file(new_rows)
 
-    async def _join_row_cache_with_formula_instances(
-        self, rows, project_details, report_definition
+        with Stopwatch("self._fill_datasheet_element_in_rows.load") as w:
+            await self._fill_datasheet_element_in_rows(new_rows, linking_data)
+            print(w.report())
+
+        grouped_rows = self._fill_row_columns(new_rows, linking_data)
+
+        dump_to_file(grouped_rows)
+        # self._fill_row_order(grouped_rows, report_definition)
+
+        return grouped_rows
+
+    async def _preload_data(
+        self,
+        report_definition: ReportDefinition,
+        project_details: ProjectDetails,
+    ) -> LinkingData:
+        unit_instances = await self.unit_instance_service.load(
+            UnitInstanceCacheKey(project_id=project_details.id)
+        )
+
+        injector = FormulaInjector()
+        for unit_instance in unit_instances:
+            injector.add_unit(FrozenUnit(unit_instance))
+
+        return LinkingData(
+            report_definition=report_definition,
+            project_details=project_details,
+            unit_instances=unit_instances,
+            injector=injector,
+        )
+
+    async def _join_row_cache_with_unit_instances(
+        self, rows, linking_data: LinkingData
     ) -> List[ReportRow]:
         new_rows: List[ReportRow] = []
 
+        report_definition = linking_data.report_definition
         element_attribute = report_definition.structure.datasheet_attribute
         formula_attribute = report_definition.structure.formula_attribute
-        formula_ids: Set[UUID] = {formula_attribute.get(row) for row in rows}
-        formulas_instance_by_def_id = await self._get_report_formula_nodes(
-            project_details.id, formula_ids
-        )
+        project_id = linking_data.project_details.id
+        datasheet_id = linking_data.project_details.datasheet_id
+        report_def_id = linking_data.report_definition.id
+        null_uuid = zero_uuid()
+        unit_instances_by_def_id: Dict[UUID, UnitInstanceCache] = {
+            formula_id: list(values)
+            for formula_id, values in groupby(
+                linking_data.unit_instances, key=lambda x: x.formula_id
+            )
+            if not formula_id is None
+        }
 
         for row in rows:
             element_id = UUID(element_attribute.get(row))
             formula_id = UUID(formula_attribute.get(row))
 
             assert (
-                formula_id in formulas_instance_by_def_id
+                formula_id in unit_instances_by_def_id
             ), f"Missing formula {formula_id}"
-            formula_instances = formulas_instance_by_def_id[formula_id]
+            unit_instances = unit_instances_by_def_id[formula_id]
 
-            for formula_instance in formula_instances:
+            for formula_instance in unit_instances:
                 new_rows.append(
                     ReportRow(
-                        project_id=project_details.id,
-                        report_def_id=report_definition.id,
+                        project_id=project_id,
+                        report_def_id=report_def_id,
                         group_digest="",
-                        datasheet_id=project_details.datasheet_id,
+                        datasheet_id=datasheet_id,
                         node_id=formula_instance.node_id,
                         formula_id=formula_instance.formula_id,
                         element_id=element_id,
                         order_index=0,
-                        child_reference_id=zero_uuid(),
+                        child_reference_id=null_uuid,
                         row={**row, "formula": formula_instance.report_dict},
                     )
                 )
@@ -415,10 +479,12 @@ class ReportLinking:
         return new_rows
 
     async def _fill_datasheet_element_in_rows(
-        self, report_rows: List[ReportRow], project_details: ProjectDetails
+        self, report_rows: List[ReportRow], linking_data: LinkingData
     ):
+        project_id = linking_data.project_details.id
+        datasheet_id = linking_data.project_details.datasheet_id
         old_rows = await self.report_row_service.find_by(
-            ReportRowFilter(project_id=project_details.id)
+            ReportRowFilter(project_id=project_id)
         )
 
         old_row_by_formula_cache = {
@@ -439,7 +505,7 @@ class ReportLinking:
 
         missing_elements = await self.datasheet_element_plucker.pluck_subressources(
             DatasheetElementFilter(
-                datasheet_id=project_details.datasheet_id,
+                datasheet_id=datasheet_id,
                 child_element_reference=zero_uuid(),
             ),
             lambda ids: DatasheetElementPluckFilter(element_def_ids=ids),
@@ -456,8 +522,9 @@ class ReportLinking:
                 ] = missing_element.report_dict
 
     def _fill_row_columns(
-        self, report_rows: List[ReportRow], report_definition: ReportDefinition
+        self, report_rows: List[ReportRow], linking_data: LinkingData
     ):
+        report_definition = linking_data.report_definition
         footprint_columns = {
             g.attribute_name
             for g in report_definition.structure.group_by
@@ -497,7 +564,7 @@ class ReportLinking:
 
             for column in first_pass_columns:
                 columns[column.name] = self._evaluate(
-                    column.expression, report_row.row, None
+                    column.expression, report_row.row, None, linking_data.injector
                 )
 
             group_id = "/".join(
@@ -507,11 +574,12 @@ class ReportLinking:
 
             report_row.group_digest = sha3_256(group_id.encode("utf8")).hexdigest()
 
-        grouped_rows: List[ReportRow] = []
         rows_by_group = defaultdict(list)
 
         for report_row in report_rows:
             rows_by_group[report_row.group_digest].append(report_row)
+
+        grouped_rows = defaultdict(list)
 
         for group_report_rows in rows_by_group.values():
             rows = [group_report_row.row for group_report_row in group_report_rows]
@@ -520,10 +588,12 @@ class ReportLinking:
 
             for column in second_pass_column:
                 columns[column.name] = self._evaluate(
-                    column.expression, report_row.row, rows
+                    column.expression, report_row.row, rows, linking_data.injector
                 )
 
-            grouped_rows.append(report_row)
+            if columns["cost"] != "0.0 $":
+                stage = report_definition.structure.stage_attribute.get(report_row.row)
+                grouped_rows[stage].append(columns)
 
         return grouped_rows
 
@@ -543,7 +613,7 @@ class ReportLinking:
         for index, report_row in enumerate(report_rows):
             report_row.order_index = index
 
-    def _evaluate(self, expression, row, rows_group):
+    def _evaluate(self, expression, row, rows_group, injector):
         try:
             return self.expression_evaluator.evaluate(
                 expression,
@@ -553,6 +623,7 @@ class ReportLinking:
                     "round_number": round_number,
                     "format_currency": format_currency,
                     "sum": sum,
+                    "injector": injector,
                 },
             )
         except Exception as e:

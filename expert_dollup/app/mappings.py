@@ -972,3 +972,14 @@ def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportRowDto:
         child_reference_id=src.child_reference_id,
         row=src.row,
     )
+
+
+def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportLightRowDto:
+    return ReportLightRowDto(
+        node_id=src.node_id,
+        formula_id=src.formula_id,
+        order_index=src.order_index,
+        element_id=src.element_id,
+        child_reference_id=src.child_reference_id,
+        columns=src.row["columns"],
+    )

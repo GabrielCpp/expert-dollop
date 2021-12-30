@@ -262,7 +262,7 @@ class CustomProjectInstancePackage:
     project_definition: ProjectDefinition
     project: ProjectDetails
     formulas: List[Formula]
-    formula_instances: List[FormulaInstance]
+    unit_instances: List[UnitInstance]
     definition_nodes: List[ProjectDefinitionNode]
     nodes: List[ProjectNode]
     any_id_to_name: Dict[str, str]
@@ -277,7 +277,7 @@ class ProjectInstanceFactory:
         datasheet_def_id: Optional[UUID] = None,
     ) -> CustomProjectInstancePackage:
         seed_nodes_by_name: Dict[str, NodeSeed] = {}
-        formula_instances_by_name: Dict[str, FormulaSeed] = {}
+        unit_instances_by_name: Dict[str, FormulaSeed] = {}
         formulas_by_name: Dict[str, FormulaSeed] = {}
 
         for def_node_seed in project_seed.definitions.values():
@@ -290,8 +290,8 @@ class ProjectInstanceFactory:
                 for formula_seed in node_seed.formulas.values():
                     formula_instance_name = formula_seed.full_name
 
-                    assert not formula_instance_name in formula_instances_by_name
-                    formula_instances_by_name[formula_instance_name] = formula_seed
+                    assert not formula_instance_name in unit_instances_by_name
+                    unit_instances_by_name[formula_instance_name] = formula_seed
 
                     previous_formula_definition = formulas_by_name.get(
                         formula_seed.name, formula_seed
@@ -378,17 +378,16 @@ class ProjectInstanceFactory:
             for formula_seed in formulas_by_name.values()
         ]
 
-        formula_instances = [
-            FormulaInstance(
-                project_id=project.id,
+        unit_instances = [
+            UnitInstance(
                 formula_id=formula_instance.id,
                 node_id=formula_instance.node.id,
-                node_path=formula_instance.path,
+                path=formula_instance.path,
                 formula_name=formula_instance.name,
                 calculation_details=formula_instance.calculation_details,
                 result=formula_instance.result,
             )
-            for formula_instance in formula_instances_by_name.values()
+            for formula_instance in unit_instances_by_name.values()
         ]
 
         any_id_to_name: Dict[str, str] = {
@@ -414,6 +413,6 @@ class ProjectInstanceFactory:
             definition_nodes=definition_nodes,
             nodes=nodes,
             formulas=formulas,
-            formula_instances=formula_instances,
+            unit_instances=unit_instances,
             any_id_to_name=any_id_to_name,
         )

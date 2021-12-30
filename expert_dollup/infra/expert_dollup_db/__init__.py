@@ -197,16 +197,6 @@ class ProjectDefinitionFormulaDao(BaseModel):
     dependency_graph: FormulaDependencyGraphDao
 
 
-class ProjectFormulaInstanceDao(BaseModel):
-    project_id: UUID
-    formula_id: UUID
-    node_id: UUID
-    node_path: str
-    formula_name: str
-    calculation_details: str
-    result: Union[int, str, float, bool]
-
-
 class ElementPropertySchemaDao(BaseModel):
     value_validator: JsonSchemaDao
 
