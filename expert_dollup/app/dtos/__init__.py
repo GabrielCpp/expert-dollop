@@ -83,5 +83,7 @@ from .report_definition_dto import (
     AttributeBucketDto,
     ReportColumnDto,
     ReportJoinDto,
+    StageGroupingDto,
+    ReportComputationDto,
 )
 from .measure_unit_dto import MeasureUnitDto

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from uuid import UUID
-from typing import Dict, Union, Optional
+from typing import List, Optional, Union
 from expert_dollup.shared.database_services import QueryFilter
 from .report_definition import ReportRowDict
 
@@ -17,6 +17,13 @@ class ReportRow:
     element_id: UUID
     child_reference_id: UUID
     row: ReportRowDict
+
+
+@dataclass
+class ReportGroup:
+    label: str
+    summary: Union[float, str, bool, int]
+    rows: List[ReportRow]
 
 
 class ReportRowFilter(QueryFilter):

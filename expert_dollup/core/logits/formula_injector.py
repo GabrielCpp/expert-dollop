@@ -49,7 +49,12 @@ class FormulaInjector:
         if len(units) == 0:
             return default
 
-        return [unit.value for unit in units]
+        if len(units) == 1:
+            return units[0].value
+
+        # TODO: Fix me
+        return "<Error>"
+        raise Exception(f"Too many value for {name} in node {node_id}")
 
 
 class FrozenUnit:

@@ -1,6 +1,6 @@
 from uuid import UUID
 from expert_dollup.core.object_storage import ObjectStorage
-from expert_dollup.core.units import ReportRowCacheBuilder
+from expert_dollup.core.builders import ReportRowCacheBuilder
 from expert_dollup.core.domains import *
 from expert_dollup.infra.services import *
 

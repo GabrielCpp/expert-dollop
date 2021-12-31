@@ -336,17 +336,29 @@ class ReportColumnDao(BaseModel):
     name: str
     expression: str
     is_visible: bool
+    unit_id: Optional[str] = None
+    unit: Optional[AttributeBucketDao] = None
+
+
+class ReportComputationDao(BaseModel):
+    expression: str
+    unit_id: Optional[str] = None
+
+
+class StageGroupingDao(BaseModel):
+    label: AttributeBucketDao
+    summary: ReportComputationDao
 
 
 class ReportStructureDao(BaseModel):
     datasheet_selection_alias: str
     formula_attribute: AttributeBucketDao
     datasheet_attribute: AttributeBucketDao
-    stage_attribute: AttributeBucketDao
     joins_cache: List[ReportJoinDao]
     columns: List[ReportColumnDao]
     group_by: List[AttributeBucketDao]
     order_by: List[AttributeBucketDao]
+    stage: StageGroupingDao
 
 
 class ReportDefinitionDao(BaseModel):

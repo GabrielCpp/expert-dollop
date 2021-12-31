@@ -68,7 +68,7 @@ class FormulaResolver:
         formula_dependencies: Dict[str, Set[str]] = {
             formula_expression.name: FormulaVisitor.get_names(
                 formula_expression.expression
-            ).var_names
+            )
             for formula_expression in formula_expressions
         }
 

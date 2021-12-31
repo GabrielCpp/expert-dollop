@@ -22,7 +22,7 @@ class FormulaVisitor(ast.NodeVisitor):
     whithelisted_fn_names = set(["sqrt", "sin", "cos", "tan", "abs"])
 
     @staticmethod
-    def get_names(expression: str):
+    def get_names(expression: str) -> "FormulaVisitor":
         formula_ast = ast.parse(expression)
         visitor = FormulaVisitor()
         visitor.visit(formula_ast)

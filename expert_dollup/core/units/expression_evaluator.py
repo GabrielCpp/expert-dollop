@@ -58,6 +58,10 @@ class AstVirtualMachine:
 
             return value[index]
 
+        if isinstance(node, ast.Attribute):
+            value = self.compute(node.value, scope)
+            return getattr(value, node.attr)
+
         if isinstance(node, ast.Assign):
             targets = [self.compute(t, scope) for t in node.targets]
             value = self.compute(node.value, scope)
@@ -176,9 +180,6 @@ class AstVirtualMachine:
             return result
 
         if isinstance(node, ast.Call):
-            if not isinstance(node.func, ast.Name):
-                raise Exception("Functino only support direct reference")
-
             args = []
 
             for arg in node.args:
@@ -187,13 +188,18 @@ class AstVirtualMachine:
 
             assert len(args) < 15
 
-            if node.func.id in scope:
-                if scope[node.func.id].__name__ == "_compute_function":
-                    return scope[node.func.id](scope, args)
-                else:
-                    return scope[node.func.id](*args)
+            if isinstance(node.func, ast.Name):
+                if node.func.id in scope:
+                    if scope[node.func.id].__name__ == "_compute_function":
+                        return scope[node.func.id](scope, args)
+                    else:
+                        return scope[node.func.id](*args)
 
-            raise Exception(f"Unknown function {node.func.id}")
+                raise Exception(f"Unknown function {node.func.id}")
+            else:
+                fn = self.compute(node.func, scope)
+                result = fn(*args)
+                return result
 
         raise Exception(f"Unsupported node {type(node)}")
 

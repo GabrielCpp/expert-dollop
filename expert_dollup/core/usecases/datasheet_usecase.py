@@ -7,6 +7,7 @@ from expert_dollup.core.domains import (
     DatasheetFilter,
     DatasheetElementFilter,
     DatasheetCloneTarget,
+    zero_uuid,
 )
 from expert_dollup.infra.services import (
     DatasheetService,
@@ -64,7 +65,9 @@ class DatasheetUseCase:
                     DatasheetElement(
                         datasheet_id=cloned_datasheet.id,
                         element_def_id=result.definition_element.id,
-                        child_element_reference=uuid4(),
+                        child_element_reference=zero_uuid()
+                        if result.child_element_reference == zero_uuid()
+                        else uuid4(),
                         properties=result.properties,
                         original_datasheet_id=result.original_datasheet_id,
                         creation_date_utc=self.clock.utcnow(),
@@ -94,7 +97,7 @@ class DatasheetUseCase:
             DatasheetElement(
                 datasheet_id=datasheet.id,
                 element_def_id=definition_element.id,
-                child_element_reference=uuid4(),
+                child_element_reference=zero_uuid(),
                 properties={
                     name: default_property.value
                     for name, default_property in definition_element.default_properties.items()

@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 from expert_dollup.shared.starlette_injection import CamelModel
 
 ReportColumnDictDto = Dict[str, Union[str, float, bool, int, UUID, List[UUID], None]]
@@ -17,12 +17,6 @@ class ReportJoinDto(CamelModel):
     allow_dicard_element: bool
 
 
-class ReportColumnDto(CamelModel):
-    name: str
-    expression: str
-    is_visible: bool = True
-
-
 class AttributeBucketDto(CamelModel):
     bucket_name: str
     attribute_name: str
@@ -31,15 +25,33 @@ class AttributeBucketDto(CamelModel):
         return row[self.bucket_name][self.attribute_name]
 
 
+class ReportColumnDto(CamelModel):
+    name: str
+    expression: str
+    is_visible: bool = True
+    unit_id: Optional[str] = None
+    unit: Optional[AttributeBucketDto] = None
+
+
+class ReportComputationDto(CamelModel):
+    expression: str
+    unit_id: Optional[str] = None
+
+
+class StageGroupingDto(CamelModel):
+    label: AttributeBucketDto
+    summary: ReportComputationDto
+
+
 class ReportStructureDto(CamelModel):
     datasheet_selection_alias: str
     formula_attribute: AttributeBucketDto
     datasheet_attribute: AttributeBucketDto
-    stage_attribute: AttributeBucketDto
     joins_cache: List[ReportJoinDto]
     columns: List[ReportColumnDto]
     group_by: List[AttributeBucketDto]
     order_by: List[AttributeBucketDto]
+    stage: StageGroupingDto
 
 
 class ReportDefinitionDto(CamelModel):

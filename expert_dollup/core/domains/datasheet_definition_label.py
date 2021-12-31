@@ -17,7 +17,7 @@ class Label:
         if name == "id":
             return self.id
 
-        return self.attributes.get(name)
+        return self.attributes[name]
 
     @property
     def report_dict(self) -> dict:

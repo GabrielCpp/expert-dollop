@@ -99,10 +99,12 @@ from .report_definition import (
     ReportRowsCache,
     ReportRowKey,
     ReportDefinitionFilter,
+    StageGrouping,
+    ReportComputation,
 )
 from .report_definition_row_cache import (
     ReportDefinitionRowCache,
     ReportDefinitionRowCacheFilter,
 )
-from .report_row import ReportRow, ReportRowFilter
+from .report_row import ReportRow, ReportRowFilter, ReportGroup
 from .measure_unit import MeasureUnit

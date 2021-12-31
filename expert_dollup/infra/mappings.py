@@ -984,7 +984,7 @@ def map_report_structure_from_dao(
         datasheet_selection_alias=src.datasheet_selection_alias,
         formula_attribute=mapper.map(src.formula_attribute, AttributeBucket),
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucket),
-        stage_attribute=mapper.map(src.stage_attribute, AttributeBucket),
+        stage=mapper.map(src.stage, StageGrouping),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoin),
         columns=mapper.map_many(src.columns, ReportColumn),
         group_by=mapper.map_many(src.group_by, AttributeBucket),
@@ -999,12 +999,38 @@ def map_report_structure_to_dao(
         datasheet_selection_alias=src.datasheet_selection_alias,
         formula_attribute=mapper.map(src.formula_attribute, AttributeBucketDao),
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucketDao),
-        stage_attribute=mapper.map(src.stage_attribute, AttributeBucketDao),
+        stage=mapper.map(src.stage, StageGroupingDao),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoinDao),
         columns=mapper.map_many(src.columns, ReportColumnDao),
         group_by=mapper.map_many(src.group_by, AttributeBucketDao),
         order_by=mapper.map_many(src.order_by, AttributeBucketDao),
     )
+
+
+def map_stage_grouping_from_dao(src: StageGroupingDao, mapper: Mapper) -> StageGrouping:
+    return StageGrouping(
+        label=mapper.map(src.label, AttributeBucket),
+        summary=mapper.map(src.summary, ReportComputation),
+    )
+
+
+def map_stage_grouping_to_dao(src: StageGrouping, mapper: Mapper) -> StageGroupingDao:
+    return StageGroupingDao(
+        label=mapper.map(src.label, AttributeBucketDao),
+        summary=mapper.map(src.summary, ReportComputationDao),
+    )
+
+
+def map_report_computation_to_dao(
+    src: ReportComputation, mapper: Mapper
+) -> ReportComputationDao:
+    return ReportComputationDao(expression=src.expression, unit_id=src.unit_id)
+
+
+def map_report_computation_from_dao(
+    src: ReportComputationDao, mapper: Mapper
+) -> ReportComputation:
+    return ReportComputation(expression=src.expression, unit_id=src.unit_id)
 
 
 def map_attribute_bucket_from_dao(
@@ -1054,6 +1080,8 @@ def map_report_column_from_dao(src: ReportColumnDao, mapper: Mapper) -> ReportCo
         name=src.name,
         expression=src.expression,
         is_visible=src.is_visible,
+        unit_id=src.unit_id,
+        unit=src.unit,
     )
 
 
@@ -1062,6 +1090,8 @@ def map_report_column_to_dao(src: ReportColumn, mapper: Mapper) -> ReportColumnD
         name=src.name,
         expression=src.expression,
         is_visible=src.is_visible,
+        unit_id=src.unit_id,
+        unit=src.unit,
     )
 
 

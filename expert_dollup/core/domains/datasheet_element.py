@@ -3,8 +3,10 @@ from typing import Optional, Dict, Union, List
 from dataclasses import dataclass
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
+from functools import lru_cache
 
 
+@lru_cache(maxsize=1)
 def zero_uuid() -> UUID:
     return UUID(int=0)
 
@@ -20,7 +22,12 @@ class DatasheetElement:
 
     @property
     def report_dict(self) -> dict:
-        return {**self.properties, "original_datasheet_id": self.original_datasheet_id}
+        return {
+            **self.properties,
+            "element_def_id": self.element_def_id,
+            "child_element_reference": self.child_element_reference,
+            "original_datasheet_id": self.original_datasheet_id,
+        }
 
 
 @dataclass(init=False)

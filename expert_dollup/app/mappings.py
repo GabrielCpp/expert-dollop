@@ -1,4 +1,5 @@
 from uuid import UUID, uuid4
+from decimal import Decimal
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import Mapper, RevervibleUnionMapping
 from expert_dollup.shared.database_services import Page
@@ -879,7 +880,7 @@ def map_report_structure_from_dto(
         datasheet_selection_alias=src.datasheet_selection_alias,
         formula_attribute=mapper.map(src.formula_attribute, AttributeBucket),
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucket),
-        stage_attribute=mapper.map(src.stage_attribute, AttributeBucket),
+        stage=mapper.map(src.stage, StageGrouping),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoin),
         columns=mapper.map_many(src.columns, ReportColumn),
         group_by=mapper.map_many(src.group_by, AttributeBucket),
@@ -894,12 +895,38 @@ def map_report_structure_to_dto(
         datasheet_selection_alias=src.datasheet_selection_alias,
         formula_attribute=mapper.map(src.formula_attribute, AttributeBucketDto),
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucketDto),
-        stage_attribute=mapper.map(src.stage_attribute, AttributeBucketDto),
+        stage=mapper.map(src.stage, StageGrouping),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoinDto),
         columns=mapper.map_many(src.columns, ReportColumnDto),
         group_by=mapper.map_many(src.group_by, AttributeBucketDto),
         order_by=mapper.map_many(src.order_by, AttributeBucketDto),
     )
+
+
+def map_stage_grouping_to_dto(src: StageGrouping, mapper: Mapper) -> StageGroupingDto:
+    return StageGroupingDto(
+        label=mapper.map(src.label, AttributeBucketDto),
+        summary=mapper.map(src.summary, ReportComputationDto),
+    )
+
+
+def map_stage_grouping_from_dto(src: StageGroupingDto, mapper: Mapper) -> StageGrouping:
+    return StageGrouping(
+        label=mapper.map(src.label, AttributeBucket),
+        summary=mapper.map(src.summary, ReportComputation),
+    )
+
+
+def map_report_computation_to_dto(
+    src: ReportComputation, mapper: Mapper
+) -> ReportComputationDto:
+    return ReportComputationDto(expression=src.expression, unit_id=src.unit_id)
+
+
+def map_report_computation_from_dto(
+    src: ReportComputationDto, mapper: Mapper
+) -> ReportComputation:
+    return ReportComputation(expression=src.expression, unit_id=src.unit_id)
 
 
 def map_attribute_bucket_from_dto(
@@ -948,6 +975,8 @@ def map_report_column_from_dto(src: ReportColumnDto, mapper: Mapper) -> ReportCo
         name=src.name,
         expression=src.expression,
         is_visible=src.is_visible,
+        unit_id=src.unit_id,
+        unit=src.unit,
     )
 
 
@@ -956,6 +985,8 @@ def map_report_column_to_dto(src: ReportColumn, mapper: Mapper) -> ReportColumnD
         name=src.name,
         expression=src.expression,
         is_visible=src.is_visible,
+        unit_id=src.unit_id,
+        unit=src.unit,
     )
 
 

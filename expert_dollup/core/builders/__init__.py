@@ -4,3 +4,4 @@ from .project_builder import ProjectBuilder
 from .project_node_slice_builder import ProjectNodeSliceBuilder
 from .project_tree_builder import ProjectTreeBuilder
 from .unit_instance_builder import UnitInstanceBuilder
+from .report_row_cache_builder import ReportRowCacheBuilder
