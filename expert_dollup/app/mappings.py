@@ -7,6 +7,30 @@ from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 
 
+primitive_with_none_union_dto_mappings = RevervibleUnionMapping(
+    PrimitiveWithNoneUnionDto,
+    PrimitiveWithNoneUnion,
+    {
+        BoolFieldValueDto: bool,
+        IntFieldValueDto: int,
+        StringFieldValueDto: str,
+        DecimalFieldValueDto: Decimal,
+        type(None): type(None),
+    },
+)
+
+primitive_union_dto_mappings = RevervibleUnionMapping(
+    PrimitiveUnionDto,
+    PrimitiveUnion,
+    {
+        BoolFieldValueDto: bool,
+        IntFieldValueDto: int,
+        StringFieldValueDto: str,
+        DecimalFieldValueDto: Decimal,
+    },
+)
+
+
 def map_project_definition_from_dto(
     src: ProjectDefinitionDto, mapper: Mapper
 ) -> ProjectDefinition:
@@ -122,7 +146,7 @@ def map_field_update_input_from_dto(
 ) -> FieldUpdate:
     return FieldUpdate(
         node_id=src.node_id,
-        value=mapper.map(src.value, ValueUnion, ValueUnionDto),
+        value=mapper.map(src.value, primitive_with_none_union_dto_mappings.from_origin),
     )
 
 
@@ -131,7 +155,7 @@ def map_field_update_input_to_dto(
 ) -> FieldUpdateInputDto:
     return FieldUpdateInputDto(
         node_id=src.node_id,
-        value=mapper.map(src.value, ValueUnionDto, ValueUnion),
+        value=mapper.map(src.value, primitive_with_none_union_dto_mappings.to_origin),
     )
 
 
@@ -222,7 +246,9 @@ def map_project_definition_node_from_dto(
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
         config=mapper.map(src.config, NodeConfig),
-        default_value=mapper.map(src.default_value, ValueUnion, ValueUnionDto),
+        default_value=mapper.map(
+            src.default_value, primitive_with_none_union_dto_mappings.from_origin
+        ),
         path=src.path,
         creation_date_utc=mapper.get(Clock).utcnow(),
     )
@@ -240,7 +266,9 @@ def map_project_definition_node_to_dto(
         order_index=src.order_index,
         config=mapper.map(src.config, NodeConfigDto),
         path=src.path,
-        default_value=mapper.map(src.default_value, ValueUnionDto, ValueUnion),
+        default_value=mapper.map(
+            src.default_value, primitive_with_none_union_dto_mappings.to_origin
+        ),
     )
 
 
@@ -331,11 +359,13 @@ def map_int_field_value_to_dto(src: int, mapper: Mapper) -> IntFieldValueDto:
 
 def map_decimal_field_value_from_dto(
     src: DecimalFieldValueDto, mapper: Mapper
-) -> float:
+) -> Decimal:
     return src.numeric
 
 
-def map_decimal_field_value_to_dto(src: float, mapper: Mapper) -> DecimalFieldValueDto:
+def map_decimal_field_value_to_dto(
+    src: Decimal, mapper: Mapper
+) -> DecimalFieldValueDto:
     return DecimalFieldValueDto(numeric=src)
 
 
@@ -347,40 +377,6 @@ def map_reference_id_to_dto(src: UUID, mapper: Mapper) -> ReferenceIdDto:
     return ReferenceIdDto(uuid=src)
 
 
-def map_value_union_from_dto(src: ValueUnionDto, mapper: Mapper) -> ValueUnion:
-    value = None
-
-    if isinstance(src, StringFieldValueDto):
-        value = src.text
-    elif isinstance(src, BoolFieldValueDto):
-        value = src.enabled
-    elif isinstance(src, IntFieldValueDto):
-        value = src.integer
-    elif isinstance(src, DecimalFieldValueDto):
-        value = src.numeric
-    elif not src is None:
-        raise LookupError(f"Field type not found {type(src)}")
-
-    return value
-
-
-def map_value_union_to_dto(src: ValueUnion, mapper: Mapper) -> ValueUnionDto:
-    value = None
-
-    if src is True or src is False:
-        value = BoolFieldValueDto(enabled=src)
-    elif isinstance(src, int):
-        value = IntFieldValueDto(integer=src)
-    elif isinstance(src, float):
-        value = DecimalFieldValueDto(numeric=src)
-    elif isinstance(src, str):
-        value = StringFieldValueDto(text=src)
-    elif not src is None:
-        raise LookupError("Field type not found")
-
-    return value
-
-
 def map_project_node_from_dto(src: ProjectNodeDto, mapper: Mapper) -> ProjectNode:
     return ProjectNode(
         id=src.id,
@@ -389,13 +385,13 @@ def map_project_node_from_dto(src: ProjectNodeDto, mapper: Mapper) -> ProjectNod
         type_name=src.type_name,
         type_path=src.type_path,
         path=src.path,
-        value=mapper.map(src.value, ValueUnion, ValueUnionDto),
+        value=mapper.map(src.value, primitive_with_none_union_dto_mappings.from_origin),
         label=src.label,
     )
 
 
 def map_project_node_to_dto(src: ProjectNode, mapper: Mapper) -> ProjectNodeDto:
-    value = mapper.map(src.value, ValueUnionDto, ValueUnion)
+    value = mapper.map(src.value, primitive_with_none_union_dto_mappings.to_origin)
     result = ProjectNodeDto(
         id=src.id,
         project_id=src.project_id,
@@ -595,13 +591,9 @@ def map_datasheet_definition_element_to_dto(
         name=src.name,
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
-        default_properties={
-            name: DatasheetDefinitionElementPropertyDto(
-                is_readonly=property_details.is_readonly,
-                value=property_details.value,
-            )
-            for (name, property_details) in src.default_properties.items()
-        },
+        default_properties=mapper.map_dict_values(
+            src.default_properties, DatasheetDefinitionElementPropertyDto
+        ),
         tags=src.tags,
         creation_date_utc=src.creation_date_utc,
     )
@@ -617,15 +609,29 @@ def map_datasheet_definition_element_from_dto(
         is_collection=src.is_collection,
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
-        default_properties={
-            name: DatasheetDefinitionElementProperty(
-                is_readonly=property_details.is_readonly,
-                value=property_details.value,
-            )
-            for (name, property_details) in src.default_properties.items()
-        },
+        default_properties=mapper.map_dict_values(
+            src.default_properties, DatasheetDefinitionElementProperty
+        ),
         tags=src.tags,
         creation_date_utc=mapper.get(Clock).utcnow(),
+    )
+
+
+def map_datasheet_definition_element_property_from_dto(
+    src: DatasheetDefinitionElementPropertyDto, mapper: Mapper
+) -> DatasheetDefinitionElementProperty:
+    return DatasheetDefinitionElementProperty(
+        is_readonly=src.is_readonly,
+        value=mapper.map(src.value, primitive_union_dto_mappings.from_origin),
+    )
+
+
+def map_datasheet_definition_element_property_to_dto(
+    src: DatasheetDefinitionElementProperty, mapper: Mapper
+) -> DatasheetDefinitionElementPropertyDto:
+    return DatasheetDefinitionElementPropertyDto(
+        is_readonly=src.is_readonly,
+        value=mapper.map(src.value, primitive_union_dto_mappings.to_origin),
     )
 
 
@@ -722,7 +728,7 @@ label_attribute_value_dto_mappings = RevervibleUnionMapping(
         BoolFieldValueDto: bool,
         IntFieldValueDto: int,
         StringFieldValueDto: str,
-        DecimalFieldValueDto: float,
+        DecimalFieldValueDto: Decimal,
         ReferenceIdDto: UUID,
     },
 )
@@ -803,7 +809,9 @@ def map_datasheet_element_import_from_dto(
         datasheet_id=src.datasheet_id,
         element_def_id=src.element_def_id,
         child_element_reference=src.child_element_reference,
-        properties=src.properties,
+        properties=mapper.map_dict_values(
+            src.properties, primitive_union_dto_mappings.from_origin
+        ),
         original_datasheet_id=src.original_datasheet_id,
         creation_date_utc=mapper.get(Clock).utcnow(),
     )
@@ -816,7 +824,9 @@ def map_datasheet_element_to_dto(
         datasheet_id=src.datasheet_id,
         element_def_id=src.element_def_id,
         child_element_reference=src.child_element_reference,
-        properties=src.properties,
+        properties=mapper.map_dict_values(
+            src.properties, primitive_union_dto_mappings.to_origin
+        ),
         original_datasheet_id=src.original_datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )
@@ -829,7 +839,9 @@ def map_datasheet_element_from_dto(
         datasheet_id=src.datasheet_id,
         element_def_id=src.element_def_id,
         child_element_reference=src.child_element_reference,
-        properties=src.properties,
+        properties=mapper.map_dict_values(
+            src.properties, primitive_union_dto_mappings.from_origin
+        ),
         original_datasheet_id=src.original_datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )

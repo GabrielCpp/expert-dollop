@@ -1,6 +1,7 @@
 from uuid import UUID
 import gzip
 import struct
+from decimal import Decimal
 from io import BytesIO
 from expert_dollup.infra.expert_dollup_storage import ExpertDollupStorage
 from expert_dollup.core.object_storage import ObjectStorage
@@ -54,8 +55,9 @@ class UnitInstanceCloudObject(ObjectStorage[UnitInstanceCache, UnitInstanceCache
 
                 if value_type == "I":
                     value = read_from("l", f)
-                elif value_type == "F":
-                    value = read_from("d", f)
+                elif value_type == "D":
+                    value_len = read_from("L", f)
+                    value = Decimal(f.read(value_len).decode("utf8"))
                 elif value_type == "B":
                     value = True if read_from("B", f) == 1 else False
                 elif value_type == "S":
@@ -109,9 +111,11 @@ class UnitInstanceCloudObject(ObjectStorage[UnitInstanceCache, UnitInstanceCache
                 if isinstance(instance.result, int):
                     f.write(struct.pack("B", ord("I")))
                     f.write(struct.pack("l", instance.result))
-                elif isinstance(instance.result, float):
-                    f.write(struct.pack("B", ord("F")))
-                    f.write(struct.pack("d", instance.result))
+                elif isinstance(instance.result, Decimal):
+                    f.write(struct.pack("B", ord("D")))
+                    result = str(instance.result).encode("utf8")
+                    f.write(struct.pack("L", len(result)))
+                    f.write(result)
                 elif isinstance(instance.result, bool):
                     f.write(struct.pack("B", ord("B")))
                     f.write(struct.pack("B", 1 if instance.result else 0))

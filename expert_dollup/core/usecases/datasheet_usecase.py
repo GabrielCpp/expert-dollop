@@ -92,6 +92,9 @@ class DatasheetUseCase:
 
     async def add(self, datasheet: Datasheet) -> Datasheet:
         await self.datasheet_service.insert(datasheet)
+
+    async def add_filled_datasheet(self, datasheet: Datasheet) -> Datasheet:
+        await self.datasheet_service.insert(datasheet)
         definition_elements = await self.datasheet_definition_element_service.find_all()
         elements = [
             DatasheetElement(

@@ -4,6 +4,7 @@ from typing import Any
 from uuid import UUID
 from datetime import datetime, date
 from pydantic import BaseModel
+from decimal import Decimal
 
 
 class ExtraEncoder(json.JSONEncoder):
@@ -13,6 +14,9 @@ class ExtraEncoder(json.JSONEncoder):
 
         if dataclasses.is_dataclass(obj):
             return dataclasses.asdict(obj)
+
+        if isinstance(obj, Decimal):
+            return str(obj)
 
         if isinstance(obj, (date, datetime)):
             return obj.isoformat()

@@ -2,6 +2,7 @@ from typing import Dict, List, Optional, Union
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
+from decimal import Decimal
 from .helpers import make_uuid
 from expert_dollup.core.domains import *
 from expert_dollup.core.logits import serialize_post_processed_expression
@@ -14,7 +15,7 @@ class FormulaSeed:
         formula_dependencies: List[str],
         node_dependencies: List[str],
         calculation_details: str = "",
-        result: float = 0,
+        result: Decimal = Decimal("0"),
     ):
         self.expression = expression
         self.calculation_details = calculation_details
@@ -71,7 +72,7 @@ class NodeSeed:
     def __init__(
         self,
         parent: Optional[str] = None,
-        value: Union[str, float, int, bool, None] = None,
+        value: PrimitiveWithNoneUnion = None,
         formulas: Optional[Dict[str, FormulaSeed]] = None,
     ):
         self.parent = parent
@@ -159,7 +160,7 @@ class DefNodeSeed:
         self.instances = instances
         self.parent = parent
         self.is_collection = False
-        self.default_value: ValueUnion = None
+        self.default_value: PrimitiveWithNoneUnion = None
         self._path_names: Optional[List[str]] = None
         self._config: Optional[NodeConfig] = None
         self._name: Optional[str] = None

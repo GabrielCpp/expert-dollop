@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from uuid import UUID
-from typing import Optional, Union, List
+from typing import Optional, List
+from .expert_dollup_db import PrimitiveUnionDao
 from .storage_connectors.storage_client import StorageClient
 
 
@@ -14,4 +15,4 @@ class UnitInstanceDao(BaseModel):
     node_path: List[UUID]
     name: str
     calculation_details: str
-    result: Union[str, bool, int, float]
+    result: PrimitiveUnionDao

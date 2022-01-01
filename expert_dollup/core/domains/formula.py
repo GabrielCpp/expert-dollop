@@ -1,7 +1,9 @@
+from decimal import Decimal
 from uuid import UUID
 from dataclasses import dataclass, asdict, field
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Dict, Union
 from expert_dollup.shared.database_services import QueryFilter
+from .values_union import PrimitiveUnion
 
 
 @dataclass
@@ -29,9 +31,16 @@ class FormulaDependencyGraph:
 
 
 @dataclass
+class AstNodeValue:
+    number: Optional[Decimal] = None
+    text: Optional[str] = None
+    enabled: Optional[bool] = None
+
+
+@dataclass
 class AstNode:
     kind: str
-    values: Dict[str, Union[str, bool, int, float]] = field(default_factory=dict)
+    values: Dict[str, Union[AstNodeValue, str]] = field(default_factory=dict)
     properties: Dict[str, "AstNode"] = field(default_factory=dict)
     children: Dict[str, List["AstNode"]] = field(default_factory=dict)
 
@@ -61,7 +70,7 @@ class UnitInstance:
     path: List[UUID]
     name: str
     calculation_details: str
-    result: Union[str, bool, int, float]
+    result: PrimitiveUnion
 
     @property
     def report_dict(self) -> dict:
@@ -83,7 +92,7 @@ class FieldNode:
     path: List[UUID]
     type_id: UUID
     type_path: List[UUID]
-    expression: Union[str, int, float, bool]
+    expression: PrimitiveUnion
 
 
 class FormulaFilter(QueryFilter):

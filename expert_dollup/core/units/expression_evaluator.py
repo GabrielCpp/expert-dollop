@@ -1,4 +1,5 @@
 import ast
+from decimal import Decimal
 
 
 class AstVirtualMachine:
@@ -137,6 +138,10 @@ class AstVirtualMachine:
                 return left - right
 
             if isinstance(node.op, ast.Mult):
+                assert isinstance(left, Decimal), type(left)
+                assert isinstance(
+                    right, Decimal
+                ), f"Right id type of {type(right)} and value of {right}"
                 return left * right
 
             if isinstance(node.op, ast.Div):

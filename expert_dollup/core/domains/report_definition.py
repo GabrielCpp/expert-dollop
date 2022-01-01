@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from uuid import UUID
+from decimal import Decimal
 from typing import List, Dict, Union, Optional
 from expert_dollup.shared.database_services import QueryFilter
 
-ReportColumnDict = Dict[str, Union[str, float, bool, int, UUID, List[UUID], None]]
+ReportColumnDict = Dict[str, Union[str, Decimal, bool, int, UUID, List[UUID], None]]
 ReportRowDict = Dict[str, ReportColumnDict]
 ReportRowsCache = List[ReportRowDict]
 

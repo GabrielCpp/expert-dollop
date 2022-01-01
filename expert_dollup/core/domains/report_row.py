@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from uuid import UUID
-from typing import List, Optional, Union
+from typing import List, Optional
 from expert_dollup.shared.database_services import QueryFilter
 from .report_definition import ReportRowDict
+from .values_union import PrimitiveUnion
 
 
 @dataclass
@@ -22,7 +23,7 @@ class ReportRow:
 @dataclass
 class ReportGroup:
     label: str
-    summary: Union[float, str, bool, int]
+    summary: PrimitiveUnion
     rows: List[ReportRow]
 
 

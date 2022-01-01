@@ -109,12 +109,16 @@ class DatasheetDefinitionElementDtoFactory(factory.Factory):
     order_index = factory.Sequence(lambda n: n)
     tags = factory.LazyFunction(lambda: [])
     name = factory.Sequence(lambda n: f"field_name{n}")
-    default_properties = {
-        "conversion_factor": DatasheetDefinitionElementPropertyDto(
-            is_readonly=True, value=2
-        ),
-        "lost": DatasheetDefinitionElementPropertyDto(is_readonly=True, value=2),
-    }
+    default_properties = factory.Dict(
+        {
+            "conversion_factor": DatasheetDefinitionElementPropertyDto(
+                is_readonly=True, value=IntFieldValueDto(integer=2)
+            ),
+            "lost": DatasheetDefinitionElementPropertyDto(
+                is_readonly=True, value=IntFieldValueDto(integer=2)
+            ),
+        }
+    )
 
 
 class LabelCollectionDtoFactory(factory.Factory):

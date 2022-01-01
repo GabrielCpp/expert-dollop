@@ -6,7 +6,7 @@ from expert_dollup.core.domains import (
     ProjectNode,
     ProjectNodeTree,
     ProjectNodeFilter,
-    ValueUnion,
+    PrimitiveWithNoneUnion,
     FieldUpdate,
 )
 from expert_dollup.infra.services import (
@@ -88,7 +88,7 @@ class ProjectNodeUseCase:
         return tree
 
     async def update_node_value(
-        self, project_id: UUID, node_id: UUID, value: ValueUnion
+        self, project_id: UUID, node_id: UUID, value: PrimitiveWithNoneUnion
     ) -> ProjectNode:
         return await self.node_event_dispatcher.update_node_value(
             project_id, node_id, value

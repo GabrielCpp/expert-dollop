@@ -59,7 +59,7 @@ async def resolve_update_project_field(
     info: GraphQLResolveInfo,
     project_id: UUID,
     node_id: UUID,
-    value: ValueUnionDto,
+    value: PrimitiveWithNoneUnion,
     mutate_project_field: callable,
 ):
     value = collapse_union(

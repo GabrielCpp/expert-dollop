@@ -1,7 +1,8 @@
 from typing import List, Optional, Union, Dict
 from uuid import UUID
 from datetime import datetime
-from pydantic import StrictBool, StrictInt, StrictStr, StrictFloat, BaseModel, Field
+from decimal import Decimal
+from pydantic import BaseModel, Field, StrictStr, StrictFloat, StrictBool, StrictInt
 from expert_dollup.shared.database_services import DbConnection
 from .node_config_dao import (
     NodeConfigDao,
@@ -30,14 +31,47 @@ class ExpertDollupDatabase(DbConnection):
     pass
 
 
+class IntFieldValueDao(BaseModel):
+    integer: int
+
+
+class DecimalFieldValueDao(BaseModel):
+    numeric: Decimal
+
+
+class StringFieldValueDao(BaseModel):
+    text: str
+
+
+class BoolFieldValueDao(BaseModel):
+    enabled: bool
+
+
 class ReferenceIdDao(BaseModel):
     uuid: UUID
 
 
-ValueUnion = Union[StrictBool, StrictInt, StrictStr, StrictFloat, None]
-LabelAttributeDaoUnion = Union[
-    StrictBool, StrictInt, StrictStr, StrictFloat, ReferenceIdDao
+class ReferenceIdDao(BaseModel):
+    uuid: UUID
+
+
+PrimitiveWithNoneUnionDao = Union[
+    BoolFieldValueDao, IntFieldValueDao, StringFieldValueDao, DecimalFieldValueDao, None
 ]
+
+PrimitiveUnionDao = Union[
+    BoolFieldValueDao, IntFieldValueDao, StringFieldValueDao, DecimalFieldValueDao
+]
+
+
+LabelAttributeDaoUnion = Union[
+    BoolFieldValueDao,
+    IntFieldValueDao,
+    StringFieldValueDao,
+    DecimalFieldValueDao,
+    ReferenceIdDao,
+]
+
 JsonSchemaDao = dict
 
 
@@ -71,7 +105,7 @@ class ProjectDefinitionNodeDao(BaseModel):
     instanciate_by_default: bool
     order_index: int
     config: NodeConfigDao
-    default_value: ValueUnion
+    default_value: PrimitiveWithNoneUnionDao
     path: str
     level: int
     display_query_internal_id: UUID
@@ -105,7 +139,7 @@ class ProjectNodeDao(BaseModel):
     type_id: UUID
     type_name: str
     path: str
-    value: ValueUnion
+    value: PrimitiveWithNoneUnionDao
     label: str
     level: int
     type_path: str
@@ -265,7 +299,7 @@ class LabelDao(BaseModel):
 
 class DatasheetDefinitionElementPropertyDao(BaseModel):
     is_readonly: bool
-    value: ValueUnion
+    value: PrimitiveUnionDao
 
 
 class DatasheetDefinitionElementDao(BaseModel):
@@ -311,7 +345,7 @@ class DatasheetElementDao(BaseModel):
     datasheet_id: UUID
     element_def_id: UUID
     child_element_reference: UUID
-    properties: dict
+    properties: Dict[str, PrimitiveUnionDao]
     original_datasheet_id: UUID
     creation_date_utc: datetime
 
@@ -372,12 +406,6 @@ class ReportDefinitionDao(BaseModel):
     project_def_id: UUID
     name: str
     structure: ReportStructureDao
-
-
-class ReportDefinitionRowCacheDao(BaseModel):
-    report_def_id: UUID
-    row_digest: str
-    row: Dict[str, Dict[str, Union[str, float, bool, int, None]]]
 
 
 class ReportRowDao(BaseModel):

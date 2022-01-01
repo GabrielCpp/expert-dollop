@@ -1,12 +1,12 @@
 from uuid import UUID
-from typing import List, Dict, Union
-from datetime import datetime
+from typing import List, Dict
 from expert_dollup.shared.starlette_injection import CamelModel
+from .dynamic_primitive import PrimitiveUnionDto
 
 
 class DatasheetDefinitionElementPropertyDto(CamelModel):
     is_readonly: bool
-    value: Union[float, str, bool]
+    value: PrimitiveUnionDto
 
 
 class DatasheetDefinitionElementDto(CamelModel):

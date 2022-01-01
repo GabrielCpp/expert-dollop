@@ -1,6 +1,7 @@
 from typing import List, Dict
 from uuid import UUID
 from collections import defaultdict
+from decimal import Decimal
 from expert_dollup.core.queries import Plucker
 from expert_dollup.infra.services import FormulaService
 from expert_dollup.core.domains import *
@@ -40,7 +41,7 @@ class UnitInstanceBuilder:
                         path=node.path,
                         name=formula.name,
                         calculation_details="<was not calculated yet>",
-                        result=0,
+                        result=Decimal(0),
                     )
                 )
 
@@ -85,7 +86,7 @@ class UnitInstanceBuilder:
                         path=node_path,
                         name=formula.name,
                         calculation_details="<was not calculated yet>",
-                        result=0,
+                        result=Decimal(0),
                     )
                 )
 

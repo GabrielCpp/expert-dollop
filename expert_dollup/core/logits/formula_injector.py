@@ -1,10 +1,11 @@
-from typing import List, Union, Dict, Protocol
+from decimal import Decimal
+from typing import List, Dict, Protocol
 from uuid import UUID
 from collections import defaultdict
 from functools import cached_property
 from expert_dollup.core.domains.project_node import ProjectNode
 import expert_dollup.core.logits.formula_processor as formula_processor
-from expert_dollup.core.domains import UnitInstance, ValueUnion, ProjectNode
+from expert_dollup.core.domains import UnitInstance, PrimitiveUnion, ProjectNode
 
 
 class UnitLike(Protocol):
@@ -74,7 +75,7 @@ class FrozenUnit:
         return self._formula_instance.name
 
     @property
-    def value(self) -> Union[str, bool, int, float]:
+    def value(self) -> PrimitiveUnion:
         return self._formula_instance.result
 
 
@@ -139,17 +140,21 @@ class FormulaUnit:
         return self._touched
 
     @property
-    def value(self):
+    def value(self) -> PrimitiveUnion:
         return self.computed.result
 
 
 class FieldUnit:
     def __init__(self, node: ProjectNode):
         self._node = node
+        self._value = self._node.value
+
+        if isinstance(self._value, int):
+            self._value = Decimal(self._value)
 
     @property
-    def value(self) -> ValueUnion:
-        return self._node.value
+    def value(self) -> PrimitiveUnion:
+        return self._value
 
     @property
     def node_id(self) -> UUID:

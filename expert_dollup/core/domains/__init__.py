@@ -12,7 +12,6 @@ from .project_definition_node import (
     CollapsibleContainerFieldConfig,
     NodeMetaConfig,
     NodeConfig,
-    ValueUnion,
     FieldDetailsUnion,
     JsonSchema,
     TranslationConfig,
@@ -57,6 +56,7 @@ from .formula import (
     FormulaDependencyGraph,
     FormulaDependency,
     AstNode,
+    AstNodeValue,
 )
 
 from .datasheet_definition import DatasheetDefinition, ElementPropertySchema
@@ -108,3 +108,4 @@ from .report_definition_row_cache import (
 )
 from .report_row import ReportRow, ReportRowFilter, ReportGroup
 from .measure_unit import MeasureUnit
+from .values_union import PrimitiveUnion, PrimitiveWithNoneUnion

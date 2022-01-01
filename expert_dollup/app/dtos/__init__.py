@@ -12,8 +12,6 @@ from .project_definition_node_dto import (
     CollapsibleContainerFieldConfigDto,
     NodeConfigDto,
     NodeMetaConfigDto,
-    ValueUnionDto,
-    FieldDetailsUnion,
     config_type_lookup_map,
     value_type_lookup_map,
     field_details_to_domain_map,
@@ -28,6 +26,9 @@ from .dynamic_primitive import (
     StringFieldValueDto,
     BoolFieldValueDto,
     ReferenceIdDto,
+    PrimitiveWithNoneUnionDto,
+    PrimitiveUnionDto,
+    JsonSchemaDto,
 )
 from .project_definition_node_tree_dto import (
     ProjectDefinitionTreeNodeDto,

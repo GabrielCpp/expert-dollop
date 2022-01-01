@@ -1,6 +1,5 @@
 from typing import List
 from uuid import UUID
-from expert_dollup.app.dtos.dynamic_primitive import ReferenceIdDto
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import (
     Mapper,
@@ -17,6 +16,30 @@ from expert_dollup.core.utils.path_transform import (
 from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_storage import *
+
+
+primitive_with_none_union_dao_mappings = RevervibleUnionMapping(
+    PrimitiveWithNoneUnionDao,
+    PrimitiveWithNoneUnion,
+    {
+        BoolFieldValueDao: bool,
+        IntFieldValueDao: int,
+        StringFieldValueDao: str,
+        DecimalFieldValueDao: Decimal,
+        type(None): type(None),
+    },
+)
+
+primitive_union_dao_mappings = RevervibleUnionMapping(
+    PrimitiveUnionDao,
+    PrimitiveUnion,
+    {
+        BoolFieldValueDao: bool,
+        IntFieldValueDao: int,
+        StringFieldValueDao: str,
+        DecimalFieldValueDao: Decimal,
+    },
+)
 
 
 def get_display_query_id(global_id: UUID, path: List[UUID]) -> str:
@@ -65,7 +88,9 @@ def map_project_definition_node_from_dao(
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
         config=mapper.map(src.config, NodeConfig, NodeConfigDao),
-        default_value=src.default_value,
+        default_value=mapper.map(
+            src.default_value, primitive_with_none_union_dao_mappings.from_origin
+        ),
         path=split_uuid_path(src.path),
         creation_date_utc=src.creation_date_utc,
     )
@@ -242,7 +267,9 @@ def map_project_definition_node_to_dao(
         display_query_internal_id=display_query_internal_id,
         level=len(src.path),
         creation_date_utc=mapper.get(Clock).utcnow(),
-        default_value=src.default_value,
+        default_value=mapper.map(
+            src.default_value, primitive_with_none_union_dao_mappings.to_origin
+        ),
     )
 
 
@@ -276,7 +303,7 @@ def map_project_node_to_dao(src: ProjectNode, mapper: Mapper) -> ProjectNodeDao:
         type_id=src.type_id,
         type_name=src.type_name,
         path=join_uuid_path(src.path),
-        value=src.value,
+        value=mapper.map(src.value, primitive_with_none_union_dao_mappings.to_origin),
         label=src.label,
         type_path=join_uuid_path(src.type_path),
         level=len(src.path),
@@ -293,7 +320,7 @@ def map_project_node_from_dao(src: ProjectNodeDao, mapper: Mapper) -> ProjectNod
         type_name=src.type_name,
         path=split_uuid_path(src.path),
         type_path=split_uuid_path(src.type_path),
-        value=src.value,
+        value=mapper.map(src.value, primitive_with_none_union_dao_mappings.from_origin),
         label=src.label,
     )
 
@@ -629,7 +656,7 @@ def map_datasheet_definition_element_property_to_dao(
 ) -> DatasheetDefinitionElementPropertyDao:
     return DatasheetDefinitionElementPropertyDao(
         is_readonly=src.is_readonly,
-        value=src.value,
+        value=mapper.map(src.value, primitive_union_dao_mappings.to_origin),
     )
 
 
@@ -638,7 +665,7 @@ def map_datasheet_definition_element_property_from_dao(
 ) -> DatasheetDefinitionElementProperty:
     return DatasheetDefinitionElementProperty(
         is_readonly=src.is_readonly,
-        value=src.value,
+        value=mapper.map(src.value, primitive_union_dao_mappings.from_origin),
     )
 
 
@@ -742,14 +769,10 @@ label_attribute_dao_mappings = RevervibleUnionMapping(
     LabelAttributeDaoUnion,
     LabelAttributeUnion,
     {
-        StrictBool: bool,
-        StrictInt: int,
-        StrictStr: str,
-        StrictFloat: float,
-        float: float,
-        int: int,
-        str: str,
-        bool: bool,
+        BoolFieldValueDao: bool,
+        IntFieldValueDao: int,
+        StringFieldValueDao: str,
+        DecimalFieldValueDao: Decimal,
         ReferenceIdDao: UUID,
     },
 )
@@ -777,20 +800,40 @@ def map_datasheet_definition_label_from_dao(src: LabelDao, mapper: Mapper) -> La
     )
 
 
-def map_strict_bool_to_dao(src: bool, mapper: Mapper) -> StrictBool:
-    return StrictBool(src)
+def map_string_field_value_from_dao(src: StringFieldValueDao, mapper: Mapper) -> str:
+    return src.text
 
 
-def map_strict_int_to_dao(src: int, mapper: Mapper) -> StrictInt:
-    return StrictInt(src)
+def map_string_field_value_to_dao(src: str, mapper: Mapper) -> StringFieldValueDao:
+    return StringFieldValueDao(text=src)
 
 
-def map_strict_str_to_dao(src: str, mapper: Mapper) -> StrictStr:
-    return StrictStr(src)
+def map_bool_field_value_from_dao(src: BoolFieldValueDao, mapper: Mapper) -> bool:
+    return src.enabled
 
 
-def map_strict_float_to_dao(src: float, mapper: Mapper) -> StrictFloat:
-    return StrictFloat(src)
+def map_bool_field_value_to_dao(src: bool, mapper: Mapper) -> BoolFieldValueDao:
+    return BoolFieldValueDao(enabled=src)
+
+
+def map_int_field_value_from_dao(src: IntFieldValueDao, mapper: Mapper) -> int:
+    return src.integer
+
+
+def map_int_field_value_to_dao(src: int, mapper: Mapper) -> IntFieldValueDao:
+    return IntFieldValueDao(integer=src)
+
+
+def map_decimal_field_value_from_dao(
+    src: DecimalFieldValueDao, mapper: Mapper
+) -> Decimal:
+    return src.numeric
+
+
+def map_decimal_field_value_to_dao(
+    src: Decimal, mapper: Mapper
+) -> DecimalFieldValueDao:
+    return DecimalFieldValueDao(numeric=src)
 
 
 def map_reference_id_to_dao(src: UUID, mapper: Mapper) -> ReferenceIdDao:
@@ -830,7 +873,9 @@ def map_datasheet_element_to_dao(
         datasheet_id=src.datasheet_id,
         element_def_id=src.element_def_id,
         child_element_reference=src.child_element_reference,
-        properties=src.properties,
+        properties=mapper.map_dict_values(
+            src.properties, primitive_union_dao_mappings.to_origin
+        ),
         original_datasheet_id=src.original_datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )
@@ -843,7 +888,9 @@ def map_datasheet_element_from_dao(
         datasheet_id=src.datasheet_id,
         element_def_id=src.element_def_id,
         child_element_reference=src.child_element_reference,
-        properties=src.properties,
+        properties=mapper.map_dict_values(
+            src.properties, primitive_union_dao_mappings.from_origin
+        ),
         original_datasheet_id=src.original_datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )

@@ -1,6 +1,7 @@
 import math
 from typing import List, Dict
 from uuid import UUID
+from decimal import Decimal
 from collections import defaultdict, OrderedDict
 from itertools import groupby, chain
 from dataclasses import dataclass
@@ -13,10 +14,10 @@ from expert_dollup.core.logits import FormulaInjector, FrozenUnit
 from .expression_evaluator import ExpressionEvaluator
 
 
-def round_number(number, digits, method) -> float:
+def round_number(number: Decimal, digits: int, method: str) -> Decimal:
     assert method == "truncate", "method is the only method supported"
-    stepper = 10.0 ** digits
-    return math.trunc(stepper * number) / stepper
+    stepper = Decimal(10.0 ** digits)
+    return Decimal(int(stepper * Decimal(number))) / stepper
 
 
 from stopwatch import Stopwatch

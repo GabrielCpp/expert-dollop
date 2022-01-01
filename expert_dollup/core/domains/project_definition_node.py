@@ -2,8 +2,9 @@ from dataclasses import dataclass, field
 from uuid import UUID
 from typing import Optional, List, Union, Dict
 from datetime import datetime
-from expert_dollup.shared.database_services import QueryFilter
 from enum import Enum
+from expert_dollup.shared.database_services import QueryFilter
+from .values_union import PrimitiveWithNoneUnion
 
 JsonSchema = dict
 
@@ -104,9 +105,6 @@ class NodeConfig:
     value_validator: Optional[JsonSchema] = None
 
 
-ValueUnion = Union[bool, int, str, float, None]
-
-
 @dataclass
 class ProjectDefinitionNode:
     id: UUID
@@ -116,7 +114,7 @@ class ProjectDefinitionNode:
     instanciate_by_default: bool
     order_index: int
     config: NodeConfig
-    default_value: ValueUnion
+    default_value: PrimitiveWithNoneUnion
     path: List[UUID]
     creation_date_utc: datetime
 
@@ -132,7 +130,7 @@ class ProjectDefinitionNodeFilter(QueryFilter):
     is_collection: Optional[bool]
     instanciate_by_default: Optional[bool]
     order_index: Optional[int]
-    default_value: ValueUnion
+    default_value: PrimitiveWithNoneUnion
     path: Optional[List[UUID]]
     creation_date_utc: Optional[datetime]
     display_query_internal_id: Optional[UUID]

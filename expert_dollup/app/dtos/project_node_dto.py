@@ -1,7 +1,7 @@
 from expert_dollup.shared.starlette_injection import CamelModel
 from typing import List, Optional, Union
 from uuid import UUID
-from .project_definition_node_dto import ValueUnionDto
+from .dynamic_primitive import PrimitiveWithNoneUnionDto
 
 
 class ProjectNodeDto(CamelModel):
@@ -11,7 +11,7 @@ class ProjectNodeDto(CamelModel):
     type_name: str
     path: List[UUID]
     type_path: List[UUID]
-    value: ValueUnionDto
+    value: PrimitiveWithNoneUnionDto
     label: str = ""
 
 

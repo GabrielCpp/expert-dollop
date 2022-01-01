@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Dict, List, Optional, Union, Type, Protocol
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -17,14 +18,14 @@ DEFAULT_VALUE_MAPPING = {
     int: INT_JSON_SCHEMA,
     str: STRING_JSON_SCHEMA,
     bool: BOOL_JSON_SCHEMA,
-    float: NUMBER_JSON_SCHEMA,
+    Decimal: NUMBER_JSON_SCHEMA,
 }
 
 DEFAULT_VALUE_GENERATOR = {
     int: lambda x: x * 2,
     str: lambda x: f"value{x}",
     bool: lambda x: x % 2 == 0,
-    float: lambda x: x + float(x) / 100,
+    Decimal: lambda x: x + Decimal(x) / 100,
 }
 
 
@@ -43,7 +44,7 @@ class CustomDatasheetInstancePackage:
     translations: List[Translation]
 
 
-PropertyTypeUnion = Union[Type[int], Type[float], Type[str], Type[bool]]
+PropertyTypeUnion = Union[Type[int], Type[Decimal], Type[str], Type[bool]]
 
 
 class ElementSeed:

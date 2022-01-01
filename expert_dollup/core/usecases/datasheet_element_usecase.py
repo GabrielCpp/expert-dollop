@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import Dict, Union
+from typing import Dict
 from expert_dollup.core.exceptions import ValidationError, InvalidUsageError
 from expert_dollup.core.domains import (
     Datasheet,
@@ -8,6 +8,7 @@ from expert_dollup.core.domains import (
     DatasheetElementId,
     DatasheetDefinitionElement,
     DatasheetDefinition,
+    PrimitiveUnion,
 )
 from expert_dollup.infra.services import (
     DatasheetService,
@@ -45,23 +46,14 @@ class DatasheetElementUseCase:
             ),
         )
 
-        if len(elements) == 0:
-            await self.datasheet_element_service.insert(element)
-        else:
-            await self.datasheet_element_service.update(
-                DatasheetElementFilter(properties=element.properties),
-                DatasheetElementFilter(
-                    datasheet_id=element.datasheet_id,
-                    element_def_id=element.element_def_id,
-                    child_element_reference=element.child_element_reference,
-                ),
-            )
+        assert len(elements) == 0, f"element id exists {element} -> {elements}"
+        await self.datasheet_element_service.insert(element)
 
     async def find_datasheet_element(self, id: DatasheetElementId) -> DatasheetElement:
         return await self.datasheet_element_service.find_by_id(id)
 
     async def update_datasheet_element_properties(
-        self, id: DatasheetElementId, properties: Dict[str, Union[float, str, bool]]
+        self, id: DatasheetElementId, properties: Dict[str, PrimitiveUnion]
     ) -> DatasheetElement:
         datasheet: Datasheet = await self.datasheet_service.find_by_id(id.datasheet_id)
         datasheet_definition: DatasheetDefinition = (
@@ -146,7 +138,7 @@ class DatasheetElementUseCase:
 
     def _validate_datasheet_element_properties(
         self,
-        properties: Dict[str, Union[float, str, bool]],
+        properties: Dict[str, PrimitiveUnion],
         datasheet_definition: DatasheetDefinition,
         element_definition: DatasheetDefinitionElement,
     ):

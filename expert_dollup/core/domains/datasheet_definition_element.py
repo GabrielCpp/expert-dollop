@@ -1,15 +1,15 @@
 from uuid import UUID
-from typing import List, Union, Optional, Dict
-from dataclasses import dataclass, asdict
+from typing import List, Optional, Dict
+from dataclasses import dataclass
 from datetime import datetime
-from expert_dollup.infra.expert_dollup_db import ValueUnion
+from .values_union import PrimitiveUnion
 from expert_dollup.shared.database_services import QueryFilter
 
 
 @dataclass
 class DatasheetDefinitionElementProperty:
     is_readonly: bool
-    value: ValueUnion
+    value: PrimitiveUnion
 
 
 @dataclass
