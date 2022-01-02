@@ -32,15 +32,11 @@ class FormulaResolver:
         project_node_service: ProjectNodeService,
         project_definition_node_service: ProjectDefinitionNodeService,
         unit_instance_builder: UnitInstanceBuilder,
-        formulas_plucker: Plucker[FormulaService],
-        nodes_plucker: Plucker[ProjectNodeService],
     ):
         self.formula_service = formula_service
         self.project_node_service = project_node_service
         self.project_definition_node_service = project_definition_node_service
         self.unit_instance_builder = unit_instance_builder
-        self.formulas_plucker = formulas_plucker
-        self.nodes_plucker = nodes_plucker
 
     async def parse_many(self, formula_expressions: List[FormulaExpression]) -> Formula:
         project_def_id = formula_expressions[0].project_def_id

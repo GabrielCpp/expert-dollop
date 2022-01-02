@@ -5,7 +5,6 @@ from collections import defaultdict, OrderedDict
 from itertools import groupby, chain
 from dataclasses import dataclass
 from hashlib import sha3_256
-from expert_dollup.core import exceptions
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.queries import Plucker
 from expert_dollup.infra.services import DatasheetElementService
