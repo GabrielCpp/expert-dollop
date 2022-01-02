@@ -32,11 +32,12 @@ async def get_project_report(
     usecase=Depends(Inject(ReportUseCase)),
     handler=Depends(Inject(RequestHandler)),
 ):
-    results = await handler.forward_many(
-        usecase.get_report_rows,
+
+    return await handler.forward(
+        usecase.get_report,
         dict(project_id=project_id, report_definition_id=report_definition_id),
         MappingChain(
-            domain=ReportRow,
-            out_dto=ReportLightRowDto,
+            domain=Report,
+            out_dto=ReportDto,
         ),
     )

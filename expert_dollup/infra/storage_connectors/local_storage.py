@@ -4,6 +4,7 @@ from tempfile import gettempdir
 from pathlib import Path
 from os import makedirs, fsync
 from os.path import exists
+from .storage_client import ObjectNotFound
 
 
 class LocalStorage(StorageClient):
@@ -28,7 +29,7 @@ class LocalStorage(StorageClient):
             full_path = Path(gettempdir()) / self.prefix / path
 
             if not exists(full_path):
-                raise Exception("file not found")
+                raise ObjectNotFound("Object not found", path=path)
 
             with open(full_path, "rb") as f:
                 return f.read()

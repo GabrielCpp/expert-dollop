@@ -48,8 +48,6 @@ services:
     - 8888:8888
     networks:
       - backend
-    volumes:
-    - ${PWD}/storage_data:/data
 volumes:
   firebase_data:
     name: firebase_data

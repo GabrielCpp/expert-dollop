@@ -1,16 +1,22 @@
-import math
-from typing import List, Dict
+from typing import List, Dict, Optional
 from uuid import UUID
 from decimal import Decimal
 from collections import defaultdict, OrderedDict
 from itertools import groupby, chain
 from dataclasses import dataclass
 from hashlib import sha3_256
+from expert_dollup.core import exceptions
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.queries import Plucker
-from expert_dollup.core.domains import *
-from expert_dollup.infra.services import *
+from expert_dollup.infra.services import DatasheetElementService
 from expert_dollup.core.logits import FormulaInjector, FrozenUnit
+from expert_dollup.core.exceptions import (
+    ReportGenerationError,
+    AstEvaluationError,
+    RessourceNotFound,
+)
+from expert_dollup.core.domains import *
+from expert_dollup.shared.starlette_injection import Clock
 from .expression_evaluator import ExpressionEvaluator
 
 
@@ -20,14 +26,12 @@ def round_number(number: Decimal, digits: int, method: str) -> Decimal:
     return Decimal(int(stepper * Decimal(number))) / stepper
 
 
-from stopwatch import Stopwatch
-
-
 @dataclass
 class LinkingData:
     report_definition: ReportDefinition
     project_details: ProjectDetails
     unit_instances: UnitInstanceCache
+    old_report: Optional[Report]
     injector: FormulaInjector
 
 
@@ -35,48 +39,39 @@ class ReportLinking:
     def __init__(
         self,
         report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
-        report_row_service: ReportRowService,
+        report_storage: ObjectStorage[Report, ReportKey],
         unit_instance_service: ObjectStorage[UnitInstanceCache, UnitInstanceCacheKey],
         datasheet_element_plucker: Plucker[DatasheetElementService],
         expression_evaluator: ExpressionEvaluator,
+        clock: Clock,
     ):
         self.report_def_row_cache = report_def_row_cache
         self.unit_instance_service = unit_instance_service
-        self.report_row_service = report_row_service
+        self.report_storage = report_storage
         self.datasheet_element_plucker = datasheet_element_plucker
         self.expression_evaluator = expression_evaluator
+        self.clock = clock
 
     async def link_report(
         self,
         report_definition: ReportDefinition,
         project_details: ProjectDetails,
-    ) -> List[ReportRow]:
-        from tests.fixtures import dump_to_file
-
+    ) -> Report:
         linking_data = await self._preload_data(report_definition, project_details)
-
-        with Stopwatch("self.report_def_row_cache.load") as w:
-            rows = await self.report_def_row_cache.load(
-                ReportRowKey(
-                    project_def_id=report_definition.project_def_id,
-                    report_definition_id=report_definition.id,
-                )
+        rows = await self.report_def_row_cache.load(
+            ReportRowKey(
+                project_def_id=report_definition.project_def_id,
+                report_definition_id=report_definition.id,
             )
-            print(w.report())
+        )
 
-        with Stopwatch("self._join_row_cache_with_unit_instances") as w:
-            new_rows = self._join_row_cache_with_unit_instances(rows, linking_data)
-
-        with Stopwatch("self._fill_datasheet_element_in_rows.load") as w:
-            await self._fill_datasheet_element_in_rows(new_rows, linking_data)
-            print(w.report())
-
+        new_rows = self._join_row_cache_with_unit_instances(rows, linking_data)
+        await self._fill_datasheet_element_in_rows(new_rows, linking_data)
         new_rows = self._fill_row_columns(new_rows, linking_data)
         new_rows = self._fill_row_order(new_rows, report_definition)
-        new_rows = self._build_stage_groups(new_rows, report_definition)
-        dump_to_file(new_rows)
+        stages = self._build_stage_groups(new_rows, report_definition)
 
-        return new_rows
+        return Report(stages=stages, creation_date_utc=self.clock.utcnow())
 
     async def _preload_data(
         self,
@@ -91,7 +86,18 @@ class ReportLinking:
         for unit_instance in unit_instances:
             injector.add_unit(FrozenUnit(unit_instance))
 
+        try:
+            old_report = await self.report_storage.load(
+                ReportKey(
+                    project_id=project_details.id,
+                    report_definition_id=report_definition.id,
+                )
+            )
+        except RessourceNotFound:
+            old_report = None
+
         return LinkingData(
+            old_report=old_report,
             report_definition=report_definition,
             project_details=project_details,
             unit_instances=unit_instances,
@@ -119,8 +125,10 @@ class ReportLinking:
         }
 
         for row in rows:
-            element_id = UUID(element_attribute.get(row))
-            formula_id = UUID(formula_attribute.get(row))
+            element_id = element_attribute.get(row)
+            assert isinstance(element_id, UUID)
+            formula_id = formula_attribute.get(row)
+            assert isinstance(element_id, UUID)
 
             assert (
                 formula_id in unit_instances_by_def_id
@@ -148,12 +156,15 @@ class ReportLinking:
     async def _fill_datasheet_element_in_rows(
         self, report_rows: List[ReportRow], linking_data: LinkingData
     ):
-        project_id = linking_data.project_details.id
-        datasheet_id = linking_data.project_details.datasheet_id
-        old_rows = await self.report_row_service.find_by(
-            ReportRowFilter(project_id=project_id)
+        datasheet_bucket_name = (
+            linking_data.report_definition.structure.datasheet_attribute.attribute_name
         )
-
+        datasheet_id = linking_data.project_details.datasheet_id
+        old_rows = (
+            []
+            if linking_data.old_report is None
+            else chain(*[stage.rows for stage in linking_data.old_report.stages])
+        )
         old_row_by_formula_cache = {
             f"{old_row.formula_id}/{old_row.node_id}": old_row for old_row in old_rows
         }
@@ -166,7 +177,9 @@ class ReportLinking:
 
             if not old_row is None:
                 report_row.child_reference_id = old_row.child_reference_id
-                report_row.row["datasheet_element"] = old_row["datasheet_element"]
+                report_row.row[datasheet_bucket_name] = old_row.row[
+                    datasheet_bucket_name
+                ]
             else:
                 missing_elements_for_rows[report_row.element_id].append(index)
 
@@ -185,7 +198,7 @@ class ReportLinking:
         for missing_element in missing_elements:
             for row_index in missing_elements_for_rows[missing_element.element_def_id]:
                 report_rows[row_index].row[
-                    "datasheet_element"
+                    datasheet_bucket_name
                 ] = missing_element.report_dict
 
     def _fill_row_columns(
@@ -284,7 +297,7 @@ class ReportLinking:
 
     def _build_stage_groups(
         self, report_rows: List[ReportRow], report_definition: ReportDefinition
-    ) -> List[StageGrouping]:
+    ) -> List[ReportGroup]:
         groups = OrderedDict()
 
         for report_row in report_rows:
@@ -317,7 +330,10 @@ class ReportLinking:
                     "injector": injector,
                 },
             )
-        except Exception as e:
-            print(row)
-            raise e
-            raise Exception(f"Failed to calculate {expression}") from e
+        except AstEvaluationError as e:
+            raise ReportGenerationError(
+                f"Error while evaluating expression",
+                expression=expression,
+                row=row,
+                **e.props,
+            ) from e

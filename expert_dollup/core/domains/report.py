@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 from typing import List, Optional
+from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
 from .report_definition import ReportRowDict
 from .values_union import PrimitiveUnion
@@ -25,6 +26,18 @@ class ReportGroup:
     label: str
     summary: PrimitiveUnion
     rows: List[ReportRow]
+
+
+@dataclass
+class Report:
+    stages: List[ReportGroup]
+    creation_date_utc: datetime
+
+
+@dataclass
+class ReportKey:
+    project_id: UUID
+    report_definition_id: UUID
 
 
 class ReportRowFilter(QueryFilter):

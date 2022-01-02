@@ -106,6 +106,10 @@ from .report_definition_row_cache import (
     ReportDefinitionRowCache,
     ReportDefinitionRowCacheFilter,
 )
-from .report_row import ReportRow, ReportRowFilter, ReportGroup
+from .report import ReportRow, ReportRowFilter, ReportGroup, Report, ReportKey
 from .measure_unit import MeasureUnit
-from .values_union import PrimitiveUnion, PrimitiveWithNoneUnion
+from .values_union import (
+    PrimitiveUnion,
+    PrimitiveWithNoneUnion,
+    PrimitiveWithReferenceUnion,
+)

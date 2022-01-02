@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter

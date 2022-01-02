@@ -5,7 +5,6 @@ from decimal import Decimal
 from expert_dollup.core.queries import Plucker
 from expert_dollup.infra.services import FormulaService
 from expert_dollup.core.domains import *
-from expert_dollup.core.logits import serialize_post_processed_expression
 
 
 class UnitInstanceBuilder:

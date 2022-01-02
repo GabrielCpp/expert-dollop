@@ -30,6 +30,18 @@ primitive_union_dto_mappings = RevervibleUnionMapping(
     },
 )
 
+primitive_with_reference_union_dto_mappings = RevervibleUnionMapping(
+    PrimitiveWithReferenceUnionDto,
+    PrimitiveWithReferenceUnion,
+    {
+        BoolFieldValueDto: bool,
+        IntFieldValueDto: int,
+        StringFieldValueDto: str,
+        DecimalFieldValueDto: Decimal,
+        ReferenceIdDto: UUID,
+    },
+)
+
 
 def map_project_definition_from_dto(
     src: ProjectDefinitionDto, mapper: Mapper
@@ -1013,16 +1025,30 @@ def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportRowDto:
         datasheet_id=src.datasheet_id,
         element_id=src.element_id,
         child_reference_id=src.child_reference_id,
-        row=src.row,
+        row={
+            name: {
+                att_name: mapper.map_many(value, ReferenceIdDto)
+                if isinstance(value, list)
+                else mapper.map(
+                    value, primitive_with_reference_union_dto_mappings.to_origin
+                )
+                for att_name, value in attributes.items()
+            }
+            for name, attributes in src.row.items()
+        },
     )
 
 
-def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportLightRowDto:
-    return ReportLightRowDto(
-        node_id=src.node_id,
-        formula_id=src.formula_id,
-        order_index=src.order_index,
-        element_id=src.element_id,
-        child_reference_id=src.child_reference_id,
-        columns=src.row["columns"],
+def map_report_to_dto(src: Report, mapper: Mapper) -> ReportDto:
+    return ReportDto(
+        stages=mapper.map_many(src.stages, ReportGroupDto),
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_report_group_to_dto(src: ReportGroup, mapper: Mapper) -> ReportGroupDto:
+    return ReportGroupDto(
+        label=src.label,
+        summary=mapper.map(src.summary, primitive_union_dto_mappings.to_origin),
+        rows=mapper.map_many(src.rows, ReportRowDto),
     )

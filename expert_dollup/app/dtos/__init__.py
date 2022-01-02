@@ -29,6 +29,7 @@ from .dynamic_primitive import (
     PrimitiveWithNoneUnionDto,
     PrimitiveUnionDto,
     JsonSchemaDto,
+    PrimitiveWithReferenceUnionDto,
 )
 from .project_definition_node_tree_dto import (
     ProjectDefinitionTreeNodeDto,
@@ -77,7 +78,7 @@ from .datasheet_element_dto import (
     DatasheetElementPageDto,
     DatasheetElementImportDto,
 )
-from .report_row_dto import ReportRowDto, ReportLightRowDto
+from .report_dto import ReportRowDto, ReportGroupDto, ReportDto
 from .report_definition_dto import (
     ReportDefinitionDto,
     ReportStructureDto,

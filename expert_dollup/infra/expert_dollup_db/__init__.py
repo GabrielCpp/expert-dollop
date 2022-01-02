@@ -408,26 +408,6 @@ class ReportDefinitionDao(BaseModel):
     structure: ReportStructureDao
 
 
-class ReportRowDao(BaseModel):
-    class Meta:
-        pk = ("project_id", "report_def_id", "node_id")
-
-    class Config:
-        title = "report_rows"
-
-    project_id: UUID
-    report_def_id: UUID
-    node_id: UUID
-    formula_id: UUID
-    group_digest: str
-    order_index: int
-    datasheet_id: UUID
-    element_id: UUID
-    child_reference_id: UUID
-    row: Dict[
-        str, Dict[str, Union[StrictStr, StrictFloat, StrictBool, StrictInt, None]]
-    ]
-
 
 class MeasureUnitDao(BaseModel):
     class Meta:

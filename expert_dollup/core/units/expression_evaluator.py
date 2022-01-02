@@ -1,5 +1,6 @@
 import ast
 from decimal import Decimal
+from expert_dollup.core.exceptions import AstEvaluationError
 
 
 class AstVirtualMachine:
@@ -218,6 +219,11 @@ class ExpressionEvaluator:
         ast_vm = AstVirtualMachine(scope)
         result = None
         for element in formula_ast.body:
-            result = ast_vm.compute(element)
+            try:
+                result = ast_vm.compute(element)
+            except Exception as e:
+                raise AstEvaluationError(
+                    "Error during evaluation of expression", original_message=str(e)
+                ) from e
 
         return result

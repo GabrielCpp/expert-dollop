@@ -2,8 +2,25 @@ from uuid import UUID
 from typing import List, Dict, Union, Optional
 from decimal import Decimal
 from expert_dollup.shared.starlette_injection import CamelModel
+from .dynamic_primitive import (
+    StringFieldValueDto,
+    DecimalFieldValueDto,
+    BoolFieldValueDto,
+    IntFieldValueDto,
+    ReferenceIdDto,
+)
 
-ReportColumnDictDto = Dict[str, Union[str, Decimal, bool, int, UUID, List[UUID], None]]
+ReportColumnDictDto = Dict[
+    str,
+    Union[
+        StringFieldValueDto,
+        DecimalFieldValueDto,
+        BoolFieldValueDto,
+        IntFieldValueDto,
+        ReferenceIdDto,
+        List[ReferenceIdDto],
+    ],
+]
 ReportRowDictDto = Dict[str, ReportColumnDictDto]
 
 

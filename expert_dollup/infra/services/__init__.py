@@ -15,5 +15,4 @@ from .datasheet_definition_element_service import DatasheetDefinitionElementServ
 from .datasheet_service import DatasheetService
 from .datasheet_element_service import DatasheetElementService
 from .report_definition_service import ReportDefinitionService
-from .report_row_service import ReportRowService
 from .measure_unit_service import MeasureUnitService

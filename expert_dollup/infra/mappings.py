@@ -41,6 +41,18 @@ primitive_union_dao_mappings = RevervibleUnionMapping(
     },
 )
 
+primitive_with_reference_union_dao_mappings = RevervibleUnionMapping(
+    PrimitiveUnionDao,
+    PrimitiveUnion,
+    {
+        BoolFieldValueDao: bool,
+        IntFieldValueDao: int,
+        StringFieldValueDao: str,
+        DecimalFieldValueDao: Decimal,
+        ReferenceIdDao: UUID,
+    },
+)
+
 
 def get_display_query_id(global_id: UUID, path: List[UUID]) -> str:
     display_query_internal_id = global_id
@@ -1198,3 +1210,93 @@ def map_datasheet_element_pluck_filter(
             "element_def_ids": ("element_def_id", None),
         },
     )
+
+
+def map_report_to_dao(src: Report, mapper: Mapper) -> ReportDao:
+    return ReportDao(
+        creation_date_utc=src.creation_date_utc,
+        stages=mapper.map_many(src.stages, ReportGroupDao),
+    )
+
+
+def map_report_from_dao(src: ReportDao, mapper: Mapper) -> Report:
+    return Report(
+        creation_date_utc=src.creation_date_utc,
+        stages=mapper.map_many(src.stages, ReportGroup),
+    )
+
+
+def map_report_group_to_dao(src: ReportGroup, mapper: Mapper) -> ReportGroupDao:
+    return ReportGroupDao(
+        label=src.label,
+        summary=mapper.map(src.summary, primitive_union_dao_mappings.to_origin),
+        rows=mapper.map_many(src.rows, ReportRowDao),
+    )
+
+
+def map_report_group_from_dao(src: ReportGroupDao, mapper: Mapper) -> ReportGroup:
+    return ReportGroup(
+        label=src.label,
+        summary=mapper.map(src.summary, primitive_union_dao_mappings.from_origin),
+        rows=mapper.map_many(src.rows, ReportRow),
+    )
+
+
+def map_report_row_to_dao(src: ReportRow, mapper: Mapper) -> ReportRowDao:
+    return ReportRowDao(
+        project_id=src.project_id,
+        report_def_id=src.report_def_id,
+        node_id=src.node_id,
+        formula_id=src.formula_id,
+        group_digest=src.group_digest,
+        order_index=src.order_index,
+        datasheet_id=src.datasheet_id,
+        element_id=src.element_id,
+        child_reference_id=src.child_reference_id,
+        row=map_report_rows_dict_to_dao(src.row, mapper),
+    )
+
+
+def map_report_row_from_dao(src: ReportRowDao, mapper: Mapper) -> ReportRow:
+    return ReportRow(
+        project_id=src.project_id,
+        report_def_id=src.report_def_id,
+        node_id=src.node_id,
+        formula_id=src.formula_id,
+        group_digest=src.group_digest,
+        order_index=src.order_index,
+        datasheet_id=src.datasheet_id,
+        element_id=src.element_id,
+        child_reference_id=src.child_reference_id,
+        row=map_report_rows_dict_from_dao(src.row, mapper),
+    )
+
+
+def map_report_rows_dict_to_dao(src: ReportRowDict, mapper: Mapper) -> ReportRowDictDao:
+    return {
+        name: {
+            attr_name: mapper.map_many(attribute, ReferenceIdDao)
+            if isinstance(attribute, list)
+            else mapper.map(
+                attribute, primitive_with_reference_union_dao_mappings.to_origin
+            )
+            for attr_name, attribute in bucket.items()
+        }
+        for name, bucket in src.items()
+    }
+
+
+def map_report_rows_dict_from_dao(
+    src: ReportRowDictDao, mapper: Mapper
+) -> ReportRowDict:
+    return {
+        name: {
+            attr_name: mapper.map_many(attribute, UUID)
+            if isinstance(attribute, list)
+            else mapper.map(
+                attribute, primitive_with_reference_union_dao_mappings.from_origin
+            )
+            for attr_name, attribute in bucket.items()
+        }
+        for name, bucket in src.items()
+    }

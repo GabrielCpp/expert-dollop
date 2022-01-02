@@ -1,7 +1,11 @@
 from os import environ
 from inspect import isclass
 from injector import Binder, singleton, inject
-from expert_dollup.infra.storage_connectors import LocalStorage, GoogleCloudStorage
+from expert_dollup.infra.storage_connectors import (
+    LocalStorage,
+    GoogleCloudStorage,
+    StorageProxy,
+)
 from expert_dollup.shared.starlette_injection import factory_of
 from expert_dollup.shared.database_services import create_connection
 from expert_dollup.infra.expert_dollup_storage import ExpertDollupStorage
@@ -29,9 +33,15 @@ def bind_database(binder: Binder) -> None:
     binder.bind(ExpertDollupDatabase, to=database, scope=singleton)
 
 
+from expert_dollup.infra.storage_connectors import ObjectNotFound
+from expert_dollup.core.exceptions import RessourceNotFound
+
+storage_exception_mappings = {ObjectNotFound: lambda e: RessourceNotFound()}
+
+
 def bind_storage(binder: Binder) -> None:
     storage = (
-        LocalStorage("expertdollup")
+        StorageProxy(LocalStorage("expertdollup"), storage_exception_mappings)
         if is_development()
         else GoogleCloudStorage("expertdollup")
     )
@@ -43,6 +53,12 @@ def bind_storage(binder: Binder) -> None:
 
 
 def bind_services(binder: Binder) -> None:
+    for class_type in get_classes(services):
+        core_class_type = class_type.__orig_bases__[0]
+        binder.bind(
+            core_class_type, factory_of(class_type, database=ExpertDollupDatabase)
+        )
+
     for class_type in services.__dict__.values():
         if isclass(class_type):
             binder.bind(

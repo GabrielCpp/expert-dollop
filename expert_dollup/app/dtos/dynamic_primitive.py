@@ -27,8 +27,17 @@ class ReferenceIdDto(CamelModel):
 PrimitiveWithNoneUnionDto = Union[
     BoolFieldValueDto, IntFieldValueDto, StringFieldValueDto, DecimalFieldValueDto, None
 ]
+
 PrimitiveUnionDto = Union[
     BoolFieldValueDto, IntFieldValueDto, StringFieldValueDto, DecimalFieldValueDto
+]
+
+PrimitiveWithReferenceUnionDto = Union[
+    BoolFieldValueDto,
+    IntFieldValueDto,
+    StringFieldValueDto,
+    DecimalFieldValueDto,
+    ReferenceIdDto,
 ]
 
 JsonSchemaDto = dict

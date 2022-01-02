@@ -165,6 +165,9 @@ class PostgresColumnBuilder:
         if type_args[0] is str:
             return postgresql.ARRAY(String, dimensions=1)
 
+        if type_args[0] is UUID:
+            return postgresql.ARRAY(self._build_uuid(schema, type_args), dimensions=1)
+
         return self._make_json_column_type()
 
     def _make_json_column_type(self) -> postgresql.JSON:
@@ -253,6 +256,16 @@ class PostgresConnection(DbConnection):
 
     @staticmethod
     async def _init_connection(conn):
+        await conn.set_type_codec(
+            "uuid", encoder=str, decoder=UUID, schema="pg_catalog"
+        )
+        await conn.set_type_codec(
+            "uuid",
+            encoder=lambda u: u.bytes,
+            decoder=lambda u: UUID(bytes=u),
+            schema="pg_catalog",
+            format="binary",
+        )
         await conn.set_type_codec(
             "json",
             encoder=JsonSerializer.encode,
@@ -617,7 +630,7 @@ class PostgresTableService(CollectionService[Domain]):
         version = record.get("_version", None)
 
         if version is None or version == self._version:
-            return self._dao(**record)
+            return self._dao.parse_obj(record)
 
         return self._version_mappers[version][self._version](
             self._version_mappers, record

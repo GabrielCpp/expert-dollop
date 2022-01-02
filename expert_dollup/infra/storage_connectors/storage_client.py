@@ -1,4 +1,9 @@
 from abc import ABC, abstractmethod
+from expert_dollup.shared.starlette_injection import DetailedError
+
+
+class ObjectNotFound(DetailedError):
+    pass
 
 
 class StorageClient(ABC):
