@@ -25,7 +25,7 @@ google-cloud-storage = "^1.43.0"
 
 [tool.poetry.extras]
 postgres = ["databases", "sqlalchemy"]
-firebase = ["google-cloud-firestore"]
+firestore = ["google-cloud-firestore"]
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.8.4"

@@ -26,10 +26,10 @@ services:
     networks:
       - backend
   
-  firebase:
+  firestore:
       build:
           context: .
-          dockerfile: firebase.dockerfile
+          dockerfile: firestore.dockerfile
       ports:
       - 8806:8806
       command: gcloud beta emulators firestore start --host-port=0.0.0.0:8806
