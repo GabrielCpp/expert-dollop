@@ -79,9 +79,6 @@ class QueryBuilder(ABC):
     def find_by(self, query_filter: QueryFilter) -> "QueryBuilder":
         pass
 
-    def find_by_isnot(self, query_filter: QueryFilter) -> "QueryBuilder":
-        pass
-
     @abstractmethod
     def startwiths(self, query_filter: QueryFilter) -> "QueryBuilder":
         pass

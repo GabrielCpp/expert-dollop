@@ -257,16 +257,6 @@ class PostgresConnection(DbConnection):
     @staticmethod
     async def _init_connection(conn):
         await conn.set_type_codec(
-            "uuid", encoder=str, decoder=UUID, schema="pg_catalog"
-        )
-        await conn.set_type_codec(
-            "uuid",
-            encoder=lambda u: u.bytes,
-            decoder=lambda u: UUID(bytes=u),
-            schema="pg_catalog",
-            format="binary",
-        )
-        await conn.set_type_codec(
             "json",
             encoder=JsonSerializer.encode,
             decoder=JsonSerializer.decode,
@@ -326,15 +316,6 @@ class PostgresQueryBuilder(QueryBuilder):
     def find_by(self, query_filter: QueryFilter) -> "QueryBuilder":
         where_filter = self._build_filter(query_filter)
         self._conditions.append(where_filter)
-        return self
-
-    def find_by_isnot(self, query_filter: QueryFilter) -> "QueryBuilder":
-        filter_fields = self._mapper.map(query_filter, dict, query_filter.__class__)
-
-        for name, value in filter_fields.items():
-            where_filter = getattr(self._table.c, name).isnot(value)
-            self._conditions.append(where_filter)
-
         return self
 
     def startwiths(self, query_filter: QueryFilter) -> "QueryBuilder":

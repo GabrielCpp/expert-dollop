@@ -165,6 +165,12 @@ def create_project_tables():
         ["project_id", "path"],
     )
 
+    op.create_index(
+        op.f("ix_project_node_project_id_level"),
+        "project_node",
+        ["project_id", "level"],
+    )
+
     op.create_table(
         "project_node_metadata",
         Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
@@ -278,20 +284,6 @@ def create_report_tables():
         Column("project_def_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
         Column("structure", postgresql.JSON(), nullable=False),
-    )
-
-    op.create_table(
-        "report_rows",
-        Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("report_def_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("node_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("formula_id", postgresql.UUID(), nullable=False),
-        Column("group_digest", String(256), nullable=False),
-        Column("order_index", Integer, nullable=False),
-        Column("datasheet_id", postgresql.UUID(), nullable=False),
-        Column("element_id", postgresql.UUID(), nullable=False),
-        Column("child_reference_id", postgresql.UUID(), nullable=False),
-        Column("row", postgresql.JSON(), nullable=False),
     )
 
 
