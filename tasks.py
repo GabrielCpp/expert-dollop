@@ -211,7 +211,7 @@ def upload_base_project(c):
     cwd = os.getcwd()
     db_truncate(c)
     c.run(
-        f"curl -X POST -F 'file=@{cwd}/project-setup.jsonl'  http://localhost:8000/api/import"
+        f"curl -X POST -F 'file=@{cwd}/project-setup.jsonl' http://localhost:8000/api/import"
     )
 
 
@@ -219,5 +219,5 @@ def upload_base_project(c):
 def upload_project(c):
     cwd = os.getcwd()
     c.run(
-        f"curl -X POST -F 'file=@{cwd}/project.jsonl'  http://localhost:8000/api/import"
+        f"curl -X POST -F 'file=@{cwd}/project.jsonl' http://localhost:8000/api/import"
     )

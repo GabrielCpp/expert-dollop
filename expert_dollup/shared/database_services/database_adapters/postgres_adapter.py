@@ -256,9 +256,15 @@ class PostgresConnection(DbConnection):
 
     @staticmethod
     async def _init_connection(conn):
+        def get_bytes(u):
+            if isinstance(u, str):
+                return UUID(u).bytes
+
+            return u.bytes
+
         await conn.set_type_codec(
             "uuid",
-            encoder=lambda u: u.bytes,
+            encoder=get_bytes,
             decoder=lambda u: UUID(bytes=u),
             schema="pg_catalog",
             format="binary",
