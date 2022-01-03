@@ -749,6 +749,7 @@ label_attribute_value_dto_mappings = RevervibleUnionMapping(
 def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> Label:
     return Label(
         id=src.id,
+        name=src.name,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
         attributes=mapper.map_dict_values(
@@ -760,6 +761,7 @@ def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> La
 def map_datasheet_definition_label_to_dto(src: Label, mapper: Mapper) -> LabelDto:
     return LabelDto(
         id=src.id,
+        name=src.name,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
         attributes=mapper.map_dict_values(

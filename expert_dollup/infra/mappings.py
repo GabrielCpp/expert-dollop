@@ -795,6 +795,7 @@ def map_datasheet_definition_label_to_dao(src: Label, mapper: Mapper) -> LabelDa
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
+        name=src.name,
         attributes=mapper.map_dict_values(
             src.attributes, label_attribute_dao_mappings.to_origin
         ),
@@ -806,6 +807,7 @@ def map_datasheet_definition_label_from_dao(src: LabelDao, mapper: Mapper) -> La
         id=src.id,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
+        name=src.name,
         attributes=mapper.map_dict_values(
             src.attributes, label_attribute_dao_mappings.from_origin
         ),

@@ -3,13 +3,14 @@ from decimal import Decimal
 from expert_dollup.core.exceptions import AstEvaluationError
 
 
+class ReturnSignal(Exception):
+    def __init__(self, value):
+        Exception.__init__(self, "Evaluate return")
+        self.value = value
+
+
 class AstVirtualMachine:
-    def __init__(self, scope: dict):
-        self.scope = scope
-
-    def compute(self, node, scope=None):
-        scope = scope or self.scope
-
+    def compute(self, node, scope):
         if isinstance(node, ast.FunctionDef):
             args_name = [a.arg for a in node.args.args]
             body = node.body
@@ -23,12 +24,19 @@ class AstVirtualMachine:
                         value = self.compute(element.value, fn_scope)
                         return value
 
-                    self.compute(element, fn_scope)
+                    try:
+                        self.compute(element, fn_scope)
+                    except ReturnSignal as r:
+                        return r.value
 
                 return None
 
-            self.scope[node.name] = _compute_function
+            scope[node.name] = _compute_function
             return _compute_function
+
+        if isinstance(node, ast.Return):
+            value = None if node.value is None else self.compute(node.value, scope)
+            raise ReturnSignal(value)
 
         if isinstance(node, ast.GeneratorExp):
             elements = self.compute(node.generators[0].iter, scope)
@@ -99,7 +107,7 @@ class AstVirtualMachine:
 
         if isinstance(node, ast.Name):
             if isinstance(node.ctx, ast.Load):
-                assert node.id in scope, f"{node.id } not found"
+                assert node.id in scope, f"{node.id} not found"
                 value = scope[node.id]
                 return value
 
@@ -216,11 +224,11 @@ class ExpressionEvaluator:
 
     def evaluate(self, expression: str, scope: dict):
         formula_ast = ast.parse(expression)
-        ast_vm = AstVirtualMachine(scope)
+        ast_vm = AstVirtualMachine()
         result = None
         for element in formula_ast.body:
             try:
-                result = ast_vm.compute(element)
+                result = ast_vm.compute(element, scope)
             except Exception as e:
                 raise AstEvaluationError(
                     "Error during evaluation of expression", original_message=str(e)

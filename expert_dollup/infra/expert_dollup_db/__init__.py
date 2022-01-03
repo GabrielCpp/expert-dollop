@@ -83,7 +83,7 @@ class ProjectDefinitionDao(BaseModel):
         title = "project_definition"
 
     id: UUID
-    name: str
+    name: str = Field(max_length=64)
     default_datasheet_id: UUID
     datasheet_def_id: UUID
     creation_date_utc: datetime
@@ -100,7 +100,7 @@ class ProjectDefinitionNodeDao(BaseModel):
 
     id: UUID
     project_def_id: UUID
-    name: str
+    name: str = Field(max_length=64)
     is_collection: bool
     instanciate_by_default: bool
     order_index: int
@@ -120,7 +120,7 @@ class ProjectDao(BaseModel):
         title = "project"
 
     id: UUID
-    name: str
+    name: str = Field(max_length=64)
     is_staged: bool
     project_def_id: UUID
     datasheet_id: UUID
@@ -137,7 +137,7 @@ class ProjectNodeDao(BaseModel):
     id: UUID
     project_id: UUID
     type_id: UUID
-    type_name: str
+    type_name: str = Field(max_length=64)
     path: str
     value: PrimitiveWithNoneUnionDao
     label: str
@@ -174,7 +174,7 @@ class RessourceDao(BaseModel):
         title = "ressource"
 
     id: UUID
-    name: str
+    name: str = Field(max_length=255)
     owner_id: UUID
 
 
@@ -189,7 +189,7 @@ class TranslationDao(BaseModel):
     ressource_id: UUID
     locale: str = Field(min_length=5, max_length=5)
     scope: UUID
-    name: str
+    name: str = Field(max_length=64)
     value: str
     creation_date_utc: datetime
 
@@ -207,7 +207,7 @@ class SettingDao(BaseModel):
 
 class FormulaDependencyDao(BaseModel):
     target_type_id: UUID
-    name: str
+    name: str = Field(max_length=64)
 
 
 class FormulaDependencyGraphDao(BaseModel):
@@ -225,7 +225,7 @@ class ProjectDefinitionFormulaDao(BaseModel):
     id: UUID
     project_def_id: UUID
     attached_to_type_id: UUID
-    name: str
+    name: str = Field(max_length=64)
     expression: str
     final_ast: dict
     dependency_graph: FormulaDependencyGraphDao
@@ -243,7 +243,7 @@ class DatasheetDefinitionDao(BaseModel):
         title = "datasheet_definition"
 
     id: UUID
-    name: str
+    name: str = Field(max_length=64)
     properties: Dict[str, ElementPropertySchemaDao]
 
 
@@ -280,7 +280,7 @@ class LabelCollectionDao(BaseModel):
 
     id: UUID
     datasheet_definition_id: UUID
-    name: str
+    name: str = Field(max_length=64)
     attributes_schema: Dict[str, LabelAttributeSchemaDaoUnion]
 
 
@@ -294,6 +294,7 @@ class LabelDao(BaseModel):
     id: UUID
     label_collection_id: UUID
     order_index: int
+    name: str = Field(max_length=64)
     attributes: Dict[str, LabelAttributeDaoUnion]
 
 
@@ -328,7 +329,7 @@ class DatasheetDao(BaseModel):
         title = "datasheet"
 
     id: UUID
-    name: str
+    name: str = Field(max_length=64)
     is_staged: bool
     datasheet_def_id: UUID
     from_datasheet_id: Optional[UUID]
@@ -351,23 +352,23 @@ class DatasheetElementDao(BaseModel):
 
 
 class ReportJoinDao(BaseModel):
-    from_object_name: str
-    from_property_name: str
-    join_on_collection: str
-    join_on_attribute: str
-    alias_name: str
+    from_object_name: str = Field(max_length=64)
+    from_property_name: str = Field(max_length=64)
+    join_on_collection: str = Field(max_length=64)
+    join_on_attribute: str = Field(max_length=64)
+    alias_name: str = Field(max_length=64)
     warn_about_idle_items: bool
     same_cardinality: bool
     allow_dicard_element: bool
 
 
 class AttributeBucketDao(BaseModel):
-    bucket_name: str
-    attribute_name: str
+    bucket_name: str = Field(max_length=64)
+    attribute_name: str = Field(max_length=64)
 
 
 class ReportColumnDao(BaseModel):
-    name: str
+    name: str = Field(max_length=64)
     expression: str
     is_visible: bool
     unit_id: Optional[str] = None
@@ -404,9 +405,8 @@ class ReportDefinitionDao(BaseModel):
 
     id: UUID
     project_def_id: UUID
-    name: str
+    name: str = Field(max_length=64)
     structure: ReportStructureDao
-
 
 
 class MeasureUnitDao(BaseModel):

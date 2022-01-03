@@ -34,7 +34,6 @@ class ReportRowCacheBuilder:
         report_definition_service: ReportDefinitionService,
         label_collection_service: LabelCollectionService,
         label_service: LabelService,
-        translation_plucker: Plucker[TranslationService],
         formula_plucker: Plucker[FormulaService],
     ):
         self.datasheet_definition_service = datasheet_definition_service
@@ -43,7 +42,6 @@ class ReportRowCacheBuilder:
         self.report_definition_service = report_definition_service
         self.label_collection_service = label_collection_service
         self.label_service = label_service
-        self.translation_plucker = translation_plucker
         self.formula_plucker = formula_plucker
 
     async def refresh_cache(
@@ -55,7 +53,6 @@ class ReportRowCacheBuilder:
         for join in report_definition.structure.joins_cache:
             report_buckets = await self._join_on(report_buckets, join, cache)
 
-        await self._join_translations(report_buckets)
         await self._join_formulas(report_buckets, report_definition)
         report_buckets = self._distinct_rows(report_buckets)
 
@@ -137,35 +134,6 @@ class ReportRowCacheBuilder:
         ]
 
         return report_buckets
-
-    async def _join_translations(self, report_buckets: List[Dict[str, Dict[str, Any]]]):
-        ressource_ids = set()
-
-        for report_bucket in report_buckets:
-            for row in report_bucket.values():
-                ressource_ids.add(row["id"])
-
-        translations = await self.translation_plucker.plucks(
-            lambda scopes: TranslationPluckFilter(scopes=scopes), ressource_ids
-        )
-
-        translations_name_by_scope: Dict[UUID, str] = {}
-        for translation in translations:
-            translations_name_by_scope[translation.scope] = translation.name
-
-        for report_bucket in report_buckets:
-            for bucket_name, row in report_bucket.items():
-                translation_name = "<Missing translation>"
-                target_id = row["id"]
-
-                if target_id in translations_name_by_scope:
-                    translation_name = translations_name_by_scope[target_id]
-                else:
-                    print(
-                        f"Missing translation for {target_id} in bucket {bucket_name}"
-                    )
-
-                row["translation"] = translation_name
 
     async def _join_formulas(
         self,
@@ -251,7 +219,7 @@ class ReportRowCacheBuilder:
             matchs = self._match_attributes(attribute, attributes_to_label, seen)
 
             if len(matchs) == 0:
-                print(f"Discarding attribute {attribute} for {join}")
+                cache.warnings.append(f"Discarding attribute {attribute} for {join}")
                 if join.allow_dicard_element:
                     continue
 

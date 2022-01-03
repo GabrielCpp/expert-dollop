@@ -257,6 +257,14 @@ class PostgresConnection(DbConnection):
     @staticmethod
     async def _init_connection(conn):
         await conn.set_type_codec(
+            "uuid",
+            encoder=lambda u: u.bytes,
+            decoder=lambda u: UUID(bytes=u),
+            schema="pg_catalog",
+            format="binary",
+        )
+
+        await conn.set_type_codec(
             "json",
             encoder=JsonSerializer.encode,
             decoder=JsonSerializer.decode,
@@ -391,12 +399,12 @@ class PostgresTableService(CollectionService[Domain]):
         mapper: Mapper,
     ):
         self._mapper = mapper
+        self._database = connector
         self._dao = meta.dao
         self._domain = meta.domain
         self._paginator_factory = getattr(meta, "paginator", lambda _: None)
         self._version = getattr(self._dao.Meta, "version", None)
         self._version_mappers = getattr(self._dao.Meta, "version_mappers", {})
-        self._database = connector
         self._table = tables.get(self._dao)
         self._paginator = self._paginator_factory(self._table)
         self._column_processors = self._build_table_raw_processors()
@@ -634,10 +642,7 @@ class PostgresTableService(CollectionService[Domain]):
         ]
 
         records = [
-            [
-                column_processor.processor(d[column_processor.name])
-                for column_processor in self._column_processors
-            ]
+            [d[column_processor.name] for column_processor in self._column_processors]
             for d in dicts
         ]
 

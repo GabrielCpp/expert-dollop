@@ -39,9 +39,9 @@ def create_global_table():
         "translation",
         Column("id", postgresql.UUID(), nullable=False),
         Column("ressource_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("scope", postgresql.UUID(), nullable=False, primary_key=True),
         Column("locale", String(5), nullable=False, primary_key=True),
         Column("name", String, nullable=False, primary_key=True),
+        Column("scope", postgresql.UUID(), nullable=False),
         Column("value", String, nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
@@ -217,6 +217,7 @@ def create_datasheet_tables():
             nullable=False,
         ),
         Column("order_index", Integer, nullable=False),
+        Column("name", String, nullable=False),
         Column("attributes", postgresql.JSON(), nullable=False),
     )
 

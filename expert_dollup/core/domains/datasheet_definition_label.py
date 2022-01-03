@@ -12,6 +12,7 @@ class Label:
     id: UUID
     label_collection_id: UUID
     order_index: int
+    name: str
     attributes: Dict[str, LabelAttributeUnion] = field(default_factory=dict)
 
     def get_attribute(self, name: str):
@@ -22,7 +23,12 @@ class Label:
 
     @property
     def report_dict(self) -> dict:
-        return {**self.attributes, "id": self.id, "order_index": self.order_index}
+        return {
+            **self.attributes,
+            "id": self.id,
+            "order_index": self.order_index,
+            "name": self.name,
+        }
 
 
 class LabelFilter(QueryFilter):
