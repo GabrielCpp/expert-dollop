@@ -7,7 +7,6 @@ from expert_dollup.shared.starlette_injection.clock_provider import StaticClock
 from tests.fixtures.mock_interface_utils import (
     StrictInterfaceSetup,
     compare_per_arg,
-    raise_async,
 )
 from expert_dollup.app.dtos import *
 from expert_dollup.core.units import *
@@ -116,6 +115,17 @@ datasheet_seed = DatasheetSeed(
         ),
     },
     collection_seeds={
+        "datasheetelement_binding": CollectionSeed(
+            label_count=10,
+            schemas={
+                "formula": FormulaAggregate("*"),
+                "special_condition": bool,
+                "quantity": Decimal,
+                "stage": CollectionAggregate("stage"),
+                "orderformcategory": CollectionAggregate("orderformcategory"),
+                "datasheet_element": DatasheetAggregate("*"),
+            },
+        ),
         "substage": CollectionSeed(
             label_count=10,
             schemas={
@@ -279,80 +289,6 @@ def make_general_report(project_def_id: UUID) -> ReportDefinition:
 
 
 @pytest.mark.asyncio
-async def test_given_report_definition(snapshot):
-    datasheet_fixture = DatasheetInstanceFactory.build(datasheet_seed)
-    project_fixture = ProjectInstanceFactory.build(
-        project_seed,
-        default_datasheet_id=datasheet_fixture.datasheet.id,
-        datasheet_def_id=datasheet_fixture.datasheet_definition.id,
-    )
-    report_definition = make_general_report(project_fixture.project_definition.id)
-
-    datasheet_definition_service = StrictInterfaceSetup(DatasheetDefinitionService)
-    project_definition_service = StrictInterfaceSetup(ProjectDefinitionService)
-    datasheet_definition_element_service = StrictInterfaceSetup(
-        DatasheetDefinitionElementService
-    )
-    label_collection_service = StrictInterfaceSetup(LabelCollectionService)
-    label_service = StrictInterfaceSetup(LabelService)
-    formula_plucker = StrictInterfaceSetup(Plucker)
-
-    project_definition_service.setup(
-        lambda x: x.find_by_id(report_definition.project_def_id),
-        returns_async=project_fixture.project_definition,
-    )
-
-    datasheet_def_id = datasheet_fixture.datasheet_definition.id
-
-    datasheet_definition_service.setup(
-        lambda x: x.find_by_id(datasheet_def_id),
-        returns_async=datasheet_fixture.datasheet_definition,
-    )
-
-    datasheet_definition_element_service.setup(
-        lambda x: x.find_by(
-            DatasheetDefinitionElementFilter(datasheet_def_id=datasheet_def_id)
-        ),
-        returns_async=datasheet_fixture.datasheet_definition_elements,
-    )
-
-    label_collection_service.setup(
-        lambda x: x.find_by(
-            LabelCollectionFilter(datasheet_definition_id=datasheet_def_id)
-        ),
-        returns_async=datasheet_fixture.label_collections,
-    )
-
-    for label_collection in datasheet_fixture.label_collections:
-        label_service.setup(
-            lambda x: x.find_by(LabelFilter(label_collection_id=label_collection.id)),
-            returns_async=[
-                label
-                for label in datasheet_fixture.labels
-                if label.label_collection_id == label_collection.id
-            ],
-        )
-
-    formula_plucker.setup(
-        lambda x: x.plucks(lambda x: callable(x), lambda x: True),
-        returns_async=project_fixture.formulas,
-        compare_method=compare_per_arg,
-    )
-
-    report_linking = ReportRowCacheBuilder(
-        datasheet_definition_service.object,
-        project_definition_service.object,
-        datasheet_definition_element_service.object,
-        label_collection_service.object,
-        label_service.object,
-        formula_plucker.object,
-    )
-
-    report_buckets = await report_linking.refresh_cache(report_definition)
-    snapshot.assert_match(dump_snapshot(report_buckets), "report_linking_test.json")
-
-
-@pytest.mark.asyncio
 async def test_given_row_cache_should_produce_correct_report():
     datasheet_fixture = DatasheetInstanceFactory.build(datasheet_seed)
     project_fixture = ProjectInstanceFactory.build(
@@ -422,7 +358,6 @@ async def test_given_row_cache_should_produce_correct_report():
     ]
 
     report_def_row_cache = StrictInterfaceSetup(ObjectStorage)
-    report_storage = StrictInterfaceSetup(ObjectStorage)
     unit_instance_storage = StrictInterfaceSetup(ObjectStorage)
     datasheet_element_plucker = StrictInterfaceSetup(Plucker)
     expression_evaluator = StrictInterfaceSetup(ExpressionEvaluator)
@@ -441,16 +376,6 @@ async def test_given_row_cache_should_produce_correct_report():
     unit_instance_storage.setup(
         lambda x: x.load(UnitInstanceCacheKey(project_id=project_fixture.project.id)),
         returns_async=project_fixture.unit_instances,
-    )
-
-    report_storage.setup(
-        lambda x: x.load(
-            ReportKey(
-                project_id=project_fixture.project.id,
-                report_definition_id=report_definition.id,
-            )
-        ),
-        invoke=raise_async(RessourceNotFound()),
     )
 
     missing_element_ids = {
@@ -499,7 +424,6 @@ async def test_given_row_cache_should_produce_correct_report():
 
     report_linking = ReportLinking(
         report_def_row_cache.object,
-        report_storage.object,
         unit_instance_storage.object,
         datasheet_element_plucker.object,
         expression_evaluator.object,

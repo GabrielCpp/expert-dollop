@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 import ast
+from uuid import UUID
 from ast import AST
 from typing import Dict, Union
 from expert_dollup.core.domains import AstNode, AstNodeValue
 from decimal import Decimal
+from dataclasses import dataclass
 
 
 class SafeguardDivision(ast.NodeTransformer):
@@ -120,7 +122,12 @@ def serialize_post_processed_expression(expression: str) -> dict:
 class ComputationUnit(ABC):
     @property
     @abstractmethod
-    def name(self):
+    def name(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def node_id(self) -> UUID:
         pass
 
     @property
@@ -129,15 +136,33 @@ class ComputationUnit(ABC):
         pass
 
 
-def process_module_node(node: dict, unit: ComputationUnit):
-    return dispatch(node["properties"]["body"], unit)
+@dataclass
+class Calculation:
+    details: str = ""
+    index: int = 0
+
+    def add(self, result, details) -> str:
+        self.index = self.index + 1
+        temp_name = f"temp{self.index}({result})"
+        self.details = f"{self.details}\n{temp_name} = {details}"
+
+        return temp_name
+
+    def add_final(self, result, details) -> None:
+        self.index = self.index + 1
+        temp_name = f"\n<final_result, {result}>"
+        self.details = f"{self.details}\n{temp_name} = {details}"
 
 
-def process_expr_node(node: dict, unit: ComputationUnit):
-    return dispatch(node["properties"]["value"], unit)
+def process_module_node(node: dict, unit: ComputationUnit, calc: Calculation):
+    return dispatch(node["properties"]["body"], unit, calc)
 
 
-def process_name_node(node: dict, unit: ComputationUnit):
+def process_expr_node(node: dict, unit: ComputationUnit, calc: Calculation):
+    return dispatch(node["properties"]["value"], unit, calc)
+
+
+def process_name_node(node: dict, unit: ComputationUnit, calc: Calculation):
     name = node["values"]["id"]
     assert (
         name in unit.units
@@ -145,14 +170,14 @@ def process_name_node(node: dict, unit: ComputationUnit):
     values = unit.units[name]
 
     if len(values) == 1:
-        return values[0].value, f"<{name}, {values[0].value}>"
+        return values[0].value, f"<{name}[{values[0].node_id}], {values[0].value}>"
 
     sum_result = sum(unit.value for unit in unit.units[name])
 
-    return sum_result, f"sum(<{name}, {sum_result}>)"
+    return sum_result, calc.add(sum_result, f"sum({name})")
 
 
-def process_constant_node(node: dict, unit: ComputationUnit):
+def process_constant_node(node: dict, unit: ComputationUnit, calc: Calculation):
     value = node["values"]["value"]
     text = value["text"]
     enabled = value["enabled"]
@@ -170,7 +195,7 @@ def process_constant_node(node: dict, unit: ComputationUnit):
     return real_value, f"{real_value}"
 
 
-def process_num_node(node: dict, unit: ComputationUnit):
+def process_num_node(node: dict, unit: ComputationUnit, calc: Calculation):
     value = node["values"]["n"]
     text = value["text"]
     enabled = value["enabled"]
@@ -188,7 +213,7 @@ def process_num_node(node: dict, unit: ComputationUnit):
     return real_value, f"{real_value}"
 
 
-def process_str_node(node: dict, unit: ComputationUnit):
+def process_str_node(node: dict, unit: ComputationUnit, calc: Calculation):
     value = node["values"]["a"]
     text = value["text"]
     enabled = value["enabled"]
@@ -213,15 +238,16 @@ UNARY_OP_DISPATCH = {
 }
 
 
-def process_unary_op_node(node: dict, unit: ComputationUnit):
-    operand, operand_details = dispatch(node["properties"]["operand"], unit)
+def process_unary_op_node(node: dict, unit: ComputationUnit, calc: Calculation):
+    operand, operand_details = dispatch(node["properties"]["operand"], unit, calc)
     op = node["values"]["op"]
     compute = UNARY_OP_DISPATCH.get(op)
 
     if compute is None:
         raise Exception("Unsupported unary op")
 
-    return compute(operand, operand_details)
+    result, details = compute(operand, operand_details)
+    return result, calc.add(result, details)
 
 
 BiNARY_OP_DISPATCH = {
@@ -244,16 +270,18 @@ BiNARY_OP_DISPATCH = {
 }
 
 
-def process_bin_op_node(node: dict, unit: ComputationUnit):
-    left, left_details = dispatch(node["properties"]["left"], unit)
-    right, right_details = dispatch(node["properties"]["right"], unit)
+def process_bin_op_node(node: dict, unit: ComputationUnit, calc: Calculation):
+    left, left_details = dispatch(node["properties"]["left"], unit, calc)
+    right, right_details = dispatch(node["properties"]["right"], unit, calc)
     op = node["values"]["op"]
     compute = BiNARY_OP_DISPATCH.get(op)
 
     if compute is None:
         raise Exception("Unsupported binary op")
 
-    return compute(left, left_details, right, right_details)
+    result, details = compute(left, left_details, right, right_details)
+
+    return result, calc.add(result, details)
 
 
 COMPARATOR_DISPATCH = {
@@ -284,14 +312,14 @@ COMPARATOR_DISPATCH = {
 }
 
 
-def process_compare_node(node: dict, unit: ComputationUnit):
-    left, left_details = dispatch(node["properties"]["left"], unit)
+def process_compare_node(node: dict, unit: ComputationUnit, calc: Calculation):
+    left, left_details = dispatch(node["properties"]["left"], unit, calc)
     result = left
     details = f"{left_details}"
     ops = node["values"]["ops"].split()
 
     for comparator, op in zip(node["children"]["comparators"], ops):
-        right, right_details = dispatch(comparator, unit)
+        right, right_details = dispatch(comparator, unit, calc)
         compute = COMPARATOR_DISPATCH.get(op)
 
         if compute is None:
@@ -300,7 +328,9 @@ def process_compare_node(node: dict, unit: ComputationUnit):
         result, details = compute(left, details, right, right_details)
         left = right
 
-    return Decimal(1 if result else 0), details
+    result = Decimal(1 if result else 0)
+
+    return result, calc.add(result, details)
 
 
 def safe_div(a: Decimal, b: Decimal) -> Decimal:
@@ -313,12 +343,12 @@ def safe_div(a: Decimal, b: Decimal) -> Decimal:
     return a / b
 
 
-def process_call_node(node: dict, unit: ComputationUnit):
+def process_call_node(node: dict, unit: ComputationUnit, calc: Calculation):
     args = []
     details = []
 
     for arg in node["children"]["args"]:
-        result, calculation_details = dispatch(arg, unit)
+        result, calculation_details = dispatch(arg, unit, calc)
         args.append(result)
         details.append(calculation_details)
 
@@ -326,11 +356,15 @@ def process_call_node(node: dict, unit: ComputationUnit):
     fn_id = node["values"]["fn_name"]
 
     if fn_id == "safe_div":
-        return safe_div(*args), f"safe_div({details_str})"
+        result = safe_div(*args)
+        details = f"safe_div({details_str})"
+        return result, calc.add(result, details)
 
     if fn_id == "sqrt":
         assert len(args) == 1
-        return args[0].sqrt(), f"sqrt({details_str})"
+        result = args[0].sqrt()
+        details = f"sqrt({details_str})"
+        return result, calc.add(result, details)
 
     raise Exception(f"Unknown function {fn_id}")
 
@@ -349,5 +383,12 @@ AST_NODE_PROCESSOR: Dict[str, callable] = {
 }
 
 
-def dispatch(node: dict, unit: ComputationUnit):
-    return AST_NODE_PROCESSOR[node["kind"]](node, unit)
+def dispatch(node: dict, unit: ComputationUnit, calc: Calculation):
+    return AST_NODE_PROCESSOR[node["kind"]](node, unit, calc)
+
+
+def compute(node: dict, unit: ComputationUnit):
+    calc = Calculation()
+    result, details = dispatch(node, unit, calc)
+    calc.add_final(result, details)
+    return result, calc.details

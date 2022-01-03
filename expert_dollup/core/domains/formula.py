@@ -77,6 +77,15 @@ class UnitInstance:
         return asdict(self)
 
 
+@dataclass
+class UnitInstanceElement:
+    project_id: UUID
+    element_def_id: UUID
+    formula_id: UUID
+    node_id: UUID
+    datasheet_element_reference: UUID
+
+
 UnitInstanceCache = List[UnitInstance]
 
 

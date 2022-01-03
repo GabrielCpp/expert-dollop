@@ -184,15 +184,15 @@ async def test_given_unit_instances_should_compute_collection():
             node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
             path=[],
             name="formulaA",
-            calculation_details="<fieldB, 2> * sum(<fieldA, 12>)",
-            result=Decimal(24),
+            calculation_details="\ntemp1(12) = sum(fieldA)\ntemp2(24) = <fieldB[4303a404-1c3e-7aca-1261-9b6544363a3e], 2> * temp1(12)\n\n<final_result, 24> = temp2(24)",
+            result=Decimal("24"),
         ),
         UnitInstance(
             formula_id=UUID("b9af5d87-31a6-3603-85d0-1c849c9f4b44"),
             node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
             path=[],
             name="formulaB",
-            calculation_details="<fieldB, 2> * sum(<sectionA_formula, 6.000000>)",
+            calculation_details="\ntemp1(6.000000) = sum(sectionA_formula)\ntemp2(12.000000) = <fieldB[4303a404-1c3e-7aca-1261-9b6544363a3e], 2> * temp1(6.000000)\n\n<final_result, 12.000000> = temp2(12.000000)",
             result=Decimal("12.000000"),
         ),
         UnitInstance(
@@ -204,7 +204,7 @@ async def test_given_unit_instances_should_compute_collection():
                 UUID("8ceb58ac-94a7-0ae9-a6da-6b6fbb3e00e8"),
             ],
             name="sectionA_formula",
-            calculation_details="<fieldA, 5> - 2.000000",
+            calculation_details="\ntemp1(3.000000) = <fieldA[941055cb-b2bc-0916-4182-4774e576c6eb], 5> - 2.000000\n\n<final_result, 3.000000> = temp1(3.000000)",
             result=Decimal("3.000000"),
         ),
         UnitInstance(
@@ -216,7 +216,7 @@ async def test_given_unit_instances_should_compute_collection():
                 UUID("8ceb58ac-94a7-0ae9-a6da-6b6fbb3e00e8"),
             ],
             name="sectionA_formula",
-            calculation_details="<fieldA, 4> - 2.000000",
+            calculation_details="\ntemp1(2.000000) = <fieldA[a23ee02f-9bc1-0573-ed61-60ebffc6d4c8], 4> - 2.000000\n\n<final_result, 2.000000> = temp1(2.000000)",
             result=Decimal("2.000000"),
         ),
         UnitInstance(
@@ -228,7 +228,7 @@ async def test_given_unit_instances_should_compute_collection():
                 UUID("8ceb58ac-94a7-0ae9-a6da-6b6fbb3e00e8"),
             ],
             name="sectionA_formula",
-            calculation_details="<fieldA, 3> - 2.000000",
+            calculation_details="\ntemp1(1.000000) = <fieldA[56969dee-a7d6-7243-b154-fe4c75334aa9], 3> - 2.000000\n\n<final_result, 1.000000> = temp1(1.000000)",
             result=Decimal("1.000000"),
         ),
     ]

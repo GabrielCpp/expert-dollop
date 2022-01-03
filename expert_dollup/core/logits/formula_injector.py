@@ -120,7 +120,7 @@ class FormulaUnit:
             for name in self.dependencies
         }
 
-        result, calculation_details = formula_processor.dispatch(self._final_ast, self)
+        result, calculation_details = formula_processor.compute(self._final_ast, self)
 
         if result != self._formula_instance.result:
             self._formula_instance.result = result

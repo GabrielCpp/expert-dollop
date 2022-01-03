@@ -30,7 +30,6 @@ class LinkingData:
     report_definition: ReportDefinition
     project_details: ProjectDetails
     unit_instances: UnitInstanceCache
-    old_report: Optional[Report]
     injector: FormulaInjector
 
 
@@ -38,7 +37,6 @@ class ReportLinking:
     def __init__(
         self,
         report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
-        report_storage: ObjectStorage[Report, ReportKey],
         unit_instance_storage: ObjectStorage[UnitInstanceCache, UnitInstanceCacheKey],
         datasheet_element_plucker: Plucker[DatasheetElementService],
         expression_evaluator: ExpressionEvaluator,
@@ -46,7 +44,6 @@ class ReportLinking:
     ):
         self.report_def_row_cache = report_def_row_cache
         self.unit_instance_storage = unit_instance_storage
-        self.report_storage = report_storage
         self.datasheet_element_plucker = datasheet_element_plucker
         self.expression_evaluator = expression_evaluator
         self.clock = clock
@@ -85,18 +82,7 @@ class ReportLinking:
         for unit_instance in unit_instances:
             injector.add_unit(FrozenUnit(unit_instance))
 
-        try:
-            old_report = await self.report_storage.load(
-                ReportKey(
-                    project_id=project_details.id,
-                    report_definition_id=report_definition.id,
-                )
-            )
-        except RessourceNotFound:
-            old_report = None
-
         return LinkingData(
-            old_report=old_report,
             report_definition=report_definition,
             project_details=project_details,
             unit_instances=unit_instances,
@@ -159,28 +145,11 @@ class ReportLinking:
             linking_data.report_definition.structure.datasheet_attribute.attribute_name
         )
         datasheet_id = linking_data.project_details.datasheet_id
-        old_rows = (
-            []
-            if linking_data.old_report is None
-            else chain(*[stage.rows for stage in linking_data.old_report.stages])
-        )
-        old_row_by_formula_cache = {
-            f"{old_row.formula_id}/{old_row.node_id}": old_row for old_row in old_rows
-        }
-
         missing_elements_for_rows: Dict[UUID, List[int]] = defaultdict(list)
 
         for index, report_row in enumerate(report_rows):
             formula_cache_id = f"{report_row.formula_id}/{report_row.node_id}"
-            old_row = old_row_by_formula_cache.get(formula_cache_id)
-
-            if not old_row is None:
-                report_row.child_reference_id = old_row.child_reference_id
-                report_row.row[datasheet_bucket_name] = old_row.row[
-                    datasheet_bucket_name
-                ]
-            else:
-                missing_elements_for_rows[report_row.element_id].append(index)
+            missing_elements_for_rows[report_row.element_id].append(index)
 
         missing_elements = await self.datasheet_element_plucker.pluck_subressources(
             DatasheetElementFilter(
