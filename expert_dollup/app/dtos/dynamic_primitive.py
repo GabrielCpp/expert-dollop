@@ -1,5 +1,7 @@
 from expert_dollup.shared.starlette_injection import CamelModel
+from typing import Union
 from uuid import UUID
+from decimal import Decimal
 
 
 class IntFieldValueDto(CamelModel):
@@ -7,7 +9,7 @@ class IntFieldValueDto(CamelModel):
 
 
 class DecimalFieldValueDto(CamelModel):
-    numeric: float
+    numeric: Decimal
 
 
 class StringFieldValueDto(CamelModel):
@@ -20,3 +22,22 @@ class BoolFieldValueDto(CamelModel):
 
 class ReferenceIdDto(CamelModel):
     uuid: UUID
+
+
+PrimitiveWithNoneUnionDto = Union[
+    BoolFieldValueDto, IntFieldValueDto, StringFieldValueDto, DecimalFieldValueDto, None
+]
+
+PrimitiveUnionDto = Union[
+    BoolFieldValueDto, IntFieldValueDto, StringFieldValueDto, DecimalFieldValueDto
+]
+
+PrimitiveWithReferenceUnionDto = Union[
+    BoolFieldValueDto,
+    IntFieldValueDto,
+    StringFieldValueDto,
+    DecimalFieldValueDto,
+    ReferenceIdDto,
+]
+
+JsonSchemaDto = dict

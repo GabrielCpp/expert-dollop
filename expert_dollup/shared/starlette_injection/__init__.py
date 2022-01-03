@@ -7,3 +7,4 @@ from .graphql_context import GraphqlContext
 from .problem import problem
 from .modeling import CamelModel
 from .handlers import *
+from .detailed_error import DetailedError

@@ -132,6 +132,16 @@ class Never:
     pass
 
 
+class MatchingMockMismatch(Exception):
+    def __init__(self, message, **props):
+        Exception.__init__(self, message)
+        self.props = props
+
+    def __str__(self):
+        prop_str = "  \n".join(f"{name}={value}" for name, value in self.props.items())
+        return f"{Exception.__str__(self)} -> {prop_str}"
+
+
 class StrictInterfaceSetup:
     class Proxy:
         def __init__(self):
@@ -154,6 +164,9 @@ class StrictInterfaceSetup:
         proxy: "StrictInterfaceSetup.Proxy"
         effect: callable
         is_equivalent: callable
+
+        def __repr__(self):
+            return str(self.invokation)
 
         @property
         def invokation(self) -> call:
@@ -186,10 +199,11 @@ class StrictInterfaceSetup:
                     break
 
             if selected_effect is None:
-                raise Exception(
-                    "No matching invokation found for {} with {}".format(
-                        self.method_name, invokation
-                    )
+                raise MatchingMockMismatch(
+                    "No matching invokation found",
+                    target=f"object.{self.method_name}",
+                    invokation=str(invokation),
+                    candidates=str(self.effect_by_calls),
                 )
 
             self.invoke_count = self.invoke_count + 1

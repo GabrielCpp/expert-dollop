@@ -1,15 +1,15 @@
 from uuid import UUID
-from typing import List, Union, Optional, Dict
+from typing import List, Optional, Dict
 from dataclasses import dataclass
 from datetime import datetime
-from expert_dollup.infra.expert_dollup_db import ValueUnion
+from .values_union import PrimitiveUnion
 from expert_dollup.shared.database_services import QueryFilter
 
 
 @dataclass
 class DatasheetDefinitionElementProperty:
     is_readonly: bool
-    value: ValueUnion
+    value: PrimitiveUnion
 
 
 @dataclass
@@ -23,6 +23,16 @@ class DatasheetDefinitionElement:
     default_properties: Dict[str, DatasheetDefinitionElementProperty]
     tags: List[UUID]
     creation_date_utc: datetime
+
+    @property
+    def report_dict(self):
+        return {
+            "id": self.id,
+            "unit_id": self.unit_id,
+            "is_collection": self.is_collection,
+            "order_index": self.order_index,
+            "name": self.name,
+        }
 
 
 class DatasheetDefinitionElementFilter(QueryFilter):

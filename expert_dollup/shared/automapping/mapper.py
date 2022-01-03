@@ -48,6 +48,18 @@ class Mapper:
             for key, instance in instances.items()
         }
 
+    def map_dict_list_values(
+        self,
+        instances: Dict[K, List[T]],
+        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
+        from_type: Type[T] = None,
+        after=lambda x: x,
+    ) -> Dict[K, List[U]]:
+        return {
+            key: after(self.map_many(instance, to_type, from_type))
+            for key, instance in instances.items()
+        }
+
     def map(
         self,
         instance: T,
@@ -56,25 +68,27 @@ class Mapper:
     ) -> U:
         from_type = type(instance) if from_type is None else from_type
 
-        if not from_type in self._mappings:
-            raise MapingError(f"No mapping for instance {from_type} -> {to_type}")
-
-        submapper = self._mappings.get(from_type)
-
         if isinstance(to_type, dict):
             if not from_type in to_type:
                 raise MapingError(
-                    f"Mapping for type union must be among provided types {','.join(list(to_type.keys()))}"
+                    f"Mapping for type {str(from_type)} union must be among provided types {','.join(str(t) for t in to_type.keys())}"
                 )
 
             to_type = to_type[from_type]
 
-        object_mapper = submapper.get(to_type)
+        if from_type is to_type:
+            return instance
 
-        if object_mapper is None:
+        if not from_type in self._mappings:
+            raise MapingError(f"No mapping for instance {from_type} -> {to_type}")
+
+        submappers = self._mappings.get(from_type)
+
+        if not to_type in submappers:
             raise MapingError(f"No mapping for target {from_type} -> {to_type}")
 
-        result = object_mapper(instance, self)
+        apply_mapping = submappers.get(to_type)
+        result = apply_mapping(instance, self)
 
         return result
 

@@ -6,18 +6,18 @@ class ProjectDefinitionDtoFactory(factory.Factory):
     class Meta:
         model = ProjectDefinitionDto
 
-    id = factory.Faker("uuid4")
+    id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"Gab{n}")
-    datasheet_def_id = factory.Faker("uuid4")
-    default_datasheet_id = factory.Faker("uuid4")
+    datasheet_def_id = factory.Faker("pyuuid4")
+    default_datasheet_id = factory.Faker("pyuuid4")
 
 
 class ProjectDefinitionNodeDtoFactory(factory.Factory):
     class Meta:
         model = ProjectDefinitionNodeDto
 
-    id = factory.Faker("uuid4")
-    project_def_id = factory.Faker("uuid4")
+    id = factory.Faker("pyuuid4")
+    project_def_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"Container{n}")
     is_collection = False
     instanciate_by_default = True
@@ -41,9 +41,9 @@ class TranslationDtoFactory(factory.Factory):
     class Meta:
         model = TranslationDto
 
-    id = factory.Faker("uuid4")
-    ressource_id = factory.Faker("uuid4")
-    scope = factory.Faker("uuid4")
+    id = factory.Faker("pyuuid4")
+    ressource_id = factory.Faker("pyuuid4")
+    scope = factory.Faker("pyuuid4")
     locale = "fr_CA"
     name = factory.Sequence(lambda n: f"hello{n}")
     value = factory.Sequence(lambda n: f"translation{n}")
@@ -54,9 +54,9 @@ class TranslationInputDtoFactory(factory.Factory):
     class Meta:
         model = TranslationInputDto
 
-    id = factory.Faker("uuid4")
-    ressource_id = factory.Faker("uuid4")
-    scope = factory.Faker("uuid4")
+    id = factory.Faker("pyuuid4")
+    ressource_id = factory.Faker("pyuuid4")
+    scope = factory.Faker("pyuuid4")
     locale = "fr_CA"
     name = factory.Sequence(lambda n: f"hello{n}")
     value = factory.Sequence(lambda n: f"translation{n}")
@@ -66,20 +66,20 @@ class ProjectDetailsDtoFactory(factory.Factory):
     class Meta:
         model = ProjectDetailsDto
 
-    id = factory.Faker("uuid4")
+    id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"project{n}")
     is_staged = False
-    project_def_id = factory.Faker("uuid4")
-    datasheet_id = factory.Faker("uuid4")
+    project_def_id = factory.Faker("pyuuid4")
+    datasheet_id = factory.Faker("pyuuid4")
 
 
 class FormulaDtoFactory(factory.Factory):
     class Meta:
         model = FormulaExpressionDto
 
-    id = factory.Faker("uuid4")
-    project_def_id = factory.Faker("uuid4")
-    attached_to_type_id = factory.Faker("uuid4")
+    id = factory.Faker("pyuuid4")
+    project_def_id = factory.Faker("pyuuid4")
+    attached_to_type_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"formula{n}")
     expression = "a+b*c/2"
 
@@ -88,7 +88,7 @@ class DatasheetDefinitionDtoFactory(factory.Factory):
     class Meta:
         model = DatasheetDefinitionDto
 
-    id = factory.Faker("uuid4")
+    id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"datasheet_definition{n}")
     properties = {
         "conversion_factor": ElementPropertySchemaDto(
@@ -102,27 +102,31 @@ class DatasheetDefinitionElementDtoFactory(factory.Factory):
     class Meta:
         model = DatasheetDefinitionElementDto
 
-    id = factory.Faker("uuid4")
+    id = factory.Faker("pyuuid4")
     unit_id = "inch"
     is_collection = False
-    datasheet_def_id = factory.Faker("uuid4")
+    datasheet_def_id = factory.Faker("pyuuid4")
     order_index = factory.Sequence(lambda n: n)
     tags = factory.LazyFunction(lambda: [])
     name = factory.Sequence(lambda n: f"field_name{n}")
-    default_properties = {
-        "conversion_factor": DatasheetDefinitionElementPropertyDto(
-            is_readonly=True, value=2
-        ),
-        "lost": DatasheetDefinitionElementPropertyDto(is_readonly=True, value=2),
-    }
+    default_properties = factory.Dict(
+        {
+            "conversion_factor": DatasheetDefinitionElementPropertyDto(
+                is_readonly=True, value=IntFieldValueDto(integer=2)
+            ),
+            "lost": DatasheetDefinitionElementPropertyDto(
+                is_readonly=True, value=IntFieldValueDto(integer=2)
+            ),
+        }
+    )
 
 
 class LabelCollectionDtoFactory(factory.Factory):
     class Meta:
         model = LabelCollectionDto
 
-    id = factory.Faker("uuid4")
-    datasheet_definition_id = factory.Faker("uuid4")
+    id = factory.Faker("pyuuid4")
+    datasheet_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"label_collection_{n}")
     attributes_schema = factory.Dict({})
 
@@ -131,8 +135,9 @@ class LabelDtoFactory(factory.Factory):
     class Meta:
         model = LabelDto
 
-    id = factory.Faker("uuid4")
-    label_collection_id = factory.Faker("uuid4")
+    id = factory.Faker("pyuuid4")
+    name = factory.Sequence(lambda n: f"label_{n}")
+    label_collection_id = factory.Faker("pyuuid4")
     order_index = factory.Sequence(lambda n: n)
     attributes = factory.Dict({})
 
@@ -143,5 +148,5 @@ class DatasheetDtoFactory(factory.Factory):
 
     name = factory.Sequence(lambda n: f"datasheet{n}")
     is_staged = False
-    datasheet_definition_id = factory.Faker("uuid4")
+    datasheet_definition_id = factory.Faker("pyuuid4")
     from_datasheet_id = None

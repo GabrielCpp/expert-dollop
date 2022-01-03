@@ -47,7 +47,7 @@ async def add_datasheet(
     handler=Depends(Inject(RequestHandler)),
 ):
     return await handler.handle(
-        usecase.add,
+        usecase.add_filled_datasheet,
         datasheet,
         MappingChain(
             dto=NewDatasheetDto,

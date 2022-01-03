@@ -2,23 +2,8 @@ from typing import List
 from uuid import UUID, uuid4
 from collections import defaultdict, OrderedDict
 from expert_dollup.core.builders import RessourceBuilder
-from expert_dollup.core.domains import (
-    Project,
-    ProjectDetails,
-    ProjectNode,
-    ProjectNodeMeta,
-    ProjectDefinitionNodeFilter,
-    ProjectNodeFilter,
-    ProjectNodeMetaFilter,
-    ProjectNodeMetaState,
-    BoundedNode,
-    Trigger,
-    TriggerAction,
-)
-
-
+from expert_dollup.core.domains import *
 from expert_dollup.infra.services import *
-from .formula_cache_result_builder import FormulaCacheResultBuilder
 
 
 class TriggerHandler:
@@ -46,13 +31,11 @@ class ProjectBuilder:
         project_node_meta_service: ProjectNodeMetaService,
         project_definition_node_service: ProjectDefinitionNodeService,
         ressource_builder: RessourceBuilder,
-        formula_cache_result_builder: FormulaCacheResultBuilder,
     ):
         self.project_definition_node_service = project_definition_node_service
         self.project_node_meta_service = project_node_meta_service
         self.ressource_builder = ressource_builder
         self.project_node_service = project_node_service
-        self.formula_cache_result_builder = formula_cache_result_builder
 
     async def build_new(self, project_details: ProjectDetails) -> Project:
         node_definitions = await self.project_definition_node_service.find_by(
@@ -108,9 +91,6 @@ class ProjectBuilder:
             details=project_details,
             nodes=nodes,
             metas=node_metas,
-            formulas_result=await self.formula_cache_result_builder.build(
-                project_details.project_def_id, nodes
-            ),
             ressource=self.ressource_builder.build(
                 project_details.id, project_details.id, "project"
             ),
@@ -140,9 +120,6 @@ class ProjectBuilder:
             nodes=cloned_nodes,
             metas=cloned_metas,
             ressource=ressource,
-            formulas_result=await self.formula_cache_result_builder.build(
-                project_details.project_def_id, cloned_nodes
-            ),
         )
 
     async def _clone_project_nodes(

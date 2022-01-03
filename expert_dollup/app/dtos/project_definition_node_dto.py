@@ -1,12 +1,22 @@
 from uuid import UUID
 from typing import Optional, List, Union, Dict
 from expert_dollup.shared.starlette_injection import CamelModel
-from expert_dollup.core.domains import *
+from expert_dollup.core.domains import (
+    IntFieldConfig,
+    DecimalFieldConfig,
+    StringFieldConfig,
+    BoolFieldConfig,
+    StaticChoiceFieldConfig,
+    CollapsibleContainerFieldConfig,
+    StaticNumberFieldConfig,
+)
 from .dynamic_primitive import (
     IntFieldValueDto,
     DecimalFieldValueDto,
     StringFieldValueDto,
     BoolFieldValueDto,
+    JsonSchemaDto,
+    PrimitiveWithNoneUnionDto,
 )
 
 
@@ -108,16 +118,8 @@ class NodeConfigDto(CamelModel):
     meta: NodeMetaConfigDto
     triggers: List[TriggerDto]
     field_details: Optional[FieldDetailsUnionDto]
-    value_validator: Optional[JsonSchema]
+    value_validator: Optional[JsonSchemaDto]
 
-
-ValueUnionDto = Union[
-    IntFieldValueDto,
-    DecimalFieldValueDto,
-    StringFieldValueDto,
-    BoolFieldValueDto,
-    None,
-]
 
 value_type_lookup_map = {
     IntFieldValueDto: "IntFieldValue",
@@ -136,7 +138,7 @@ class ProjectDefinitionNodeDto(CamelModel):
     instanciate_by_default: bool
     order_index: int
     config: NodeConfigDto
-    default_value: ValueUnionDto
+    default_value: PrimitiveWithNoneUnionDto
     path: List[UUID]
 
 
@@ -148,4 +150,4 @@ class ProjectDefinitionNodePageDto(CamelModel):
 
 class FieldUpdateInputDto(CamelModel):
     node_id: str
-    value: ValueUnionDto
+    value: PrimitiveWithNoneUnionDto

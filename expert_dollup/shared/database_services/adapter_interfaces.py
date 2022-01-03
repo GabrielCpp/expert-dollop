@@ -21,7 +21,7 @@ class DbConnection(ABC):
         pass
 
     @abstractmethod
-    async def truncate_db(self):
+    async def truncate_db(self, tables: Optional[List[str]] = None):
         pass
 
     @abstractmethod
@@ -35,7 +35,7 @@ def create_connection(
     scheme = urlparse(connection_string).scheme
 
     if len(DbConnection._REGISTRY) == 0:
-        connectors = environ.get("DB_CONNECTORS").split()
+        connectors = environ.get("DB_CONNECTORS", "postgresql").split()
 
         for connector in connectors:
             if connector == "postgresql":
@@ -79,9 +79,6 @@ class QueryBuilder(ABC):
     def find_by(self, query_filter: QueryFilter) -> "QueryBuilder":
         pass
 
-    def find_by_isnot(self, query_filter: QueryFilter) -> "QueryBuilder":
-        pass
-
     @abstractmethod
     def startwiths(self, query_filter: QueryFilter) -> "QueryBuilder":
         pass
@@ -117,6 +114,10 @@ class CollectionService(ABC, Generic[Domain]):
 
     @abstractmethod
     async def insert_many(self, domains: List[Domain]):
+        pass
+
+    @abstractmethod
+    async def upserts(self, domains: List[Domain]) -> None:
         pass
 
     @abstractmethod

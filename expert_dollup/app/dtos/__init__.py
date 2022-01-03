@@ -12,8 +12,6 @@ from .project_definition_node_dto import (
     CollapsibleContainerFieldConfigDto,
     NodeConfigDto,
     NodeMetaConfigDto,
-    ValueUnionDto,
-    FieldDetailsUnion,
     config_type_lookup_map,
     value_type_lookup_map,
     field_details_to_domain_map,
@@ -28,6 +26,10 @@ from .dynamic_primitive import (
     StringFieldValueDto,
     BoolFieldValueDto,
     ReferenceIdDto,
+    PrimitiveWithNoneUnionDto,
+    PrimitiveUnionDto,
+    JsonSchemaDto,
+    PrimitiveWithReferenceUnionDto,
 )
 from .project_definition_node_tree_dto import (
     ProjectDefinitionTreeNodeDto,
@@ -76,3 +78,14 @@ from .datasheet_element_dto import (
     DatasheetElementPageDto,
     DatasheetElementImportDto,
 )
+from .report_dto import ReportRowDto, ReportGroupDto, ReportDto
+from .report_definition_dto import (
+    ReportDefinitionDto,
+    ReportStructureDto,
+    AttributeBucketDto,
+    ReportColumnDto,
+    ReportJoinDto,
+    StageGroupingDto,
+    ReportComputationDto,
+)
+from .measure_unit_dto import MeasureUnitDto

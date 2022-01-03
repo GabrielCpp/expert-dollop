@@ -1,17 +1,15 @@
-from uuid import uuid4, UUID
-from datetime import timezone
-from faker import Faker
+from uuid import UUID
 from typing import List
 from expert_dollup.core.domains import *
 from ..fake_db_helpers import FakeDb, DbFixtureGenerator
 from ..factories import FieldConfigFactory
+from ..factories_domain import *
 
 
 class SimpleProject(DbFixtureGenerator):
     def __init__(self):
         self._db = FakeDb()
-        self.fake = Faker()
-        self.field_config_factory = FieldConfigFactory(self.fake)
+        self.field_config_factory = FieldConfigFactory()
 
     @property
     def db(self) -> FakeDb:
@@ -37,10 +35,8 @@ class SimpleProject(DbFixtureGenerator):
                 config = self.field_config_factory.build_config(
                     name, index, config_type
                 )
-                other_field = {}
 
-                sub_node = ProjectDefinitionNode(
-                    id=uuid4(),
+                sub_node = ProjectDefinitionNodeFactory(
                     name=name,
                     project_def_id=project_def_id,
                     path=parents,
@@ -48,15 +44,13 @@ class SimpleProject(DbFixtureGenerator):
                     instanciate_by_default=True,
                     order_index=index,
                     config=config,
-                    creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                     default_value=value,
                 )
 
                 self.db.add(sub_node)
                 generate_child_node(sub_node, [*parents, str(sub_node.id)])
 
-        root_a = ProjectDefinitionNode(
-            id=uuid4(),
+        root_a = ProjectDefinitionNodeFactory(
             name="root_a",
             project_def_id=project_def_id,
             path=[],
@@ -68,15 +62,13 @@ class SimpleProject(DbFixtureGenerator):
                     help_text_name="root_a_text", label="root_a"
                 ),
             ),
-            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=None,
         )
 
         self.db.add(root_a)
         generate_child_node(root_a, [str(root_a.id)])
 
-        root_b = ProjectDefinitionNode(
-            id=uuid4(),
+        root_b = ProjectDefinitionNodeFactory(
             name="root_b",
             project_def_id=project_def_id,
             path=[],
@@ -88,7 +80,6 @@ class SimpleProject(DbFixtureGenerator):
                     help_text_name="root_b_text", label="root_b"
                 ),
             ),
-            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=None,
         )
 
@@ -96,14 +87,7 @@ class SimpleProject(DbFixtureGenerator):
         generate_child_node(root_b, [str(root_b.id)])
 
     def generate_project_definition(self):
-        project_definition = ProjectDefinition(
-            id=uuid4(),
-            name="".join(self.fake.words()),
-            default_datasheet_id=uuid4(),
-            datasheet_def_id=uuid4(),
-            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
-        )
-
+        project_definition = ProjectDefinitionFactory()
         self.db.add(project_definition)
         self.generate_project_node_definition(project_definition.id)
 
@@ -112,50 +96,38 @@ class SimpleProject(DbFixtureGenerator):
 
         for project_node_definition in self.db.all(ProjectDefinitionNode):
             self.db.add(
-                Translation(
-                    id=uuid4(),
+                TranslationFactory(
                     ressource_id=project_definition.id,
                     scope=project_node_definition.id,
                     locale="fr_CA",
                     name=project_node_definition.config.translations.label,
-                    value=" ".join(self.fake.words()),
-                    creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
             )
 
             self.db.add(
-                Translation(
-                    id=uuid4(),
+                TranslationFactory(
                     ressource_id=project_definition.id,
                     scope=project_node_definition.id,
                     locale="fr_CA",
                     name=project_node_definition.config.translations.help_text_name,
-                    value=self.fake.sentence(nb_words=20),
-                    creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
             )
 
             self.db.add(
-                Translation(
-                    id=uuid4(),
+                TranslationFactory(
                     ressource_id=project_definition.id,
                     scope=project_node_definition.id,
                     locale="en_US",
                     name=project_node_definition.config.translations.label,
-                    value=" ".join(self.fake.words()),
-                    creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
             )
 
             self.db.add(
-                Translation(
-                    id=uuid4(),
+                TranslationFactory(
                     ressource_id=project_definition.id,
                     scope=project_node_definition.id,
                     locale="en_US",
                     name=project_node_definition.config.translations.help_text_name,
-                    value=self.fake.sentence(nb_words=20),
-                    creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                 )
             )
 
@@ -164,26 +136,20 @@ class SimpleProject(DbFixtureGenerator):
             ):
                 for option in project_node_definition.config.field_details.options:
                     self.db.add(
-                        Translation(
-                            id=uuid4(),
+                        TranslationFactory(
                             ressource_id=project_definition.id,
                             scope=project_node_definition.id,
                             locale="en_US",
                             name=option.label,
-                            value=self.fake.sentence(nb_words=20),
-                            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                         )
                     )
 
                     self.db.add(
-                        Translation(
-                            id=uuid4(),
+                        TranslationFactory(
                             ressource_id=project_definition.id,
                             scope=project_node_definition.id,
                             locale="en_US",
                             name=option.help_text,
-                            value=self.fake.sentence(nb_words=20),
-                            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
                         )
                     )
 

@@ -6,8 +6,7 @@ from expert_dollup.core.domains import (
     ProjectNodeFilter,
 )
 from expert_dollup.shared.database_services import CollectionServiceProxy
-from expert_dollup.core.utils.path_transform import split_uuid_path
-from expert_dollup.infra.expert_dollup_db import ProjectNodeDao
+from expert_dollup.infra.expert_dollup_db import ProjectNodeDao, FIELD_LEVEL
 
 
 class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
@@ -90,8 +89,7 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
     async def get_all_fields(self, project_id: UUID) -> List[ProjectNode]:
         builder = (
             self.get_builder()
-            .find_by(ProjectNodeFilter(project_id=project_id))
-            .find_by_isnot(ProjectNodeFilter(value=None))
+            .find_by(ProjectNodeFilter(project_id=project_id, level=FIELD_LEVEL))
             .finalize()
         )
 

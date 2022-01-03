@@ -1,13 +1,25 @@
 import factory
 from expert_dollup.core.domains import *
+from datetime import timezone
+
+
+class ProjectDefinitionFactory(factory.Factory):
+    class Meta:
+        model = ProjectDefinition
+
+    id = factory.Faker("pyuuid4")
+    name = factory.Sequence(lambda n: f"project_definition_{n}")
+    default_datasheet_id = factory.Faker("pyuuid4")
+    datasheet_def_id = factory.Faker("pyuuid4")
+    creation_date_utc = factory.Faker("date_time", tzinfo=timezone.utc)
 
 
 class ProjectDefinitionNodeFactory(factory.Factory):
     class Meta:
         model = ProjectDefinitionNode
 
-    id = factory.Faker("uuid4")
-    project_def_id = factory.Faker("uuid4")
+    id = factory.Faker("pyuuid4")
+    project_def_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"node{n}")
     is_collection = False
     instanciate_by_default = True
@@ -20,18 +32,8 @@ class ProjectDefinitionNodeFactory(factory.Factory):
         )
     )
     default_value = None
-    path = []
-    creation_date_utc = factory.Faker("date_time")
-
-
-class ReportInitialSelectionFactory(factory.Factory):
-    class Meta:
-        model = ReportInitialSelection
-
-    from_object_name = "a"
-    from_property_name = "property_a"
-    alias_name = "join_a"
-    distinct = True
+    path = factory.List([])
+    creation_date_utc = factory.Faker("date_time", tzinfo=timezone.utc)
 
 
 class ReportJoinFactory(factory.Factory):
@@ -46,12 +48,25 @@ class ReportJoinFactory(factory.Factory):
     is_inner_join = True
 
 
+class AttributeBucketFactory(factory.Factory):
+    class Meta:
+        model = AttributeBucket
+
+    bucket_name = "bucket"
+    attribute_name = "attribute"
+
+
 class ReportStructureFactory(factory.Factory):
     class Meta:
         model = ReportStructure
 
-    initial_selection = factory.SubFactory(ReportInitialSelectionFactory)
+    datasheet_selection_alias = "datasheet_element"
     joins = factory.List([factory.SubFactory(ReportJoinFactory) for _ in range(3)])
+    formula_attribute = factory.SubFactory(AttributeBucketFactory)
+    datasheet_attribute = factory.SubFactory(AttributeBucketFactory)
+    columns = factory.List([])
+    group_by = factory.List([])
+    order_by = factory.List([])
 
 
 class ReportColumnFactory(factory.Factory):
@@ -66,10 +81,65 @@ class ReportDefinitionFactory(factory.Factory):
     class Meta:
         model = ReportDefinition
 
-    id = factory.Faker("uuid4")
-    project_def_id = factory.Faker("uuid4")
+    id = factory.Faker("pyuuid4")
+    project_def_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"report_name_{n}")
-    columns = factory.List([])
     structure = factory.SubFactory(ReportStructureFactory)
-    group_by = factory.List([])
-    order_by = factory.List([])
+
+
+class DatasheetDefinitionFactory(factory.Factory):
+    class Meta:
+        model = DatasheetDefinition
+
+    id = factory.Faker("pyuuid4")
+    name = factory.Sequence(lambda n: f"datasheet_definition_{n}")
+    properties = factory.Dict({})
+
+
+class DatasheetDefinitionElementFactory(factory.Factory):
+    class Meta:
+        model = DatasheetDefinitionElement
+
+    id = factory.Faker("pyuuid4")
+    unit_id: str
+    is_collection: bool
+    datasheet_def_id = factory.Faker("pyuuid4")
+    order_index: int
+    name: str
+    default_properties = factory.Dict({})
+    tags = factory.List([factory.Faker("pyuuid4")])
+    creation_date_utc = factory.Faker("date_time", tzinfo=timezone.utc)
+
+
+class LabelFactory(factory.Factory):
+    class Meta:
+        model = Label
+
+    id = factory.Faker("pyuuid4")
+    label_collection_id = factory.Faker("pyuuid4")
+    order_index = factory.Sequence(lambda n: n)
+    name = factory.Sequence(lambda n: f"label_{n}")
+    attributes = factory.Dict({})
+
+
+class LabelCollectionFactory(factory.Factory):
+    class Meta:
+        model = LabelCollection
+
+    id = factory.Faker("pyuuid4")
+    datasheet_definition_id = factory.Faker("pyuuid4")
+    name = factory.Sequence(lambda n: f"label_collection_{n}")
+    attributes_schema = factory.Dict({})
+
+
+class TranslationFactory(factory.Factory):
+    class Meta:
+        model = Translation
+
+    id = factory.Faker("pyuuid4")
+    ressource_id = factory.Faker("pyuuid4")
+    locale = "fr_CA"
+    scope = factory.Faker("pyuuid4")
+    name = factory.Sequence(lambda n: f"translation_{n}")
+    value = factory.Sequence(lambda n: f"translation_value_{n}")
+    creation_date_utc = factory.Faker("date_time", tzinfo=timezone.utc)

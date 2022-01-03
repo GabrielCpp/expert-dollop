@@ -1,37 +1,72 @@
 from dataclasses import dataclass
 from uuid import UUID
-from typing import List
+from decimal import Decimal
+from typing import List, Dict, Union, Optional
+from expert_dollup.shared.database_services import QueryFilter
+
+ReportColumnDict = Dict[str, Union[str, Decimal, bool, int, UUID, List[UUID], None]]
+ReportRowDict = Dict[str, ReportColumnDict]
+ReportRowsCache = List[ReportRowDict]
+
+
+@dataclass
+class ReportRowKey:
+    project_def_id: UUID
+    report_definition_id: UUID
 
 
 @dataclass
 class ReportJoin:
     from_object_name: str
     from_property_name: str
-    to_object_name: str
-    to_property_name: str
+    join_on_collection: str
+    join_on_attribute: str
     alias_name: str
-    is_inner_join: bool = True
+    warn_about_idle_items: bool = True
+    same_cardinality: bool = False
+    allow_dicard_element: bool = False
 
 
 @dataclass
-class ReportInitialSelection:
-    from_object_name: str
-    from_property_name: str
-    alias_name: str
-    distinct: bool
+class AttributeBucket:
+    bucket_name: str
+    attribute_name: str
+
+    def get(self, row: ReportRowDict):
+        return row[self.bucket_name][self.attribute_name]
 
 
 @dataclass
-class ReportStructure:
-    initial_selection: ReportInitialSelection
-    joins_cache: List[ReportJoin]
-    joins: List[ReportJoin]
+class ReportComputation:
+    expression: str
+    unit_id: Optional[str] = None
 
 
 @dataclass
 class ReportColumn:
     name: str
     expression: str
+    unit_id: Optional[str] = None
+    unit: Optional[AttributeBucket] = None
+    is_visible: bool = True
+
+
+@dataclass
+class StageGrouping:
+    label: AttributeBucket
+    summary: ReportComputation
+
+
+@dataclass
+class ReportStructure:
+    datasheet_selection_alias: str
+    formula_attribute: AttributeBucket
+    datasheet_attribute: AttributeBucket
+    joins_cache: List[ReportJoin]
+    columns: List[ReportColumn]
+    group_by: List[AttributeBucket]
+    order_by: List[AttributeBucket]
+    stage: StageGrouping
 
 
 @dataclass
@@ -39,7 +74,8 @@ class ReportDefinition:
     id: UUID
     project_def_id: UUID
     name: str
-    columns: List[ReportColumn]
     structure: ReportStructure
-    group_by: List[str]
-    order_by: List[str]
+
+
+class ReportDefinitionFilter(QueryFilter):
+    project_def_id: UUID

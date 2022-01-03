@@ -6,22 +6,22 @@ from expert_dollup.shared.database_services import QueryFilter
 from .project_definition_node import JsonSchema
 
 
-@dataclass
+@dataclass(frozen=True)
 class CollectionAggregate:
     from_collection: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class DatasheetAggregate:
     from_datasheet: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class FormulaAggregate:
     from_formula: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class StaticProperty:
     json_schema: JsonSchema
 

@@ -36,10 +36,11 @@ class TranslationUseCase:
             )
 
         await self.service.update(domain)
+
         return await self.find_by_id(
             TranslationId(
                 ressource_id=domain.ressource_id,
-                scope=scope,
+                scope=domain.scope,
                 locale=domain.locale,
                 name=domain.name,
             )

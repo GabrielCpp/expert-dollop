@@ -5,7 +5,8 @@ from expert_dollup.core.builders import ProjectNodeSliceBuilder, ProjectTreeBuil
 from expert_dollup.core.domains import (
     ProjectNode,
     ProjectNodeFilter,
-    ValueUnion,
+    ProjectNodeValues,
+    PrimitiveWithNoneUnion,
     ProjectNodeMeta,
     TriggerAction,
     Trigger,
@@ -38,13 +39,13 @@ class NodeEventDispatcher:
         self.project_node_meta = project_node_meta
 
     async def update_node_value(
-        self, project_id: UUID, node_id: UUID, value: ValueUnion
+        self, project_id: UUID, node_id: UUID, value: PrimitiveWithNoneUnion
     ) -> Awaitable[ProjectNode]:
         bounded_node = await self._get_bounded_node(project_id, node_id)
         self.node_value_validation.validate_value(bounded_node.definition.config, value)
         await self._execute_triggers(bounded_node, value)
         await self.project_node_service.update(
-            ProjectNodeFilter(value=value),
+            ProjectNodeValues(value=value),
             ProjectNodeFilter(project_id=bounded_node.node.project_id, id=node_id),
         )
 
@@ -86,7 +87,7 @@ class NodeEventDispatcher:
             )
 
     async def _execute_triggers(
-        self, bounded_node: BoundedNode, value: ValueUnion
+        self, bounded_node: BoundedNode, value: PrimitiveWithNoneUnion
     ) -> Awaitable:
         project_id = bounded_node.node.project_id
 
@@ -97,7 +98,7 @@ class NodeEventDispatcher:
                 await self._trigger_change_name(trigger, bounded_node, value)
 
     async def _trigger_toogle_visibility(
-        self, trigger: Trigger, project_id: UUID, value: ValueUnion
+        self, trigger: Trigger, project_id: UUID, value: PrimitiveWithNoneUnion
     ):
         meta_node: ProjectNodeMeta = await self.project_node_meta.find_one_by(
             ProjectNodeMetaFilter(project_id=project_id, type_id=trigger.target_type_id)
@@ -112,7 +113,7 @@ class NodeEventDispatcher:
         )
 
     async def _trigger_change_name(
-        self, trigger: Trigger, bounded_node: BoundedNode, value: ValueUnion
+        self, trigger: Trigger, bounded_node: BoundedNode, value: PrimitiveWithNoneUnion
     ) -> Awaitable:
         index = bounded_node.node.type_path.index(trigger.target_type_id)
         path = bounded_node.node.path[0 : index + 1]

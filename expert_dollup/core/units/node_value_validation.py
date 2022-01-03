@@ -7,7 +7,7 @@ class NodeValueValidation:
     def __init__(self, schema_validator: SchemaValidator):
         self.schema_validator = schema_validator
 
-    def validate_value(self, config: NodeConfig, value: ValueUnion) -> None:
+    def validate_value(self, config: NodeConfig, value: PrimitiveWithNoneUnion) -> None:
         if config.value_validator is None:
             if not value is None:
                 raise ValidationError.for_field(

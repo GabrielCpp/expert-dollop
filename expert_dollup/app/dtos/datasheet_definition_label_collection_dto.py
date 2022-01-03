@@ -1,7 +1,7 @@
 from uuid import UUID
 from expert_dollup.shared.starlette_injection import CamelModel
 from typing import Dict, Union
-from .project_definition_node_dto import JsonSchema
+from .dynamic_primitive import JsonSchemaDto
 
 
 class CollectionAggregateDto(CamelModel):
@@ -17,7 +17,7 @@ class FormulaAggregateDto(CamelModel):
 
 
 class StaticPropertyDto(CamelModel):
-    json_schema: JsonSchema
+    json_schema: JsonSchemaDto
 
 
 LabelAttributeSchemaDtoUnion = Union[

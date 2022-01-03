@@ -1,10 +1,46 @@
-from dataclasses import dataclass
 from uuid import UUID, uuid4
+from decimal import Decimal
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import Mapper, RevervibleUnionMapping
 from expert_dollup.shared.database_services import Page
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
+
+
+primitive_with_none_union_dto_mappings = RevervibleUnionMapping(
+    PrimitiveWithNoneUnionDto,
+    PrimitiveWithNoneUnion,
+    {
+        BoolFieldValueDto: bool,
+        IntFieldValueDto: int,
+        StringFieldValueDto: str,
+        DecimalFieldValueDto: Decimal,
+        type(None): type(None),
+    },
+)
+
+primitive_union_dto_mappings = RevervibleUnionMapping(
+    PrimitiveUnionDto,
+    PrimitiveUnion,
+    {
+        BoolFieldValueDto: bool,
+        IntFieldValueDto: int,
+        StringFieldValueDto: str,
+        DecimalFieldValueDto: Decimal,
+    },
+)
+
+primitive_with_reference_union_dto_mappings = RevervibleUnionMapping(
+    PrimitiveWithReferenceUnionDto,
+    PrimitiveWithReferenceUnion,
+    {
+        BoolFieldValueDto: bool,
+        IntFieldValueDto: int,
+        StringFieldValueDto: str,
+        DecimalFieldValueDto: Decimal,
+        ReferenceIdDto: UUID,
+    },
+)
 
 
 def map_project_definition_from_dto(
@@ -122,7 +158,7 @@ def map_field_update_input_from_dto(
 ) -> FieldUpdate:
     return FieldUpdate(
         node_id=src.node_id,
-        value=mapper.map(src.value, ValueUnion, ValueUnionDto),
+        value=mapper.map(src.value, primitive_with_none_union_dto_mappings.from_origin),
     )
 
 
@@ -131,7 +167,7 @@ def map_field_update_input_to_dto(
 ) -> FieldUpdateInputDto:
     return FieldUpdateInputDto(
         node_id=src.node_id,
-        value=mapper.map(src.value, ValueUnionDto, ValueUnion),
+        value=mapper.map(src.value, primitive_with_none_union_dto_mappings.to_origin),
     )
 
 
@@ -222,7 +258,9 @@ def map_project_definition_node_from_dto(
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
         config=mapper.map(src.config, NodeConfig),
-        default_value=mapper.map(src.default_value, ValueUnion, ValueUnionDto),
+        default_value=mapper.map(
+            src.default_value, primitive_with_none_union_dto_mappings.from_origin
+        ),
         path=src.path,
         creation_date_utc=mapper.get(Clock).utcnow(),
     )
@@ -240,7 +278,9 @@ def map_project_definition_node_to_dto(
         order_index=src.order_index,
         config=mapper.map(src.config, NodeConfigDto),
         path=src.path,
-        default_value=mapper.map(src.default_value, ValueUnionDto, ValueUnion),
+        default_value=mapper.map(
+            src.default_value, primitive_with_none_union_dto_mappings.to_origin
+        ),
     )
 
 
@@ -331,46 +371,22 @@ def map_int_field_value_to_dto(src: int, mapper: Mapper) -> IntFieldValueDto:
 
 def map_decimal_field_value_from_dto(
     src: DecimalFieldValueDto, mapper: Mapper
-) -> float:
-    return src.integer
+) -> Decimal:
+    return src.numeric
 
 
-def map_decimal_field_value_to_dto(src: float, mapper: Mapper) -> DecimalFieldValueDto:
-    return DecimalFieldValueDto(integer=src)
+def map_decimal_field_value_to_dto(
+    src: Decimal, mapper: Mapper
+) -> DecimalFieldValueDto:
+    return DecimalFieldValueDto(numeric=src)
 
 
-def map_value_union_from_dto(src: ValueUnionDto, mapper: Mapper) -> ValueUnion:
-    value = None
-
-    if isinstance(src, StringFieldValueDto):
-        value = src.text
-    elif isinstance(src, BoolFieldValueDto):
-        value = src.enabled
-    elif isinstance(src, IntFieldValueDto):
-        value = src.integer
-    elif isinstance(src, DecimalFieldValueDto):
-        value = src.numeric
-    elif not src is None:
-        raise LookupError(f"Field type not found {type(src)}")
-
-    return value
+def map_reference_id_from_dto(src: ReferenceIdDto, mapper: Mapper) -> UUID:
+    return src.uuid
 
 
-def map_value_union_to_dto(src: ValueUnion, mapper: Mapper) -> ValueUnionDto:
-    value = None
-
-    if src is True or src is False:
-        value = BoolFieldValueDto(enabled=src)
-    elif isinstance(src, int):
-        value = IntFieldValueDto(integer=src)
-    elif isinstance(src, float):
-        value = DecimalFieldValueDto(numeric=src)
-    elif isinstance(src, str):
-        value = StringFieldValueDto(text=src)
-    elif not src is None:
-        raise LookupError("Field type not found")
-
-    return value
+def map_reference_id_to_dto(src: UUID, mapper: Mapper) -> ReferenceIdDto:
+    return ReferenceIdDto(uuid=src)
 
 
 def map_project_node_from_dto(src: ProjectNodeDto, mapper: Mapper) -> ProjectNode:
@@ -381,13 +397,13 @@ def map_project_node_from_dto(src: ProjectNodeDto, mapper: Mapper) -> ProjectNod
         type_name=src.type_name,
         type_path=src.type_path,
         path=src.path,
-        value=mapper.map(src.value, ValueUnion, ValueUnionDto),
+        value=mapper.map(src.value, primitive_with_none_union_dto_mappings.from_origin),
         label=src.label,
     )
 
 
 def map_project_node_to_dto(src: ProjectNode, mapper: Mapper) -> ProjectNodeDto:
-    value = mapper.map(src.value, ValueUnionDto, ValueUnion)
+    value = mapper.map(src.value, primitive_with_none_union_dto_mappings.to_origin)
     result = ProjectNodeDto(
         id=src.id,
         project_id=src.project_id,
@@ -587,13 +603,9 @@ def map_datasheet_definition_element_to_dto(
         name=src.name,
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
-        default_properties={
-            name: DatasheetDefinitionElementPropertyDto(
-                is_readonly=property_details.is_readonly,
-                value=property_details.value,
-            )
-            for (name, property_details) in src.default_properties.items()
-        },
+        default_properties=mapper.map_dict_values(
+            src.default_properties, DatasheetDefinitionElementPropertyDto
+        ),
         tags=src.tags,
         creation_date_utc=src.creation_date_utc,
     )
@@ -609,15 +621,29 @@ def map_datasheet_definition_element_from_dto(
         is_collection=src.is_collection,
         datasheet_def_id=src.datasheet_def_id,
         order_index=src.order_index,
-        default_properties={
-            name: DatasheetDefinitionElementProperty(
-                is_readonly=property_details.is_readonly,
-                value=property_details.value,
-            )
-            for (name, property_details) in src.default_properties.items()
-        },
+        default_properties=mapper.map_dict_values(
+            src.default_properties, DatasheetDefinitionElementProperty
+        ),
         tags=src.tags,
         creation_date_utc=mapper.get(Clock).utcnow(),
+    )
+
+
+def map_datasheet_definition_element_property_from_dto(
+    src: DatasheetDefinitionElementPropertyDto, mapper: Mapper
+) -> DatasheetDefinitionElementProperty:
+    return DatasheetDefinitionElementProperty(
+        is_readonly=src.is_readonly,
+        value=mapper.map(src.value, primitive_union_dto_mappings.from_origin),
+    )
+
+
+def map_datasheet_definition_element_property_to_dto(
+    src: DatasheetDefinitionElementProperty, mapper: Mapper
+) -> DatasheetDefinitionElementPropertyDto:
+    return DatasheetDefinitionElementPropertyDto(
+        is_readonly=src.is_readonly,
+        value=mapper.map(src.value, primitive_union_dto_mappings.to_origin),
     )
 
 
@@ -659,6 +685,54 @@ def map_label_collection_to_dto(
     )
 
 
+def map_static_property_from_dto(
+    src: StaticPropertyDto, mapper: Mapper
+) -> StaticProperty:
+    return StaticProperty(json_schema=src.json_schema)
+
+
+def map_static_property_to_dto(
+    src: StaticProperty, mapper: Mapper
+) -> StaticPropertyDto:
+    return StaticPropertyDto(json_schema=src.json_schema)
+
+
+def map_collection_aggregate_from_dto(
+    src: CollectionAggregateDto, mapper: Mapper
+) -> CollectionAggregate:
+    return CollectionAggregate(from_collection=src.from_collection)
+
+
+def map_collection_aggregate_to_dto(
+    src: CollectionAggregate, mapper: Mapper
+) -> CollectionAggregateDto:
+    return CollectionAggregateDto(from_collection=src.from_collection)
+
+
+def map_datasheet_aggregate_from_dto(
+    src: DatasheetAggregateDto, mapper: Mapper
+) -> DatasheetAggregate:
+    return DatasheetAggregate(from_datasheet=src.from_datasheet)
+
+
+def map_datasheet_aggregate_to_dto(
+    src: DatasheetAggregate, mapper: Mapper
+) -> DatasheetAggregateDto:
+    return DatasheetAggregateDto(from_datasheet=src.from_datasheet)
+
+
+def map_formula_aggregate_from_dto(
+    src: FormulaAggregateDto, mapper: Mapper
+) -> FormulaAggregate:
+    return FormulaAggregate(from_formula=src.from_formula)
+
+
+def map_formula_aggregate_to_dto(
+    src: FormulaAggregate, mapper: Mapper
+) -> FormulaAggregateDto:
+    return FormulaAggregateDto(from_formula=src.from_formula)
+
+
 label_attribute_value_dto_mappings = RevervibleUnionMapping(
     LabelAttributeValueDto,
     LabelAttributeUnion,
@@ -666,7 +740,7 @@ label_attribute_value_dto_mappings = RevervibleUnionMapping(
         BoolFieldValueDto: bool,
         IntFieldValueDto: int,
         StringFieldValueDto: str,
-        DecimalFieldValueDto: float,
+        DecimalFieldValueDto: Decimal,
         ReferenceIdDto: UUID,
     },
 )
@@ -675,6 +749,7 @@ label_attribute_value_dto_mappings = RevervibleUnionMapping(
 def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> Label:
     return Label(
         id=src.id,
+        name=src.name,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
         attributes=mapper.map_dict_values(
@@ -686,6 +761,7 @@ def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> La
 def map_datasheet_definition_label_to_dto(src: Label, mapper: Mapper) -> LabelDto:
     return LabelDto(
         id=src.id,
+        name=src.name,
         label_collection_id=src.label_collection_id,
         order_index=src.order_index,
         attributes=mapper.map_dict_values(
@@ -747,7 +823,9 @@ def map_datasheet_element_import_from_dto(
         datasheet_id=src.datasheet_id,
         element_def_id=src.element_def_id,
         child_element_reference=src.child_element_reference,
-        properties=src.properties,
+        properties=mapper.map_dict_values(
+            src.properties, primitive_union_dto_mappings.from_origin
+        ),
         original_datasheet_id=src.original_datasheet_id,
         creation_date_utc=mapper.get(Clock).utcnow(),
     )
@@ -760,7 +838,9 @@ def map_datasheet_element_to_dto(
         datasheet_id=src.datasheet_id,
         element_def_id=src.element_def_id,
         child_element_reference=src.child_element_reference,
-        properties=src.properties,
+        properties=mapper.map_dict_values(
+            src.properties, primitive_union_dto_mappings.to_origin
+        ),
         original_datasheet_id=src.original_datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )
@@ -773,7 +853,9 @@ def map_datasheet_element_from_dto(
         datasheet_id=src.datasheet_id,
         element_def_id=src.element_def_id,
         child_element_reference=src.child_element_reference,
-        properties=src.properties,
+        properties=mapper.map_dict_values(
+            src.properties, primitive_union_dto_mappings.from_origin
+        ),
         original_datasheet_id=src.original_datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )
@@ -785,3 +867,202 @@ def map_datasheet_clone_target_from_dto(
     return DatasheetCloneTarget(
         target_datasheet_id=src.target_datasheet_id, new_name=src.new_name
     )
+
+
+def map_measure_unit_from_dto(src: MeasureUnitDto, mapper: Mapper) -> MeasureUnit:
+    return MeasureUnit(id=src.id)
+
+
+def map_measure_unit_to_dto(src: MeasureUnit, mapper: Mapper) -> MeasureUnitDto:
+    return MeasureUnitDto(id=src.id)
+
+
+def map_report_definition_from_dto(
+    src: ReportDefinitionDto, mapper: Mapper
+) -> ReportDefinition:
+    return ReportDefinition(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        name=src.name,
+        structure=mapper.map(src.structure, ReportStructure),
+    )
+
+
+def map_report_definition_to_dto(
+    src: ReportDefinition, mapper: Mapper
+) -> ReportDefinitionDto:
+    return ReportDefinitionDto(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        name=src.name,
+        structure=mapper.map(src.structure, ReportDefinitionDto),
+    )
+
+
+def map_report_structure_from_dto(
+    src: ReportStructureDto, mapper: Mapper
+) -> ReportStructure:
+    return ReportStructure(
+        datasheet_selection_alias=src.datasheet_selection_alias,
+        formula_attribute=mapper.map(src.formula_attribute, AttributeBucket),
+        datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucket),
+        stage=mapper.map(src.stage, StageGrouping),
+        joins_cache=mapper.map_many(src.joins_cache, ReportJoin),
+        columns=mapper.map_many(src.columns, ReportColumn),
+        group_by=mapper.map_many(src.group_by, AttributeBucket),
+        order_by=mapper.map_many(src.order_by, AttributeBucket),
+    )
+
+
+def map_report_structure_to_dto(
+    src: ReportStructure, mapper: Mapper
+) -> ReportStructureDto:
+    return ReportStructureDto(
+        datasheet_selection_alias=src.datasheet_selection_alias,
+        formula_attribute=mapper.map(src.formula_attribute, AttributeBucketDto),
+        datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucketDto),
+        stage=mapper.map(src.stage, StageGrouping),
+        joins_cache=mapper.map_many(src.joins_cache, ReportJoinDto),
+        columns=mapper.map_many(src.columns, ReportColumnDto),
+        group_by=mapper.map_many(src.group_by, AttributeBucketDto),
+        order_by=mapper.map_many(src.order_by, AttributeBucketDto),
+    )
+
+
+def map_stage_grouping_to_dto(src: StageGrouping, mapper: Mapper) -> StageGroupingDto:
+    return StageGroupingDto(
+        label=mapper.map(src.label, AttributeBucketDto),
+        summary=mapper.map(src.summary, ReportComputationDto),
+    )
+
+
+def map_stage_grouping_from_dto(src: StageGroupingDto, mapper: Mapper) -> StageGrouping:
+    return StageGrouping(
+        label=mapper.map(src.label, AttributeBucket),
+        summary=mapper.map(src.summary, ReportComputation),
+    )
+
+
+def map_report_computation_to_dto(
+    src: ReportComputation, mapper: Mapper
+) -> ReportComputationDto:
+    return ReportComputationDto(expression=src.expression, unit_id=src.unit_id)
+
+
+def map_report_computation_from_dto(
+    src: ReportComputationDto, mapper: Mapper
+) -> ReportComputation:
+    return ReportComputation(expression=src.expression, unit_id=src.unit_id)
+
+
+def map_attribute_bucket_from_dto(
+    src: AttributeBucketDto, mapper: Mapper
+) -> AttributeBucket:
+    return AttributeBucket(
+        bucket_name=src.bucket_name, attribute_name=src.attribute_name
+    )
+
+
+def map_attribute_bucket_to_dto(
+    src: AttributeBucket, mapper: Mapper
+) -> AttributeBucketDto:
+    return AttributeBucketDto(
+        bucket_name=src.bucket_name, attribute_name=src.attribute_name
+    )
+
+
+def map_report_join_from_dto(src: ReportJoinDto, mapper: Mapper) -> ReportJoin:
+    return ReportJoin(
+        from_object_name=src.from_object_name,
+        from_property_name=src.from_property_name,
+        join_on_collection=src.join_on_collection,
+        join_on_attribute=src.join_on_attribute,
+        alias_name=src.alias_name,
+        warn_about_idle_items=src.warn_about_idle_items,
+        same_cardinality=src.same_cardinality,
+        allow_dicard_element=src.allow_dicard_element,
+    )
+
+
+def map_report_join_to_dto(src: ReportJoin, mapper: Mapper) -> ReportJoinDto:
+    return ReportJoinDto(
+        from_object_name=src.from_object_name,
+        from_property_name=src.from_property_name,
+        join_on_collection=src.join_on_collection,
+        join_on_attribute=src.join_on_attribute,
+        alias_name=src.alias_name,
+        warn_about_idle_items=src.warn_about_idle_items,
+        same_cardinality=src.same_cardinality,
+    )
+
+
+def map_report_column_from_dto(src: ReportColumnDto, mapper: Mapper) -> ReportColumn:
+    return ReportColumn(
+        name=src.name,
+        expression=src.expression,
+        is_visible=src.is_visible,
+        unit_id=src.unit_id,
+        unit=src.unit,
+    )
+
+
+def map_report_column_to_dto(src: ReportColumn, mapper: Mapper) -> ReportColumnDto:
+    return ReportColumnDto(
+        name=src.name,
+        expression=src.expression,
+        is_visible=src.is_visible,
+        unit_id=src.unit_id,
+        unit=src.unit,
+    )
+
+
+def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportRowDto:
+    return ReportRowDto(
+        project_id=src.project_id,
+        report_def_id=src.report_def_id,
+        node_id=src.node_id,
+        formula_id=src.formula_id,
+        group_digest=src.group_digest,
+        order_index=src.order_index,
+        datasheet_id=src.datasheet_id,
+        element_id=src.element_id,
+        child_reference_id=src.child_reference_id,
+        row={
+            name: {
+                att_name: mapper.map_many(value, ReferenceIdDto)
+                if isinstance(value, list)
+                else mapper.map(
+                    value, primitive_with_reference_union_dto_mappings.to_origin
+                )
+                for att_name, value in attributes.items()
+            }
+            for name, attributes in src.row.items()
+        },
+    )
+
+
+def map_report_to_dto(src: Report, mapper: Mapper) -> ReportDto:
+    return ReportDto(
+        stages=mapper.map_many(src.stages, ReportGroupDto),
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_report_group_to_dto(src: ReportGroup, mapper: Mapper) -> ReportGroupDto:
+    return ReportGroupDto(
+        label=src.label,
+        summary=mapper.map(src.summary, primitive_union_dto_mappings.to_origin),
+        rows=mapper.map_many(src.rows, ReportRowDto),
+    )
+
+
+def map_primitive_with_none_union_to_dto(
+    src: PrimitiveWithNoneUnion, mapper: Mapper
+) -> PrimitiveWithNoneUnionDto:
+    return mapper.map(src, primitive_with_none_union_dto_mappings.to_origin)
+
+
+def map_primitive_with_none_union_from_dto(
+    src: PrimitiveWithNoneUnionDto, mapper: Mapper
+) -> PrimitiveWithNoneUnion:
+    return mapper.map(src, primitive_with_none_union_dto_mappings.from_origin)

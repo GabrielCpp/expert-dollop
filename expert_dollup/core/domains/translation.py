@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
@@ -38,3 +38,7 @@ class TranslationFilter(QueryFilter):
     name: Optional[str]
     value: Optional[str]
     creation_date_utc: Optional[datetime]
+
+
+class TranslationPluckFilter(QueryFilter):
+    scopes: Optional[List[UUID]]

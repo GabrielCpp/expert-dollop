@@ -1,5 +1,3 @@
-import json
-import dataclasses
 from typing import (
     List,
     TypeVar,
@@ -9,15 +7,13 @@ from typing import (
     Type,
     Tuple,
     Union,
-    Set,
-    Any,
 )
 from pydantic import BaseModel, ConstrainedStr
 from pydantic.fields import ModelField
 from dataclasses import dataclass
 from inspect import isclass
 from uuid import UUID
-from datetime import datetime, date
+from datetime import datetime
 from databases import Database
 from databases.backends.postgres import PostgresBackend
 from sqlalchemy import (
@@ -33,10 +29,8 @@ from sqlalchemy import (
     String,
     Boolean,
     DateTime,
-    Text,
     Integer,
 )
-from sqlalchemy import schema
 from sqlalchemy.schema import FetchedValue
 from sqlalchemy.sql import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -52,33 +46,8 @@ from ..adapter_interfaces import (
 from ..page import Page
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
-
-
-class ExtraEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, UUID):
-            return str(obj)
-
-        if dataclasses.is_dataclass(obj):
-            return dataclasses.asdict(obj)
-
-        if isinstance(obj, (date, datetime)):
-            return obj.isoformat()
-
-        if isinstance(obj, BaseModel):
-            return obj.dict()
-
-        return json.JSONEncoder.default(self, obj)
-
-
-class JsonSerializer:
-    @staticmethod
-    def encode(x: str) -> Any:
-        return json.dumps(x, indent=2, sort_keys=True, cls=ExtraEncoder)
-
-    @staticmethod
-    def decode(x: str):
-        return json.loads(x)
+from ..batch_helper import batch
+from ..json_serializer import JsonSerializer
 
 
 NoneType = type(None)
@@ -196,6 +165,9 @@ class PostgresColumnBuilder:
         if type_args[0] is str:
             return postgresql.ARRAY(String, dimensions=1)
 
+        if type_args[0] is UUID:
+            return postgresql.ARRAY(self._build_uuid(schema, type_args), dimensions=1)
+
         return self._make_json_column_type()
 
     def _make_json_column_type(self) -> postgresql.JSON:
@@ -244,16 +216,25 @@ class PostgresConnection(DbConnection):
             table = Table(table_name, self.metadata, *columns)
             self.tables[dao_type] = table
 
-    async def truncate_db(self):
+    async def truncate_db(self, tables: Optional[List[str]] = None):
         engine = create_engine(self.connection_string)
-        meta = MetaData()
-        meta.reflect(bind=engine)
         con = engine.connect()
         trans = con.begin()
-        for table in meta.sorted_tables:
-            con.execute(f'ALTER TABLE "{table.name}" DISABLE TRIGGER ALL;')
-            con.execute(table.delete())
-            con.execute(f'ALTER TABLE "{table.name}" ENABLE TRIGGER ALL;')
+
+        if tables is None:
+            meta = MetaData()
+            meta.reflect(bind=engine)
+
+            for table in meta.sorted_tables:
+                con.execute(f'ALTER TABLE "{table.name}" DISABLE TRIGGER ALL;')
+                con.execute(table.delete())
+                con.execute(f'ALTER TABLE "{table.name}" ENABLE TRIGGER ALL;')
+        else:
+            for table in tables:
+                con.execute(f'ALTER TABLE "{table}" DISABLE TRIGGER ALL;')
+                con.execute(f"DELETE FROM {table};")
+                con.execute(f'ALTER TABLE "{table}" ENABLE TRIGGER ALL;')
+
         trans.commit()
 
     async def drop_db(self):
@@ -275,6 +256,14 @@ class PostgresConnection(DbConnection):
 
     @staticmethod
     async def _init_connection(conn):
+        await conn.set_type_codec(
+            "uuid",
+            encoder=lambda u: u.bytes,
+            decoder=lambda u: UUID(bytes=u),
+            schema="pg_catalog",
+            format="binary",
+        )
+
         await conn.set_type_codec(
             "json",
             encoder=JsonSerializer.encode,
@@ -337,15 +326,6 @@ class PostgresQueryBuilder(QueryBuilder):
         self._conditions.append(where_filter)
         return self
 
-    def find_by_isnot(self, query_filter: QueryFilter) -> "QueryBuilder":
-        filter_fields = self._mapper.map(query_filter, dict, query_filter.__class__)
-
-        for name, value in filter_fields.items():
-            where_filter = getattr(self._table.c, name).isnot(value)
-            self._conditions.append(where_filter)
-
-        return self
-
     def startwiths(self, query_filter: QueryFilter) -> "QueryBuilder":
         filter_fields = self._mapper.map(query_filter, dict, query_filter.__class__)
 
@@ -359,6 +339,9 @@ class PostgresQueryBuilder(QueryBuilder):
         filter_fields = self._mapper.map(pluck_filter, dict, pluck_filter.__class__)
 
         for name, values in filter_fields.items():
+            assert (
+                len(values) <= 1000
+            ), f"Len of batch must be less than 1000, now {len(values)}"
             where_filter = getattr(self._table.c, name).in_(values)
             self._conditions.append(where_filter)
 
@@ -416,12 +399,12 @@ class PostgresTableService(CollectionService[Domain]):
         mapper: Mapper,
     ):
         self._mapper = mapper
+        self._database = connector
         self._dao = meta.dao
         self._domain = meta.domain
         self._paginator_factory = getattr(meta, "paginator", lambda _: None)
         self._version = getattr(self._dao.Meta, "version", None)
         self._version_mappers = getattr(self._dao.Meta, "version_mappers", {})
-        self._database = connector
         self._table = tables.get(self._dao)
         self._paginator = self._paginator_factory(self._table)
         self._column_processors = self._build_table_raw_processors()
@@ -447,6 +430,22 @@ class PostgresTableService(CollectionService[Domain]):
             await self._insert_many_raw(dicts)
         else:
             query = pg_insert(self._table, dicts)
+            await self._database.execute(query=query)
+
+    async def upserts(self, domains: List[Domain]) -> None:
+        if len(domains) == 0:
+            return
+
+        dicts = self._map_many_to_dict(domains)
+        constraint = f"{self._table.name}_pkey"
+
+        for items in batch(dicts, 1000):
+            query = pg_insert(self._table, items)
+            set_ = {c.name: c for c in query.excluded if not c.primary_key}
+            query = query.on_conflict_do_update(
+                constraint=constraint,
+                set_=set_,
+            )
             await self._database.execute(query=query)
 
     async def find_all(self, limit: int = 1000) -> List[Domain]:
@@ -620,7 +619,7 @@ class PostgresTableService(CollectionService[Domain]):
         version = record.get("_version", None)
 
         if version is None or version == self._version:
-            return self._dao(**record)
+            return self._dao.parse_obj(record)
 
         return self._version_mappers[version][self._version](
             self._version_mappers, record
@@ -643,10 +642,7 @@ class PostgresTableService(CollectionService[Domain]):
         ]
 
         records = [
-            [
-                column_processor.processor(d[column_processor.name])
-                for column_processor in self._column_processors
-            ]
+            [d[column_processor.name] for column_processor in self._column_processors]
             for d in dicts
         ]
 

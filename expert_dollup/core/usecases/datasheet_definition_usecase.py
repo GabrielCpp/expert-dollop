@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import Awaitable
+from typing import List
 from expert_dollup.core.exceptions import ValidationError
 from expert_dollup.core.domains import DatasheetDefinition, Ressource
 from expert_dollup.infra.services import DatasheetDefinitionService, RessourceService
@@ -23,7 +23,7 @@ class DatasheetDefinitionUseCase:
     async def find_by_id(self, id: UUID):
         return await self.datasheet_definition_service.find_by_id(id)
 
-    async def add(self, domain: DatasheetDefinition) -> Awaitable[DatasheetDefinition]:
+    async def add(self, domain: DatasheetDefinition) -> DatasheetDefinition:
         suffix_name = self.word_provider.pick_joined(3)
         name = "datasheet_definition_" + suffix_name + domain.id.hex
         ressource = Ressource(id=domain.id, name=name, owner_id=uuid4())
@@ -35,14 +35,14 @@ class DatasheetDefinitionUseCase:
 
     async def update(
         self, datasheet_definition: DatasheetDefinition
-    ) -> Awaitable[DatasheetDefinition]:
+    ) -> DatasheetDefinition:
         self.validate_datasheet(datasheet_definition)
         await self.datasheet_definition_service.update(datasheet_definition)
         return await self.datasheet_definition_service.find_by_id(
             datasheet_definition.id
         )
 
-    async def delete_by_id(self, id: UUID) -> Awaitable:
+    async def delete_by_id(self, id: UUID) -> None:
         await self.datasheet_definition_service.delete_by_id(id)
 
     def validate_datasheet(self, datasheet_definition: DatasheetDefinition):

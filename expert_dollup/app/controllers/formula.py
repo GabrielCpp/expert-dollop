@@ -77,7 +77,7 @@ async def remove_formula(
 
 
 @router.post("/project/{project_id}/formula_cache")
-async def add_formula(
+async def refresh_formula_cache(
     project_id: UUID,
     usecase=Depends(Inject(FormulaUseCase)),
 ):

@@ -3,8 +3,6 @@ from typing import Type, Dict, Callable, TypeVar
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.types import ASGIApp
-
 
 ExceptionHandler = Dict[Type, Callable[[Exception, Request], Response]]
 InteralErrorHandler = Callable[[], Response]

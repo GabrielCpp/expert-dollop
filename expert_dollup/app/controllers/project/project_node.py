@@ -122,7 +122,7 @@ async def find_form_content(
 async def mutate_project_field(
     project_id: UUID,
     node_id: UUID,
-    value: ValueUnionDto,
+    value: PrimitiveWithNoneUnionDto,
     usecase=Depends(Inject(ProjectNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
 ):
@@ -130,7 +130,11 @@ async def mutate_project_field(
         usecase.update_node_value,
         dict(project_id=project_id, node_id=node_id, value=value),
         MappingChain(out_dto=ProjectNodeDto),
-        map_keys=dict(value=MappingChain(dto=ValueUnionDto, domain=ValueUnion)),
+        map_keys=dict(
+            value=MappingChain(
+                dto=PrimitiveWithNoneUnionDto, domain=PrimitiveWithNoneUnion
+            )
+        ),
     )
 
 

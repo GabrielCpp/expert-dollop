@@ -23,4 +23,5 @@ class LabelDto(CamelModel):
     id: UUID
     label_collection_id: UUID
     order_index: int
+    name: str
     attributes: Dict[str, LabelAttributeValueDto]

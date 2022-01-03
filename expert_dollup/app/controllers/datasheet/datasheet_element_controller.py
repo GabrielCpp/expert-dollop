@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
-from typing import Optional, Union, Dict
-from expert_dollup.shared.database_services import Page
+from typing import Optional, Dict
 from expert_dollup.shared.starlette_injection import Inject
 from expert_dollup.shared.starlette_injection import (
     RequestHandler,
@@ -63,7 +62,7 @@ async def update_datasheet_element_properties(
     datasheet_id: UUID,
     element_def_id: UUID,
     child_element_reference: UUID,
-    properties: Dict[str, Union[float, str, bool]],
+    properties: Dict[str, PrimitiveUnion],
     request_handler=Depends(Inject(RequestHandler)),
     usecase=Depends(Inject(DatasheetElementUseCase)),
 ):
@@ -88,7 +87,7 @@ async def update_datasheet_element_properties(
 async def add_datasheet_element_to_collection(
     datasheet_id: UUID,
     element_def_id: UUID,
-    properties: Dict[str, Union[float, str, bool]],
+    properties: Dict[str, PrimitiveUnion],
     request_handler=Depends(Inject(RequestHandler)),
     usecase=Depends(Inject(DatasheetElementUseCase)),
 ):

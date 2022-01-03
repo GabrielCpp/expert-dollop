@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from uuid import UUID
 from typing import List
-from .formula import FormulaCachedResult
 from .project_node import ProjectNode
 from .project_node_meta import ProjectNodeMeta
 from .ressource import Ressource
@@ -22,4 +21,3 @@ class Project:
     details: ProjectDetails
     nodes: List[ProjectNode]
     metas: List[ProjectNodeMeta]
-    formulas_result: List[FormulaCachedResult]

@@ -1,197 +1,307 @@
-from typing import List, Dict, Any, Set
-from dataclasses import dataclass, field
-from expert_dollup.core.domains import *
-from expert_dollup.core.queries import Plucker
-from expert_dollup.infra.services import (
-    ReportDefinitionService,
-    LabelCollectionService,
-    LabelService,
-)
+from typing import List, Dict, Optional
 from uuid import UUID
+from decimal import Decimal
+from collections import defaultdict, OrderedDict
+from itertools import groupby, chain
+from dataclasses import dataclass
+from hashlib import sha3_256
+from expert_dollup.core.object_storage import ObjectStorage
+from expert_dollup.core.queries import Plucker
+from expert_dollup.infra.services import DatasheetElementService
+from expert_dollup.core.logits import FormulaInjector, FrozenUnit
+from expert_dollup.core.exceptions import (
+    ReportGenerationError,
+    AstEvaluationError,
+    RessourceNotFound,
+)
+from expert_dollup.core.domains import *
+from expert_dollup.shared.starlette_injection import Clock
+from .expression_evaluator import ExpressionEvaluator
+
+
+def round_number(number: Decimal, digits: int, method: str) -> Decimal:
+    assert method == "truncate", "method is the only method supported"
+    stepper = Decimal(10.0 ** digits)
+    return Decimal(int(stepper * Decimal(number))) / stepper
 
 
 @dataclass
-class ReportLinkingCache:
-    label_collections: Dict[str, List[LabelCollection]] = field(default_factory=dict)
-    labels: Dict[UUID, List[Label]] = field(default_factory=dict)
-    labels_by_id: Dict[UUID, Label] = field(default_factory=dict)
-
-    async def get_labels(
-        self,
-        label_collection_service: LabelCollectionService,
-        label_service: LabelService,
-        collection_name: str,
-    ):
-        if collection_name in self.label_collections:
-            label_collection = self.label_collections[collection_name]
-            labels = self.labels[label_collection.id]
-            return labels
-
-        label_collection = await label_collection_service.find_one_by(
-            LabelCollectionFilter(name=collection_name)
-        )
-        self.label_collections[label_collection.name] = label_collection
-
-        labels = await label_service.find_by(
-            LabelFilter(label_collection_id=label_collection.id)
-        )
-        self.labels[label_collection.id] = labels
-
-        for label in labels:
-            self.labels_by_id[label.id] = label
-
-        return labels
-
-    async def get_aggregates(
-        self, label_plucker: Plucker[LabelService], ids: Set[UUID]
-    ) -> Dict[UUID, Label]:
-        labels = {id: self.labels_by_id[id] for id in ids if id in self.labels_by_id}
-        remaining_ids = ids - set(labels.keys())
-        remaining_labels = await label_plucker.plucks(
-            lambda ids: LabelPluckFilter(ids=ids), remaining_ids
-        )
-
-        for remaining_label in remaining_labels:
-            self.labels_by_id[remaining_label.id] = remaining_label
-            labels[remaining_label.id] = remaining_label
-
-        return labels
+class LinkingData:
+    report_definition: ReportDefinition
+    project_details: ProjectDetails
+    unit_instances: UnitInstanceCache
+    injector: FormulaInjector
 
 
 class ReportLinking:
     def __init__(
         self,
-        report_definition_service: ReportDefinitionService,
-        label_collection_service: LabelCollectionService,
-        label_service: LabelService,
-        label_plucker: Plucker[LabelService],
+        report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
+        unit_instance_storage: ObjectStorage[UnitInstanceCache, UnitInstanceCacheKey],
+        datasheet_element_plucker: Plucker[DatasheetElementService],
+        expression_evaluator: ExpressionEvaluator,
+        clock: Clock,
     ):
-        self.report_definition_service = report_definition_service
-        self.label_collection_service = label_collection_service
-        self.label_service = label_service
-        self.label_plucker = label_plucker
+        self.report_def_row_cache = report_def_row_cache
+        self.unit_instance_storage = unit_instance_storage
+        self.datasheet_element_plucker = datasheet_element_plucker
+        self.expression_evaluator = expression_evaluator
+        self.clock = clock
 
-    async def refresh_cache(self, report_definition: ReportDefinition):
-        cache = ReportLinkingCache()
-        initial_select = report_definition.structure.initial_selection
-        report_buckets = self._initial_select(initial_select, cache)
-
-        for join in report_definition.structure.joins:
-            await self._join_on(report_buckets, join, cache)
-
-    def link_report(
+    async def link_report(
         self,
         report_definition: ReportDefinition,
         project_details: ProjectDetails,
-        locale: str,
-    ):
-        pass
+    ) -> Report:
+        linking_data = await self._preload_data(report_definition, project_details)
+        rows = await self.report_def_row_cache.load(
+            ReportRowKey(
+                project_def_id=report_definition.project_def_id,
+                report_definition_id=report_definition.id,
+            )
+        )
 
-    async def _initial_select(
+        new_rows = self._join_row_cache_with_unit_instances(rows, linking_data)
+        await self._fill_datasheet_element_in_rows(new_rows, linking_data)
+        new_rows = self._fill_row_columns(new_rows, linking_data)
+        new_rows = self._fill_row_order(new_rows, report_definition)
+        stages = self._build_stage_groups(new_rows, report_definition)
+
+        return Report(stages=stages, creation_date_utc=self.clock.utcnow())
+
+    async def _preload_data(
         self,
-        initial_select: ReportInitialSelection,
-        cache: ReportLinkingCache,
-    ) -> List[Dict[str, Dict[str, Any]]]:
-        report_buckets: List[Dict[str, Dict[str, Any]]] = []
+        report_definition: ReportDefinition,
+        project_details: ProjectDetails,
+    ) -> LinkingData:
+        unit_instances = await self.unit_instance_storage.load(
+            UnitInstanceCacheKey(project_id=project_details.id)
+        )
 
-        if initial_select.join_type == JoinType.LABEL_PROPERTY:
-            labels = await cache.get_labels(
-                self.label_collection_service,
-                self.label_service,
-                ReportLinkingCache.to_object_name,
+        injector = FormulaInjector()
+        for unit_instance in unit_instances:
+            injector.add_unit(FrozenUnit(unit_instance))
+
+        return LinkingData(
+            report_definition=report_definition,
+            project_details=project_details,
+            unit_instances=unit_instances,
+            injector=injector,
+        )
+
+    def _join_row_cache_with_unit_instances(
+        self, rows, linking_data: LinkingData
+    ) -> List[ReportRow]:
+        new_rows: List[ReportRow] = []
+
+        report_definition = linking_data.report_definition
+        element_attribute = report_definition.structure.datasheet_attribute
+        formula_attribute = report_definition.structure.formula_attribute
+        project_id = linking_data.project_details.id
+        datasheet_id = linking_data.project_details.datasheet_id
+        report_def_id = linking_data.report_definition.id
+        null_uuid = zero_uuid()
+        unit_instances_by_def_id: Dict[UUID, UnitInstanceCache] = {
+            formula_id: list(values)
+            for formula_id, values in groupby(
+                linking_data.unit_instances, key=lambda x: x.formula_id
+            )
+            if not formula_id is None
+        }
+
+        for row in rows:
+            element_id = element_attribute.get(row)
+            assert isinstance(element_id, UUID)
+            formula_id = formula_attribute.get(row)
+            assert isinstance(element_id, UUID)
+
+            assert (
+                formula_id in unit_instances_by_def_id
+            ), f"Missing formula {formula_id}"
+            unit_instances = unit_instances_by_def_id[formula_id]
+
+            for formula_instance in unit_instances:
+                new_rows.append(
+                    ReportRow(
+                        project_id=project_id,
+                        report_def_id=report_def_id,
+                        group_digest="",
+                        datasheet_id=datasheet_id,
+                        node_id=formula_instance.node_id,
+                        formula_id=formula_instance.formula_id,
+                        element_id=element_id,
+                        order_index=0,
+                        child_reference_id=null_uuid,
+                        row={**row, "formula": formula_instance.report_dict},
+                    )
+                )
+
+        return new_rows
+
+    async def _fill_datasheet_element_in_rows(
+        self, report_rows: List[ReportRow], linking_data: LinkingData
+    ):
+        datasheet_bucket_name = (
+            linking_data.report_definition.structure.datasheet_attribute.attribute_name
+        )
+        datasheet_id = linking_data.project_details.datasheet_id
+        missing_elements_for_rows: Dict[UUID, List[int]] = defaultdict(list)
+
+        for index, report_row in enumerate(report_rows):
+            formula_cache_id = f"{report_row.formula_id}/{report_row.node_id}"
+            missing_elements_for_rows[report_row.element_id].append(index)
+
+        missing_elements = await self.datasheet_element_plucker.pluck_subressources(
+            DatasheetElementFilter(
+                datasheet_id=datasheet_id,
+                child_element_reference=zero_uuid(),
+            ),
+            lambda ids: DatasheetElementPluckFilter(element_def_ids=ids),
+            set(missing_elements_for_rows.keys()),
+        )
+
+        assert len(missing_elements) == len(
+            missing_elements_for_rows
+        ), f"{len(missing_elements)} != {len(missing_elements_for_rows)}"
+        for missing_element in missing_elements:
+            for row_index in missing_elements_for_rows[missing_element.element_def_id]:
+                report_rows[row_index].row[
+                    datasheet_bucket_name
+                ] = missing_element.report_dict
+
+    def _fill_row_columns(
+        self, report_rows: List[ReportRow], linking_data: LinkingData
+    ):
+        report_definition = linking_data.report_definition
+        footprint_columns = {
+            g.attribute_name
+            for g in report_definition.structure.group_by
+            if g.bucket_name == "columns"
+        }
+
+        first_pass_columns = (
+            report_definition.structure.columns
+            if len(footprint_columns) == 0
+            else [
+                column
+                for column in report_definition.structure.columns
+                if column.name in footprint_columns or not column.is_visible
+            ]
+        )
+
+        first_pass_column_names = {
+            first_pass_column.name for first_pass_column in first_pass_columns
+        }
+
+        second_pass_column = (
+            []
+            if len(footprint_columns) == 0
+            else [
+                column
+                for column in report_definition.structure.columns
+                if not column.name in first_pass_column_names
+            ]
+        )
+
+        if len(second_pass_column) == 0:
+            raise Exception("Group by require at least one aggregate")
+
+        for report_row in report_rows:
+            columns = {}
+            report_row.row["columns"] = columns
+
+            for column in first_pass_columns:
+                columns[column.name] = self._evaluate(
+                    column.expression, report_row.row, None, linking_data.injector
+                )
+
+            group_id = "/".join(
+                attribute_bucket.get(report_row.row)
+                for attribute_bucket in report_definition.structure.group_by
             )
 
-            properties_iter = (
-                label.properties[initial_select.from_property_name] for label in labels
-            )
-            properties = (
-                set(properties_iter)
-                if initial_select.distinct
-                else list(properties_iter)
-            )
+            report_row.group_digest = sha3_256(group_id.encode("utf8")).hexdigest()
 
-            for label_property in properties:
-                report_buckets.append({initial_select.alias_name: label_property})
+        rows_by_group = defaultdict(list)
 
-        return report_buckets
+        for report_row in report_rows:
+            rows_by_group[report_row.group_digest].append(report_row)
 
-    async def _join_on(
-        self,
-        report_buckets: List[Dict[str, Dict[str, Any]]],
-        join: ReportJoin,
-        cache: ReportLinkingCache,
+        grouped_rows = defaultdict(list)
+
+        for group_report_rows in rows_by_group.values():
+            rows = [group_report_row.row for group_report_row in group_report_rows]
+            report_row = group_report_rows[0]
+            columns = report_row.row["columns"]
+
+            for column in second_pass_column:
+                columns[column.name] = self._evaluate(
+                    column.expression, report_row.row, rows, linking_data.injector
+                )
+
+            if columns["cost"] != 0:
+                stage = report_definition.structure.stage.label.get(report_row.row)
+                grouped_rows[stage].append(report_row)
+
+        return list(chain(*grouped_rows.values()))
+
+    def _fill_row_order(
+        self, report_rows: List[ReportRow], report_definition: ReportDefinition
     ):
+        def get_row_order_tuple(report_row: ReportRow) -> list:
+            ordering = []
+            for attribute_bucket in report_definition.structure.order_by:
+                value = attribute_bucket.get(report_row.row)
+                ordering.append(value)
 
-        if join.join_type == JoinType.LABEL_PROPERTY:
-            labels = await cache.get_labels(
-                self.label_collection_service, self.label_service, join.to_object_name
+            return ordering
+
+        report_rows.sort(key=get_row_order_tuple)
+
+        for index, report_row in enumerate(report_rows):
+            report_row.order_index = index
+
+        return report_rows
+
+    def _build_stage_groups(
+        self, report_rows: List[ReportRow], report_definition: ReportDefinition
+    ) -> List[ReportGroup]:
+        groups = OrderedDict()
+
+        for report_row in report_rows:
+            key = report_definition.structure.stage.label.get(report_row.row)
+
+            if not key in groups:
+                groups[key] = ReportGroup(label=key, rows=[], summary="")
+
+            groups[key].rows.append(report_row)
+
+        for stage_group in groups.values():
+            stage_group.summary = self._evaluate(
+                report_definition.structure.stage.summary.expression,
+                None,
+                (x.row for x in stage_group.rows),
+                None,
             )
-            self._inner_join_on_properties(join, report_buckets, labels)
 
-        if join.join_type == JoinType.LABEL_AGGREGATE:
-            labels = await cache.get_labels(
-                self.label_collection_service, self.label_service, join.to_object_name
+        return list(groups.values())
+
+    def _evaluate(self, expression, row, rows_group, injector):
+        try:
+            return self.expression_evaluator.evaluate(
+                expression,
+                {
+                    "row": row,
+                    "rows": rows_group,
+                    "round_number": round_number,
+                    "sum": sum,
+                    "injector": injector,
+                },
             )
-            await self._inner_join_on_aggregates(join, report_buckets, labels, cache)
-
-    def _inner_join_on_buckets(
-        self,
-        join: ReportJoin,
-        report_buckets: List[Dict[str, Dict[str, Any]]],
-        other_buckets: List[Dict[str, Dict[str, Any]]],
-    ):
-        for report_bucket in report_buckets:
-            for other_report_bucket in other_buckets:
-                bucket_value = report_bucket[join.from_object_name][
-                    join.from_property_name
-                ]
-                other_bucket_value = other_report_bucket[join.to_object_name][
-                    join.to_property_name
-                ]
-
-                if bucket_value == other_bucket_value:
-                    report_bucket[join.alias_name] = other_bucket_value
-
-    def _inner_join_on_properties(
-        self,
-        join: ReportJoin,
-        report_buckets: List[Dict[str, Dict[str, Any]]],
-        labels: List[Label],
-    ):
-        for report_bucket in report_buckets:
-            property_value = label.properties[join.to_property_name]
-            bucket_value = report_bucket[join.from_object_name][join.from_property_name]
-
-            for label in labels:
-                if bucket_value == property_value:
-                    report_bucket[join.alias_name] = property_value
-
-    async def _inner_join_on_aggregates(
-        self,
-        join: ReportJoin,
-        report_buckets: List[Dict[str, Dict[str, Any]]],
-        labels: List[Label],
-        cache: ReportLinkingCache,
-    ):
-        aggregate_ids: Set[UUID] = set()
-
-        for report_bucket in report_buckets:
-            aggregate_id = label.aggregates[join.to_property_name]
-            bucket_value = report_bucket[join.from_object_name][join.from_property_name]
-
-            for label in labels:
-                if bucket_value == aggregate_id:
-                    report_bucket[join.alias_name] = aggregate_id
-                    aggregate_ids.add(aggregate_id)
-
-        aggregates_by_id = await cache.get_aggregates(self.label_plucker, aggregate_ids)
-
-        for report_bucket in report_buckets:
-            aggregate_id = report_bucket[join.alias_name]
-            aggregate = aggregates_by_id[aggregate_id]
-
-            collpased_aggregate = {}
-            collpased_aggregate.update(aggregate.properties)
-            collpased_aggregate.update(aggregate.aggregates)
-
-            report_bucket[join.alias_name] = collpased_aggregate
+        except AstEvaluationError as e:
+            raise ReportGenerationError(
+                f"Error while evaluating expression",
+                expression=expression,
+                row=row,
+                **e.props,
+            ) from e

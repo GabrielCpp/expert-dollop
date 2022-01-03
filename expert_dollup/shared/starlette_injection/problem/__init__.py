@@ -1,3 +1,5 @@
+import http.client as httplib
+
 # From https://github.com/cbornet/python-httpproblem/blob/master/httpproblem/problem.py
 def problem(status=None, title=None, detail=None, type=None, instance=None, **kwargs):
     """

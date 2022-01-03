@@ -198,7 +198,9 @@ async def test_clone_collection(ac, db_helper: DbFixtureHelper):
         assert response.status_code == 200, response.text
 
         nodes = unwrap_many(
-            response, ProjectNodeDto, lambda x: (len(x.type_path), x.type_path)
+            response,
+            ProjectNodeDto,
+            lambda x: (len(x.type_path), x.type_path, x.type_name),
         )
         return (node, nodes)
 
@@ -210,7 +212,9 @@ async def test_clone_collection(ac, db_helper: DbFixtureHelper):
         assert response.status_code == 200, response.text
 
         original_nodes = unwrap_many(
-            response, ProjectNodeDto, lambda x: (len(x.type_path), x.type_path)
+            response,
+            ProjectNodeDto,
+            lambda x: (len(x.type_path), x.type_path, x.type_name),
         )
         assert_clone_tree_is_equivalent(nodes, original_nodes)
 

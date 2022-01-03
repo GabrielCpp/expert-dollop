@@ -1,20 +1,51 @@
+from decimal import Decimal
 from uuid import UUID
-from dataclasses import dataclass
-from typing import List, Optional, Union
-from ast import AST
+from dataclasses import dataclass, asdict, field
+from typing import List, Optional, Dict, Union
 from expert_dollup.shared.database_services import QueryFilter
-from .project_node import ProjectNode
+from .values_union import PrimitiveUnion
 
 
 @dataclass
 class FormulaDependency:
     target_type_id: UUID
+    name: str
 
 
 @dataclass
 class FormulaDependencyGraph:
     formulas: List[FormulaDependency]
     nodes: List[FormulaDependency]
+
+    @property
+    def dependencies(self) -> List[str]:
+        dependencies_concat: List[str] = []
+
+        for formula in self.formulas:
+            dependencies_concat.append(formula.name)
+
+        for node in self.nodes:
+            dependencies_concat.append(node.name)
+
+        return dependencies_concat
+
+
+@dataclass
+class AstNodeValue:
+    number: Optional[Decimal] = None
+    text: Optional[str] = None
+    enabled: Optional[bool] = None
+
+
+@dataclass
+class AstNode:
+    kind: str
+    values: Dict[str, Union[AstNodeValue, str]] = field(default_factory=dict)
+    properties: Dict[str, "AstNode"] = field(default_factory=dict)
+    children: Dict[str, List["AstNode"]] = field(default_factory=dict)
+
+    def dict(self) -> dict:
+        return asdict(self)
 
 
 @dataclass
@@ -29,15 +60,38 @@ class FormulaExpression:
 @dataclass
 class Formula(FormulaExpression):
     dependency_graph: FormulaDependencyGraph
+    final_ast: dict
 
 
 @dataclass
-class FormulaCachedResult:
+class UnitInstance:
+    formula_id: Optional[UUID]
+    node_id: UUID
+    path: List[UUID]
+    name: str
+    calculation_details: str
+    result: PrimitiveUnion
+
+    @property
+    def report_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class UnitInstanceElement:
     project_id: UUID
+    element_def_id: UUID
     formula_id: UUID
     node_id: UUID
-    calculation_details: str
-    result: Union[str, bool, int, float]
+    datasheet_element_reference: UUID
+
+
+UnitInstanceCache = List[UnitInstance]
+
+
+@dataclass
+class UnitInstanceCacheKey:
+    project_id: UUID
 
 
 @dataclass
@@ -47,15 +101,7 @@ class FieldNode:
     path: List[UUID]
     type_id: UUID
     type_path: List[UUID]
-    expression: Union[str, int, float, bool]
-
-
-@dataclass
-class ComputedFormula:
-    formula: Formula
-    result: FormulaCachedResult
-    node: ProjectNode
-    final_ast: AST
+    expression: PrimitiveUnion
 
 
 class FormulaFilter(QueryFilter):
@@ -72,5 +118,5 @@ class FormulaPluckFilter(QueryFilter):
     attached_to_type_ids: Optional[UUID]
 
 
-class FormulaCachedResultFilter(QueryFilter):
-    project_id: UUID
+class FormulaCachePluckFilter(QueryFilter):
+    formula_ids: List[UUID]

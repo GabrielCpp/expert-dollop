@@ -12,7 +12,6 @@ from .project_definition_node import (
     CollapsibleContainerFieldConfig,
     NodeMetaConfig,
     NodeConfig,
-    ValueUnion,
     FieldDetailsUnion,
     JsonSchema,
     TranslationConfig,
@@ -21,7 +20,13 @@ from .project_definition_node import (
     StaticNumberFieldConfig,
 )
 from .project import ProjectDetails, Project
-from .project_node import ProjectNode, ProjectNodeFilter, FieldUpdate, NodePluckFilter
+from .project_node import (
+    ProjectNode,
+    ProjectNodeFilter,
+    FieldUpdate,
+    NodePluckFilter,
+    ProjectNodeValues,
+)
 from .project_definition_tree import (
     ProjectDefinitionNodeTree,
     ProjectDefinitionTreeNode,
@@ -41,19 +46,23 @@ from .translation import (
     TranslationId,
     TranslationRessourceLocaleQuery,
     TranslationFilter,
+    TranslationPluckFilter,
 )
 from .ressource import Ressource
 from .formula import (
     Formula,
     FormulaExpression,
-    FormulaCachedResult,
-    ComputedFormula,
+    UnitInstance,
+    UnitInstanceCacheKey,
+    UnitInstanceCache,
     FieldNode,
     FormulaFilter,
     FormulaPluckFilter,
-    FormulaCachedResultFilter,
+    FormulaCachePluckFilter,
     FormulaDependencyGraph,
     FormulaDependency,
+    AstNode,
+    AstNodeValue,
 )
 
 from .datasheet_definition import DatasheetDefinition, ElementPropertySchema
@@ -82,13 +91,32 @@ from .datasheet_element import (
     DatasheetElement,
     DatasheetElementFilter,
     DatasheetElementId,
+    DatasheetElementPluckFilter,
     zero_uuid,
+    DatasheetElementValues,
 )
 from .bounded_node import BoundedNode, BoundedNodeSlice
 from .report_definition import (
     ReportDefinition,
     ReportColumn,
     ReportStructure,
+    AttributeBucket,
     ReportJoin,
-    ReportInitialSelection,
+    ReportRowDict,
+    ReportRowsCache,
+    ReportRowKey,
+    ReportDefinitionFilter,
+    StageGrouping,
+    ReportComputation,
+)
+from .report_definition_row_cache import (
+    ReportDefinitionRowCache,
+    ReportDefinitionRowCacheFilter,
+)
+from .report import ReportRow, ReportRowFilter, ReportGroup, Report, ReportKey
+from .measure_unit import MeasureUnit
+from .values_union import (
+    PrimitiveUnion,
+    PrimitiveWithNoneUnion,
+    PrimitiveWithReferenceUnion,
 )

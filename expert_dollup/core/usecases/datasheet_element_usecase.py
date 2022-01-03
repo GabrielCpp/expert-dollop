@@ -1,17 +1,15 @@
 from uuid import UUID, uuid4
-from typing import Awaitable, Dict, Union, Optional
-from dataclasses import asdict
-from expert_dollup.shared.database_services import Page
+from typing import Dict
 from expert_dollup.core.exceptions import ValidationError, InvalidUsageError
 from expert_dollup.core.domains import (
     Datasheet,
     DatasheetElement,
-    DatasheetFilter,
     DatasheetElementFilter,
+    DatasheetElementValues,
     DatasheetElementId,
     DatasheetDefinitionElement,
     DatasheetDefinition,
-    DatasheetCloneTarget,
+    PrimitiveUnion,
 )
 from expert_dollup.infra.services import (
     DatasheetService,
@@ -49,26 +47,15 @@ class DatasheetElementUseCase:
             ),
         )
 
-        if len(elements) == 0:
-            await self.datasheet_element_service.insert(element)
-        else:
-            await self.datasheet_element_service.update(
-                DatasheetElementFilter(properties=element.properties),
-                DatasheetElementFilter(
-                    datasheet_id=element.datasheet_id,
-                    element_def_id=element.element_def_id,
-                    child_element_reference=element.child_element_reference,
-                ),
-            )
+        assert len(elements) == 0, f"element id exists {element} -> {elements}"
+        await self.datasheet_element_service.insert(element)
 
-    async def find_datasheet_element(
-        self, id: DatasheetElementId
-    ) -> Awaitable[DatasheetElement]:
+    async def find_datasheet_element(self, id: DatasheetElementId) -> DatasheetElement:
         return await self.datasheet_element_service.find_by_id(id)
 
     async def update_datasheet_element_properties(
-        self, id: DatasheetElementId, properties: Dict[str, Union[float, str, bool]]
-    ) -> Awaitable[DatasheetElement]:
+        self, id: DatasheetElementId, properties: Dict[str, PrimitiveUnion]
+    ) -> DatasheetElement:
         datasheet: Datasheet = await self.datasheet_service.find_by_id(id.datasheet_id)
         datasheet_definition: DatasheetDefinition = (
             await self.datasheet_definition_service.find_by_id(
@@ -86,7 +73,7 @@ class DatasheetElementUseCase:
         )
 
         await self.datasheet_element_service.update(
-            DatasheetElementFilter(properties=properties),
+            DatasheetElementValues(properties=properties),
             DatasheetElementFilter(
                 datasheet_id=id.datasheet_id,
                 element_def_id=id.element_def_id,
@@ -98,7 +85,7 @@ class DatasheetElementUseCase:
 
     async def add_collection_item(
         self, datasheet_id: UUID, element_def_id: UUID, properties: UUID
-    ) -> Awaitable[DatasheetElement]:
+    ) -> DatasheetElement:
         datasheet: Datasheet = await self.datasheet_service.find_by_id(datasheet_id)
         datasheet_definition: DatasheetDefinition = (
             await self.datasheet_definition_service.find_by_id(
@@ -128,7 +115,7 @@ class DatasheetElementUseCase:
 
         return new_element
 
-    async def delete_element(self, element_id: DatasheetElementId) -> Awaitable:
+    async def delete_element(self, element_id: DatasheetElementId) -> None:
         element_definition: DatasheetDefinitionElement = (
             await self.datasheet_definition_element_service.find_by_id(
                 element_id.element_def_id
@@ -152,7 +139,7 @@ class DatasheetElementUseCase:
 
     def _validate_datasheet_element_properties(
         self,
-        properties: Dict[str, Union[float, str, bool]],
+        properties: Dict[str, PrimitiveUnion],
         datasheet_definition: DatasheetDefinition,
         element_definition: DatasheetDefinitionElement,
     ):

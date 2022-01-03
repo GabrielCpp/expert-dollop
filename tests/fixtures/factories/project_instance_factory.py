@@ -1,9 +1,11 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
-from .helpers import make_uuid
+from decimal import Decimal
+from expert_dollup.core.logits import serialize_post_processed_expression
 from expert_dollup.core.domains import *
+from .helpers import make_uuid
 
 
 class FormulaSeed:
@@ -13,11 +15,11 @@ class FormulaSeed:
         formula_dependencies: List[str],
         node_dependencies: List[str],
         calculation_details: str = "",
-        result: Optional[float] = None,
+        result: Decimal = Decimal("0"),
     ):
         self.expression = expression
         self.calculation_details = calculation_details
-        self.result = result
+        self.result = Decimal(result) if isinstance(result, (int, float)) else result
         self.formula_dependencies = formula_dependencies
         self.node_dependencies = node_dependencies
         self._name: Optional[str] = None
@@ -70,7 +72,7 @@ class NodeSeed:
     def __init__(
         self,
         parent: Optional[str] = None,
-        value: Union[str, float, int, bool, None] = None,
+        value: PrimitiveWithNoneUnion = None,
         formulas: Optional[Dict[str, FormulaSeed]] = None,
     ):
         self.parent = parent
@@ -158,7 +160,7 @@ class DefNodeSeed:
         self.instances = instances
         self.parent = parent
         self.is_collection = False
-        self.default_value: ValueUnion = None
+        self.default_value: PrimitiveWithNoneUnion = None
         self._path_names: Optional[List[str]] = None
         self._config: Optional[NodeConfig] = None
         self._name: Optional[str] = None
@@ -244,13 +246,24 @@ class ProjectSeed:
         for name, definiton in self.definitions.items():
             definiton.backfill(name, self)
 
+    @property
+    def formulas(self) -> List[FormulaSeed]:
+        ids = {}
+
+        for definition in self.definitions.values():
+            for instance in definition.instances.values():
+                for formula in instance.formulas.values():
+                    ids[formula.id] = formula
+
+        return list(ids.values())
+
 
 @dataclass
 class CustomProjectInstancePackage:
     project_definition: ProjectDefinition
     project: ProjectDetails
     formulas: List[Formula]
-    formulas_cache_result: List[FormulaCachedResult]
+    unit_instances: List[UnitInstance]
     definition_nodes: List[ProjectDefinitionNode]
     nodes: List[ProjectNode]
     any_id_to_name: Dict[str, str]
@@ -265,7 +278,7 @@ class ProjectInstanceFactory:
         datasheet_def_id: Optional[UUID] = None,
     ) -> CustomProjectInstancePackage:
         seed_nodes_by_name: Dict[str, NodeSeed] = {}
-        formula_instances_by_name: Dict[str, FormulaSeed] = {}
+        unit_instances_by_name: Dict[str, FormulaSeed] = {}
         formulas_by_name: Dict[str, FormulaSeed] = {}
 
         for def_node_seed in project_seed.definitions.values():
@@ -278,8 +291,8 @@ class ProjectInstanceFactory:
                 for formula_seed in node_seed.formulas.values():
                     formula_instance_name = formula_seed.full_name
 
-                    assert not formula_instance_name in formula_instances_by_name
-                    formula_instances_by_name[formula_instance_name] = formula_seed
+                    assert not formula_instance_name in unit_instances_by_name
+                    unit_instances_by_name[formula_instance_name] = formula_seed
 
                     previous_formula_definition = formulas_by_name.get(
                         formula_seed.name, formula_seed
@@ -345,16 +358,19 @@ class ProjectInstanceFactory:
                 attached_to_type_id=formula_seed.node.definition.id,
                 expression=formula_seed.expression,
                 name=formula_seed.name,
+                final_ast=serialize_post_processed_expression(formula_seed.expression),
                 dependency_graph=FormulaDependencyGraph(
                     formulas=[
                         FormulaDependency(
-                            target_type_id=formulas_by_name[dependant_name].id
+                            target_type_id=formulas_by_name[dependant_name].id,
+                            name=dependant_name,
                         )
                         for dependant_name in formula_seed.formula_dependencies
                     ],
                     nodes=[
                         FormulaDependency(
-                            target_type_id=project_seed.definitions[dependant_name].id
+                            target_type_id=project_seed.definitions[dependant_name].id,
+                            name=dependant_name,
                         )
                         for dependant_name in formula_seed.node_dependencies
                     ],
@@ -363,15 +379,16 @@ class ProjectInstanceFactory:
             for formula_seed in formulas_by_name.values()
         ]
 
-        formulas_cache_result = [
-            FormulaCachedResult(
-                project_id=project.id,
+        unit_instances = [
+            UnitInstance(
                 formula_id=formula_instance.id,
                 node_id=formula_instance.node.id,
+                path=formula_instance.node.path,
+                name=formula_instance.name,
                 calculation_details=formula_instance.calculation_details,
                 result=formula_instance.result,
             )
-            for formula_instance in formula_instances_by_name.values()
+            for formula_instance in unit_instances_by_name.values()
         ]
 
         any_id_to_name: Dict[str, str] = {
@@ -397,6 +414,6 @@ class ProjectInstanceFactory:
             definition_nodes=definition_nodes,
             nodes=nodes,
             formulas=formulas,
-            formulas_cache_result=formulas_cache_result,
+            unit_instances=unit_instances,
             any_id_to_name=any_id_to_name,
         )
