@@ -32,7 +32,6 @@ class DatasheetDefinitionElement:
             "is_collection": self.is_collection,
             "order_index": self.order_index,
             "name": self.name,
-            "tags": self.tags,
         }
 
 

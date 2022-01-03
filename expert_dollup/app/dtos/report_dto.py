@@ -2,7 +2,7 @@ from typing import List
 from uuid import UUID
 from datetime import datetime
 from expert_dollup.shared.starlette_injection import CamelModel
-from .report_definition_dto import ReportRowDictDto, ReportColumnDictDto
+from .report_definition_dto import ReportRowDictDto
 from .dynamic_primitive import PrimitiveUnionDto
 
 

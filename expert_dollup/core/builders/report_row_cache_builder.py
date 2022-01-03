@@ -214,9 +214,11 @@ class ReportRowCacheBuilder:
         for report_bucket in report_buckets:
             report_dict = report_bucket[join.from_object_name]
             attribute = report_dict[join.from_property_name]
-            matchs = self._match_attributes(attribute, attributes_to_label, seen)
 
-            if len(matchs) == 0:
+            if attribute in attributes_to_label:
+                seen.add(attribute)
+                matchs = attributes_to_label[attribute]
+            else:
                 cache.warnings.append(f"Discarding attribute {attribute} for {join}")
                 if join.allow_dicard_element:
                     continue
@@ -243,20 +245,3 @@ class ReportRowCacheBuilder:
         ), f"Unused {len(attributes_to_label) - len(seen)} labels for collection {joined_collection.name}"
         """
         return new_buckets
-
-    def _match_attributes(self, attributes, attributes_to_label, seen) -> List[Label]:
-        if isinstance(attributes, list):
-            results = []
-
-            for attribute in attributes:
-                if attribute in attributes_to_label:
-                    results.extend(attributes_to_label[attribute])
-                    seen.add(attribute)
-
-            return results
-
-        if attributes in attributes_to_label:
-            seen.add(attributes)
-            return attributes_to_label[attributes]
-
-        return []
