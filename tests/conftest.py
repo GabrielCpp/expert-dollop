@@ -1,3 +1,4 @@
+from uuid import UUID
 import pytest
 import os
 import logging
@@ -15,10 +16,20 @@ from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import create_connection
 from .fixtures import *
 from factory.random import reseed_random
+from factory import Faker
+from faker.providers import BaseProvider
+
+
+class PyProvider(BaseProvider):
+    def pyuuid4(self) -> UUID:
+        hexs = self.hexify("^" * 32)
+        return UUID(hexs)
+
 
 load_dotenv(dotenv_path=Path(".") / ".env.test")
 load_dotenv()
 reseed_random(1)
+Faker.add_provider(PyProvider)
 
 
 @pytest.fixture

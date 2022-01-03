@@ -1054,3 +1054,15 @@ def map_report_group_to_dto(src: ReportGroup, mapper: Mapper) -> ReportGroupDto:
         summary=mapper.map(src.summary, primitive_union_dto_mappings.to_origin),
         rows=mapper.map_many(src.rows, ReportRowDto),
     )
+
+
+def map_primitive_with_none_union_to_dto(
+    src: PrimitiveWithNoneUnion, mapper: Mapper
+) -> PrimitiveWithNoneUnionDto:
+    return mapper.map(src, primitive_with_none_union_dto_mappings.to_origin)
+
+
+def map_primitive_with_none_union_from_dto(
+    src: PrimitiveWithNoneUnionDto, mapper: Mapper
+) -> PrimitiveWithNoneUnion:
+    return mapper.map(src, primitive_with_none_union_dto_mappings.from_origin)

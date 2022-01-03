@@ -5,6 +5,7 @@ from expert_dollup.core.builders import ProjectNodeSliceBuilder, ProjectTreeBuil
 from expert_dollup.core.domains import (
     ProjectNode,
     ProjectNodeFilter,
+    ProjectNodeValues,
     PrimitiveWithNoneUnion,
     ProjectNodeMeta,
     TriggerAction,
@@ -44,7 +45,7 @@ class NodeEventDispatcher:
         self.node_value_validation.validate_value(bounded_node.definition.config, value)
         await self._execute_triggers(bounded_node, value)
         await self.project_node_service.update(
-            ProjectNodeFilter(value=value),
+            ProjectNodeValues(value=value),
             ProjectNodeFilter(project_id=bounded_node.node.project_id, id=node_id),
         )
 

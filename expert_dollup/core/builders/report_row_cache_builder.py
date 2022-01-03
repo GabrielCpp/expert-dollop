@@ -31,7 +31,6 @@ class ReportRowCacheBuilder:
         datasheet_definition_service: DatasheetDefinitionService,
         project_definition_service: ProjectDefinitionService,
         datasheet_definition_element_service: DatasheetDefinitionElementService,
-        report_definition_service: ReportDefinitionService,
         label_collection_service: LabelCollectionService,
         label_service: LabelService,
         formula_plucker: Plucker[FormulaService],
@@ -39,7 +38,6 @@ class ReportRowCacheBuilder:
         self.datasheet_definition_service = datasheet_definition_service
         self.project_definition_service = project_definition_service
         self.datasheet_definition_element_service = datasheet_definition_element_service
-        self.report_definition_service = report_definition_service
         self.label_collection_service = label_collection_service
         self.label_service = label_service
         self.formula_plucker = formula_plucker

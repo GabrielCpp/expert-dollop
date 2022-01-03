@@ -1,3 +1,4 @@
+from decimal import Decimal
 from expert_dollup.core.logits import serialize_post_processed_expression
 
 
@@ -49,7 +50,13 @@ def test_given_formula_expression_should_produce_correct_serialized_ast():
                                         },
                                         {
                                             "kind": "Constant",
-                                            "values": {"value": 2},
+                                            "values": {
+                                                "value": {
+                                                    "number": Decimal("2.000000"),
+                                                    "text": None,
+                                                    "enabled": None,
+                                                }
+                                            },
                                             "properties": {},
                                             "children": {},
                                         },
@@ -156,7 +163,13 @@ def test_given_formula_expression_when_expression_contain_function_should_produc
                                     },
                                     "right": {
                                         "kind": "Constant",
-                                        "values": {"value": 2},
+                                        "values": {
+                                            "value": {
+                                                "number": Decimal("2.000000"),
+                                                "text": None,
+                                                "enabled": None,
+                                            }
+                                        },
                                         "properties": {},
                                         "children": {},
                                     },

@@ -49,6 +49,9 @@ class UnitInstanceBuilder:
     def build_with_fields(
         self, formulas: List[Formula], nodes: List[ProjectNode]
     ) -> List[UnitInstance]:
+        if len(nodes) == 0 or len(formulas) == 0:
+            return []
+
         formulas_result: List[UnitInstance] = []
         parent_node_by_type_id = defaultdict(list)
         project_id = nodes[0].project_id

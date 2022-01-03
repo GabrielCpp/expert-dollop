@@ -125,7 +125,7 @@ class FormulaResolver:
         return formulas
 
     async def parse(self, formula_expression: FormulaExpression) -> Formula:
-        visitor = FormulaVisitor.get_names(formula_expression)
+        visitor = FormulaVisitor.get_names(formula_expression.expression)
 
         if formula_expression.name in visitor.var_names:
             raise Exception(f"Formua {formula_expression.name} is self dependant")

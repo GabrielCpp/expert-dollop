@@ -42,6 +42,14 @@ class DatasheetElementFilter(QueryFilter):
     datasheet_id: Optional[UUID]
     element_def_id: Optional[UUID]
     child_element_reference: Optional[UUID]
+    original_datasheet_id: Optional[UUID]
+    creation_date_utc: Optional[datetime]
+
+
+class DatasheetElementValues(QueryFilter):
+    datasheet_id: Optional[UUID]
+    element_def_id: Optional[UUID]
+    child_element_reference: Optional[UUID]
     properties: Optional[Dict[str, PrimitiveUnion]]
     original_datasheet_id: Optional[UUID]
     creation_date_utc: Optional[datetime]

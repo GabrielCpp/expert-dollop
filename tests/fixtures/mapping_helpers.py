@@ -46,10 +46,10 @@ Dao = TypeVar("Dao")
 
 
 def unwrap(response: Response, obj_type: Type):
-    return obj_type(**response.json())
+    return obj_type.parse_obj(response.json())
 
 
 def unwrap_many(
     response: Response, dao: Type, sort_by_key: Callable[[Dao], Any] = lambda x: x.id
 ) -> List[Dao]:
-    return sorted([dao(**item) for item in response.json()], key=sort_by_key)
+    return sorted([dao.parse_obj(item) for item in response.json()], key=sort_by_key)

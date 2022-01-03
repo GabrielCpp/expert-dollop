@@ -1,5 +1,8 @@
 from uuid import UUID, uuid4
 from typing import List
+from expert_dollup.core.domains.datasheet_definition_element import (
+    DatasheetDefinitionElementFilter,
+)
 from expert_dollup.shared.database_services import Page
 from expert_dollup.core.domains import (
     Datasheet,
@@ -95,7 +98,12 @@ class DatasheetUseCase:
 
     async def add_filled_datasheet(self, datasheet: Datasheet) -> Datasheet:
         await self.datasheet_service.insert(datasheet)
-        definition_elements = await self.datasheet_definition_element_service.find_all()
+        definition_elements = await self.datasheet_definition_element_service.find_by(
+            DatasheetDefinitionElementFilter(
+                datasheet_def_id=datasheet.datasheet_def_id
+            )
+        )
+
         elements = [
             DatasheetElement(
                 datasheet_id=datasheet.id,
@@ -112,7 +120,7 @@ class DatasheetUseCase:
         ]
 
         await self.datasheet_element_service.insert_many(elements)
-        return await self.datasheet_service.find_by_id(datasheet.id)
+        return datasheet
 
     async def update(self, datasheet_id: UUID, updates: DatasheetFilter) -> Datasheet:
         await self.datasheet_service.update(updates, DatasheetFilter(id=datasheet_id))

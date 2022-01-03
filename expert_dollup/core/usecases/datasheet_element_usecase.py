@@ -5,6 +5,7 @@ from expert_dollup.core.domains import (
     Datasheet,
     DatasheetElement,
     DatasheetElementFilter,
+    DatasheetElementValues,
     DatasheetElementId,
     DatasheetDefinitionElement,
     DatasheetDefinition,
@@ -72,7 +73,7 @@ class DatasheetElementUseCase:
         )
 
         await self.datasheet_element_service.update(
-            DatasheetElementFilter(properties=properties),
+            DatasheetElementValues(properties=properties),
             DatasheetElementFilter(
                 datasheet_id=id.datasheet_id,
                 element_def_id=id.element_def_id,

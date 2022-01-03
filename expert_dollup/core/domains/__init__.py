@@ -20,7 +20,13 @@ from .project_definition_node import (
     StaticNumberFieldConfig,
 )
 from .project import ProjectDetails, Project
-from .project_node import ProjectNode, ProjectNodeFilter, FieldUpdate, NodePluckFilter
+from .project_node import (
+    ProjectNode,
+    ProjectNodeFilter,
+    FieldUpdate,
+    NodePluckFilter,
+    ProjectNodeValues,
+)
 from .project_definition_tree import (
     ProjectDefinitionNodeTree,
     ProjectDefinitionTreeNode,
@@ -87,6 +93,7 @@ from .datasheet_element import (
     DatasheetElementId,
     DatasheetElementPluckFilter,
     zero_uuid,
+    DatasheetElementValues,
 )
 from .bounded_node import BoundedNode, BoundedNodeSlice
 from .report_definition import (

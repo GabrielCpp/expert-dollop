@@ -31,6 +31,16 @@ class ProjectNodeFilter(QueryFilter):
     type_id: Optional[UUID]
     path: Optional[List[UUID]]
     label: Optional[str]
+    level: Optional[int]
+    display_query_internal_id: Optional[UUID]
+
+
+class ProjectNodeValues(QueryFilter):
+    id: Optional[UUID]
+    project_id: Optional[UUID]
+    type_id: Optional[UUID]
+    path: Optional[List[UUID]]
+    label: Optional[str]
     value: PrimitiveWithNoneUnion
     level: Optional[int]
     display_query_internal_id: Optional[UUID]

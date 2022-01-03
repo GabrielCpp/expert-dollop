@@ -8,6 +8,11 @@ from expert_dollup.shared.starlette_injection import make_page_model
 from ..fixtures import *
 
 
+@pytest.fixture(autouse=True)
+async def wip_db(dal):
+    await dal.truncate_db()
+
+
 @pytest.mark.asyncio
 async def test_given_project_definition_should_be_able_to_create_delete_update(ac):
     expected_project_definition = ProjectDefinitionDtoFactory()

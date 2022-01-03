@@ -6,6 +6,11 @@ from ..fixtures import *
 from ..utils import find_name
 
 
+@pytest.fixture(autouse=True)
+async def wip_db(dal):
+    await dal.truncate_db()
+
+
 @pytest.mark.asyncio
 async def test_project_creation(ac, mapper):
     db = SimpleProject().generate().db

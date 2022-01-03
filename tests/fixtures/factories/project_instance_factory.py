@@ -1,11 +1,11 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 from decimal import Decimal
-from .helpers import make_uuid
-from expert_dollup.core.domains import *
 from expert_dollup.core.logits import serialize_post_processed_expression
+from expert_dollup.core.domains import *
+from .helpers import make_uuid
 
 
 class FormulaSeed:
@@ -19,7 +19,7 @@ class FormulaSeed:
     ):
         self.expression = expression
         self.calculation_details = calculation_details
-        self.result = result
+        self.result = Decimal(result) if isinstance(result, (int, float)) else result
         self.formula_dependencies = formula_dependencies
         self.node_dependencies = node_dependencies
         self._name: Optional[str] = None
@@ -383,8 +383,8 @@ class ProjectInstanceFactory:
             UnitInstance(
                 formula_id=formula_instance.id,
                 node_id=formula_instance.node.id,
-                path=formula_instance.path,
-                formula_name=formula_instance.name,
+                path=formula_instance.node.path,
+                name=formula_instance.name,
                 calculation_details=formula_instance.calculation_details,
                 result=formula_instance.result,
             )

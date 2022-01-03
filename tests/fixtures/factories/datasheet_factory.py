@@ -317,6 +317,7 @@ class DatasheetInstanceFactory:
                         id=label_seed.id,
                         label_collection_id=collection_seed.id,
                         order_index=index,
+                        name=label_seed.name,
                         attributes=label_seed.attributes,
                     )
                 )

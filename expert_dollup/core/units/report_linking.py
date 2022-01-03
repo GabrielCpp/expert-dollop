@@ -39,13 +39,13 @@ class ReportLinking:
         self,
         report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
         report_storage: ObjectStorage[Report, ReportKey],
-        unit_instance_service: ObjectStorage[UnitInstanceCache, UnitInstanceCacheKey],
+        unit_instance_storage: ObjectStorage[UnitInstanceCache, UnitInstanceCacheKey],
         datasheet_element_plucker: Plucker[DatasheetElementService],
         expression_evaluator: ExpressionEvaluator,
         clock: Clock,
     ):
         self.report_def_row_cache = report_def_row_cache
-        self.unit_instance_service = unit_instance_service
+        self.unit_instance_storage = unit_instance_storage
         self.report_storage = report_storage
         self.datasheet_element_plucker = datasheet_element_plucker
         self.expression_evaluator = expression_evaluator
@@ -77,7 +77,7 @@ class ReportLinking:
         report_definition: ReportDefinition,
         project_details: ProjectDetails,
     ) -> LinkingData:
-        unit_instances = await self.unit_instance_service.load(
+        unit_instances = await self.unit_instance_storage.load(
             UnitInstanceCacheKey(project_id=project_details.id)
         )
 

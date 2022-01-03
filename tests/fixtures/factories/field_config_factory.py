@@ -1,6 +1,7 @@
 from random import choice
 from dataclasses import dataclass
 from faker import Faker
+from decimal import Decimal
 from expert_dollup.core.domains import *
 from expert_dollup.infra.json_schema import (
     INT_JSON_SCHEMA,
@@ -17,8 +18,8 @@ class TypeFactory:
 
 
 class FieldConfigFactory:
-    def __init__(self, fake: Faker):
-        self.fake = fake
+    def __init__(self):
+        self.fake = Faker()
         self.node_factory = {
             IntFieldConfig: TypeFactory(
                 build_value=self._create_int_value,
@@ -86,7 +87,7 @@ class FieldConfigFactory:
         )
 
     def _create_decimal_value(self):
-        return self.fake.pyfloat(right_digits=3, min_value=-10, max_value=5000)
+        return self.fake.pydecimal(right_digits=3, min_value=-10, max_value=5000)
 
     def _create_decimal_custom_attr(self, name: str, index: int):
         return NodeConfig(

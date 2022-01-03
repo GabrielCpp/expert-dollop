@@ -1,17 +1,14 @@
-from datetime import timezone
-from uuid import uuid4, UUID
-from faker import Faker
+from uuid import UUID
 from expert_dollup.core.domains import *
 from ..fake_db_helpers import FakeDb, DbFixtureGenerator
 from ..factories import FieldConfigFactory
+from ..factories_domain import *
 
 
 class ProjectWithTrigger(DbFixtureGenerator):
     def __init__(self):
         self._db = FakeDb()
-        self.fake = Faker()
-        self.fake.seed_instance(seed=1)
-        self.field_config_factory = FieldConfigFactory(self.fake)
+        self.field_config_factory = FieldConfigFactory()
         self.labels = ["root", "subsection", "form", "section", "field"]
 
     @property
@@ -19,18 +16,10 @@ class ProjectWithTrigger(DbFixtureGenerator):
         return self._db
 
     def generate(self):
-        project_definition = ProjectDefinition(
-            id=uuid4(),
-            name="".join(self.fake.words()),
-            default_datasheet_id=uuid4(),
-            datasheet_def_id=uuid4(),
-            creation_date_utc=self.fake.date_time(),
-        )
-
+        project_definition = ProjectDefinitionFactory()
         self.db.add(project_definition)
 
-        root_a = ProjectDefinitionNode(
-            id=uuid4(),
+        root_a = ProjectDefinitionNodeFactory(
             name="root_a",
             project_def_id=project_definition.id,
             path=[],
@@ -43,7 +32,6 @@ class ProjectWithTrigger(DbFixtureGenerator):
                 ),
                 meta=NodeMetaConfig(is_visible=True),
             ),
-            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=None,
         )
         subsection_a = self._create_container_node(root_a)
@@ -55,8 +43,7 @@ class ProjectWithTrigger(DbFixtureGenerator):
         self.db.add(form_a)
         self.db.add(section_a)
 
-        root_b = ProjectDefinitionNode(
-            id=uuid4(),
+        root_b = ProjectDefinitionNodeFactory(
             name="root_b",
             project_def_id=project_definition.id,
             path=[],
@@ -69,7 +56,6 @@ class ProjectWithTrigger(DbFixtureGenerator):
                 ),
                 meta=NodeMetaConfig(is_visible=False),
             ),
-            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=None,
         )
 
@@ -97,8 +83,7 @@ class ProjectWithTrigger(DbFixtureGenerator):
         name = f"{parent.name}_{label}_0"
         config = self.field_config_factory.build_config(name, 0)
 
-        node = ProjectDefinitionNode(
-            id=uuid4(),
+        node = ProjectDefinitionNodeFactory(
             name=name,
             project_def_id=parent.project_def_id,
             path=parent.subpath,
@@ -106,7 +91,6 @@ class ProjectWithTrigger(DbFixtureGenerator):
             instanciate_by_default=True,
             order_index=0,
             config=config,
-            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=None,
         )
 
@@ -123,8 +107,7 @@ class ProjectWithTrigger(DbFixtureGenerator):
         )
         value = self.field_config_factory.build_value(CollapsibleContainerFieldConfig)
 
-        node = ProjectDefinitionNode(
-            id=uuid4(),
+        node = ProjectDefinitionNodeFactory(
             name=name,
             project_def_id=parent.project_def_id,
             path=parent.subpath,
@@ -132,7 +115,6 @@ class ProjectWithTrigger(DbFixtureGenerator):
             instanciate_by_default=True,
             order_index=0,
             config=config,
-            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=value,
         )
 
@@ -156,8 +138,7 @@ class ProjectWithTrigger(DbFixtureGenerator):
             )
         )
 
-        node = ProjectDefinitionNode(
-            id=uuid4(),
+        node = ProjectDefinitionNodeFactory(
             name=name,
             project_def_id=parent.project_def_id,
             path=parent.subpath,
@@ -165,7 +146,6 @@ class ProjectWithTrigger(DbFixtureGenerator):
             instanciate_by_default=True,
             order_index=0,
             config=config,
-            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=value,
         )
 
@@ -186,8 +166,7 @@ class ProjectWithTrigger(DbFixtureGenerator):
             )
         )
 
-        node = ProjectDefinitionNode(
-            id=uuid4(),
+        node = ProjectDefinitionNodeFactory(
             name=name,
             project_def_id=parent.project_def_id,
             path=parent.subpath,
@@ -195,7 +174,6 @@ class ProjectWithTrigger(DbFixtureGenerator):
             instanciate_by_default=True,
             order_index=0,
             config=config,
-            creation_date_utc=self.fake.date_time(tzinfo=timezone.utc),
             default_value=value,
         )
 

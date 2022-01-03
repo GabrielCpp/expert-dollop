@@ -486,7 +486,27 @@ def map_project_node_filter_to_dict(src: ProjectNodeFilter, mapper: Mapper) -> d
             "project_id": ("project_id", None),
             "type_id": ("type_id", None),
             "path": ("path", join_uuid_path),
-            "value": ("value", None),
+            "label": ("label", None),
+            "level": ("level", None),
+            "display_query_internal_id": ("display_query_internal_id", None),
+        },
+    )
+
+
+def map_project_node_values_to_dict(src: ProjectNodeValues, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "id": ("id", None),
+            "project_id": ("project_id", None),
+            "type_id": ("type_id", None),
+            "path": ("path", join_uuid_path),
+            "value": (
+                "value",
+                lambda x: mapper.map(
+                    x, primitive_with_none_union_dao_mappings.to_origin
+                ),
+            ),
             "label": ("label", None),
             "level": ("level", None),
             "display_query_internal_id": ("display_query_internal_id", None),
@@ -919,7 +939,26 @@ def map_datasheet_element_filter_to_dict(
             "datasheet_id": ("datasheet_id", None),
             "element_def_id": ("element_def_id", None),
             "child_element_reference": ("child_element_reference", None),
-            "properties": ("properties", None),
+            "creation_date_utc": ("creation_date_utc", None),
+        },
+    )
+
+
+def map_datasheet_element_values_to_dict(
+    src: DatasheetElementValues, mapper: Mapper
+) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "datasheet_id": ("datasheet_id", None),
+            "element_def_id": ("element_def_id", None),
+            "child_element_reference": ("child_element_reference", None),
+            "properties": (
+                "properties",
+                lambda x: mapper.map_dict_values(
+                    x, primitive_union_dao_mappings.to_origin
+                ),
+            ),
             "creation_date_utc": ("creation_date_utc", None),
         },
     )
