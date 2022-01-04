@@ -16,15 +16,16 @@ class ReportRowDto(CamelModel):
     datasheet_id: UUID
     element_id: UUID
     child_reference_id: UUID
+    columns: List[PrimitiveUnionDto]
     row: ReportRowDictDto
 
 
-class ReportGroupDto(CamelModel):
+class ReportStageDto(CamelModel):
     label: str
     summary: PrimitiveUnionDto
     rows: List[ReportRowDto]
 
 
 class ReportDto(CamelModel):
-    stages: List[ReportGroupDto]
+    stages: List[ReportStageDto]
     creation_date_utc: datetime

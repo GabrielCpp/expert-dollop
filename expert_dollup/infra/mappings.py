@@ -467,6 +467,13 @@ def map_project_definition_node_filter_to_dict(
     )
 
 
+def map_report_definition_filter(src: ReportDefinitionFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {"project_def_id": ("project_def_id", None)},
+    )
+
+
 def map_project_definition_node_pluck_filter_to_dict(
     src: ProjectDefinitionNodePluckFilter, mapper: Mapper
 ) -> dict:
@@ -1256,27 +1263,27 @@ def map_datasheet_element_pluck_filter(
 def map_report_to_dao(src: Report, mapper: Mapper) -> ReportDao:
     return ReportDao(
         creation_date_utc=src.creation_date_utc,
-        stages=mapper.map_many(src.stages, ReportGroupDao),
+        stages=mapper.map_many(src.stages, ReportStageDao),
     )
 
 
 def map_report_from_dao(src: ReportDao, mapper: Mapper) -> Report:
     return Report(
         creation_date_utc=src.creation_date_utc,
-        stages=mapper.map_many(src.stages, ReportGroup),
+        stages=mapper.map_many(src.stages, ReportStage),
     )
 
 
-def map_report_group_to_dao(src: ReportGroup, mapper: Mapper) -> ReportGroupDao:
-    return ReportGroupDao(
+def map_report_group_to_dao(src: ReportStage, mapper: Mapper) -> ReportStageDao:
+    return ReportStageDao(
         label=src.label,
         summary=mapper.map(src.summary, primitive_union_dao_mappings.to_origin),
         rows=mapper.map_many(src.rows, ReportRowDao),
     )
 
 
-def map_report_group_from_dao(src: ReportGroupDao, mapper: Mapper) -> ReportGroup:
-    return ReportGroup(
+def map_report_group_from_dao(src: ReportStageDao, mapper: Mapper) -> ReportStage:
+    return ReportStage(
         label=src.label,
         summary=mapper.map(src.summary, primitive_union_dao_mappings.from_origin),
         rows=mapper.map_many(src.rows, ReportRow),
@@ -1294,6 +1301,7 @@ def map_report_row_to_dao(src: ReportRow, mapper: Mapper) -> ReportRowDao:
         datasheet_id=src.datasheet_id,
         element_id=src.element_id,
         child_reference_id=src.child_reference_id,
+        columns=mapper.map_many(src.columns, primitive_union_dao_mappings.to_origin),
         row=map_report_rows_dict_to_dao(src.row, mapper),
     )
 
@@ -1309,6 +1317,7 @@ def map_report_row_from_dao(src: ReportRowDao, mapper: Mapper) -> ReportRow:
         datasheet_id=src.datasheet_id,
         element_id=src.element_id,
         child_reference_id=src.child_reference_id,
+        columns=mapper.map_many(src.columns, primitive_union_dao_mappings.from_origin),
         row=map_report_rows_dict_from_dao(src.row, mapper),
     )
 

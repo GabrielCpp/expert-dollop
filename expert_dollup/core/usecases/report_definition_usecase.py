@@ -1,4 +1,6 @@
+from re import I
 from uuid import UUID
+from typing import List
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.builders import ReportRowCacheBuilder
 from expert_dollup.core.domains import *
@@ -35,3 +37,11 @@ class ReportDefinitionUseCase:
 
     async def add(self, report_definition: ReportDefinition):
         await self.report_definition_service.insert(report_definition)
+
+    async def find_all_reports_definitions(
+        self, project_def_id: UUID
+    ) -> List[ReportDefinition]:
+        report_definitions = await self.report_definition_service.find_by(
+            ReportDefinitionFilter(project_def_id=project_def_id)
+        )
+        return report_definitions

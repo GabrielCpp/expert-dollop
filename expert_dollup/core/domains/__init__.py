@@ -113,7 +113,7 @@ from .report_definition_row_cache import (
     ReportDefinitionRowCache,
     ReportDefinitionRowCacheFilter,
 )
-from .report import ReportRow, ReportRowFilter, ReportGroup, Report, ReportKey
+from .report import ReportRow, ReportRowFilter, ReportStage, Report, ReportKey
 from .measure_unit import MeasureUnit
 from .values_union import (
     PrimitiveUnion,

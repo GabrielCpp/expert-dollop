@@ -192,15 +192,20 @@ type StringFieldValue {
   text: String!
 }
 
+type ReferenceId {
+  uuid: String!
+}
+
+
 type BoolFieldValue {
   enabled: Boolean!
 }
 
-union FieldValue =
-    IntFieldValue
+union FieldValue = IntFieldValue
   | DecimalFieldValue
   | StringFieldValue
   | BoolFieldValue
+  | ReferenceId
 
 input IntFieldConfigInput {
   validator: JsonSchema!
@@ -434,6 +439,54 @@ type ProjectNodeTree {
   roots: [ProjectNodeTreeTypeNode!]!
 }
 
+type AttributeBucket {
+  bucketName: String!
+  attributeName: String!
+}
+
+type ReportColumnDefinition {
+  name: String!
+  expression: String!
+  isVisible: Boolean!
+  unitId: String
+}
+
+type ReportDefinitionStructure {
+  formulaAttribute: AttributeBucket
+  datasheetAttribute: AttributeBucket
+  columns: [ReportColumnDefinition!]!
+}
+
+type ReportDefinition {
+    id: String!
+    project_def_id: String!
+    name: String!
+    structure: ReportDefinitionStructure
+}
+
+type ReportRow {
+    projectId: ID!
+    reportDefId: ID!
+    nodeId: ID!
+    formulaId: ID!
+    orderIndex: Int!
+    datasheetId: String!
+    elementId: String!
+    childReferenceId: String!
+    columns: [FieldValue]!
+}
+
+type ReportStage {
+  label: String
+  summary: FieldValue
+  rows: [ReportRow!]!
+}
+
+type Report {
+  stages: [ReportStage!]!
+  creationDateUtc: String
+}
+
 type Translation {
   id: ID!
   ressourceId: String!
@@ -519,6 +572,9 @@ type Query {
     first: Int!
     after: String
   ): FormulaConnection!
+  findReportDefinitions(projectDefId: ID!): [ReportDefinition!]!
+  findReportDefinition(reportDefinitionId: ID!): ReportDefinition!
+  findProjectReport(projectId: ID!, reportDefinitionId: ID!): Report!
 }
 
 input TranslationInput {

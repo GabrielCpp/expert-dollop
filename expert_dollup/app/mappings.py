@@ -1,5 +1,7 @@
 from uuid import UUID, uuid4
 from decimal import Decimal
+
+from pydantic.utils import almost_equal_floats
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import Mapper, RevervibleUnionMapping
 from expert_dollup.shared.database_services import Page
@@ -895,7 +897,7 @@ def map_report_definition_to_dto(
         id=src.id,
         project_def_id=src.project_def_id,
         name=src.name,
-        structure=mapper.map(src.structure, ReportDefinitionDto),
+        structure=mapper.map(src.structure, ReportStructureDto),
     )
 
 
@@ -921,7 +923,7 @@ def map_report_structure_to_dto(
         datasheet_selection_alias=src.datasheet_selection_alias,
         formula_attribute=mapper.map(src.formula_attribute, AttributeBucketDto),
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucketDto),
-        stage=mapper.map(src.stage, StageGrouping),
+        stage=mapper.map(src.stage, StageGroupingDto),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoinDto),
         columns=mapper.map_many(src.columns, ReportColumnDto),
         group_by=mapper.map_many(src.group_by, AttributeBucketDto),
@@ -993,6 +995,7 @@ def map_report_join_to_dto(src: ReportJoin, mapper: Mapper) -> ReportJoinDto:
         alias_name=src.alias_name,
         warn_about_idle_items=src.warn_about_idle_items,
         same_cardinality=src.same_cardinality,
+        allow_dicard_element=src.allow_dicard_element,
     )
 
 
@@ -1027,6 +1030,7 @@ def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportRowDto:
         datasheet_id=src.datasheet_id,
         element_id=src.element_id,
         child_reference_id=src.child_reference_id,
+        columns=mapper.map_many(src.columns, primitive_union_dto_mappings.to_origin),
         row={
             name: {
                 att_name: mapper.map_many(value, ReferenceIdDto)
@@ -1043,13 +1047,13 @@ def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportRowDto:
 
 def map_report_to_dto(src: Report, mapper: Mapper) -> ReportDto:
     return ReportDto(
-        stages=mapper.map_many(src.stages, ReportGroupDto),
+        stages=mapper.map_many(src.stages, ReportStageDto),
         creation_date_utc=src.creation_date_utc,
     )
 
 
-def map_report_group_to_dto(src: ReportGroup, mapper: Mapper) -> ReportGroupDto:
-    return ReportGroupDto(
+def map_report_group_to_dto(src: ReportStage, mapper: Mapper) -> ReportStageDto:
+    return ReportStageDto(
         label=src.label,
         summary=mapper.map(src.summary, primitive_union_dto_mappings.to_origin),
         rows=mapper.map_many(src.rows, ReportRowDto),

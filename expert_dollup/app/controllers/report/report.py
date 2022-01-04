@@ -9,27 +9,11 @@ from expert_dollup.app.dtos import *
 router = APIRouter()
 
 
-@router.get("/project/{project_id}/reports")
-async def get_avaible_reports(
-    project_id: UUID,
-    usecase=Depends(Inject(ReportUseCase)),
-    handler=Depends(Inject(RequestHandler)),
-):
-    return await handler.forward_many(
-        usecase.get_avaible_reports,
-        dict(project_id=project_id),
-        MappingChain(
-            domain=ReportRow,
-            out_dto=ReportDefinitionDto,
-        ),
-    )
-
-
 @router.get("/project/{project_id}/report/{report_definition_id}")
 async def get_project_report(
     project_id: UUID,
     report_definition_id: UUID,
-    usecase=Depends(Inject(ReportUseCase)),
+    usecase: ReportUseCase = Depends(Inject(ReportUseCase)),
     handler=Depends(Inject(RequestHandler)),
 ):
 

@@ -436,7 +436,7 @@ async def test_given_row_cache_should_produce_correct_report():
 
     expected_rows = Report(
         stages=[
-            ReportGroup(
+            ReportStage(
                 label="for test sake",
                 summary="for test sake",
                 rows=[

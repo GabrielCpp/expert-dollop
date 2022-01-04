@@ -66,6 +66,7 @@ class ReportLinking:
         new_rows = self._fill_row_columns(new_rows, linking_data)
         new_rows = self._fill_row_order(new_rows, report_definition)
         stages = self._build_stage_groups(new_rows, report_definition)
+        self._fill_ordered_columns(new_rows, report_definition)
 
         return Report(stages=stages, creation_date_utc=self.clock.utcnow())
 
@@ -132,6 +133,7 @@ class ReportLinking:
                         element_id=element_id,
                         order_index=0,
                         child_reference_id=null_uuid,
+                        columns=[],
                         row={**row, "formula": formula_instance.report_dict},
                     )
                 )
@@ -265,14 +267,14 @@ class ReportLinking:
 
     def _build_stage_groups(
         self, report_rows: List[ReportRow], report_definition: ReportDefinition
-    ) -> List[ReportGroup]:
+    ) -> List[ReportStage]:
         groups = OrderedDict()
 
         for report_row in report_rows:
             key = report_definition.structure.stage.label.get(report_row.row)
 
             if not key in groups:
-                groups[key] = ReportGroup(label=key, rows=[], summary="")
+                groups[key] = ReportStage(label=key, rows=[], summary="")
 
             groups[key].rows.append(report_row)
 
@@ -285,6 +287,15 @@ class ReportLinking:
             )
 
         return list(groups.values())
+
+    def _fill_ordered_columns(
+        self, report_rows: List[ReportRow], report_definition: ReportDefinition
+    ):
+        columns = report_definition.structure.columns
+
+        for report_row in report_rows:
+            for column in columns:
+                report_row.columns.append(report_row.row["columns"][column.name])
 
     def _evaluate(self, expression, row, rows_group, injector):
         try:

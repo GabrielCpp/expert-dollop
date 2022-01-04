@@ -15,6 +15,7 @@ from .dynamic_primitive import (
     DecimalFieldValueDto,
     StringFieldValueDto,
     BoolFieldValueDto,
+    ReferenceIdDto,
     JsonSchemaDto,
     PrimitiveWithNoneUnionDto,
 )
@@ -126,6 +127,7 @@ value_type_lookup_map = {
     DecimalFieldValueDto: "DecimalFieldValue",
     StringFieldValueDto: "StringFieldValue",
     BoolFieldValueDto: "BoolFieldValue",
+    ReferenceIdDto: "ReferenceId",
     type(None): "null",
 }
 

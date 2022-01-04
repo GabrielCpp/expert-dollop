@@ -18,11 +18,12 @@ class ReportRow:
     datasheet_id: UUID
     element_id: UUID
     child_reference_id: UUID
+    columns: List[PrimitiveUnion]
     row: ReportRowDict
 
 
 @dataclass
-class ReportGroup:
+class ReportStage:
     label: str
     summary: PrimitiveUnion
     rows: List[ReportRow]
@@ -30,7 +31,7 @@ class ReportGroup:
 
 @dataclass
 class Report:
-    stages: List[ReportGroup]
+    stages: List[ReportStage]
     creation_date_utc: datetime
 
 

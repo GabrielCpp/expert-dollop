@@ -51,15 +51,16 @@ class ReportRowDao(BaseModel):
     datasheet_id: UUID
     element_id: UUID
     child_reference_id: UUID
+    columns: List[PrimitiveUnionDao]
     row: ReportRowDictDao
 
 
-class ReportGroupDao(BaseModel):
+class ReportStageDao(BaseModel):
     label: str
     summary: PrimitiveUnionDao
     rows: List[ReportRowDao]
 
 
 class ReportDao(BaseModel):
-    stages: List[ReportGroupDao]
+    stages: List[ReportStageDao]
     creation_date_utc: datetime
