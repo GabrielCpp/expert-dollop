@@ -23,7 +23,7 @@ class ProjectDefinitonUseCase:
     async def add(self, domain: ProjectDefinition) -> Awaitable:
         suffix_name = self.word_provider.pick_joined(3)
         name = "project_definition_" + suffix_name + domain.id.hex
-        ressource = Ressource(id=domain.id, name=name, owner_id=uuid4())
+        ressource = Ressource(id=domain.id, kind="project_definition", owner_id=uuid4())
 
         await self.ressource_service.insert(ressource)
         await self.service.insert(domain)

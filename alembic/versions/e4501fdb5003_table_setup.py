@@ -30,10 +30,8 @@ def create_global_table():
         "ressource",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("owner_id", postgresql.UUID(), nullable=False),
-        Column("name", String, nullable=False),
+        Column("kind", String, nullable=False),
     )
-
-    op.create_index(op.f("ix_ressource_name"), "ressource", ["name"], unique=True)
 
     op.create_table(
         "translation",

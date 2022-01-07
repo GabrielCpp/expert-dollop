@@ -174,7 +174,7 @@ class RessourceDao(BaseModel):
         title = "ressource"
 
     id: UUID
-    name: str = Field(max_length=255)
+    kind: str = Field(max_length=64)
     owner_id: UUID
 
 

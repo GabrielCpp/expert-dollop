@@ -24,10 +24,9 @@ class DatasheetDefinitionUseCase:
         return await self.datasheet_definition_service.find_by_id(id)
 
     async def add(self, domain: DatasheetDefinition) -> DatasheetDefinition:
-        suffix_name = self.word_provider.pick_joined(3)
-        name = "datasheet_definition_" + suffix_name + domain.id.hex
-        ressource = Ressource(id=domain.id, name=name, owner_id=uuid4())
-
+        ressource = Ressource(
+            id=domain.id, kind="datsheet_definition", owner_id=uuid4()
+        )
         self.validate_datasheet(domain)
         await self.ressource_service.insert(ressource)
         await self.datasheet_definition_service.insert(domain)

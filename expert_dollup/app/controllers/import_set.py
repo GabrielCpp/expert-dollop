@@ -197,8 +197,7 @@ ressources = {
     "raw_project": RessourceLoader(
         dto=ProjectDetailsDto,
         domain=ProjectDetails,
-        usecase=ProjectService,
-        method="insert",
+        usecase=ProjectUseCase,
     ),
     "raw_node": RessourceLoader(
         dto=ProjectNodeDto,

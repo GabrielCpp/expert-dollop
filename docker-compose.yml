@@ -38,16 +38,6 @@ services:
       networks:
           - backend
 
-  cloud-storage:
-    container_name: cloud-storage
-    build:
-        context: .
-        dockerfile: cloud_storage.dockerfile
-    restart: always
-    ports:
-    - 8888:8888
-    networks:
-      - backend
 volumes:
   firebase_data:
     name: firebase_data

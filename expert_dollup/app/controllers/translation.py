@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
 from expert_dollup.shared.starlette_injection import Inject
@@ -79,7 +79,6 @@ async def delete_translation(
     locale: str,
     name: str,
     usecase=Depends(Inject(TranslationUseCase)),
-    handler=Depends(Inject(RequestHandler)),
 ):
     id = TranslationId(ressource_id=ressource_id, locale=locale, scope=scope, name=name)
     await usecase.delete_by_id(id)
@@ -111,4 +110,18 @@ async def find_translation_in_scope(
         usecase.find_by,
         TranslationFilter(ressource_id=ressource_id, scope=scope),
         MappingChain(out_dto=TranslationDto, domain=Translation),
+    )
+
+
+@router.get("/translation/{ressource_id}/{locale}/json_bundle")
+async def get_json_bundle_for_ressource_locale(
+    ressource_id: UUID,
+    locale: str,
+    handler: RequestHandler = Depends(Inject(RequestHandler)),
+    usecase: TranslationUseCase = Depends(Inject(TranslationUseCase)),
+):
+    return await handler.handle(
+        usecase.get_translation_bundle,
+        TranslationRessourceLocaleQuery(ressource_id=ressource_id, locale=locale),
+        MappingChain(out_dto=dict, out_domain=List[Translation]),
     )

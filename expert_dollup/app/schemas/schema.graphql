@@ -410,6 +410,7 @@ type ProjectDetails {
   projectDefinition: ProjectDefinition!
   datasheetId: String!
   datasheet: Datasheet!
+  reportDefinitions: [ReportDefinition!]!
 }
 
 input ProjectDetailsInput {
@@ -452,8 +453,8 @@ type ReportColumnDefinition {
 }
 
 type ReportDefinitionStructure {
-  formulaAttribute: AttributeBucket
-  datasheetAttribute: AttributeBucket
+  formulaAttribute: AttributeBucket!
+  datasheetAttribute: AttributeBucket!
   columns: [ReportColumnDefinition!]!
 }
 
@@ -461,7 +462,7 @@ type ReportDefinition {
     id: String!
     project_def_id: String!
     name: String!
-    structure: ReportDefinitionStructure
+    structure: ReportDefinitionStructure!
 }
 
 type ReportRow {

@@ -5,6 +5,7 @@ import datetime
 from uuid import UUID
 from decimal import Decimal
 from pydantic.main import BaseModel
+from enum import Enum
 
 dump_file_path = "."
 index = 0
@@ -27,6 +28,9 @@ class ExtraEncoder(json.JSONEncoder):
         if isinstance(obj, Decimal):
             return str(obj)
 
+        if issubclass(type(obj), Enum):
+            return str(obj)
+
         return json.JSONEncoder.default(self, obj)
 
 
@@ -45,7 +49,7 @@ def dump_to_file(json_serializable):
         json.dump(
             json_serializable, outfile, indent=2, sort_keys=True, cls=ExtraEncoder
         )
-
+        outfile.flush()
         os.fsync(outfile)
 
 

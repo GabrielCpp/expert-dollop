@@ -19,6 +19,7 @@ datasheet_definition_property_schema_dict = ObjectType(
 )
 datasheet_definition_element = ObjectType("DatasheetDefinitionElement")
 project_definition = ObjectType("ProjectDefinition")
+project_details = ObjectType("ProjectDetails")
 project_definition_node = ObjectType("ProjectDefinitionNode")
 field_value = UnionType("FieldValue")
 field_details_union_type = UnionType("FieldDetailsUnion")
@@ -34,6 +35,7 @@ types = [
     project_definition,
     datasheet,
     datasheet_element,
+    project_details,
     project_definition_node,
     field_value,
     field_details_union_type,

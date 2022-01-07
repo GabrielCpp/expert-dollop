@@ -429,14 +429,15 @@ class PostgresTableService(CollectionService[Domain]):
         value = self._map_to_dict(domain)
         await self._database.execute(query=query, values=value)
 
-    async def insert_many(self, domains: List[Domain], bulk=True):
+    async def insert_many(self, domains: List[Domain], bulk=False):
         dicts = self._map_many_to_dict(domains)
 
-        if bulk:
-            await self._insert_many_raw(dicts)
-        else:
-            query = pg_insert(self._table, dicts)
-            await self._database.execute(query=query)
+        for dicts_batch in batch(dicts, 1000):
+            if bulk:
+                await self._insert_many_raw(dicts_batch)
+            else:
+                query = pg_insert(self._table, dicts_batch)
+                await self._database.execute(query=query)
 
     async def upserts(self, domains: List[Domain]) -> None:
         if len(domains) == 0:

@@ -381,7 +381,7 @@ def map_project_node_meta_state_from_dao(
 def map_ressource_from_dao(src: RessourceDao, mapper: Mapper) -> Ressource:
     return Ressource(
         id=src.id,
-        name=src.name,
+        kind=src.kind,
         owner_id=src.owner_id,
     )
 
@@ -389,7 +389,7 @@ def map_ressource_from_dao(src: RessourceDao, mapper: Mapper) -> Ressource:
 def map_ressource_to_dao(src: Ressource, mapper: Mapper) -> RessourceDao:
     return RessourceDao(
         id=src.id,
-        name=src.name,
+        kind=src.kind,
         owner_id=src.owner_id,
     )
 

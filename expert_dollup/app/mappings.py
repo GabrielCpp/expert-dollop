@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
+from typing import List
 from decimal import Decimal
-
 from pydantic.utils import almost_equal_floats
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import Mapper, RevervibleUnionMapping
@@ -1070,3 +1070,7 @@ def map_primitive_with_none_union_from_dto(
     src: PrimitiveWithNoneUnionDto, mapper: Mapper
 ) -> PrimitiveWithNoneUnion:
     return mapper.map(src, primitive_with_none_union_dto_mappings.from_origin)
+
+
+def map_translations_to_json_bundle(src: List[Translation], mapper: Mapper) -> dict:
+    return {translation.name: translation.value for translation in src}

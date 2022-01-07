@@ -5,5 +5,5 @@ from uuid import UUID
 @dataclass
 class Ressource:
     id: UUID
-    name: str
+    kind: str
     owner_id: UUID

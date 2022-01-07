@@ -1,7 +1,6 @@
 from typing import List
 from uuid import UUID, uuid4
 from collections import defaultdict, OrderedDict
-from expert_dollup.core.builders import RessourceBuilder
 from expert_dollup.core.domains import *
 from expert_dollup.infra.services import *
 
@@ -11,8 +10,6 @@ class TriggerHandler:
         self.nodes_by_id = nodes_by_id
 
     def run(self, bounded_node: BoundedNode):
-        project_id = bounded_node.node.project_id
-
         for trigger in bounded_node.definition.config.triggers:
             if trigger.action == TriggerAction.CHANGE_NAME:
                 self._trigger_change_name(trigger, bounded_node)
@@ -30,11 +27,9 @@ class ProjectBuilder:
         project_node_service: ProjectNodeService,
         project_node_meta_service: ProjectNodeMetaService,
         project_definition_node_service: ProjectDefinitionNodeService,
-        ressource_builder: RessourceBuilder,
     ):
         self.project_definition_node_service = project_definition_node_service
         self.project_node_meta_service = project_node_meta_service
-        self.ressource_builder = ressource_builder
         self.project_node_service = project_node_service
 
     async def build_new(self, project_details: ProjectDetails) -> Project:
@@ -91,8 +86,8 @@ class ProjectBuilder:
             details=project_details,
             nodes=nodes,
             metas=node_metas,
-            ressource=self.ressource_builder.build(
-                project_details.id, project_details.id, "project"
+            ressource=Ressource(
+                id=project_details.id, kind="project", owner_id=uuid4()
             ),
         )
 
@@ -105,10 +100,7 @@ class ProjectBuilder:
             datasheet_id=project_details.datasheet_id,
         )
 
-        ressource = self.ressource_builder.build(
-            cloned_project.id, cloned_project.id, "project"
-        )
-
+        ressource = Ressource(cloned_project.id, "project", uuid4())
         cloned_nodes = await self._clone_project_nodes(
             project_details.id, cloned_project
         )

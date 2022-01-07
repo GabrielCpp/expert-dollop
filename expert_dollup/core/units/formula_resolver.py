@@ -1,6 +1,4 @@
-import ast
-from expert_dollup.core.domains.formula import FormulaFilter
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Tuple
 from uuid import UUID
 from expert_dollup.core.domains import (
     Formula,
@@ -8,6 +6,7 @@ from expert_dollup.core.domains import (
     FormulaDependencyGraph,
     FormulaDependency,
     UnitInstanceCache,
+    FormulaFilter,
 )
 from expert_dollup.infra.services import (
     FormulaService,
@@ -15,7 +14,6 @@ from expert_dollup.infra.services import (
     ProjectDefinitionNodeService,
 )
 from expert_dollup.core.builders import UnitInstanceBuilder
-from expert_dollup.core.queries import Plucker
 from expert_dollup.core.logits import (
     FormulaVisitor,
     FormulaInjector,
@@ -180,7 +178,7 @@ class FormulaResolver:
 
     async def compute_all_project_formula(
         self, project_id: UUID, project_def_id: UUID
-    ) -> UnitInstanceCache:
+    ) -> Tuple[UnitInstanceCache, FormulaInjector]:
         injector = FormulaInjector()
         nodes = await self.project_node_service.get_all_fields(project_id)
 
@@ -208,4 +206,4 @@ class FormulaResolver:
 
         updated_instances = [unit.computed for unit in injector.units]
 
-        return updated_instances
+        return updated_instances, injector
