@@ -70,7 +70,7 @@ def creat_app(container: Injector = None):
     container = container or build_container()
     exception_handler = container.get(ExceptionHandlerDict)
 
-    app = FastAPI()
+    app = FastAPI(debug=False)
 
     @AuthJWT.load_config
     def get_config():
@@ -101,8 +101,8 @@ def creat_app(container: Injector = None):
         "/graphql",
         GraphQL(
             schema,
-            debug=True,
-            introspection=True,
+            debug=False,
+            introspection=False,
             context_value=lambda request: GraphqlContext(
                 container=request.state.container, request=request
             ),

@@ -20,12 +20,30 @@ class ReportRowDto(CamelModel):
     row: ReportRowDictDto
 
 
+class MinimalReportRowDto(CamelModel):
+    node_id: UUID
+    formula_id: UUID
+    element_id: UUID
+    child_reference_id: UUID
+    columns: List[PrimitiveUnionDto]
+
+
 class ReportStageDto(CamelModel):
     label: str
     summary: PrimitiveUnionDto
     rows: List[ReportRowDto]
 
 
+class MinimalReportStageDto(CamelModel):
+    label: str
+    summary: PrimitiveUnionDto
+    rows: List[MinimalReportRowDto]
+
+
 class ReportDto(CamelModel):
     stages: List[ReportStageDto]
     creation_date_utc: datetime
+
+
+class MinimalReportDto(CamelModel):
+    stages: List[MinimalReportStageDto]

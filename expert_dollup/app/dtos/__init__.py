@@ -78,7 +78,14 @@ from .datasheet_element_dto import (
     DatasheetElementPageDto,
     DatasheetElementImportDto,
 )
-from .report_dto import ReportRowDto, ReportStageDto, ReportDto
+from .report_dto import (
+    ReportRowDto,
+    ReportStageDto,
+    ReportDto,
+    MinimalReportDto,
+    MinimalReportStageDto,
+    MinimalReportRowDto,
+)
 from .report_definition_dto import (
     ReportDefinitionDto,
     ReportStructureDto,

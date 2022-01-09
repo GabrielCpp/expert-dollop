@@ -1074,3 +1074,29 @@ def map_primitive_with_none_union_from_dto(
 
 def map_translations_to_json_bundle(src: List[Translation], mapper: Mapper) -> dict:
     return {translation.name: translation.value for translation in src}
+
+
+def map_minimal_report_dto(src: Report, mapper: Mapper) -> MinimalReportDto:
+    return MinimalReportDto(
+        stages=mapper.map_many(src.stages, MinimalReportStageDto),
+    )
+
+
+def map_minimal_report_stage_dto(
+    src: ReportStage, mapper: Mapper
+) -> MinimalReportStageDto:
+    return MinimalReportStageDto(
+        label=src.label,
+        summary=mapper.map(src.summary, primitive_union_dto_mappings.to_origin),
+        rows=mapper.map_many(src.rows, MinimalReportRowDto),
+    )
+
+
+def map_minimal_report_row_dto(src: ReportRow, mapper: Mapper) -> MinimalReportRowDto:
+    return MinimalReportRowDto(
+        node_id=src.node_id,
+        formula_id=src.formula_id,
+        element_id=src.element_id,
+        child_reference_id=src.child_reference_id,
+        columns=mapper.map_many(src.columns, primitive_union_dto_mappings.to_origin),
+    )

@@ -14,26 +14,26 @@ def drop_db():
     asyncio.run(connection.drop_db())
 
 
-def truncate_db():
+def truncate_db(tables=None):
     from dotenv import load_dotenv
     from expert_dollup.shared.database_services import create_connection
 
     load_dotenv()
     connection = create_connection(os.getenv("DATABASE_URL"))
-    asyncio.run(connection.truncate_db())
+    asyncio.run(connection.truncate_db(tables))
 
 
-@task(name="start-http")
-def start_http(c):
+@task(name="start-https")
+def start_https(c):
     c.run(
-        "poetry run uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000"
+        "poetry run uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000 --ssl-keyfile .local/predykt.dev.key --ssl-certfile .local/predykt.dev.crt"
     )
 
 
 @task
 def start(c):
     c.run(
-        "poetry run uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000 --ssl-keyfile .local/predykt.dev.key --ssl-certfile .local/predykt.dev.crt"
+        "poetry run uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000"
     )
 
 
@@ -70,24 +70,10 @@ def migrate(c, migration):
     c.run("poetry run alembic upgrade {} --sql".format(migration))
 
 
-@task(name="db:delete")
+@task(name="docker:clean")
 def deleteDb(c):
-    if c.run("docker ps -aq").stdout != "":
-        c.run("docker stop $(docker ps -aq)")
-
-    if c.run("docker ps -aq").stdout != "":
-        c.run("docker rm $(docker ps -aq)")
-
-    c.run("docker network prune -f")
-
-    if c.run("docker images --filter dangling=true -qa").stdout != "":
-        c.run("docker rmi -f $(docker images --filter dangling=true -qa)")
-
-    if c.run("docker volume ls --filter dangling=true -q").stdout != "":
-        c.run("docker volume rm $(docker volume ls --filter dangling=true -q)")
-
-    if c.run("docker images -qa").stdout != "":
-        c.run("docker rmi -f $(docker images -qa)")
+    c.run("docker rm -f $(docker ps -a -q)")
+    c.run("docker volume rm $(docker volume ls -q)")
 
 
 @task(name="db:up")
@@ -218,6 +204,22 @@ def upload_base_project(c):
 @task(name="upload-project")
 def upload_project(c):
     cwd = os.getcwd()
+    truncate_db(["project", "project_node", "project_node_metadata"])
     c.run(
         f"curl -X POST -F 'file=@{cwd}/project.jsonl' http://localhost:8000/api/import"
+    )
+
+
+@task(name="refresh-cache")
+def refreshcache(c):
+    cwd = os.getcwd()
+    c.run(
+        f"curl -X POST -F 'file=@{cwd}/project.jsonl' http://localhost:8000/api/report_definition/8e084b1e-b331-4644-8485-5e91e21770b2/refresh_cache"
+    )
+
+
+@task(name="testreport")
+def testreport(c):
+    c.run(
+        "curl http://localhost:8000/api/project/11ec4bbb-ebe8-fa7c-bcc3-42010a800002/report/8e084b1e-b331-4644-8485-5e91e21770b2/minimal"
     )

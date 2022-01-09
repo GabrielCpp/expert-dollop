@@ -4,8 +4,8 @@ from uuid import UUID
 from collections import defaultdict
 from functools import cached_property
 from expert_dollup.core.domains.project_node import ProjectNode
-import expert_dollup.core.logits.formula_processor as formula_processor
 from expert_dollup.core.domains import UnitInstance, PrimitiveUnion, ProjectNode
+import expert_dollup.core.logits.formula_processor as formula_processor
 
 
 class UnitLike(Protocol):
@@ -45,7 +45,7 @@ class FormulaInjector:
         return []
 
     def get_one_value(self, node_id: UUID, path: List[UUID], name: str, default):
-        units = self.get_unit(node_id, path, name)
+        units = self.get_unit(node_id, path, name.lower())
 
         if len(units) == 0:
             return default

@@ -1,5 +1,7 @@
 from typing import List, Dict, Set, Tuple
 from uuid import UUID
+from asyncio import gather
+from expert_dollup.shared.database_services import log_execution_time_async, StopWatch
 from expert_dollup.core.domains import (
     Formula,
     FormulaExpression,
@@ -176,22 +178,25 @@ class FormulaResolver:
 
         return formula
 
+    @log_execution_time_async
     async def compute_all_project_formula(
         self, project_id: UUID, project_def_id: UUID
     ) -> Tuple[UnitInstanceCache, FormulaInjector]:
         injector = FormulaInjector()
-        nodes = await self.project_node_service.get_all_fields(project_id)
+
+        with StopWatch("Fetching formula data"):
+            nodes, formulas = await gather(
+                self.project_node_service.get_all_fields(project_id),
+                self.formula_service.find_by(
+                    FormulaFilter(project_def_id=project_def_id)
+                ),
+            )
+
+        formula_by_id = {formula.id: formula for formula in formulas}
+        unit_instances = self.unit_instance_builder.build_with_fields(formulas, nodes)
 
         for node in nodes:
             injector.add_unit(FieldUnit(node))
-
-        formulas = await self.formula_service.find_by(
-            FormulaFilter(project_def_id=project_def_id)
-        )
-
-        formula_by_id = {formula.id: formula for formula in formulas}
-
-        unit_instances = self.unit_instance_builder.build_with_fields(formulas, nodes)
 
         for formula_instance in unit_instances:
             formula = formula_by_id[formula_instance.formula_id]
@@ -204,6 +209,7 @@ class FormulaResolver:
                 )
             )
 
-        updated_instances = [unit.computed for unit in injector.units]
+        with StopWatch("Computing formulas"):
+            updated_instances = [unit.computed for unit in injector.units]
 
         return updated_instances, injector

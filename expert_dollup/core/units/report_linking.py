@@ -4,10 +4,11 @@ from decimal import Decimal
 from collections import defaultdict, OrderedDict
 from itertools import groupby, chain
 from dataclasses import dataclass
+from asyncio import gather
 from hashlib import sha3_256
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.infra.services import DatasheetElementService
-from expert_dollup.core.logits import FormulaInjector, FrozenUnit
+from expert_dollup.core.logits import FormulaInjector
 from expert_dollup.core.units import FormulaResolver
 from expert_dollup.core.builders import ReportRowCacheBuilder
 from expert_dollup.core.exceptions import (
@@ -16,8 +17,10 @@ from expert_dollup.core.exceptions import (
     RessourceNotFound,
 )
 from expert_dollup.core.domains import *
+from expert_dollup.shared.database_services.time_it import log_execution_time_async
 from expert_dollup.shared.starlette_injection import Clock
 from .expression_evaluator import ExpressionEvaluator
+from expert_dollup.shared.database_services import log_execution_time
 
 
 def round_number(number: Decimal, digits: int, method: str) -> Decimal:
@@ -54,6 +57,7 @@ class ReportLinking:
         self.formula_resolver = formula_resolver
         self.clock = clock
 
+    @log_execution_time_async
     async def _load_report_cache(self, report_definition: ReportDefinition):
         key = ReportRowKey(
             project_def_id=report_definition.project_def_id,
@@ -63,22 +67,20 @@ class ReportLinking:
         try:
             return await self.report_def_row_cache.load(key)
         except RessourceNotFound:
-            return await self.report_row_cache_builder.refresh_cache(report_definition)
+            rows = await self.report_row_cache_builder.refresh_cache(report_definition)
+            await self.report_def_row_cache.save(key, rows)
+            return rows
 
+    @log_execution_time_async
     async def link_report(
         self,
         report_definition: ReportDefinition,
         project_details: ProjectDetails,
     ) -> Report:
-        from stopwatch import Stopwatch
 
-        with Stopwatch("report_def_row_cache.load") as o:  # 16.2774s
-            rows = await self._load_report_cache(report_definition)
-            print(o.report())
-
-        with Stopwatch("_preload_data") as o:  # 35.0454s
-            linking_data = await self._preload_data(report_definition, project_details)
-            print(o.report())
+        rows, linking_data = await self._preload_data(
+            report_definition, project_details
+        )
 
         steps = [
             self._join_row_cache_with_unit_instances,  # 6.7121s
@@ -89,33 +91,30 @@ class ReportLinking:
         ]
 
         for step in steps:
-            with Stopwatch(step.__name__) as o:
-                rows = step(rows, linking_data)
-                print(o.report())
+            rows = step(rows, linking_data)
 
-        with Stopwatch("_build_stage_groups") as o:
-            stages = self._build_stage_groups(rows, linking_data)
-            print(o.report())
+        stages = self._build_stage_groups(rows, linking_data)
 
         return Report(stages=stages, creation_date_utc=self.clock.utcnow())
 
+    @log_execution_time_async
     async def _preload_data(
         self,
         report_definition: ReportDefinition,
         project_details: ProjectDetails,
     ) -> LinkingData:
-        (
-            unit_instances,
-            injector,
-        ) = await self.formula_resolver.compute_all_project_formula(
-            project_details.id, project_details.project_def_id
-        )
 
-        datasheet_elements = await self.datasheet_element_service.find_by(
-            DatasheetElementFilter(
-                datasheet_id=project_details.datasheet_id,
-                child_element_reference=zero_uuid(),
-            )
+        rows, (unit_instances, injector), datasheet_elements = await gather(
+            self._load_report_cache(report_definition),
+            self.formula_resolver.compute_all_project_formula(
+                project_details.id, project_details.project_def_id
+            ),
+            self.datasheet_element_service.find_by(
+                DatasheetElementFilter(
+                    datasheet_id=project_details.datasheet_id,
+                    child_element_reference=zero_uuid(),
+                )
+            ),
         )
 
         datasheet_elements_by_id = {
@@ -123,7 +122,7 @@ class ReportLinking:
             for datasheet_element in datasheet_elements
         }
 
-        return LinkingData(
+        return rows, LinkingData(
             report_definition=report_definition,
             project_details=project_details,
             unit_instances=unit_instances,
@@ -131,6 +130,7 @@ class ReportLinking:
             datasheet_elements_by_id=datasheet_elements_by_id,
         )
 
+    @log_execution_time
     def _join_row_cache_with_unit_instances(
         self, rows, linking_data: LinkingData
     ) -> List[ReportRow]:
@@ -148,6 +148,10 @@ class ReportLinking:
             unit_instance
             for unit_instance in linking_data.unit_instances
             if not unit_instance.formula_id is None
+            and (
+                not isinstance(unit_instance.result, Decimal)
+                or unit_instance.result > 0
+            )
         ]
         formula_instances.sort(key=lambda x: x.formula_id)
         unit_instances_by_def_id: Dict[UUID, UnitInstanceCache] = {
@@ -163,9 +167,9 @@ class ReportLinking:
             formula_id = formula_attribute.get(row)
             assert isinstance(element_id, UUID)
 
-            assert (
-                formula_id in unit_instances_by_def_id
-            ), f"Missing formula {formula_id}"
+            if not formula_id in unit_instances_by_def_id:
+                continue
+
             unit_instances = unit_instances_by_def_id[formula_id]
 
             new_rows.extend(
@@ -187,6 +191,7 @@ class ReportLinking:
 
         return new_rows
 
+    @log_execution_time
     def _fill_datasheet_element_in_rows(
         self, report_rows: List[ReportRow], linking_data: LinkingData
     ) -> List[ReportRow]:
@@ -201,6 +206,7 @@ class ReportLinking:
 
         return report_rows
 
+    @log_execution_time
     def _fill_row_columns(
         self, report_rows: List[ReportRow], linking_data: LinkingData
     ) -> List[ReportRow]:
@@ -277,6 +283,7 @@ class ReportLinking:
 
         return list(chain(*grouped_rows.values()))
 
+    @log_execution_time
     def _fill_row_order(
         self, report_rows: List[ReportRow], linking_data: LinkingData
     ) -> List[ReportRow]:
@@ -297,6 +304,7 @@ class ReportLinking:
 
         return report_rows
 
+    @log_execution_time
     def _build_stage_groups(
         self, report_rows: List[ReportRow], linking_data: LinkingData
     ) -> List[ReportStage]:
@@ -321,6 +329,7 @@ class ReportLinking:
 
         return list(groups.values())
 
+    @log_execution_time
     def _fill_ordered_columns(
         self, report_rows: List[ReportRow], linking_data: LinkingData
     ) -> List[ReportRow]:
