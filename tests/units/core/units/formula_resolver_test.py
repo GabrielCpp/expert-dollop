@@ -122,11 +122,11 @@ async def test_given_unit_instances_should_compute_collection():
         unit_instance_builder.object,
     )
 
-    results = await formula_resolver.compute_all_project_formula(
+    injector = await formula_resolver.compute_all_project_formula(
         fixture.project.id, fixture.project_definition.id
     )
 
-    assert results == [
+    assert injector.unit_instances == [
         UnitInstance(
             formula_id=None,
             node_id=UUID("941055cb-b2bc-0916-4182-4774e576c6eb"),

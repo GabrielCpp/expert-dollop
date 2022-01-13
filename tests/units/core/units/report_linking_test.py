@@ -548,3 +548,22 @@ async def test_given_row_cache_should_produce_correct_report():
     )
 
     assert report_rows == expected_rows
+
+
+@pytest.mark.asyncio
+async def test_run_command_order_report(container, ac):
+    r = container.get(ReportLinking)
+    report_def_service = container.get(ReportDefinitionService)
+    project_service = container.get(ProjectService)
+    report_definition = await report_def_service.find_by_id(
+        UUID("8e084b1e-b331-4644-8485-5e91e21770b2")
+    )
+    project_details = await project_service.find_by_id(
+        UUID("11ec4bbb-ebe8-fa7c-bcc3-42010a800002")
+    )
+    # result = await r.link_report(report_definition, project_details)
+    response = await ac.get(
+        "/api/project/11ec4bbb-ebe8-fa7c-bcc3-42010a800002/report/8e084b1e-b331-4644-8485-5e91e21770b2"
+    )
+    # dump_to_file(result)
+    assert response.status_code == 200, response.text

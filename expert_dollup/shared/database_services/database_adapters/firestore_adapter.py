@@ -1,5 +1,6 @@
 from typing import List, TypeVar, Optional, Awaitable, Dict, Type, Tuple, Union, Set
 from google.cloud.firestore import AsyncClient
+from google.cloud.firestore_v1 import Increment
 from google.auth.credentials import AnonymousCredentials
 from expert_dollup.shared.automapping import Mapper
 from ..page import Page
@@ -66,7 +67,7 @@ class FirestoreTableService(CollectionService[Domain]):
     async def insert(self, domain: Domain):
         pass
 
-    async def insert_many(self, domains: List[Domain], bulk=False):
+    async def insert_many(self, domains: List[Domain]):
         pass
 
     async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):
@@ -83,13 +84,7 @@ class FirestoreTableService(CollectionService[Domain]):
     ) -> Page[Domain]:
         pass
 
-    async def find_by(
-        self,
-        query_filter: WhereFilter,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        order_by: Optional[Tuple[str, str]] = None,
-    ) -> List[Domain]:
+    async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
         pass
 
     async def find_by_paginated(

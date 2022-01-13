@@ -42,14 +42,8 @@ class CollectionServiceProxy(CollectionService[Domain]):
     ) -> Page[Domain]:
         return await self._impl.find_all_paginated(limit, next_page_token)
 
-    async def find_by(
-        self,
-        query_filter: WhereFilter,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        order_by: Optional[Tuple[str, Literal["desc", "asc"]]] = None,
-    ) -> List[Domain]:
-        return await self._impl.find_by(query_filter, limit, offset, order_by)
+    async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
+        return await self._impl.find_by(query_filter)
 
     async def find_by_paginated(
         self,

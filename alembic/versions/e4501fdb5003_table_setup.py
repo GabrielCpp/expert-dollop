@@ -234,7 +234,7 @@ def create_datasheet_tables():
         Column("datasheet_def_id", postgresql.UUID(), nullable=False),
         Column("order_index", Integer, nullable=False),
         Column("default_properties", postgresql.JSON(), nullable=False),
-        Column("tags", ARRAY(String, dimensions=1), nullable=False),
+        Column("tags", ARRAY(postgresql.UUID(), dimensions=1), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 

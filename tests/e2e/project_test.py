@@ -64,6 +64,7 @@ async def test_project_loading(ac, db_helper: DbFixtureHelper):
     assert response.status_code == 200
 
     nodes = unwrap_many(response, ProjectNodeDto, lambda d: d.type_id)
+    print(nodes)
     assert_valid_instance_list_for_definition(
         nodes, fake_db, IsDefinitionInstanciated()
     )

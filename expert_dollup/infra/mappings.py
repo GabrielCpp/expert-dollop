@@ -662,7 +662,7 @@ def map_datasheet_definition_element_to_dao(
             name: mapper.map(property_details, DatasheetDefinitionElementPropertyDao)
             for (name, property_details) in src.default_properties.items()
         },
-        tags=list_uuid_to_str(src.tags),
+        tags=src.tags,
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -685,7 +685,7 @@ def map_datasheet_definition_element_from_dao(
             )
             for name, item_property in src.default_properties.items()
         },
-        tags=list_str_to_uuid(src.tags),
+        tags=src.tags,
         creation_date_utc=src.creation_date_utc,
     )
 

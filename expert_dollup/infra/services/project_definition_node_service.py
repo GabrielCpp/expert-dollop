@@ -7,9 +7,9 @@ from expert_dollup.shared.database_services import (
 from expert_dollup.core.domains import (
     ProjectDefinitionNode,
     ProjectDefinitionNodeFilter,
-    ProjectDefinitionNodePluckFilter,
 )
 from expert_dollup.infra.expert_dollup_db import ProjectDefinitionNodeDao
+from expert_dollup.core.utils.path_transform import join_uuid_path
 
 
 class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]):
@@ -24,9 +24,8 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
         if names is None:
             query = (
                 self.get_builder()
-                .select_fields("id", "name")
-                .find_by(ProjectDefinitionNodeFilter(project_def_id=project_def_id))
-                .finalize()
+                .select("id", "name")
+                .where("project_def_id", "==", project_def_id)
             )
 
             records = await self.fetch_all_records(query)
@@ -38,10 +37,9 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
 
         query = (
             self.get_builder()
-            .select_fields("id", "name")
-            .find_by(ProjectDefinitionNodeFilter(project_def_id=project_def_id))
-            .pluck(ProjectDefinitionNodePluckFilter(names=names))
-            .finalize()
+            .select("id", "name")
+            .where("project_def_id", "==", project_def_id)
+            .where("name", "in", names)
         )
         records = await self.fetch_all_records(query)
 
@@ -63,9 +61,8 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
         value = await self.find_by_id(id)
         query = (
             self.get_builder()
-            .find_by(ProjectDefinitionNodeFilter(project_def_id=value.project_def_id))
-            .startwiths(ProjectDefinitionNodeFilter(path=value.subpath))
-            .finalize()
+            .where("project_def_id", "==", value.project_def_id)
+            .where("path", "startwiths", join_uuid_path(value.subpath))
         )
 
         await self.delete_by(query)
@@ -75,12 +72,12 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
     ) -> List[ProjectDefinitionNode]:
         query = (
             self.get_builder()
-            .find_by(ProjectDefinitionNodeFilter(project_def_id=project_def_id))
-            .startwiths(ProjectDefinitionNodeFilter(path=path))
-            .finalize()
+            .where("project_def_id", "==", project_def_id)
+            .where("path", "startwiths", join_uuid_path(path))
+            .orderby(("level", "desc"))
         )
 
-        results = await self.find_by(query, order_by=("level", "desc"))
+        results = await self.find_by(query)
 
         return results
 
@@ -89,16 +86,12 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
     ) -> List[ProjectDefinitionNode]:
         query = (
             self.get_builder()
-            .find_by(
-                ProjectDefinitionNodeFilter(
-                    project_def_id=project_def_id,
-                    display_query_internal_id=project_def_id,
-                )
-            )
-            .finalize()
+            .where("project_def_id", "==", project_def_id)
+            .where("display_query_internal_id", "==", project_def_id)
+            .orderby(("level", "desc"))
         )
 
-        results = await self.find_by(query, order_by=("level", "desc"))
+        results = await self.find_by(query)
 
         return results
 
@@ -107,16 +100,12 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
     ) -> List[ProjectDefinitionNode]:
         query = (
             self.get_builder()
-            .find_by(
-                ProjectDefinitionNodeFilter(
-                    project_def_id=project_def_id,
-                    display_query_internal_id=root_section_id,
-                )
-            )
-            .finalize()
+            .where("project_def_id", "==", project_def_id)
+            .where("display_query_internal_id", "==", root_section_id)
+            .orderby(("level", "desc"))
         )
 
-        results = await self.find_by(query, order_by=("level", "desc"))
+        results = await self.find_by(query)
 
         return results
 
@@ -125,15 +114,11 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
     ) -> List[ProjectDefinitionNode]:
         query = (
             self.get_builder()
-            .find_by(
-                ProjectDefinitionNodeFilter(
-                    project_def_id=project_def_id,
-                    display_query_internal_id=form_id,
-                )
-            )
-            .finalize()
+            .where("project_def_id", "==", project_def_id)
+            .where("display_query_internal_id", "==", form_id)
+            .orderby(("level", "desc"))
         )
 
-        results = await self.find_by(query, order_by=("level", "desc"))
+        results = await self.find_by(query)
 
         return results

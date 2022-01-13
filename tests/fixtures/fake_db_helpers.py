@@ -3,6 +3,8 @@ from collections import defaultdict
 from typing import Callable, List, Dict, Any, Type
 from injector import Injector
 from inspect import isclass
+
+from pydantic.main import BaseModel
 from expert_dollup.infra import services
 from expert_dollup.shared.database_services import DbConnection
 
@@ -67,11 +69,9 @@ class DbFixtureHelper:
 
         return self
 
-    async def insert_daos(self, service_type: Type, daos: Dict[str, Any]):
+    async def insert_daos(self, service_type: Type, daos: List[BaseModel]):
         service = self.injector.get(service_type)
-        await service._impl._insert_many_raw(
-            [service._impl._add_version_to_dao(dao) for dao in daos]
-        )
+        await service._impl.bulk_insert(daos)
 
     async def init_db(self, fake_db: FakeDb):
         await self.dal.truncate_db()

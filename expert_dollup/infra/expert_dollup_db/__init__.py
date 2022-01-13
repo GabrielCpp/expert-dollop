@@ -317,7 +317,7 @@ class DatasheetDefinitionElementDao(BaseModel):
     datasheet_def_id: UUID
     order_index: int
     default_properties: Dict[str, DatasheetDefinitionElementPropertyDao]
-    tags: List[str]
+    tags: List[UUID]
     creation_date_utc: datetime
 
 

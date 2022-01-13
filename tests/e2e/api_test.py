@@ -156,7 +156,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
         results=[dto_translations["b_fr"], dto_translations["a_fr"]],
     )
 
-    await db_helper.insert_daos(TranslationService, translations.values())
+    await db_helper.insert_daos(TranslationService, list(translations.values()))
 
     response = await ac.get(f"/api/translation/{ressource_id}/fr_CA")
     assert response.status_code == 200

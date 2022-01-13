@@ -181,7 +181,7 @@ class FormulaResolver:
     @log_execution_time_async
     async def compute_all_project_formula(
         self, project_id: UUID, project_def_id: UUID
-    ) -> Tuple[UnitInstanceCache, FormulaInjector]:
+    ) -> FormulaInjector:
         injector = FormulaInjector()
 
         with StopWatch("Fetching formula data"):
@@ -210,6 +210,6 @@ class FormulaResolver:
             )
 
         with StopWatch("Computing formulas"):
-            updated_instances = [unit.computed for unit in injector.units]
+            injector.precompute()
 
-        return updated_instances, injector
+        return injector

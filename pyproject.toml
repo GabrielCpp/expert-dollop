@@ -16,16 +16,13 @@ PyJWT = "^2.1.0"
 cryptography = ">=2.6"
 python-multipart = "^0.0.5"
 mypy-extensions = "^0.4.3"
-databases = { extras = ["postgresql"], version = "^0.4.1", optional = true }
-sqlalchemy = { version = "^1.3.20", optional = true }
-google-cloud-firestore = {version = "^2.3.4", optional = true}
 google-cloud-storage = "^1.43.0"
 uvicorn = {extras = ["standard"], version = "^0.16.0"}
 ariadne = "^0.14.0"
+google-cloud-firestore = {version = "^2.3.4"}
+SQLAlchemy = {extras = ["asyncio"], version = "^1.4.29"}
+asyncpg = "^0.25.0"
 
-[tool.poetry.extras]
-postgres = ["databases", "sqlalchemy"]
-firestore = ["google-cloud-firestore"]
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.8.4"
@@ -38,7 +35,6 @@ factory-boy = "^3.1.0"
 invoke = "^1.5.0"
 deepdiff = "^5.5.0"
 alembic = "^1.4.3"
-psycopg2-binary = "^2.9.1"
 mypy = "^0.930"
 pytest-snapshot = "^0.8.0"
 

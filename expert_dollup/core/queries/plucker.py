@@ -10,14 +10,6 @@ Service = TypeVar("Service")
 
 class Plucker(ABC, Generic[Service]):
     @abstractmethod
-    async def pluck_batches(
-        self,
-        build_pluck_filter: Callable[[VarArg(UUID)], QueryFilter],
-        *ids_lists: List[Iterable[UUID]]
-    ) -> AsyncGenerator[List[Domain], None]:
-        pass
-
-    @abstractmethod
     async def plucks(
         self,
         build_pluck_filter: Callable[[VarArg(UUID)], QueryFilter],

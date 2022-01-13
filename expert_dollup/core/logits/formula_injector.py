@@ -19,6 +19,14 @@ class FormulaInjector:
         self.unit_map: Dict[str, List[UnitLike]] = defaultdict(list)
         self.units: List[UnitLike] = []
 
+    def precompute(self) -> None:
+        for unit in self.units:
+            unit.computed
+
+    @property
+    def unit_instances(self) -> List[UnitLike]:
+        return [unit.computed for unit in self.units]
+
     def add_unit(self, unit: UnitLike) -> None:
         for item in unit.path:
             self.unit_map[f"{item}.{unit.name}"].append(unit)

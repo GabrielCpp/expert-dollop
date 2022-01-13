@@ -104,7 +104,7 @@ class ReportLinking:
         project_details: ProjectDetails,
     ) -> LinkingData:
 
-        rows, (unit_instances, injector), datasheet_elements = await gather(
+        rows, injector, datasheet_elements = await gather(
             self._load_report_cache(report_definition),
             self.formula_resolver.compute_all_project_formula(
                 project_details.id, project_details.project_def_id
@@ -125,7 +125,7 @@ class ReportLinking:
         return rows, LinkingData(
             report_definition=report_definition,
             project_details=project_details,
-            unit_instances=unit_instances,
+            unit_instances=injector.unit_instances,
             injector=injector,
             datasheet_elements_by_id=datasheet_elements_by_id,
         )

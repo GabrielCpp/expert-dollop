@@ -19,9 +19,8 @@ class FormulaService(CollectionServiceProxy[Formula]):
     ) -> Dict[UUID, dict]:
         query = (
             self.get_builder()
-            .select_fields("id", "final_ast")
-            .find_by(FormulaFilter(project_def_id=project_def_id))
-            .finalize()
+            .select("id", "final_ast")
+            .where("project_def_id", "==", project_def_id)
         )
         records = await self.fetch_all_records(query)
 
@@ -30,28 +29,18 @@ class FormulaService(CollectionServiceProxy[Formula]):
     async def get_formulas_id_by_name(
         self, project_def_id: UUID, names: Optional[List[str]] = None
     ) -> Dict[str, UUID]:
-        if names is None:
-            query = (
-                self.get_builder()
-                .select_fields("id", "name")
-                .find_by(FormulaFilter(project_def_id=project_def_id))
-                .finalize()
-            )
-
-            records = await self.fetch_all_records(query)
-
-            return {record.get("name"): record.get("id") for record in records}
-
-        if len(names) == 0:
-            return {}
-
         query = (
             self.get_builder()
-            .select_fields("id", "name")
-            .find_by(FormulaFilter(project_def_id=project_def_id))
-            .pluck(FormulaPluckFilter(names=names))
-            .finalize()
+            .select("id", "name")
+            .where("project_def_id", "==", project_def_id)
         )
+
+        if not names is None:
+            if len(names) == 0:
+                return {}
+
+            query = query.where("name", "in", names)
+
         records = await self.fetch_all_records(query)
 
         return {record.get("name"): record.get("id") for record in records}
