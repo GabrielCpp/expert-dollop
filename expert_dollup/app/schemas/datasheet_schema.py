@@ -25,19 +25,20 @@ async def resolve_find_datasheet(
 
 
 @datasheet.field("elements")
-@inject_graphql_handler(
-    GraphqlPageHandler[DatasheetElementService, DatasheetElementDto]
-)
+@inject_graphql_handler(GraphqlPageHandler[DatasheetElement])
 @convert_kwargs_to_snake_case
 async def resolve_elements(
     parent: DatasheetDto,
     info: GraphQLResolveInfo,
     first: int,
-    handler: GraphqlPageHandler[DatasheetElementService, DatasheetElementDto],
+    handler: GraphqlPageHandler[DatasheetElement],
     after: Optional[str] = None,
 ):
     return await handler.handle(
-        DatasheetElementFilter(datasheet_id=parent.id), first, after
+        DatasheetElementDto,
+        DatasheetElementFilter(datasheet_id=parent.id),
+        first,
+        after,
     )
 
 
@@ -54,14 +55,14 @@ async def resolve_create_datasheet(
 
 
 @query.field("findDatasheets")
-@inject_graphql_handler(GraphqlPageHandler[DatasheetService, DatasheetDto])
+@inject_graphql_handler(GraphqlPageHandler[Datasheet])
 @convert_kwargs_to_snake_case
 async def resolve_find_datasheets(
     parent: DatasheetDto,
     info: GraphQLResolveInfo,
     query: str,
     first: int,
-    handler: GraphqlPageHandler[DatasheetService, DatasheetDto],
+    handler: GraphqlPageHandler[Datasheet],
     after: Optional[str] = None,
 ):
-    return await handler.find_all(first, after)
+    return await handler.find_all(DatasheetDto, first, after)

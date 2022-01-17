@@ -20,11 +20,10 @@ async def find_datasheet_elements(
     datasheet_id: UUID,
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = Query(alias="limit", default=100),
-    handler=Depends(
-        Inject(HttpPageHandler[DatasheetElementService, DatasheetElementDto])
-    ),
+    handler=Depends(Inject(HttpPageHandler[DatasheetElement])),
 ):
     return await handler.handle(
+        DatasheetElementDto,
         DatasheetElementFilter(datasheet_id=datasheet_id),
         limit,
         next_page_token,

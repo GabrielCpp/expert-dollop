@@ -5,10 +5,9 @@ from expert_dollup.core.domains.formula import FormulaExpression
 from expert_dollup.shared.starlette_injection import HttpPageHandler
 from expert_dollup.shared.starlette_injection import Inject
 from expert_dollup.shared.starlette_injection import RequestHandler, MappingChain
-from expert_dollup.core.domains import Formula, FormulaFilter
+from expert_dollup.core.domains import FormulaFilter
 from expert_dollup.app.dtos import FormulaExpressionDto, InputFormulaDto
 from expert_dollup.core.usecases import FormulaUseCase
-from expert_dollup.infra.services import FormulaService
 
 router = APIRouter()
 
@@ -18,7 +17,7 @@ async def get_formulas(
     project_def_id: UUID,
     limit: int = 10,
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
-    handler=Depends(Inject(HttpPageHandler[FormulaService, FormulaExpressionDto])),
+    handler=Depends(Inject(HttpPageHandler[FormulaExpression])),
 ):
     return await handler.handle(
         FormulaFilter(project_def_id=project_def_id), limit, next_page_token

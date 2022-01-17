@@ -18,5 +18,7 @@ class Inject:
         try:
             return container.get(self.object_class)
         except Exception as e:
-            logger.error(f"Fail to inject class {self.object_class.__name__}")
+            logger.error(
+                f"Fail to inject class {getattr(self.object_class, '__name__', self.object_class)}"
+            )
             raise e

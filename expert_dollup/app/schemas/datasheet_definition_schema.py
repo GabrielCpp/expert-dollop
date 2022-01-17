@@ -65,19 +65,17 @@ def resolve_element_definition(
 
 
 @query.field("findDatasheetDefinitions")
-@inject_graphql_handler(
-    GraphqlPageHandler[DatasheetDefinitionService, DatasheetDefinitionDto]
-)
+@inject_graphql_handler(GraphqlPageHandler[DatasheetDefinition])
 @convert_kwargs_to_snake_case
 async def resolve_find_datasheet_definitions(
     _: Any,
     info: GraphQLResolveInfo,
     query: str,
     first: int,
-    handler: GraphqlPageHandler[DatasheetDefinitionService, DatasheetDefinitionDto],
+    handler: GraphqlPageHandler[DatasheetDefinition],
     after: Optional[str] = None,
 ):
-    return await handler.find_all(first, after)
+    return await handler.find_all(DatasheetDefinitionDto, first, after)
 
 
 @query.field("findDatasheetDefinition")

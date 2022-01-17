@@ -1,14 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import AsyncGenerator, Callable, Iterable, TypeVar, List, Generic
+from typing import Callable, Iterable, TypeVar, List, Generic
 from uuid import UUID
 from expert_dollup.shared.database_services import QueryFilter
 from mypy_extensions import VarArg
 
 Domain = TypeVar("Domain")
-Service = TypeVar("Service")
 
 
-class Plucker(ABC, Generic[Service]):
+class Plucker(ABC, Generic[Domain]):
     @abstractmethod
     async def plucks(
         self,

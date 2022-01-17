@@ -1,22 +1,16 @@
 import structlog
 from typing import Awaitable, Optional, List
 from uuid import UUID
-from expert_dollup.core.exceptions import (
-    RessourceNotFound,
-    InvalidObject,
-    FactorySeedMissing,
-)
+from expert_dollup.core.exceptions import InvalidObject
 from expert_dollup.core.domains import (
     ProjectDefinitionNode,
-    ProjectDefinition,
     ProjectDefinitionNodeFilter,
-    ProjectDefinitionNodeTree,
 )
 from expert_dollup.infra.services import (
     ProjectDefinitionNodeService,
     ProjectDefinitionService,
 )
-from expert_dollup.shared.database_services import Page
+from expert_dollup.shared.database_services import Page, Paginator
 from expert_dollup.core.builders import ProjectDefinitionTreeBuilder
 from expert_dollup.core.units import NodeValueValidation
 
@@ -27,12 +21,14 @@ class ProjectDefinitionNodeUseCase:
     def __init__(
         self,
         service: ProjectDefinitionNodeService,
+        project_definition_node_paginator: Paginator[ProjectDefinitionNode],
         project_definition_service: ProjectDefinitionService,
         project_definition_node_service: ProjectDefinitionNodeService,
         project_definition_tree_builder: ProjectDefinitionTreeBuilder,
         node_value_validation: NodeValueValidation,
     ):
         self.service = service
+        self.project_definition_node_paginator = project_definition_node_paginator
         self.project_definition_service = project_definition_service
         self.project_definition_node_service = project_definition_node_service
         self.project_definition_tree_builder = project_definition_tree_builder
@@ -61,7 +57,7 @@ class ProjectDefinitionNodeUseCase:
     async def find_project_nodes(
         self, project_def_id: UUID, limit: int, next_page_token: Optional[str] = None
     ) -> Awaitable[Page[ProjectDefinitionNode]]:
-        results = await self.service.find_by_paginated(
+        results = await self.project_definition_node_paginator.find_page(
             ProjectDefinitionNodeFilter(project_def_id=project_def_id),
             limit,
             next_page_token,

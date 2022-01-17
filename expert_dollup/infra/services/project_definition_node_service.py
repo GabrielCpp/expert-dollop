@@ -2,7 +2,7 @@ from typing import List, Dict, Optional
 from uuid import UUID
 from expert_dollup.shared.database_services import (
     CollectionServiceProxy,
-    IdStampedDateCursorEncoder,
+    FieldTokenEncoder,
 )
 from expert_dollup.core.domains import (
     ProjectDefinitionNode,
@@ -16,7 +16,6 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
     class Meta:
         dao = ProjectDefinitionNodeDao
         domain = ProjectDefinitionNode
-        paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")
 
     async def get_fields_id_by_name(
         self, project_def_id: UUID, names: Optional[List[str]] = None

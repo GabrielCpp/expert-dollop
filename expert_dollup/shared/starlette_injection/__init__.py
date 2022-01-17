@@ -8,3 +8,4 @@ from .problem import problem
 from .modeling import CamelModel
 from .handlers import *
 from .detailed_error import DetailedError
+from .type_utils import get_classes, get_base, get_arg

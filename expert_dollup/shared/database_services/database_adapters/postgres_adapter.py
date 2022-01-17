@@ -6,7 +6,6 @@ from typing import (
     Type,
     Union,
 )
-from dataclasses import dataclass
 from pydantic import BaseModel, ConstrainedStr
 from pydantic.fields import ModelField
 from inspect import isclass
@@ -26,11 +25,9 @@ from sqlalchemy import (
     DateTime,
     Integer,
     text,
-    cast,
-    literal,
 )
 from sqlalchemy.sql import select
-from sqlalchemy.dialects.postgresql import insert as pg_insert, ARRAY, array
+from sqlalchemy.dialects.postgresql import insert as pg_insert, ARRAY
 from sqlalchemy.dialects import postgresql
 from expert_dollup.shared.automapping import Mapper
 from ..adapter_interfaces import (
@@ -39,7 +36,6 @@ from ..adapter_interfaces import (
     WhereFilter,
     DbConnection,
 )
-from ..page import Page
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 from ..batch_helper import batch
@@ -214,6 +210,7 @@ class PostgresConnection(DbConnection):
 BATCH_SIZE = 1000
 SUPPORTED_OPS = {
     "==": lambda lhs, rhs: lhs == rhs,
+    "<": lambda lhs, rhs: lhs < rhs,
     "in": lambda lhs, rhs: lhs.in_(rhs),
     "startwiths": lambda lhs, rhs: lhs.like(f"{rhs}%"),
 }
@@ -288,11 +285,11 @@ class PostgresTableService(CollectionService[Domain]):
         engine,
         mapper: Mapper,
     ):
+        self._dao = meta.dao
+        self._domain = meta.domain
         self._mapper = mapper
         self._database = engine
         self._table = tables.get(meta.dao)
-        self._paginator_factory = getattr(meta, "paginator", lambda _: None)
-        self._paginator = self._paginator_factory(self._table)
         self._dao_mapper = CollectionMapper(
             mapper,
             meta.domain,
@@ -309,6 +306,14 @@ class PostgresTableService(CollectionService[Domain]):
             getattr(self._table.c, table_id_name)
             for table_id_name in self.table_id_names
         ]
+
+    @property
+    def domain(self) -> Type:
+        return self._domain
+
+    @property
+    def dao(self) -> Type:
+        return self._dao
 
     async def insert(self, domain: Domain):
         value = self._dao_mapper.map_to_dict(domain)
@@ -346,55 +351,12 @@ class PostgresTableService(CollectionService[Domain]):
         results = self._dao_mapper.map_many_to_domain(records)
         return results
 
-    async def find_all_paginated(
-        self, limit: int = 1000, next_page_token: Optional[str] = None
-    ) -> Page[Domain]:
-        assert not self._paginator is None, "Paginator required"
-        query = self._paginator.build_query(None, limit, next_page_token)
-        records = await self._fetch_all(query=query)
-        results = self._dao_mapper.map_many_to_domain(records)
-        new_next_page_token = (
-            self._paginator.default_token
-            if len(records) == 0
-            else self._paginator.encode_record(records[-1])
-        )
-
-        return Page(
-            next_page_token=new_next_page_token,
-            limit=limit,
-            results=results,
-        )
-
     async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
         query = self._build_query(query_filter)
         records = await self._fetch_all(query=query)
         results = self._dao_mapper.map_many_to_domain(records)
 
         return results
-
-    async def find_by_paginated(
-        self,
-        query_filter: WhereFilter,
-        limit: int,
-        next_page_token: Optional[str] = None,
-    ) -> Page[Domain]:
-        assert not self._paginator is None, "Paginator required"
-        where_filter = self._build_filter(query_filter)
-        query = self._paginator.build_query(where_filter, limit, next_page_token)
-        records = await self._fetch_all(query=query)
-        results = self._dao_mapper.map_many_to_domain(records)
-
-        new_next_page_token = (
-            self._paginator.default_token
-            if len(records) == 0
-            else self._paginator.encode_record(records[-1])
-        )
-
-        return Page[Domain](
-            next_page_token=new_next_page_token,
-            limit=limit,
-            results=results,
-        )
 
     async def find_one_by(self, query_filter: WhereFilter) -> Domain:
         query = self._build_query(query_filter)
@@ -450,12 +412,6 @@ class PostgresTableService(CollectionService[Domain]):
         query = self._table.update().where(where_filter).values(update_fields)
         await self._execute(query)
 
-    def make_record_token(self, domain: Domain) -> str:
-        assert not self._paginator is None, "Paginator required"
-        dao = self._dao_mapper.map_many_to_dict(domain, self._dao)
-        next_page_token = self._paginator.encode_dao(dao)
-        return next_page_token
-
     def get_builder(self) -> QueryBuilder:
         return DbAgnotistQueryBuilder()
 
@@ -464,22 +420,13 @@ class PostgresTableService(CollectionService[Domain]):
         records = await self._fetch_all(query=query)
         return [record._asdict() for record in records]
 
-    async def bulk_insert(self, dicts: List[Union[dict, BaseModel]]):
-        for dicts_batch in batch(dicts, BATCH_SIZE):
-            mapped_batch = [self._dao_mapper.add_version_to_dao(d) for d in dicts_batch]
-            query = pg_insert(self._table, mapped_batch)
-            await self._execute(query)
-        return
-
+    async def bulk_insert(self, daos: List[BaseModel]):
         columns_name = [column.name for column in self._table.c]
+        records = []
 
-        def make_entries(d):
-            if add_version:
-                d = self._dao_mapper.add_version_to_dao(d)
-
-            return [d[name] for name in columns_name]
-
-        records = [make_entries(d) for d in dicts]
+        for dao in daos:
+            d = self._dao_mapper.add_version_to_dao(dao)
+            records.append([d[column_name] for column_name in columns_name])
 
         async with self._database.connect() as connection:
             conn = await connection.get_raw_connection()
@@ -505,12 +452,11 @@ class PostgresTableService(CollectionService[Domain]):
         if len(self.table_ids) == 1:
             return self.table_ids[0] == pk_id
 
-        identifier = self._mapper.map(pk_id, dict)
+        identifier = self._mapper.map(pk_id, dict, pk_id.__class__)
         name = self.table_id_names[0]
         condition = getattr(self._table.c, name) == identifier[name]
 
-        for index in range(0, len(self.table_id_names)):
-            name = self.table_id_names[index]
+        for name in self.table_id_names:
             comparaison = getattr(self._table.c, name) == identifier[name]
             condition = and_(condition, comparaison)
 

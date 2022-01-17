@@ -6,6 +6,7 @@ T = TypeVar("T")
 
 @dataclass
 class Page(Generic[T]):
-    next_page_token: Optional[str] = None
     limit: int = 500
     results: List[T] = field(default_factory=list)
+    next_page_token: Optional[str] = None
+    total_count: Optional[int] = None

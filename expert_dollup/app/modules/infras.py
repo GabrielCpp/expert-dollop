@@ -6,8 +6,14 @@ from expert_dollup.infra.storage_connectors import (
     GoogleCloudStorage,
     StorageProxy,
 )
-from expert_dollup.shared.starlette_injection import factory_of
-from expert_dollup.shared.database_services import create_connection
+from expert_dollup.shared.starlette_injection import (
+    factory_of,
+    get_classes,
+    get_base,
+    get_arg,
+)
+from expert_dollup.shared.database_services import create_connection, Paginator
+from expert_dollup.shared.automapping import Mapper
 from expert_dollup.infra.expert_dollup_storage import ExpertDollupStorage
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 from expert_dollup.infra.validators import SchemaValidator
@@ -17,26 +23,23 @@ import expert_dollup.infra.queries as queries
 import expert_dollup.core.queries as core_queries
 import expert_dollup.infra.expert_dollup_db as daos
 import expert_dollup.infra.storages as storages
-
-
-def is_development():
-    return environ.get("FASTAPI_ENV", "production") == "development"
-
-
-def get_classes(m):
-    return [class_type for class_type in m.__dict__.values() if isclass(class_type)]
-
-
-def bind_database(binder: Binder) -> None:
-    DATABASE_URL = environ["DATABASE_URL"]
-    database = create_connection(DATABASE_URL, daos)
-    binder.bind(ExpertDollupDatabase, to=database, scope=singleton)
+import expert_dollup.infra.paginators as paginators
 
 
 from expert_dollup.infra.storage_connectors import ObjectNotFound
 from expert_dollup.core.exceptions import RessourceNotFound
 
 storage_exception_mappings = {ObjectNotFound: lambda e: RessourceNotFound()}
+
+
+def is_development():
+    return environ.get("FASTAPI_ENV", "production") == "development"
+
+
+def bind_database(binder: Binder) -> None:
+    DATABASE_URL = environ["DATABASE_URL"]
+    database = create_connection(DATABASE_URL, daos)
+    binder.bind(ExpertDollupDatabase, to=database, scope=singleton)
 
 
 def bind_storage(binder: Binder) -> None:
@@ -48,13 +51,13 @@ def bind_storage(binder: Binder) -> None:
     binder.bind(ExpertDollupStorage, to=storage, scope=singleton)
 
     for class_type in get_classes(storages):
-        core_class_type = class_type.__orig_bases__[0]
+        core_class_type = get_base(class_type)
         binder.bind(core_class_type, inject(class_type))
 
 
 def bind_services(binder: Binder) -> None:
     for class_type in get_classes(services):
-        core_class_type = class_type.__orig_bases__[0]
+        core_class_type = get_base(class_type)
         binder.bind(
             core_class_type, factory_of(class_type, database=ExpertDollupDatabase)
         )
@@ -74,10 +77,33 @@ def bind_validators(binder: Binder) -> None:
 
 
 def bind_queries(binder: Binder) -> None:
-    for service_type in get_classes(services):
+    service_by_domain = {
+        get_arg(get_base(service_type)): service_type
+        for service_type in get_classes(services)
+    }
+
+    for domain_type, service_type in service_by_domain.items():
         binder.bind(
-            core_queries.Plucker[service_type],
-            factory_of(queries.PluckQuery, service=service_type),
+            core_queries.Plucker[domain_type],
+            factory_of(
+                queries.PluckQuery[domain_type], service=service_type, mapper=Mapper
+            ),
+        )
+
+
+def bind_paginators(binder: Binder) -> None:
+    service_by_domain = {
+        get_arg(get_base(service_type)): service_type
+        for service_type in get_classes(services)
+    }
+
+    for paginator_type in get_classes(paginators):
+        domain_type = get_arg(get_base(paginator_type))
+        assert domain_type in service_by_domain, f"domain_type: {domain_type}"
+
+        binder.bind(
+            Paginator[domain_type],
+            factory_of(paginator_type, service=service_by_domain[domain_type]),
         )
 
 

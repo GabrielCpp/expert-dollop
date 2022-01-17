@@ -1,18 +1,14 @@
 from typing import List, Dict, Optional
 from uuid import UUID
-from expert_dollup.core.domains import Formula, FormulaFilter, FormulaPluckFilter
+from expert_dollup.core.domains import Formula
 from expert_dollup.infra.expert_dollup_db import ProjectDefinitionFormulaDao
-from expert_dollup.shared.database_services import (
-    CollectionServiceProxy,
-    IdStampedDateCursorEncoder,
-)
+from expert_dollup.shared.database_services import CollectionServiceProxy
 
 
 class FormulaService(CollectionServiceProxy[Formula]):
     class Meta:
         dao = ProjectDefinitionFormulaDao
         domain = Formula
-        paginator = IdStampedDateCursorEncoder.for_fields("name", str, str, "")
 
     async def find_formula_final_ast_by_formula_id(
         self, project_def_id: UUID

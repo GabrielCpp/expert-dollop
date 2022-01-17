@@ -4,12 +4,19 @@ from .adapter_interfaces import QueryBuilder
 
 
 class DbAgnotistQueryBuilder(QueryBuilder):
-    def __init__(self):
-        self._selections = None
-        self._max_records = None
-        self._orders = None
-        self._wheres = []
-        self._constructs = defaultdict(list)
+    def __init__(
+        self,
+        selections=None,
+        max_records=None,
+        orders=None,
+        wheres=None,
+        constructs=None,
+    ):
+        self._selections = selections
+        self._max_records = max_records
+        self._orders = orders
+        self._wheres = wheres or []
+        self._constructs = constructs or defaultdict(list)
 
     def select(self, *names: List[str]) -> QueryBuilder:
         if len(names) == 1 and names[0] == "*":
@@ -41,3 +48,12 @@ class DbAgnotistQueryBuilder(QueryBuilder):
     def apply(self, builder: callable, *args, **kargs) -> QueryBuilder:
         builder(self, *args, **kargs)
         return self
+
+    def clone(self) -> QueryBuilder:
+        return DbAgnotistQueryBuilder(
+            self._selections,
+            self._max_records,
+            self._orders,
+            self._wheres,
+            self._constructs,
+        )

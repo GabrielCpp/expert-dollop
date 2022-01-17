@@ -1,4 +1,4 @@
-from typing import Awaitable, Optional, List
+from typing import Optional, List
 from itertools import chain
 from expert_dollup.core.exceptions import RessourceNotFound, ValidationError
 from expert_dollup.core.domains import (
@@ -12,23 +12,25 @@ from expert_dollup.infra.services import (
     ProjectService,
     DatasheetService,
 )
-from expert_dollup.shared.database_services import Page
+from expert_dollup.shared.database_services import Page, Paginator
 
 
 class TranslationUseCase:
     def __init__(
         self,
         service: TranslationService,
+        translation_paginator: Paginator[Translation],
         ressource_service: RessourceService,
         project_details_service: ProjectService,
         datasheet_service: DatasheetService,
     ):
         self.service = service
+        self.translation_paginator = translation_paginator
         self.ressource_service = ressource_service
         self.project_details_service = project_details_service
         self.datasheet_service = datasheet_service
 
-    async def add(self, domain: Translation) -> Awaitable:
+    async def add(self, domain: Translation):
         if not await self.ressource_service.has(domain.ressource_id):
             raise ValidationError.for_field(
                 "ressource_id", "Missing an attached ressource"
@@ -37,10 +39,10 @@ class TranslationUseCase:
         await self.service.insert(domain)
         return domain
 
-    async def delete_by_id(self, id: TranslationId) -> Awaitable:
+    async def delete_by_id(self, id: TranslationId):
         await self.service.delete_by_id(id)
 
-    async def update(self, domain: Translation) -> Awaitable:
+    async def update(self, domain: Translation):
         if not await self.ressource_service.has(domain.ressource_id):
             raise ValidationError.for_field(
                 "ressource_id", "Missing an attached ressource"
@@ -57,7 +59,7 @@ class TranslationUseCase:
             )
         )
 
-    async def find_by_id(self, id: TranslationId) -> Awaitable[Translation]:
+    async def find_by_id(self, id: TranslationId) -> Translation:
         result = await self.service.find_by_id(id)
 
         if result is None:
@@ -70,8 +72,8 @@ class TranslationUseCase:
         query: TranslationRessourceLocaleQuery,
         limit: int,
         next_page_token: Optional[str],
-    ) -> Awaitable[Page[Translation]]:
-        return await self.service.find_by_paginated(
+    ) -> Page[Translation]:
+        return await self.translation_paginator.find_page(
             query,
             limit,
             next_page_token,

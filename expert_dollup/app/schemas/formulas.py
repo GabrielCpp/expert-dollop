@@ -17,7 +17,7 @@ from .types import query
 
 
 @query.field("findProjectDefinitionFormulas")
-@inject_graphql_handler(GraphqlPageHandler[FormulaService, FormulaExpressionDto])
+@inject_graphql_handler(GraphqlPageHandler[Formula])
 @convert_kwargs_to_snake_case
 async def resolve_find_project_definition_formulas(
     _: Any,
@@ -25,9 +25,9 @@ async def resolve_find_project_definition_formulas(
     project_def_id: UUID,
     query: str,
     first: int,
-    handler: GraphqlPageHandler[DatasheetDefinitionService, DatasheetDefinitionDto],
+    handler: GraphqlPageHandler[Formula],
     after: Optional[str] = None,
 ):
     return await handler.handle(
-        FormulaFilter(project_def_id=project_def_id), first, after
+        FormulaExpressionDto, FormulaFilter(project_def_id=project_def_id), first, after
     )

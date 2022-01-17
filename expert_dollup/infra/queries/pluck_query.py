@@ -7,7 +7,7 @@ from expert_dollup.shared.automapping import Mapper
 Domain = TypeVar("Domain")
 
 
-class PluckQuery(Plucker):
+class PluckQuery(Plucker[Domain]):
     def __init__(self, service: CollectionService[Domain], mapper: Mapper):
         self.service = service
         self.batch_size = 1000

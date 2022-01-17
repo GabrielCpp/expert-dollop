@@ -54,6 +54,10 @@ class QueryBuilder(ABC):
     def apply(self, builder: callable, *args, **kargs) -> "QueryBuilder":
         pass
 
+    @abstractmethod
+    def clone(self) -> "QueryBuilder":
+        pass
+
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")
@@ -61,6 +65,16 @@ WhereFilter = Union[QueryFilter, QueryBuilder]
 
 
 class CollectionService(ABC, Generic[Domain]):
+    @property
+    @abstractmethod
+    def domain(self) -> Type:
+        pass
+
+    @property
+    @abstractmethod
+    def dao(self) -> Type:
+        pass
+
     @abstractmethod
     async def insert(self, domain: Domain):
         pass
@@ -78,22 +92,7 @@ class CollectionService(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
-    async def find_all_paginated(
-        self, limit: int = 1000, next_page_token: Optional[str] = None
-    ) -> Page[Domain]:
-        pass
-
-    @abstractmethod
     async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
-        pass
-
-    @abstractmethod
-    async def find_by_paginated(
-        self,
-        query_filter: WhereFilter,
-        limit: int,
-        next_page_token: Optional[str] = None,
-    ) -> Page[Domain]:
         pass
 
     @abstractmethod
@@ -127,12 +126,6 @@ class CollectionService(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
-    def make_record_token(self, domain: Domain) -> str:
-        """
-        Return next page token for a domain object.
-        """
-
-    @abstractmethod
     def get_builder(self) -> QueryBuilder:
         """
         Return new query builder
@@ -140,6 +133,21 @@ class CollectionService(ABC, Generic[Domain]):
 
     @abstractmethod
     async def fetch_all_records(self, builder: QueryBuilder) -> dict:
+        pass
+
+
+class Paginator(ABC, Generic[Domain]):
+    @abstractmethod
+    async def find_page(
+        self,
+        builder: Optional[WhereFilter],
+        limit: int,
+        next_page_token: Optional[str] = None,
+    ) -> Page[Domain]:
+        pass
+
+    @abstractmethod
+    def make_record_token(self, domain: Domain) -> str:
         pass
 
 
