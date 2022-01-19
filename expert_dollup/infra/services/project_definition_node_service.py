@@ -20,26 +20,19 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
     async def get_fields_id_by_name(
         self, project_def_id: UUID, names: Optional[List[str]] = None
     ) -> Dict[str, UUID]:
-        if names is None:
-            query = (
-                self.get_builder()
-                .select("id", "name")
-                .where("project_def_id", "==", project_def_id)
-            )
-
-            records = await self.fetch_all_records(query)
-
-            return {record.get("name"): record.get("id") for record in records}
-
-        if len(names) == 0:
-            return {}
 
         query = (
             self.get_builder()
             .select("id", "name")
             .where("project_def_id", "==", project_def_id)
-            .where("name", "in", names)
         )
+
+        if not names is None:
+            if len(names) == 0:
+                return {}
+
+            query = query.where("name", "in", names)
+
         records = await self.fetch_all_records(query)
 
         return {record.get("name"): record.get("id") for record in records}
@@ -50,7 +43,7 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
 
         parent_id = path[-1]
         parent_path = path[0:-1]
-        count = await self.count(
+        count = await self.exists(
             ProjectDefinitionNodeFilter(path=parent_path, id=parent_id)
         )
 
@@ -69,16 +62,14 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
     async def find_children(
         self, project_def_id: UUID, path: List[UUID]
     ) -> List[ProjectDefinitionNode]:
-        query = (
-            self.get_builder()
-            .where("project_def_id", "==", project_def_id)
-            .where("path", "startwiths", join_uuid_path(path))
-            .orderby(("level", "desc"))
-        )
+        query = self.get_builder().where("project_def_id", "==", project_def_id)
+
+        if len(path) > 0:
+            query.where("path", "startwiths", join_uuid_path(path))
 
         results = await self.find_by(query)
 
-        return results
+        return sorted(results, key=lambda x: len(x.path))
 
     async def find_root_sections(
         self, project_def_id: UUID

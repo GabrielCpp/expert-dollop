@@ -85,7 +85,7 @@ class FormulaResolver:
             if len(unkowns_names) > 0:
                 unkowns_names_joined = ",".join(unkowns_names)
                 raise Exception(
-                    f"There unknown name in expression [{unkowns_names_joined}] in {formula_expression.name}"
+                    f"There unknown name ({unkowns_names_joined}) in expression  in {formula_expression.name}"
                 )
 
         formulas = [

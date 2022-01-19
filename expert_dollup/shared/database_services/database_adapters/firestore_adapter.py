@@ -1,6 +1,14 @@
-from typing import List, TypeVar, Optional, Dict, Type, Tuple, Union
+from typing import Callable, Iterable, List, TypeVar, Optional, Dict, Type, Set
 from dataclasses import dataclass
-from google.cloud.firestore import AsyncClient
+from collections import defaultdict
+from os import environ
+from pydantic import BaseModel
+from google.cloud.firestore import (
+    AsyncClient,
+    AsyncWriteBatch,
+    AsyncCollectionReference,
+    Query,
+)
 from google.cloud.firestore_v1 import Increment
 from google.auth.credentials import AnonymousCredentials
 from expert_dollup.shared.automapping import Mapper
@@ -9,6 +17,7 @@ from ..exceptions import RecordNotFound
 from ..batch_helper import batch
 from ..collection_mapper import CollectionMapper
 from ..db_agnotist_query_builder import DbAgnotistQueryBuilder
+from ..simplifier import Simplifier
 from ..adapter_interfaces import (
     CollectionService,
     QueryBuilder,
@@ -18,23 +27,32 @@ from ..adapter_interfaces import (
 
 
 @dataclass
-class FirestoreCollection:
+class CollectionDetails:
     name: str
     pimary_keys: List[str]
     collection_count: bool
-    key_counts: Dict[str, List[str]]
+    key_counts: Set[Set[str]]
+
+    @property
+    def is_counting_enabled(self) -> bool:
+        return self.collection_count is True or len(self.key_counts) > 0
 
 
 class FirestoreConnection(DbConnection):
     def __init__(self, connection_string: str, **kwargs):
         self.connection_string = connection_string
-        self._client = AsyncClient(
-            project="my-project", credentials=AnonymousCredentials()
-        )
-        self.collections: Dict[Type, FirestoreCollection] = {}
+
+        options = {}
+
+        if "FIRESTORE_EMULATOR_HOST" in environ:
+            options["project"] = "my-project"
+            options["credentials"] = AnonymousCredentials()
+
+        self._client = AsyncClient(**options)
+        self.collections: Dict[Type, CollectionDetails] = {}
 
     def get_collection_service(self, meta: Type, mapper: Mapper):
-        return FirestoreTableService(meta, self.collections, self._client, mapper)
+        return FirestoreCollection(meta, self.collections, self._client, mapper)
 
     def load_metadatas(self, dao_types):
         self.collections = {}
@@ -50,20 +68,27 @@ class FirestoreConnection(DbConnection):
             meta = dao_type.Meta
             table_name = schema["title"]
             pimary_keys = list(meta.pk) if isinstance(meta.pk, tuple) else [meta.pk]
-            self.collections[dao_type] = FirestoreCollection(
+            options = getattr(meta, "options", {}).get("firestore", {})
+            self.collections[dao_type] = CollectionDetails(
                 name=table_name,
                 pimary_keys=pimary_keys,
-                collection_count=True,
-                key_counts={},
+                collection_count=options.get("collection_count", False),
+                key_counts=options.get("key_counts", set()),
             )
 
     async def truncate_db(self, names: Optional[List[str]] = None):
-        if names is None:
-            names = [collection.name for collection in self.collections.values()]
 
-        for name in names:
-            async for doc in self._client.collection(name).stream():
-                await doc.reference.delete()
+        if names is None:
+            import os
+
+            emulator_host = environ["FIRESTORE_EMULATOR_HOST"]
+            os.system(
+                f"curl -X DELETE 'http://{emulator_host}/emulator/v1/projects/my-project/databases/(default)/documents' > /dev/null"
+            )
+        else:
+            for name in names:
+                async for doc in self._client.collection(name).stream():
+                    await doc.reference.delete()
 
     async def drop_db(self):
         await self.truncate_db()
@@ -79,106 +104,192 @@ class FirestoreConnection(DbConnection):
         return True
 
 
+def startwiths_op(lhs, rhs, query):
+    assert isinstance(rhs, str), "Startwiths only support string"
+    assert (
+        len(rhs) > 0
+    ), "Startwiths argument must not be empty string, otherwise just remove it from query"
+
+    return query.where(lhs, ">=", rhs).where(lhs, "<", rhs[:-1] + chr(ord(rhs[-1]) + 1))
+
+
+BATCH_SIZE = 500
+COLLECTION_STATS_ID = "--stats--"
 SUPPORTED_OPS = {
-    "==": lambda lhs, rhs: lhs == rhs,
-    "in": lambda lhs, rhs: lhs.in_(rhs),
-    "startwiths": lambda lhs, rhs: lhs.like(f"{rhs}%"),
+    "<": lambda lhs, rhs, query: query.where(lhs, "<", rhs),
+    "==": lambda lhs, rhs, query: query.where(lhs, "==", rhs),
+    "in": lambda lhs, rhs, query: query.where(lhs, "in", rhs),
+    "startwiths": startwiths_op,
 }
 
 
 class QueryCompiler:
-    def compile_query(self, builder: DbAgnotistQueryBuilder, collection):
-        query = collection
+    def __init__(self, collection: AsyncCollectionReference):
+        self.collection = collection
 
-        for name in builder._selections:
-            pass
+    def compile_query(self, builder: DbAgnotistQueryBuilder):
+        query = self.collection
+
+        if not builder._selections is None:
+            has_one_item = len(builder._selections) == 1
+
+            if has_one_item and builder._selections[0] == "1":
+                query = query.select(["__name__"])
+            elif has_one_item and builder._selections[0] == "*":
+                pass
+            else:
+                query = query.select(builder._selections)
 
         for (column_name, op, value) in builder._wheres:
             apply_op = SUPPORTED_OPS[op]
-            query = apply_op(column_name, value, query)
+            query = apply_op(column_name, Simplifier.simplify(value), query)
 
         if not builder._orders is None:
-            pass
+            for name, direction in builder._orders:
+                query = query.order_by(
+                    name,
+                    direction=Query.DESCENDING
+                    if direction == "desc"
+                    else Query.ASCENDING,
+                )
 
         if not builder._max_records is None:
             query = query.limit(builder._max_records)
 
         return query
 
+    def build_count_key_id(self, d, keys: Set[str]):
+        return "count_" + "_".join(str(d[name]) for name in sorted(keys))
+
+
+class BatchProxy:
+    def __init__(
+        self,
+        make_batch: Callable[[], AsyncWriteBatch],
+        collection_details: CollectionDetails,
+        query_compiler: QueryCompiler,
+    ) -> None:
+        self._make_batch = make_batch
+        self._batch = make_batch()
+        self.collection_count = 0
+        self.keys_count = defaultdict(int)
+        self._query_compiler = query_compiler
+        self._collection_details = collection_details
+
+    def set(self, doc_ref, d):
+        self.collection_count += 1
+        for keys in self._collection_details.key_counts:
+            count_id = self._query_compiler.build_count_key_id(d, keys)
+            self.keys_count[count_id] += 1
+
+        self._batch.set(doc_ref, d)
+
+    def delete(self, doc_ref, d):
+        self.collection_count -= 1
+        for keys in self._collection_details.key_counts:
+            count_id = self._query_compiler.build_count_key_id(d, keys)
+            self.keys_count[count_id] -= 1
+
+        self._batch.delete(doc_ref)
+
+    def update(self, doc_ref, d):
+        self._batch.update(doc_ref, d)
+
+    @property
+    def count_related_updates(self) -> int:
+        count = 1 if self._collection_details.collection_count else 0
+        count += len(self.keys_count)
+        return count
+
+    @property
+    def is_batch_full(self) -> bool:
+        return self.collection_count + self.count_related_updates == BATCH_SIZE
+
+    async def commit(self):
+        self._add_counter_updates()
+        await self._batch.commit()
+        self._batch = self._make_batch()
+        self.collection_count = 0
+        self.keys_count = defaultdict(int)
+
+    def _add_counter_updates(self):
+        if self._collection_details.collection_count and self.collection_count != 0:
+            doc_ref = self._query_compiler.collection.document(COLLECTION_STATS_ID)
+            self._batch.set(
+                doc_ref, {"count": Increment(self.collection_count)}, merge=True
+            )
+
+        for doc_id, increment in self.keys_count.items():
+            if increment == 0:
+                continue
+
+            doc_ref = self._query_compiler.collection.document(doc_id)
+            self._batch.set(doc_ref, {"count": Increment(increment)}, merge=True)
+
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")
-BATCH_SIZE = 500
 
 
-class FirestoreTableService(CollectionService[Domain]):
+class FirestoreCollection(CollectionService[Domain]):
     def __init__(
         self,
         meta: Type,
-        tables_details: Dict[Type, FirestoreCollection],
+        tables_details: Dict[Type, CollectionDetails],
         client: AsyncClient,
         mapper: Mapper,
     ):
-        self.dao = meta.dao
-        self.domain = meta.domain
+        self._dao = meta.dao
+        self._domain = meta.domain
         self._mapper = mapper
         self._client = client
         self._table_details = tables_details.get(meta.dao)
         self._collection = client.collection(self._table_details.name)
+        self._query_compiler = QueryCompiler(self._collection)
         self._dao_mapper = CollectionMapper(
             mapper,
             meta.domain,
             meta.dao,
             getattr(meta.dao.Meta, "version", None),
             getattr(meta.dao.Meta, "version_mappers", {}),
+            Simplifier.simplify,
+            record_to_dict=lambda r: r.to_dict(),
         )
+
+    @property
+    def domain(self) -> Type:
+        return self._domain
+
+    @property
+    def dao(self) -> Type:
+        return self._dao
 
     async def insert(self, domain: Domain):
         d = self._dao_mapper.map_to_dict(domain)
-        id = self._get_document_id(d)
-        await self._collection.document(id).set(d)
+
+        if self._table_details.is_counting_enabled:
+            await self._batch_operation([d], lambda b, doc_ref, d: b.set(doc_ref, d))
+        else:
+            doc_id = self._build_id(d)
+            await self._collection.document(doc_id).set(d)
 
     async def insert_many(self, domains: List[Domain]):
         dicts = self._dao_mapper.map_many_to_dict(domains)
-        for dicts_batch in batch(dicts, BATCH_SIZE):
-            b = self._client.batch()
-
-            for d in dicts_batch:
-                id = self._get_document_id(d)
-                b.set(id, d)
-
-            b.commit()
+        await self._batch_operation(dicts, lambda b, doc_ref, d: b.set(doc_ref, d))
 
     async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):
         value_dict = self._mapper.map(value_filter, dict, value_filter.__class__)
-        query = self._build_query(query_filter).limit(BATCH_SIZE)
-        total_count = 0
-        count = 0
-        act = True
+        value_dict = Simplifier.simplify(value_dict)
 
-        while act:
-            async for doc in query.stream():
-                doc.update(value_dict)
-                count += 1
-
-            total_count += count
-
-            if count >= BATCH_SIZE:
-                count = 0
-            else:
-                act = False
-
-        return total_count
+        return await self._streamed_batch_operation(
+            query_filter, lambda b, doc_ref, d: b.update(doc_ref, value_dict)
+        )
 
     async def upserts(self, domains: List[Domain]) -> None:
         dicts = self._dao_mapper.map_many_to_dict(domains)
-        for dicts_batch in batch(dicts, BATCH_SIZE):
-            b = self._client.batch()
-
-            for d in dicts_batch:
-                b.set(d, {"merge": True})
-
-            b.commit()
+        await self._batch_operation(
+            dicts, lambda b, doc_ref, d: b.set(doc_ref, d, merge=True)
+        )
 
     async def find_all(self, limit: int = 1000) -> List[Domain]:
         results = []
@@ -208,52 +319,146 @@ class FirestoreTableService(CollectionService[Domain]):
         raise RecordNotFound()
 
     async def find_by_id(self, pk_id: Id) -> Domain:
-        doc = self._collection.document(self._build_id(pk_id)).get()
+        document_id = self._build_id_from_pk(pk_id)
+        doc = await self._collection.document(document_id).get()
 
-        if doc is None:
-            raise RecordNotFound()
+        if doc.exists:
+            return self._dao_mapper.map_to_domain(doc)
 
-        return self._dao_mapper.map_to_domain(doc)
+        raise RecordNotFound()
 
     async def has(self, pk_id: Id) -> bool:
-        doc = await self._collection.document(self._build_id(pk_id)).get()
-        return not doc is None
+        document_id = self._build_id_from_pk(pk_id)
+        doc = await self._collection.document(document_id).get()
+        return doc.exists
+
+    async def exists(self, query_filter: WhereFilter) -> bool:
+        query = self._build_query(query_filter).limit(1)
+
+        async for doc in query.stream():
+            return True
+
+        return False
 
     async def count(self, query_filter: Optional[WhereFilter] = None) -> int:
-        pass
+        counter_id = self._build_counter_id(query_filter)
+        doc = await self._collection.document(counter_id).get()
+
+        if doc.exists:
+            return int(doc.to_dict().get("count"))
+
+        return 0
 
     async def delete_by(self, query_filter: WhereFilter):
+        return await self._streamed_batch_operation(
+            query_filter, lambda b, doc_ref, d: b.delete(doc_ref, d)
+        )
+
+    async def delete_by_id(self, pk_id: Id):
+        id = self._build_id_from_pk(pk_id)
+        await self._collection.document(id).delete()
+
+    def get_builder(self) -> QueryBuilder:
+        return DbAgnotistQueryBuilder()
+
+    async def fetch_all_records(self, builder: WhereFilter) -> List[dict]:
+        query = self._build_query(builder)
+        results = []
+
+        async for doc in query.stream():
+            results.append(doc)
+
+        return results
+
+    async def bulk_insert(self, daos: List[BaseModel]):
+        dicts = (self._dao_mapper.add_version_to_dao(dao) for dao in daos)
+        await self._batch_operation(dicts, lambda b, doc_ref, d: b.set(doc_ref, d))
+
+    async def _batch_operation(self, dicts: Iterable[dict], act: callable):
+        for dicts_batch in batch(dicts, BATCH_SIZE):
+            b = BatchProxy(
+                self._client.batch, self._table_details, self._query_compiler
+            )
+
+            for d in dicts_batch:
+                doc_id = self._build_id(d)
+                doc_ref = self._collection.document(doc_id)
+                act(b, doc_ref, d)
+
+                if b.is_batch_full:
+                    await b.commit()
+
+            await b.commit()
+
+    async def _streamed_batch_operation(self, query_filter: WhereFilter, act: callable):
         query = self._build_query(query_filter).limit(BATCH_SIZE)
         total_count = 0
         count = 0
-        act = True
+        in_progress = True
+        b = BatchProxy(self._client.batch, self._table_details, self._query_compiler)
 
-        while act:
+        while in_progress:
             async for doc in query.stream():
-                await doc.reference.delete()
+                act(b, doc.reference, doc)
                 count += 1
+
+                if b.is_batch_full:
+                    await b.commit()
+
+            await b.commit()
 
             total_count += count
 
             if count >= BATCH_SIZE:
                 count = 0
             else:
-                act = False
+                in_progress = False
 
         return total_count
 
-    async def delete_by_id(self, pk_id: Id):
-        id = self._build_id(pk_id)
-        await self._collection.document(id).delete()
+    def _build_id(self, d):
+        if len(self._table_details.pimary_keys) == 1:
+            name = self._table_details.pimary_keys[0]
+            return str(d[name])
 
-    def get_builder(self) -> QueryBuilder:
-        return DbAgnotistQueryBuilder()
+        if len(self._table_details.pimary_keys) > 1:
+            return "_".join(str(d[name]) for name in self._table_details.pimary_keys)
 
-    def _get_document_id(self, d):
-        pass
+        assert False
+
+    def _build_id_from_pk(self, pk):
+        if len(self._table_details.pimary_keys) == 1:
+            return str(pk)
+
+        if len(self._table_details.pimary_keys) > 1:
+            d = self._mapper.map(pk, dict, pk.__class__)
+            return "_".join(str(d[name]) for name in self._table_details.pimary_keys)
+
+        return pk
+
+    def _build_counter_id(self, query_filter: Optional[WhereFilter]) -> str:
+        if query_filter is None:
+            assert (
+                self._table_details.collection_count is True
+            ), f"Collection count is not enabled for this {self._table_details.name}"
+            return COLLECTION_STATS_ID
+
+        d = self._mapper.map(query_filter, dict, query_filter.__class__)
+        keys_set = frozenset(d.keys())
+        assert (
+            keys_set in self._table_details.key_counts
+        ), f"Filter type '{keys_set}' is unsuported by {self._table_details.name}, avaiable options are {self._table_details.key_counts}"
+
+        return self._query_compiler.build_count_key_id(d, keys_set)
 
     def _build_query(self, builder: WhereFilter):
         if isinstance(builder, DbAgnotistQueryBuilder):
-            return QueryCompiler.compile_query(builder, self._collection)
+            return self._query_compiler.compile_query(builder)
 
-        return self._build_filter(builder)
+        query = self._query_compiler.collection
+        column_value_dict = self._mapper.map(builder, dict)
+        for (column_name, value) in column_value_dict.items():
+            simplified_value = Simplifier.simplify(value)
+            query = query.where(column_name, "==", simplified_value)
+
+        return query

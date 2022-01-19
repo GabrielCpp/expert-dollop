@@ -18,19 +18,17 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
     async def find_children(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None
     ) -> Awaitable[ProjectNode]:
-        builder = (
-            self.get_builder()
-            .where("project_id", "==", project_id)
-            .where("path", "startwiths", join_uuid_path(path))
-            .orderby(("level", "desc"))
-        )
+        builder = self.get_builder().where("project_id", "==", project_id)
 
         if not level is None:
             builder.where("level", "==", level)
 
+        if len(path) > 0:
+            builder.where("path", "startwiths", join_uuid_path(path))
+
         results = await self.find_by(builder)
 
-        return results
+        return sorted(results, key=lambda x: len(x.path))
 
     async def remove_collection(self, container: ProjectNode) -> Awaitable:
         builder = (

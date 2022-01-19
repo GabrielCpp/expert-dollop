@@ -65,6 +65,9 @@ class CollectionServiceProxy(CollectionService[Domain]):
     async def has(self, pk_id: Id) -> bool:
         return await self._impl.has(pk_id)
 
+    async def exists(self, query_filter: WhereFilter) -> bool:
+        return await self._impl.exists(query_filter)
+
     async def count(self, query_filter: Optional[WhereFilter] = None) -> int:
         return await self._impl.count(query_filter)
 

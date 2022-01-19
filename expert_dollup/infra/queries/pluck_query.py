@@ -10,7 +10,7 @@ Domain = TypeVar("Domain")
 class PluckQuery(Plucker[Domain]):
     def __init__(self, service: CollectionService[Domain], mapper: Mapper):
         self.service = service
-        self.batch_size = 1000
+        self.batch_size = 10
         self.mapper = mapper
 
     async def plucks(

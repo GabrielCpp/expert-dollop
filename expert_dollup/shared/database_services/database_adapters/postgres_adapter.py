@@ -296,6 +296,7 @@ class PostgresTableService(CollectionService[Domain]):
             meta.dao,
             getattr(meta.dao.Meta, "version", None),
             getattr(meta.dao.Meta, "version_mappers", {}),
+            record_to_dict=lambda r: r._asdict(),
         )
 
         self.table_id_names = [
@@ -388,6 +389,11 @@ class PostgresTableService(CollectionService[Domain]):
         where_filter = self._build_id_filter(pk_id)
         query = self._table.delete().where(where_filter)
         await self._execute(query=query)
+
+    async def exists(self, query_filter: WhereFilter) -> bool:
+        query = self._build_query(query_filter)
+        record = await self._fetch_one(query)
+        return not record is None
 
     async def has(self, pk_id: Id) -> bool:
         where_filter = self._build_id_filter(pk_id)

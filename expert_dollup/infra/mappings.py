@@ -1,5 +1,6 @@
 from typing import List
 from uuid import UUID
+from expert_dollup.shared.database_services import JsonSerializer
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import (
     Mapper,
@@ -9,8 +10,6 @@ from expert_dollup.shared.automapping import (
 from expert_dollup.core.utils.path_transform import (
     split_uuid_path,
     join_uuid_path,
-    list_uuid_to_str,
-    list_str_to_uuid,
 )
 
 from expert_dollup.infra.expert_dollup_db import *
@@ -545,7 +544,7 @@ def map_formula_to_dao(src: Formula, mapper: Mapper) -> ProjectDefinitionFormula
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
-        final_ast=src.final_ast,
+        final_ast=JsonSerializer.encode(src.final_ast),
         dependency_graph=FormulaDependencyGraphDao(
             formulas=[
                 FormulaDependencyDao(
@@ -570,7 +569,7 @@ def map_formula_from_dao(src: ProjectDefinitionFormulaDao, mapper: Mapper) -> Fo
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
-        final_ast=src.final_ast,
+        final_ast=JsonSerializer.decode(src.final_ast),
         dependency_graph=FormulaDependencyGraph(
             formulas=[
                 FormulaDependency(

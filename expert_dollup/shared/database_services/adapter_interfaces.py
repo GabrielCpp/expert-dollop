@@ -122,14 +122,16 @@ class CollectionService(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
+    async def exists(self, query_filter: WhereFilter) -> bool:
+        pass
+
+    @abstractmethod
     async def count(self, query_filter: Optional[WhereFilter] = None) -> int:
         pass
 
     @abstractmethod
     def get_builder(self) -> QueryBuilder:
-        """
-        Return new query builder
-        """
+        pass
 
     @abstractmethod
     async def fetch_all_records(self, builder: QueryBuilder) -> dict:
@@ -164,6 +166,11 @@ def create_connection(
                 from .database_adapters.postgres_adapter import PostgresConnection
 
                 DbConnection._REGISTRY["postgresql+asyncpg"] = PostgresConnection
+
+            if connector == "firestore+async":
+                from .database_adapters.firestore_adapter import FirestoreConnection
+
+                DbConnection._REGISTRY["firestore+async"] = FirestoreConnection
 
     build_connection = DbConnection._REGISTRY.get(scheme)
 
