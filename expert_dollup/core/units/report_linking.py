@@ -6,15 +6,13 @@ from itertools import groupby, chain
 from dataclasses import dataclass
 from asyncio import gather
 from hashlib import sha3_256
-from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.infra.services import DatasheetElementService
 from expert_dollup.core.logits import FormulaInjector
-from expert_dollup.core.units import FormulaResolver
-from expert_dollup.core.builders import ReportRowCacheBuilder
+from .formula_resolver import FormulaResolver
+from .report_row_cache import ReportRowCache
 from expert_dollup.core.exceptions import (
     ReportGenerationError,
     AstEvaluationError,
-    RessourceNotFound,
 )
 from expert_dollup.core.domains import *
 from expert_dollup.shared.database_services.time_it import log_execution_time_async
@@ -41,35 +39,17 @@ class LinkingData:
 class ReportLinking:
     def __init__(
         self,
-        report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
-        unit_instance_storage: ObjectStorage[UnitInstanceCache, UnitInstanceCacheKey],
         datasheet_element_service: DatasheetElementService,
         expression_evaluator: ExpressionEvaluator,
-        report_row_cache_builder: ReportRowCacheBuilder,
+        report_row_cache_builder: ReportRowCache,
         formula_resolver: FormulaResolver,
         clock: Clock,
     ):
-        self.report_def_row_cache = report_def_row_cache
-        self.unit_instance_storage = unit_instance_storage
         self.datasheet_element_service = datasheet_element_service
         self.expression_evaluator = expression_evaluator
         self.report_row_cache_builder = report_row_cache_builder
         self.formula_resolver = formula_resolver
         self.clock = clock
-
-    @log_execution_time_async
-    async def _load_report_cache(self, report_definition: ReportDefinition):
-        key = ReportRowKey(
-            project_def_id=report_definition.project_def_id,
-            report_definition_id=report_definition.id,
-        )
-
-        try:
-            return await self.report_def_row_cache.load(key)
-        except RessourceNotFound:
-            rows = await self.report_row_cache_builder.refresh_cache(report_definition)
-            await self.report_def_row_cache.save(key, rows)
-            return rows
 
     @log_execution_time_async
     async def link_report(
@@ -105,7 +85,7 @@ class ReportLinking:
     ) -> LinkingData:
 
         rows, injector, datasheet_elements = await gather(
-            self._load_report_cache(report_definition),
+            self.report_row_cache_builder.refresh_cache(report_definition),
             self.formula_resolver.compute_all_project_formula(
                 project_details.id, project_details.project_def_id
             ),

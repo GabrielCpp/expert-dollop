@@ -13,3 +13,7 @@ class ObjectStorage(ABC, Generic[Domain, ObjectContext]):
     @abstractmethod
     async def load(self, context: ObjectContext) -> Domain:
         pass
+
+    @abstractmethod
+    def get_url(self, context: ObjectContext) -> str:
+        pass

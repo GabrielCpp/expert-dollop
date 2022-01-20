@@ -113,7 +113,6 @@ def create_project_definition_tables():
         Column("attached_to_type_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
         Column("expression", String, nullable=False),
-        Column("final_ast", postgresql.JSON(), nullable=False),
         Column("dependency_graph", postgresql.JSON(), nullable=False),
     )
 

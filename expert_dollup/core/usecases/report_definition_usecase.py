@@ -2,7 +2,7 @@ from re import I
 from uuid import UUID
 from typing import List
 from expert_dollup.core.object_storage import ObjectStorage
-from expert_dollup.core.builders import ReportRowCacheBuilder
+from expert_dollup.core.units import ReportRowCache
 from expert_dollup.core.domains import *
 from expert_dollup.infra.services import *
 
@@ -11,7 +11,7 @@ class ReportDefinitionUseCase:
     def __init__(
         self,
         report_definition_service: ReportDefinitionService,
-        report_row_cache_builder: ReportRowCacheBuilder,
+        report_row_cache_builder: ReportRowCache,
         report_definition_row_cache_service: ObjectStorage[
             ReportRowsCache, ReportRowKey
         ],

@@ -1,6 +1,7 @@
 from typing import Callable
-from .storage_client import StorageClient
 from typing import Dict, Type, Callable
+from pathlib import Path
+from .storage_client import StorageClient
 
 
 class StorageProxy(StorageClient):
@@ -23,6 +24,10 @@ class StorageProxy(StorageClient):
             return await self._impl_client.download_binary(path)
         except Exception as e:
             self._forward_exception(e)
+
+    @property
+    def namespace_prefix(self) -> Path:
+        return self._impl_client.namespace_prefix
 
     def _forward_exception(self, e: Exception) -> None:
         build_error = self._exception_mappings.get(type(e))

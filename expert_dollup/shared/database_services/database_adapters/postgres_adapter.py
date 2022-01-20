@@ -46,6 +46,25 @@ from ..db_agnotist_query_builder import DbAgnotistQueryBuilder
 NoneType = type(None)
 
 
+import sqlalchemy.types as types
+
+
+class UUIDWrap(types.TypeDecorator):
+    """
+    Wrap asyncpg uuid to ensure they are converted to python uuid
+    """
+
+    impl = postgresql.UUID(as_uuid=True)
+
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        return value
+
+    def process_result_value(self, value, dialect):
+        return UUID(bytes=value.bytes)
+
+
 class PostgresColumnBuilder:
     def __init__(self):
         self._column_builder = {
@@ -109,7 +128,7 @@ class PostgresColumnBuilder:
         return String
 
     def _build_uuid(self, schema: dict, type_args: List[Type]):
-        return postgresql.UUID(as_uuid=True)
+        return UUIDWrap()
 
     def _build_bool(self, schema: dict, type_args: List[Type]):
         return Boolean
@@ -131,7 +150,7 @@ class PostgresColumnBuilder:
             return postgresql.ARRAY(String, dimensions=1)
 
         if type_args[0] is UUID:
-            return ARRAY(postgresql.UUID(as_uuid=True), dimensions=1)
+            return ARRAY(UUIDWrap(), dimensions=1)
 
         return self._make_json_column_type()
 

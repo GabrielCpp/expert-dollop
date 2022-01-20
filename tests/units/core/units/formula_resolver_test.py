@@ -2,108 +2,28 @@ import pytest
 from uuid import UUID
 from decimal import Decimal
 from tests.fixtures.mock_interface_utils import StrictInterfaceSetup
-from expert_dollup.infra.services import *
+from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.domains import *
 from expert_dollup.core.queries import *
 from expert_dollup.core.units import *
 from expert_dollup.core.builders import *
+from expert_dollup.infra.services import *
 from tests.fixtures import *
-
-project_seed = ProjectSeed(
-    {
-        "rootA": DefNodeSeed(
-            {
-                "1": NodeSeed(
-                    formulas={
-                        "formulaA": FormulaSeed(
-                            expression="fieldB*fieldA",
-                            formula_dependencies=[],
-                            node_dependencies=["fieldB", "fieldA"],
-                            calculation_details="<fieldB, 2> * sum(<fieldA, 12>)",
-                            result=Decimal(24),
-                        ),
-                        "formulaB": FormulaSeed(
-                            expression="fieldB*sectionA_formula",
-                            formula_dependencies=["sectionA_formula"],
-                            node_dependencies=["fieldB"],
-                        ),
-                    }
-                )
-            }
-        ),
-        "rootB": DefNodeSeed(),
-        "subSectionA": DefNodeSeed({"1": NodeSeed(parent="rootA-1")}),
-        "formA": DefNodeSeed({"1": NodeSeed(parent="subSectionA-1")}),
-        "sectionA": DefNodeSeed(
-            {
-                "1": NodeSeed(
-                    parent="formA-1",
-                    formulas={
-                        "sectionA_formula": FormulaSeed(
-                            expression="fieldA-2",
-                            formula_dependencies=[],
-                            node_dependencies=["fieldA"],
-                        ),
-                    },
-                ),
-                "2": NodeSeed(
-                    parent="formA-1",
-                    formulas={
-                        "sectionA_formula": FormulaSeed(
-                            expression="fieldA-2",
-                            formula_dependencies=[],
-                            node_dependencies=["fieldA"],
-                        ),
-                    },
-                ),
-                "3": NodeSeed(
-                    parent="formA-1",
-                    formulas={
-                        "sectionA_formula": FormulaSeed(
-                            expression="fieldA-2",
-                            formula_dependencies=[],
-                            node_dependencies=["fieldA"],
-                        ),
-                    },
-                ),
-            }
-        ),
-        "fieldA": DefNodeSeed(
-            {
-                "1": NodeSeed(
-                    parent="sectionA-1",
-                    value=Decimal(5),
-                ),
-                "2": NodeSeed(
-                    parent="sectionA-2",
-                    value=Decimal(4),
-                ),
-                "3": NodeSeed(
-                    parent="sectionA-3",
-                    value=Decimal(3),
-                ),
-            }
-        ),
-        "sectionB": DefNodeSeed({"1": NodeSeed(parent="formA-1")}),
-        "fieldB": DefNodeSeed({"1": NodeSeed(parent="sectionB-1", value=Decimal(2))}),
-    }
-)
 
 
 @pytest.mark.asyncio
 async def test_given_unit_instances_should_compute_collection():
-    formula_service = StrictInterfaceSetup(FormulaService)
     project_node_service = StrictInterfaceSetup(ProjectNodeService)
     unit_instance_builder = StrictInterfaceSetup(UnitInstanceBuilder)
+    stage_formulas_storage = StrictInterfaceSetup(ObjectStorage)
 
-    fixture = ProjectInstanceFactory.build(project_seed)
+    fixture = ProjectInstanceFactory.build(make_base_project_seed())
     fields = [node for node in fixture.nodes if not node.value is None]
+    stages_formulas = FormulaResolver.stage_formulas(fixture.formulas)
 
-    formula_service.setup(
-        lambda x: x.find_by(
-            FormulaFilter(project_def_id=fixture.project_definition.id)
-        ),
-        returns_async=fixture.formulas,
+    stage_formulas_storage.setup(
+        lambda x: x.load(StagedFormulasKey(fixture.project_definition.id)),
+        returns_async=stages_formulas,
     )
 
     project_node_service.setup(
@@ -111,15 +31,16 @@ async def test_given_unit_instances_should_compute_collection():
     )
 
     unit_instance_builder.setup(
-        lambda x: x.build_with_fields(fixture.formulas, fields),
+        lambda x: x.build_with_fields(stages_formulas, fields),
         returns=fixture.unit_instances,
     )
 
     formula_resolver = FormulaResolver(
-        formula_service.object,
+        StrictInterfaceSetup(FormulaService).object,
         project_node_service.object,
-        StrictInterfaceSetup(ProjectNodeService).object,
+        StrictInterfaceSetup(ProjectDefinitionNodeService).object,
         unit_instance_builder.object,
+        stage_formulas_storage.object,
     )
 
     injector = await formula_resolver.compute_all_project_formula(

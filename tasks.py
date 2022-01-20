@@ -195,7 +195,7 @@ def generate_env(c, hostname="predykt.dev"):
 @task(name="upload-base-project")
 def upload_base_project(c):
     cwd = os.getcwd()
-    db_truncate(c)
+    truncate_db()
     c.run(
         f"curl -X POST -F 'file=@{cwd}/project-setup.jsonl' http://localhost:8000/api/import"
     )

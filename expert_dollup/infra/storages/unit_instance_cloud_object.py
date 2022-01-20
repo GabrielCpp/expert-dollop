@@ -23,7 +23,7 @@ class UnitInstanceCloudObject(ObjectStorage[UnitInstanceCache, UnitInstanceCache
     async def load(self, ctx: UnitInstanceCacheKey) -> UnitInstanceCache:
         instances = []
         null_uuid = UUID(int=0)
-        path = f"projects/{ctx.project_id}/formula_instance.raw.gzip"
+        path = self.get_url(ctx)
         initial_bytes = await self.storage.download_binary(path)
         inbytes = BytesIO(initial_bytes)
 
@@ -127,5 +127,8 @@ class UnitInstanceCloudObject(ObjectStorage[UnitInstanceCache, UnitInstanceCache
 
         outbytes.seek(0)
         output_bytes = outbytes.read()
-        path = f"projects/{ctx.project_id}/formula_instance.raw.gzip"
+        path = self.get_url(ctx)
         await self.storage.upload_binary(path, output_bytes)
+
+    def get_url(self, ctx: UnitInstanceCacheKey) -> str:
+        return f"projects/{ctx.project_id}/formula_instance.raw.gzip"

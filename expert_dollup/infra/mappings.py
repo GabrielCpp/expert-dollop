@@ -1,6 +1,5 @@
 from typing import List
 from uuid import UUID
-from expert_dollup.shared.database_services import JsonSerializer
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import (
     Mapper,
@@ -544,7 +543,6 @@ def map_formula_to_dao(src: Formula, mapper: Mapper) -> ProjectDefinitionFormula
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
-        final_ast=JsonSerializer.encode(src.final_ast),
         dependency_graph=FormulaDependencyGraphDao(
             formulas=[
                 FormulaDependencyDao(
@@ -569,7 +567,56 @@ def map_formula_from_dao(src: ProjectDefinitionFormulaDao, mapper: Mapper) -> Fo
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
-        final_ast=JsonSerializer.decode(src.final_ast),
+        dependency_graph=FormulaDependencyGraph(
+            formulas=[
+                FormulaDependency(
+                    target_type_id=dependency.target_type_id, name=dependency.name
+                )
+                for dependency in src.dependency_graph.formulas
+            ],
+            nodes=[
+                FormulaDependency(
+                    target_type_id=dependency.target_type_id, name=dependency.name
+                )
+                for dependency in src.dependency_graph.nodes
+            ],
+        ),
+    )
+
+
+def map_staged_formula_to_dao(src: StagedFormula, mapper: Mapper) -> StagedFormulaDao:
+    return StagedFormulaDao(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        attached_to_type_id=src.attached_to_type_id,
+        name=src.name,
+        expression=src.expression,
+        final_ast=src.final_ast,
+        dependency_graph=FormulaDependencyGraphDao(
+            formulas=[
+                FormulaDependencyDao(
+                    target_type_id=dependency.target_type_id, name=dependency.name
+                )
+                for dependency in src.dependency_graph.formulas
+            ],
+            nodes=[
+                FormulaDependencyDao(
+                    target_type_id=dependency.target_type_id, name=dependency.name
+                )
+                for dependency in src.dependency_graph.nodes
+            ],
+        ),
+    )
+
+
+def map_staged_formula_from_dao(src: StagedFormulaDao, mapper: Mapper) -> StagedFormula:
+    return StagedFormula(
+        id=src.id,
+        project_def_id=src.project_def_id,
+        attached_to_type_id=src.attached_to_type_id,
+        name=src.name,
+        expression=src.expression,
+        final_ast=src.final_ast,
         dependency_graph=FormulaDependencyGraph(
             formulas=[
                 FormulaDependency(

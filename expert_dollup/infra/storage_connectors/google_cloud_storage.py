@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 from google.auth.credentials import AnonymousCredentials
 from google.cloud import storage
 from .storage_client import StorageClient
@@ -22,3 +23,7 @@ class GoogleCloudStorage(StorageClient):
         blob = self.bucket.blob(path)
         b = await loop.run_in_executor(None, blob.download_as_bytes)
         return b
+
+    @property
+    def namespace_prefix(self) -> Path:
+        return Path()

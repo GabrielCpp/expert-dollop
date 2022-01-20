@@ -35,7 +35,7 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
 
         records = await self.fetch_all_records(query)
 
-        return {record.get("name"): record.get("id") for record in records}
+        return {record.get("name"): UUID(str(record.get("id"))) for record in records}
 
     async def has_path(self, path: List[UUID]) -> bool:
         if len(path) == 0:

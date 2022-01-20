@@ -1,5 +1,4 @@
 from asyncio import gather
-from json import dump
 from typing import List, Dict, Any
 from uuid import UUID
 from collections import defaultdict
@@ -10,7 +9,8 @@ from expert_dollup.shared.database_services import JsonSerializer
 from expert_dollup.core.queries import Plucker
 from expert_dollup.core.domains import *
 from expert_dollup.infra.services import *
-from expert_dollup.core.exceptions import ReportGenerationError
+from expert_dollup.core.exceptions import ReportGenerationError, RessourceNotFound
+from expert_dollup.core.object_storage import ObjectStorage
 
 
 @dataclass
@@ -25,7 +25,7 @@ class ReportCache:
     label_collections_by_name: Dict[str, LabelCollection]
 
 
-class ReportRowCacheBuilder:
+class ReportRowCache:
     def __init__(
         self,
         datasheet_definition_service: DatasheetDefinitionService,
@@ -33,7 +33,8 @@ class ReportRowCacheBuilder:
         datasheet_definition_element_service: DatasheetDefinitionElementService,
         label_collection_service: LabelCollectionService,
         label_service: LabelService,
-        formula_plucker: Plucker[FormulaService],
+        formula_plucker: Plucker[Formula],
+        report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
     ):
         self.datasheet_definition_service = datasheet_definition_service
         self.project_definition_service = project_definition_service
@@ -41,15 +42,29 @@ class ReportRowCacheBuilder:
         self.label_collection_service = label_collection_service
         self.label_service = label_service
         self.formula_plucker = formula_plucker
+        self.report_def_row_cache = report_def_row_cache
 
-    async def refresh_cache(
+    async def refresh_cache(self, report_definition: ReportDefinition):
+        key = ReportRowKey(
+            project_def_id=report_definition.project_def_id,
+            report_definition_id=report_definition.id,
+        )
+
+        try:
+            return await self.report_def_row_cache.load(key)
+        except RessourceNotFound:
+            rows = await self.build_cache(report_definition)
+            await self.report_def_row_cache.save(key, rows)
+            return rows
+
+    async def build_cache(
         self, report_definition: ReportDefinition
     ) -> List[ReportRowDict]:
         cache = await self._build_report_cache(report_definition)
         report_buckets = await self._build_from_datasheet_elements(cache)
 
         for join in report_definition.structure.joins_cache:
-            report_buckets = await self._join_on(report_buckets, join, cache)
+            report_buckets = self._join_on(report_buckets, join, cache)
 
         await self._join_formulas(report_buckets, report_definition)
         report_buckets = self._distinct_rows(report_buckets)
@@ -160,7 +175,7 @@ class ReportRowCacheBuilder:
                 "attached_to_type_id": formula.attached_to_type_id,
             }
 
-    async def _join_on(
+    def _join_on(
         self,
         report_buckets: List[Dict[str, Dict[str, Any]]],
         join: ReportJoin,

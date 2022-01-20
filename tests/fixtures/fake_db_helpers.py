@@ -3,9 +3,10 @@ from collections import defaultdict
 from typing import Callable, List, Dict, Any, Type
 from injector import Injector
 from inspect import isclass
-
+from shutil import rmtree
 from pydantic.main import BaseModel
 from expert_dollup.infra import services
+from expert_dollup.infra.storage_connectors.storage_client import StorageClient
 from expert_dollup.shared.database_services import DbConnection
 
 
@@ -75,6 +76,7 @@ class DbFixtureHelper:
 
     async def init_db(self, fake_db: FakeDb):
         await self.dal.truncate_db()
+        rmtree("/tmp/expertdollup", ignore_errors=True)
 
         for domain_type, objects in fake_db.collections.items():
             assert (

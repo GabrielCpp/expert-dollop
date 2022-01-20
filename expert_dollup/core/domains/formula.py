@@ -60,7 +60,19 @@ class FormulaExpression:
 @dataclass
 class Formula(FormulaExpression):
     dependency_graph: FormulaDependencyGraph
+
+
+@dataclass
+class StagedFormula(Formula):
     final_ast: dict
+
+
+StagedFormulas = List[StagedFormula]
+
+
+@dataclass
+class StagedFormulasKey:
+    project_definition_id: UUID
 
 
 @dataclass

@@ -247,7 +247,6 @@ class ProjectDefinitionFormulaDao(BaseModel):
     attached_to_type_id: UUID
     name: str = Field(max_length=64)
     expression: str
-    final_ast: str
     dependency_graph: FormulaDependencyGraphDao
 
 

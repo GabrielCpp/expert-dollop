@@ -10,6 +10,7 @@ from google.cloud.firestore import (
     Query,
 )
 from google.cloud.firestore_v1 import Increment
+from google.api_core.retry import Retry, if_exception_type
 from google.auth.credentials import AnonymousCredentials
 from expert_dollup.shared.automapping import Mapper
 from ..query_filter import QueryFilter
@@ -24,6 +25,23 @@ from ..adapter_interfaces import (
     WhereFilter,
     DbConnection,
 )
+
+import google.cloud.exceptions as exceptions
+import google.api_core.exceptions as core_exceptions
+import google.auth.exceptions as auth_exceptions
+import requests.exceptions
+
+if_extended_transient_error = if_exception_type(
+    exceptions.InternalServerError,
+    exceptions.TooManyRequests,
+    exceptions.ServiceUnavailable,
+    requests.exceptions.ConnectionError,
+    requests.exceptions.ChunkedEncodingError,
+    auth_exceptions.TransportError,
+    core_exceptions.Cancelled,
+)
+
+retry_strategy = Retry(if_extended_transient_error)
 
 
 @dataclass
@@ -207,7 +225,7 @@ class BatchProxy:
 
     async def commit(self):
         self._add_counter_updates()
-        await self._batch.commit()
+        await self._batch.commit(retry_strategy)
         self._batch = self._make_batch()
         self.collection_count = 0
         self.keys_count = defaultdict(int)
@@ -271,7 +289,7 @@ class FirestoreCollection(CollectionService[Domain]):
             await self._batch_operation([d], lambda b, doc_ref, d: b.set(doc_ref, d))
         else:
             doc_id = self._build_id(d)
-            await self._collection.document(doc_id).set(d)
+            await self._collection.document(doc_id).set(d, retry=retry_strategy)
 
     async def insert_many(self, domains: List[Domain]):
         dicts = self._dao_mapper.map_many_to_dict(domains)

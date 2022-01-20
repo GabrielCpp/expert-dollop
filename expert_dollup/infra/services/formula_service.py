@@ -10,18 +10,6 @@ class FormulaService(CollectionServiceProxy[Formula]):
         dao = ProjectDefinitionFormulaDao
         domain = Formula
 
-    async def find_formula_final_ast_by_formula_id(
-        self, project_def_id: UUID
-    ) -> Dict[UUID, dict]:
-        query = (
-            self.get_builder()
-            .select("id", "final_ast")
-            .where("project_def_id", "==", project_def_id)
-        )
-        records = await self.fetch_all_records(query)
-
-        return {record.get("id"): record.get("final_ast") for record in records}
-
     async def get_formulas_id_by_name(
         self, project_def_id: UUID, names: Optional[List[str]] = None
     ) -> Dict[str, UUID]:
@@ -39,4 +27,4 @@ class FormulaService(CollectionServiceProxy[Formula]):
 
         records = await self.fetch_all_records(query)
 
-        return {record.get("name"): record.get("id") for record in records}
+        return {record.get("name"): UUID(str(record.get("id"))) for record in records}

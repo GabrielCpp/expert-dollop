@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from uuid import UUID
 from typing import Optional, List, Dict, Union
 from datetime import datetime
@@ -9,6 +9,7 @@ from .expert_dollup_db import (
     StringFieldValueDao,
     DecimalFieldValueDao,
     ReferenceIdDao,
+    FormulaDependencyGraphDao,
 )
 from .storage_connectors.storage_client import StorageClient
 
@@ -64,3 +65,14 @@ class ReportStageDao(BaseModel):
 class ReportDao(BaseModel):
     stages: List[ReportStageDao]
     creation_date_utc: datetime
+
+
+class StagedFormulaDao(BaseModel):
+
+    id: UUID
+    project_def_id: UUID
+    attached_to_type_id: UUID
+    name: str = Field(max_length=64)
+    expression: str
+    final_ast: dict
+    dependency_graph: FormulaDependencyGraphDao

@@ -13,7 +13,7 @@ class LocalStorage(StorageClient):
 
     async def upload_binary(self, path: str, data: bytes) -> None:
         def run(path, data):
-            full_path = Path(gettempdir()) / self.prefix / path
+            full_path = self.namespace_prefix / path
             makedirs(full_path.parent, exist_ok=True)
 
             with open(full_path, "wb") as f:
@@ -26,7 +26,7 @@ class LocalStorage(StorageClient):
 
     async def download_binary(self, path: str) -> bytes:
         def run():
-            full_path = Path(gettempdir()) / self.prefix / path
+            full_path = self.namespace_prefix / path
 
             if not exists(full_path):
                 raise ObjectNotFound("Object not found", path=path)
@@ -37,3 +37,7 @@ class LocalStorage(StorageClient):
         loop = asyncio.get_event_loop()
         b = await loop.run_in_executor(None, run)
         return b
+
+    @property
+    def namespace_prefix(self) -> Path:
+        return Path(gettempdir()) / self.prefix

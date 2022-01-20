@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 Domain = TypeVar("Domain")
 Record = TypeVar("Record")
+import asyncpg
 
 
 class CollectionMapper:
@@ -49,10 +50,10 @@ class CollectionMapper:
         d = self._record_to_dict(record)
         version = d.get("_version", None)
 
-        if version is None or version == self._version:
-            return self._dao.parse_obj(d)
+        if not version is None and version != self._version:
+            d = self._version_mappers[version][self._version](self._version_mappers, d)
 
-        return self._version_mappers[version][self._version](self._version_mappers, d)
+        return self._dao.parse_obj(d)
 
     def add_version_to_dao(self, dao: BaseModel) -> dict:
         d = self._to_dao(dao)

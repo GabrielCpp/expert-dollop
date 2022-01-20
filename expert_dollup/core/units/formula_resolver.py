@@ -1,13 +1,19 @@
-from typing import List, Dict, Set, Tuple
+from typing import List, Dict, Set
 from uuid import UUID
 from asyncio import gather
+from expert_dollup.core.domains.formula import (
+    StagedFormula,
+    StagedFormulas,
+    StagedFormulasKey,
+)
 from expert_dollup.shared.database_services import log_execution_time_async, StopWatch
+from expert_dollup.core.object_storage import ObjectStorage
+from expert_dollup.core.exceptions import RessourceNotFound
 from expert_dollup.core.domains import (
     Formula,
     FormulaExpression,
     FormulaDependencyGraph,
     FormulaDependency,
-    UnitInstanceCache,
     FormulaFilter,
 )
 from expert_dollup.infra.services import (
@@ -32,11 +38,13 @@ class FormulaResolver:
         project_node_service: ProjectNodeService,
         project_definition_node_service: ProjectDefinitionNodeService,
         unit_instance_builder: UnitInstanceBuilder,
+        stage_formulas_storage: ObjectStorage[StagedFormulas, StagedFormulasKey],
     ):
         self.formula_service = formula_service
         self.project_node_service = project_node_service
         self.project_definition_node_service = project_definition_node_service
         self.unit_instance_builder = unit_instance_builder
+        self.stage_formulas_storage = stage_formulas_storage
 
     async def parse_many(self, formula_expressions: List[FormulaExpression]) -> Formula:
         project_def_id = formula_expressions[0].project_def_id
@@ -95,9 +103,6 @@ class FormulaResolver:
                 attached_to_type_id=formula_expression.attached_to_type_id,
                 name=formula_expression.name,
                 expression=formula_expression.expression,
-                final_ast=formula_processor.serialize_post_processed_expression(
-                    formula_expression.expression
-                ),
                 dependency_graph=FormulaDependencyGraph(
                     formulas=[
                         FormulaDependency(
@@ -161,9 +166,6 @@ class FormulaResolver:
             attached_to_type_id=formula_expression.attached_to_type_id,
             name=formula_expression.name,
             expression=formula_expression.expression,
-            final_ast=formula_processor.serialize_post_processed_expression(
-                formula_expression.expression
-            ),
             dependency_graph=FormulaDependencyGraph(
                 formulas=[
                     FormulaDependency(target_type_id=formula_id, name=name)
@@ -178,6 +180,50 @@ class FormulaResolver:
 
         return formula
 
+    @staticmethod
+    def stage_formulas(formulas: List[Formula]) -> StagedFormulas:
+        return [
+            StagedFormula(
+                id=formula.id,
+                project_def_id=formula.project_def_id,
+                attached_to_type_id=formula.attached_to_type_id,
+                name=formula.name,
+                expression=formula.expression,
+                dependency_graph=formula.dependency_graph,
+                final_ast=formula_processor.serialize_post_processed_expression(
+                    formula.expression
+                ),
+            )
+            for formula in formulas
+        ]
+
+    async def build_staged_formulas(self, project_def_id: UUID) -> StagedFormulas:
+        formulas = await self.formula_service.find_by(
+            FormulaFilter(project_def_id=project_def_id)
+        )
+
+        return FormulaResolver.stage_formulas(formulas)
+
+    async def refresh_staged_formulas_cache(
+        self, project_def_id: UUID
+    ) -> StagedFormulas:
+        staged_formulas = await self.build_staged_formulas(project_def_id)
+        await self.stage_formulas_storage.save(
+            StagedFormulasKey(project_def_id), staged_formulas
+        )
+        return staged_formulas
+
+    @log_execution_time_async
+    async def get_staged_formulas(self, project_def_id: UUID) -> StagedFormulas:
+        try:
+            staged_formulas = await self.stage_formulas_storage.load(
+                StagedFormulasKey(project_def_id)
+            )
+        except RessourceNotFound:
+            staged_formulas = await self.refresh_staged_formulas_cache(project_def_id)
+
+        return staged_formulas
+
     @log_execution_time_async
     async def compute_all_project_formula(
         self, project_id: UUID, project_def_id: UUID
@@ -185,15 +231,15 @@ class FormulaResolver:
         injector = FormulaInjector()
 
         with StopWatch("Fetching formula data"):
-            nodes, formulas = await gather(
+            nodes, staged_formulas = await gather(
                 self.project_node_service.get_all_fields(project_id),
-                self.formula_service.find_by(
-                    FormulaFilter(project_def_id=project_def_id)
-                ),
+                self.get_staged_formulas(project_def_id),
             )
 
-        formula_by_id = {formula.id: formula for formula in formulas}
-        unit_instances = self.unit_instance_builder.build_with_fields(formulas, nodes)
+        formula_by_id = {formula.id: formula for formula in staged_formulas}
+        unit_instances = self.unit_instance_builder.build_with_fields(
+            staged_formulas, nodes
+        )
 
         for node in nodes:
             injector.add_unit(FieldUnit(node))
