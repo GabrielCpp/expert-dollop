@@ -910,7 +910,7 @@ def map_report_structure_from_dto(
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucket),
         stage=mapper.map(src.stage, StageGrouping),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoin),
-        columns=mapper.map_many(src.columns, ReportColumn),
+        columns=mapper.map_many(src.columns, ReportDefinitionColumn),
         group_by=mapper.map_many(src.group_by, AttributeBucket),
         order_by=mapper.map_many(src.order_by, AttributeBucket),
     )
@@ -925,7 +925,7 @@ def map_report_structure_to_dto(
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucketDto),
         stage=mapper.map(src.stage, StageGroupingDto),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoinDto),
-        columns=mapper.map_many(src.columns, ReportColumnDto),
+        columns=mapper.map_many(src.columns, ReportDefinitionColumnDto),
         group_by=mapper.map_many(src.group_by, AttributeBucketDto),
         order_by=mapper.map_many(src.order_by, AttributeBucketDto),
     )
@@ -999,23 +999,27 @@ def map_report_join_to_dto(src: ReportJoin, mapper: Mapper) -> ReportJoinDto:
     )
 
 
-def map_report_column_from_dto(src: ReportColumnDto, mapper: Mapper) -> ReportColumn:
-    return ReportColumn(
+def map_report_definition_column_from_dto(
+    src: ReportDefinitionColumnDto, mapper: Mapper
+) -> ReportDefinitionColumn:
+    return ReportDefinitionColumn(
         name=src.name,
         expression=src.expression,
         is_visible=src.is_visible,
         unit_id=src.unit_id,
-        unit=src.unit,
+        unit=src.unit and mapper.map(src.unit, AttributeBucket),
     )
 
 
-def map_report_column_to_dto(src: ReportColumn, mapper: Mapper) -> ReportColumnDto:
-    return ReportColumnDto(
+def map_report_definition_column_to_dto(
+    src: ReportDefinitionColumn, mapper: Mapper
+) -> ReportDefinitionColumnDto:
+    return ReportDefinitionColumnDto(
         name=src.name,
         expression=src.expression,
         is_visible=src.is_visible,
         unit_id=src.unit_id,
-        unit=src.unit,
+        unit=src.unit and mapper.map(src.unit, AttributeBucketDto),
     )
 
 
@@ -1030,7 +1034,7 @@ def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportRowDto:
         datasheet_id=src.datasheet_id,
         element_id=src.element_id,
         child_reference_id=src.child_reference_id,
-        columns=mapper.map_many(src.columns, primitive_union_dto_mappings.to_origin),
+        columns=mapper.map_many(src.columns, ReportColumnDto),
         row={
             name: {
                 att_name: mapper.map_many(value, ReferenceIdDto)
@@ -1098,5 +1102,19 @@ def map_minimal_report_row_dto(src: ReportRow, mapper: Mapper) -> MinimalReportR
         formula_id=src.formula_id,
         element_id=src.element_id,
         child_reference_id=src.child_reference_id,
-        columns=mapper.map_many(src.columns, primitive_union_dto_mappings.to_origin),
+        columns=mapper.map_many(src.columns, ReportColumnDto),
+    )
+
+
+def map_report_column_to_dto(src: ReportColumn, mapper: Mapper) -> ReportColumnDto:
+    return ReportColumnDto(
+        value=mapper.map(src.value, primitive_union_dto_mappings.to_origin),
+        unit=src.unit,
+    )
+
+
+def map_report_column_from_dto(src: ReportColumnDto, mapper: Mapper) -> ReportColumn:
+    return ReportColumn(
+        value=mapper.map(src.value, primitive_union_dto_mappings.from_origin),
+        unit=src.unit,
     )

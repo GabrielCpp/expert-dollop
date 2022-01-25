@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 import ast
 from uuid import UUID
 from ast import AST
-from typing import Dict, Union
-from expert_dollup.core.domains import AstNode, AstNodeValue
+from typing import Dict, Union, List
+from expert_dollup.core.domains import AstNode, AstNodeValue, FlatAst
 from decimal import Decimal
 from dataclasses import dataclass
 
@@ -42,71 +42,105 @@ def make_value(
     raise Exception(f"Unsupported type {type(value)} with value {value}")
 
 
-def serialize_ast(node: AST) -> AstNode:
-    if isinstance(node, ast.Module):
-        return AstNode(kind="Module", properties={"body": serialize_ast(node.body[0])})
+class AstSerializer:
+    def __init__(self):
+        self.nodes = []
 
-    if isinstance(node, ast.Expr):
-        return AstNode(kind="Expr", properties={"value": serialize_ast(node.value)})
+    def _add(self, node: AstNode) -> int:
+        index = len(self.nodes)
+        self.nodes.append(node)
+        return index
 
-    if isinstance(node, ast.Name):
-        return AstNode(kind="Name", values={"id": node.id})
+    def serialize_ast(self, node: AST) -> FlatAst:
+        root_index = self.serialize(node)
+        return FlatAst(nodes=self.nodes, root_index=root_index)
 
-    if isinstance(node, ast.Constant):
-        return AstNode(
-            kind="Constant",
-            values={"value": make_value(node.value)},
-        )
+    def serialize(self, node: AST) -> AstNode:
+        if isinstance(node, ast.Module):
+            return self._add(
+                AstNode(
+                    kind="Module", properties={"body": self.serialize(node.body[0])}
+                )
+            )
 
-    if isinstance(node, ast.Num):
-        return AstNode(
-            kind="Num",
-            values={"n": make_number(node.value)},
-        )
+        if isinstance(node, ast.Expr):
+            return self._add(
+                AstNode(kind="Expr", properties={"value": self.serialize(node.value)})
+            )
 
-    if isinstance(node, ast.Str):
-        return AstNode(kind="Str", values={"s": AstNodeValue(text=node.value)})
+        if isinstance(node, ast.Name):
+            return self._add(AstNode(kind="Name", values={"id": node.id}))
 
-    if isinstance(node, ast.UnaryOp):
-        return AstNode(
-            kind="UnaryOp",
-            values={"op": type(node.op).__name__},
-            properties={"operand": serialize_ast(node.operand)},
-        )
+        if isinstance(node, ast.Constant):
+            return self._add(
+                AstNode(
+                    kind="Constant",
+                    values={"value": make_value(node.value)},
+                )
+            )
 
-    if isinstance(node, ast.BinOp):
-        return AstNode(
-            kind="BinOp",
-            values={"op": type(node.op).__name__},
-            properties={
-                "left": serialize_ast(node.left),
-                "right": serialize_ast(node.right),
-            },
-        )
+        if isinstance(node, ast.Num):
+            return self._add(
+                AstNode(
+                    kind="Num",
+                    values={"n": make_number(node.value)},
+                )
+            )
 
-    if isinstance(node, ast.Compare):
-        return AstNode(
-            kind="Compare",
-            values={"ops": " ".join(type(op).__name__ for op in node.ops)},
-            properties={"left": serialize_ast(node.left)},
-            children={
-                "comparators": [
-                    serialize_ast(comparator) for comparator in node.comparators
-                ]
-            },
-        )
+        if isinstance(node, ast.Str):
+            return self._add(
+                AstNode(kind="Str", values={"s": AstNodeValue(text=node.value)})
+            )
 
-    if isinstance(node, ast.Call):
-        if not isinstance(node.func, ast.Name):
-            raise Exception("Functino only support direct reference")
+        if isinstance(node, ast.UnaryOp):
+            return self._add(
+                AstNode(
+                    kind="UnaryOp",
+                    values={"op": type(node.op).__name__},
+                    properties={"operand": self.serialize(node.operand)},
+                )
+            )
 
-        return AstNode(
-            kind="Call",
-            values={"fn_name": node.func.id},
-            children={"args": [serialize_ast(arg) for arg in node.args]},
-        )
+        if isinstance(node, ast.BinOp):
+            return self._add(
+                AstNode(
+                    kind="BinOp",
+                    values={"op": type(node.op).__name__},
+                    properties={
+                        "left": self.serialize(node.left),
+                        "right": self.serialize(node.right),
+                    },
+                )
+            )
 
-    raise Exception(f"Unsupported node {type(node)}")
+        if isinstance(node, ast.Compare):
+            return self._add(
+                AstNode(
+                    kind="Compare",
+                    values={"ops": " ".join(type(op).__name__ for op in node.ops)},
+                    properties={"left": self.serialize(node.left)},
+                    children={
+                        "comparators": [
+                            self.serialize(comparator)
+                            for comparator in node.comparators
+                        ]
+                    },
+                )
+            )
+
+        if isinstance(node, ast.Call):
+            if not isinstance(node.func, ast.Name):
+                raise Exception("Functino only support direct reference")
+
+            return self._add(
+                AstNode(
+                    kind="Call",
+                    values={"fn_name": node.func.id},
+                    children={"args": [self.serialize(arg) for arg in node.args]},
+                )
+            )
+
+        raise Exception(f"Unsupported node {type(node)}")
 
 
 def serialize_post_processed_expression(expression: str) -> dict:
@@ -114,9 +148,10 @@ def serialize_post_processed_expression(expression: str) -> dict:
         return SafeguardDivision().visit(formula_ast)
 
     final_ast = replace_divisions(ast.parse(expression))
-    ast_node = serialize_ast(final_ast)
+    serializer = AstSerializer()
+    flat_tree = serializer.serialize_ast(final_ast)
 
-    return ast_node.dict()
+    return flat_tree.dict()
 
 
 class ComputationUnit(ABC):
@@ -154,30 +189,43 @@ class Calculation:
         self.details = f"{self.details}\n{temp_name} = {details}"
 
 
-def process_module_node(node: dict, unit: ComputationUnit, calc: Calculation):
-    return dispatch(node["properties"]["body"], unit, calc)
+@dataclass
+class ComputationScope:
+    unit: ComputationUnit
+    calc: Calculation
+    nodes: List[dict]
+
+    def get_property(self, node: dict, name: str) -> dict:
+        return self.nodes[node["properties"][name]]
+
+    def get_children(self, node, name) -> list:
+        return [self.nodes[c] for c in node["children"][name]]
 
 
-def process_expr_node(node: dict, unit: ComputationUnit, calc: Calculation):
-    return dispatch(node["properties"]["value"], unit, calc)
+def process_module_node(node: dict, scope: ComputationScope):
+    return dispatch(scope.get_property(node, "body"), scope)
 
 
-def process_name_node(node: dict, unit: ComputationUnit, calc: Calculation):
+def process_expr_node(node: dict, scope: ComputationScope):
+    return dispatch(scope.get_property(node, "value"), scope)
+
+
+def process_name_node(node: dict, scope: ComputationScope):
     name = node["values"]["id"]
     assert (
-        name in unit.units
-    ), f"{name} not part of formula {unit.name} which contains {unit.units.keys()}"
-    values = unit.units[name]
+        name in scope.unit.units
+    ), f"{name} not part of formula {scope.unit.name} which contains {scope.unit.units.keys()}"
+    values = scope.unit.units[name]
 
     if len(values) == 1:
         return values[0].value, f"<{name}[{values[0].node_id}], {values[0].value}>"
 
-    sum_result = sum(unit.value for unit in unit.units[name])
+    sum_result = sum(unit.value for unit in scope.unit.units[name])
 
-    return sum_result, calc.add(sum_result, f"sum({name})")
+    return sum_result, scope.calc.add(sum_result, f"sum({name})")
 
 
-def process_constant_node(node: dict, unit: ComputationUnit, calc: Calculation):
+def process_constant_node(node: dict, scope: ComputationScope):
     value = node["values"]["value"]
     text = value["text"]
     enabled = value["enabled"]
@@ -195,7 +243,7 @@ def process_constant_node(node: dict, unit: ComputationUnit, calc: Calculation):
     return real_value, f"{real_value}"
 
 
-def process_num_node(node: dict, unit: ComputationUnit, calc: Calculation):
+def process_num_node(node: dict, scope: ComputationScope):
     value = node["values"]["n"]
     text = value["text"]
     enabled = value["enabled"]
@@ -213,7 +261,7 @@ def process_num_node(node: dict, unit: ComputationUnit, calc: Calculation):
     return real_value, f"{real_value}"
 
 
-def process_str_node(node: dict, unit: ComputationUnit, calc: Calculation):
+def process_str_node(node: dict, scope: ComputationScope):
     value = node["values"]["a"]
     text = value["text"]
     enabled = value["enabled"]
@@ -238,8 +286,8 @@ UNARY_OP_DISPATCH = {
 }
 
 
-def process_unary_op_node(node: dict, unit: ComputationUnit, calc: Calculation):
-    operand, operand_details = dispatch(node["properties"]["operand"], unit, calc)
+def process_unary_op_node(node: dict, scope: ComputationScope):
+    operand, operand_details = dispatch(scope.get_property(node, "operand"), scope)
     op = node["values"]["op"]
     compute = UNARY_OP_DISPATCH.get(op)
 
@@ -247,7 +295,7 @@ def process_unary_op_node(node: dict, unit: ComputationUnit, calc: Calculation):
         raise Exception("Unsupported unary op")
 
     result, details = compute(operand, operand_details)
-    return result, calc.add(result, details)
+    return result, scope.calc.add(result, details)
 
 
 BiNARY_OP_DISPATCH = {
@@ -270,9 +318,9 @@ BiNARY_OP_DISPATCH = {
 }
 
 
-def process_bin_op_node(node: dict, unit: ComputationUnit, calc: Calculation):
-    left, left_details = dispatch(node["properties"]["left"], unit, calc)
-    right, right_details = dispatch(node["properties"]["right"], unit, calc)
+def process_bin_op_node(node: dict, scope: ComputationScope):
+    left, left_details = dispatch(scope.get_property(node, "left"), scope)
+    right, right_details = dispatch(scope.get_property(node, "right"), scope)
     op = node["values"]["op"]
     compute = BiNARY_OP_DISPATCH.get(op)
 
@@ -281,7 +329,7 @@ def process_bin_op_node(node: dict, unit: ComputationUnit, calc: Calculation):
 
     result, details = compute(left, left_details, right, right_details)
 
-    return result, calc.add(result, details)
+    return result, scope.calc.add(result, details)
 
 
 COMPARATOR_DISPATCH = {
@@ -312,14 +360,14 @@ COMPARATOR_DISPATCH = {
 }
 
 
-def process_compare_node(node: dict, unit: ComputationUnit, calc: Calculation):
-    left, left_details = dispatch(node["properties"]["left"], unit, calc)
+def process_compare_node(node: dict, scope: ComputationScope):
+    left, left_details = dispatch(scope.get_property(node, "left"), scope)
     result = left
     details = f"{left_details}"
     ops = node["values"]["ops"].split()
 
-    for comparator, op in zip(node["children"]["comparators"], ops):
-        right, right_details = dispatch(comparator, unit, calc)
+    for comparator, op in zip(scope.get_children(node, "comparators"), ops):
+        right, right_details = dispatch(comparator, scope)
         compute = COMPARATOR_DISPATCH.get(op)
 
         if compute is None:
@@ -330,7 +378,7 @@ def process_compare_node(node: dict, unit: ComputationUnit, calc: Calculation):
 
     result = Decimal(1 if result else 0)
 
-    return result, calc.add(result, details)
+    return result, scope.calc.add(result, details)
 
 
 def safe_div(a: Decimal, b: Decimal) -> Decimal:
@@ -343,12 +391,12 @@ def safe_div(a: Decimal, b: Decimal) -> Decimal:
     return a / b
 
 
-def process_call_node(node: dict, unit: ComputationUnit, calc: Calculation):
+def process_call_node(node: dict, scope: ComputationScope):
     args = []
     details = []
 
-    for arg in node["children"]["args"]:
-        result, calculation_details = dispatch(arg, unit, calc)
+    for arg in scope.get_children(node, "args"):
+        result, calculation_details = dispatch(arg, scope)
         args.append(result)
         details.append(calculation_details)
 
@@ -358,13 +406,13 @@ def process_call_node(node: dict, unit: ComputationUnit, calc: Calculation):
     if fn_id == "safe_div":
         result = safe_div(*args)
         details = f"safe_div({details_str})"
-        return result, calc.add(result, details)
+        return result, scope.calc.add(result, details)
 
     if fn_id == "sqrt":
         assert len(args) == 1
         result = args[0].sqrt()
         details = f"sqrt({details_str})"
-        return result, calc.add(result, details)
+        return result, scope.calc.add(result, details)
 
     raise Exception(f"Unknown function {fn_id}")
 
@@ -383,12 +431,17 @@ AST_NODE_PROCESSOR: Dict[str, callable] = {
 }
 
 
-def dispatch(node: dict, unit: ComputationUnit, calc: Calculation):
-    return AST_NODE_PROCESSOR[node["kind"]](node, unit, calc)
+def dispatch(node: dict, scope: ComputationScope):
+    return AST_NODE_PROCESSOR[node["kind"]](node, scope)
 
 
-def compute(node: dict, unit: ComputationUnit):
+def compute(flat_tree: dict, unit: ComputationUnit):
     calc = Calculation()
-    result, details = dispatch(node, unit, calc)
+    nodes = flat_tree["nodes"]
+    root_index = flat_tree["root_index"]
+    node = nodes[root_index]
+    scope = ComputationScope(unit=unit, calc=calc, nodes=nodes)
+
+    result, details = dispatch(node, scope)
     calc.add_final(result, details)
     return result, calc.details

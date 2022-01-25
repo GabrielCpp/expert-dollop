@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, List, TypeVar, Optional, Dict, Type, Set
+from typing import Callable, Iterable, List, TypeVar, Optional, Dict, Type, Set, Any
 from dataclasses import dataclass
 from collections import defaultdict
 from os import environ
@@ -249,6 +249,10 @@ Domain = TypeVar("Domain")
 Id = TypeVar("Id")
 
 
+def record_to_dict(r) -> dict:
+    return r.to_dict()
+
+
 class FirestoreCollection(CollectionService[Domain]):
     def __init__(
         self,
@@ -271,7 +275,7 @@ class FirestoreCollection(CollectionService[Domain]):
             getattr(meta.dao.Meta, "version", None),
             getattr(meta.dao.Meta, "version_mappers", {}),
             Simplifier.simplify,
-            record_to_dict=lambda r: r.to_dict(),
+            record_to_dict=record_to_dict,
         )
 
     @property
@@ -379,12 +383,24 @@ class FirestoreCollection(CollectionService[Domain]):
     def get_builder(self) -> QueryBuilder:
         return DbAgnotistQueryBuilder()
 
-    async def fetch_all_records(self, builder: WhereFilter) -> List[dict]:
+    async def fetch_all_records(
+        self,
+        builder: WhereFilter,
+        mappings: Dict[str, Callable[[Mapper], Callable[[Any], Any]]] = {},
+    ) -> List[dict]:
         query = self._build_query(builder)
         results = []
+        value_mapper = {
+            name: mapping(self._mapper) for name, mapping in mappings.items()
+        }
 
         async for doc in query.stream():
-            results.append(doc)
+            d = {
+                name: value_mapper[name](value) if name in value_mapper else value
+                for name, value in record_to_dict(doc).items()
+            }
+
+            results.append(d)
 
         return results
 

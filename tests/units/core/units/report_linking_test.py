@@ -24,36 +24,36 @@ def make_general_report(project_def_id: UUID) -> ReportDefinition:
         name="general_report",
         structure=ReportStructure(
             columns=[
-                ReportColumn(
+                ReportDefinitionColumn(
                     name="post_transform_factor",
                     expression="1.0",
                     is_visible=False,
                 ),
-                ReportColumn(
+                ReportDefinitionColumn(
                     name="stage",
                     expression="row['floor']['name']",
                 ),
-                ReportColumn(
+                ReportDefinitionColumn(
                     name="substage_description",
                     expression="row['substage']['name']",
                 ),
-                ReportColumn(
+                ReportDefinitionColumn(
                     name="abstract_product_description",
                     expression="row['abstractproduct']['name']",
                 ),
-                ReportColumn(
+                ReportDefinitionColumn(
                     name="cost_per_unit",
                     expression="round_number(row['datasheet_element']['price'], 2, 'truncate')",
                 ),
-                ReportColumn(
+                ReportDefinitionColumn(
                     name="result",
                     expression="sum(row['formula']['result'] * row['columns']['post_transform_factor'] for row in rows)",
                 ),
-                ReportColumn(
+                ReportDefinitionColumn(
                     name="cost",
                     expression="round_number( round_number( sum(row['formula']['result'] * row['columns']['post_transform_factor'] for row in rows), 2, 'truncate') * row['datasheet_element']['price'], 2, 'truncate')",
                 ),
-                ReportColumn(
+                ReportDefinitionColumn(
                     name="order_form_category_description",
                     expression="row['orderformcategory']['name']",
                 ),

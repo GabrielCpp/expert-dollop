@@ -84,6 +84,26 @@ class MapProjectNodeMetaImportToDomain:
         ]
 
 
+class InsertProjectWithRessourceAction:
+    def __init__(self):
+        self.dto = ProjectDetailsDto
+        self.domain = ProjectDetails
+
+    async def __call__(self, injector: Injector, ressource_specs: List[BaseModel]):
+        ressource_service = injector.get(RessourceService)
+        project_service = injector.get(ProjectService)
+        mapper = injector.get(Mapper)
+
+        for ressource_spec in ressource_specs:
+            project_details = mapper.map(ressource_spec, ProjectDetails)
+            await ressource_service.insert(
+                Ressource(
+                    id=project_details.id, kind="project", owner_id=project_details.id
+                )
+            )
+            await project_service.insert(project_details)
+
+
 class DedupTranslations:
     def clear(self):
         self.node_by_project_id = {}
@@ -194,17 +214,12 @@ ressources = {
         domain=ReportDefinition,
         usecase=ReportDefinitionUseCase,
     ),
-    "raw_project": RessourceLoader(
-        dto=ProjectDetailsDto,
-        domain=ProjectDetails,
-        usecase=ProjectService,
-        method="insert",
-    ),
+    "raw_project": InsertProjectWithRessourceAction(),
     "raw_node": RessourceLoader(
         dto=ProjectNodeDto,
         domain=ProjectNode,
-        usecase=ProjectNodeService,
-        method="insert_many",
+        usecase=ProjectNodeUseCase,
+        method="imports",
     ),
     "node_meta": RessourceLoader(
         dto=ProjectNodeMetaImport,

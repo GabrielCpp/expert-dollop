@@ -1,6 +1,6 @@
 from os import environ
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, List, Optional, Union, Type, Tuple, Literal
+from typing import Generic, TypeVar, List, Optional, Union, Type, Dict, Any, Callable
 from inspect import isclass
 from urllib.parse import urlparse
 from pydantic import BaseModel
@@ -134,7 +134,11 @@ class CollectionService(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
-    async def fetch_all_records(self, builder: QueryBuilder) -> dict:
+    async def fetch_all_records(
+        self,
+        builder: QueryBuilder,
+        mappings: Dict[str, Callable[[Mapper], Callable[[Any], Any]]] = {},
+    ) -> dict:
         pass
 
 

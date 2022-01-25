@@ -23,6 +23,7 @@ google-cloud-firestore = {version = "^2.3.4"}
 SQLAlchemy = {extras = ["asyncio"], version = "^1.4.29"}
 asyncpg = "^0.25.0"
 motor = "^2.5.1"
+orjson = "^3.6.5"
 
 
 [tool.poetry.dev-dependencies]

@@ -1,11 +1,4 @@
-from typing import (
-    List,
-    TypeVar,
-    Optional,
-    Dict,
-    Type,
-    Union,
-)
+from typing import List, TypeVar, Optional, Dict, Type, Union, Callable, Any
 from pydantic import BaseModel, ConstrainedStr
 from pydantic.fields import ModelField
 from inspect import isclass
@@ -165,7 +158,7 @@ class PostgresConnection(DbConnection):
         self.tables: Dict[Type, Table] = {}
         self._engine = create_async_engine(
             connection_string,
-            json_serializer=JsonSerializer.encode,
+            json_serializer=lambda x: JsonSerializer.encode(x).decode("utf8"),
             json_deserializer=JsonSerializer.decode,
             **kwargs,
         )
@@ -440,10 +433,25 @@ class PostgresTableService(CollectionService[Domain]):
     def get_builder(self) -> QueryBuilder:
         return DbAgnotistQueryBuilder()
 
-    async def fetch_all_records(self, builder: WhereFilter) -> List[dict]:
+    async def fetch_all_records(
+        self,
+        builder: WhereFilter,
+        mappings: Dict[str, Callable[[Mapper], Callable[[Any], Any]]] = {},
+    ) -> List[dict]:
+        value_mapper = {
+            name: mapping(self._mapper) for name, mapping in mappings.items()
+        }
+
         query = self._build_query(builder)
         records = await self._fetch_all(query=query)
-        return [record._asdict() for record in records]
+
+        return [
+            {
+                name: value_mapper[name](value) if name in value_mapper else value
+                for name, value in record._asdict().items()
+            }
+            for record in records
+        ]
 
     async def bulk_insert(self, daos: List[BaseModel]):
         columns_name = [column.name for column in self._table.c]

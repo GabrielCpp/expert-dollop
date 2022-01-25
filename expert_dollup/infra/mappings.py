@@ -113,7 +113,7 @@ def map_node_config_from_dao(src: NodeConfigDao, mapper: Mapper) -> NodeConfig:
         ),
         triggers=[
             Trigger(
-                action=TriggerAction(trigger.action),
+                action=TriggerAction[trigger.action],
                 target_type_id=trigger.target_type_id,
                 params=trigger.params,
             )
@@ -1139,7 +1139,7 @@ def map_report_structure_from_dao(
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucket),
         stage=mapper.map(src.stage, StageGrouping),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoin),
-        columns=mapper.map_many(src.columns, ReportColumn),
+        columns=mapper.map_many(src.columns, ReportDefinitionColumn),
         group_by=mapper.map_many(src.group_by, AttributeBucket),
         order_by=mapper.map_many(src.order_by, AttributeBucket),
     )
@@ -1154,7 +1154,7 @@ def map_report_structure_to_dao(
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucketDao),
         stage=mapper.map(src.stage, StageGroupingDao),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoinDao),
-        columns=mapper.map_many(src.columns, ReportColumnDao),
+        columns=mapper.map_many(src.columns, ReportDefinitionColumnDao),
         group_by=mapper.map_many(src.group_by, AttributeBucketDao),
         order_by=mapper.map_many(src.order_by, AttributeBucketDao),
     )
@@ -1228,23 +1228,27 @@ def map_report_join_to_dao(src: ReportJoin, mapper: Mapper) -> ReportJoinDao:
     )
 
 
-def map_report_column_from_dao(src: ReportColumnDao, mapper: Mapper) -> ReportColumn:
-    return ReportColumn(
+def map_report_definition_column_from_dao(
+    src: ReportDefinitionColumnDao, mapper: Mapper
+) -> ReportDefinitionColumn:
+    return ReportDefinitionColumn(
         name=src.name,
         expression=src.expression,
         is_visible=src.is_visible,
         unit_id=src.unit_id,
-        unit=src.unit,
+        unit=src.unit and mapper.map(src.unit, AttributeBucket),
     )
 
 
-def map_report_column_to_dao(src: ReportColumn, mapper: Mapper) -> ReportColumnDao:
-    return ReportColumnDao(
+def map_report_definition_column_to_dao(
+    src: ReportDefinitionColumn, mapper: Mapper
+) -> ReportDefinitionColumnDao:
+    return ReportDefinitionColumnDao(
         name=src.name,
         expression=src.expression,
         is_visible=src.is_visible,
         unit_id=src.unit_id,
-        unit=src.unit,
+        unit=src.unit and mapper.map(src.unit, AttributeBucketDao),
     )
 
 

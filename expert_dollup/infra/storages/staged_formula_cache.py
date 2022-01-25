@@ -7,6 +7,7 @@ from expert_dollup.infra.expert_dollup_storage import (
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.domains import StagedFormulas, StagedFormulasKey, StagedFormula
 from expert_dollup.shared.automapping import Mapper
+from expert_dollup.shared.database_services import JsonSerializer
 
 
 class StagedFormulaCache(ObjectStorage[StagedFormulas, StagedFormulasKey]):
@@ -21,7 +22,7 @@ class StagedFormulaCache(ObjectStorage[StagedFormulas, StagedFormulasKey]):
 
         with GzipFile(fileobj=fileobj, compresslevel=9, mode="wb") as f:
             for dao in daos:
-                f.write(dao.json().encode("utf8"))
+                f.write(JsonSerializer.encode(dao.dict()))
                 f.write(b"\n")
 
         fileobj.seek(0)
@@ -36,7 +37,7 @@ class StagedFormulaCache(ObjectStorage[StagedFormulas, StagedFormulasKey]):
 
         with GzipFile(fileobj=inbytes, mode="rb") as f:
             for line in f.readlines():
-                dao = StagedFormulaDao.parse_raw(line.decode("utf8"))
+                dao = StagedFormulaDao.parse_obj(JsonSerializer.decode(line))
                 daos.append(dao)
 
         domains = self.mapper.map_many(daos, StagedFormula)

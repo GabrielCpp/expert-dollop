@@ -1,9 +1,14 @@
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
 from expert_dollup.shared.starlette_injection import CamelModel
 from .report_definition_dto import ReportRowDictDto
 from .dynamic_primitive import PrimitiveUnionDto
+
+
+class ReportColumnDto(CamelModel):
+    value: PrimitiveUnionDto
+    unit: Optional[str]
 
 
 class ReportRowDto(CamelModel):
@@ -16,7 +21,7 @@ class ReportRowDto(CamelModel):
     datasheet_id: UUID
     element_id: UUID
     child_reference_id: UUID
-    columns: List[PrimitiveUnionDto]
+    columns: List[ReportColumnDto]
     row: ReportRowDictDto
 
 
@@ -25,7 +30,7 @@ class MinimalReportRowDto(CamelModel):
     formula_id: UUID
     element_id: UUID
     child_reference_id: UUID
-    columns: List[PrimitiveUnionDto]
+    columns: List[ReportColumnDto]
 
 
 class ReportStageDto(CamelModel):

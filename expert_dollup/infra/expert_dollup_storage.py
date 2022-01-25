@@ -27,7 +27,7 @@ class UnitInstanceDao(BaseModel):
     result: PrimitiveUnionDao
 
 
-ReportColumnDictDao = Dict[
+ReportDefinitionColumnDictDao = Dict[
     str,
     Union[
         List[ReferenceIdDao],
@@ -38,7 +38,7 @@ ReportColumnDictDao = Dict[
         ReferenceIdDao,
     ],
 ]
-ReportRowDictDao = Dict[str, ReportColumnDictDao]
+ReportRowDictDao = Dict[str, ReportDefinitionColumnDictDao]
 ReportRowsCacheDao = List[ReportRowDictDao]
 
 

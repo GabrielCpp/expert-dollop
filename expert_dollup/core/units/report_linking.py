@@ -318,7 +318,17 @@ class ReportLinking:
 
         for report_row in report_rows:
             for column in columns:
-                report_row.columns.append(report_row.row["columns"][column.name])
+                unit = (
+                    column.unit_id
+                    if column.unit is None
+                    else column.unit.get(report_row.row)
+                )
+
+                report_row.columns.append(
+                    ReportColumn(
+                        value=report_row.row["columns"][column.name], unit=unit
+                    )
+                )
 
         return report_rows
 

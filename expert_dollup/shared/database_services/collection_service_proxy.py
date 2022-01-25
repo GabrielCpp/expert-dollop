@@ -1,4 +1,4 @@
-from typing import TypeVar, List, Optional, Union, Type
+from typing import Callable, TypeVar, List, Optional, Union, Type, Dict, Any
 from inspect import isclass
 from expert_dollup.shared.automapping import Mapper
 from .query_filter import QueryFilter
@@ -74,5 +74,9 @@ class CollectionServiceProxy(CollectionService[Domain]):
     def get_builder(self) -> QueryBuilder:
         return self._impl.get_builder()
 
-    async def fetch_all_records(self, builder: QueryBuilder) -> dict:
-        return await self._impl.fetch_all_records(builder)
+    async def fetch_all_records(
+        self,
+        builder: QueryBuilder,
+        mappings: Dict[str, Callable[[Mapper], Callable[[Any], Any]]] = {},
+    ) -> dict:
+        return await self._impl.fetch_all_records(builder, mappings)

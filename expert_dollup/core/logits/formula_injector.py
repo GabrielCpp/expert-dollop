@@ -53,7 +53,8 @@ class FormulaInjector:
         return []
 
     def get_one_value(self, node_id: UUID, path: List[UUID], name: str, default):
-        units = self.get_unit(node_id, path, name.lower())
+        name = name.lower()
+        units = self.get_unit(node_id, path, name)
 
         if len(units) == 0:
             return default
@@ -62,7 +63,7 @@ class FormulaInjector:
             return units[0].value
 
         # TODO: Fix me
-        return "<Error>"
+        return f"<Error, {name}>"
         raise Exception(f"Too many value for {name} in node {node_id}")
 
 

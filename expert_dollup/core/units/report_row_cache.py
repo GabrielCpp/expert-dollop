@@ -120,8 +120,7 @@ class ReportRowCache:
 
     def _distinct_rows(self, report_buckets):
         fingerprints = (
-            sha256(JsonSerializer.encode(row, indent=None).encode("utf8")).hexdigest()
-            for row in report_buckets
+            sha256(JsonSerializer.encode(row)).hexdigest() for row in report_buckets
         )
         seen = {}
         filtered_bucket = [

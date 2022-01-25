@@ -10,7 +10,7 @@ from .dynamic_primitive import (
     ReferenceIdDto,
 )
 
-ReportColumnDictDto = Dict[
+ReportDefinitionColumnDictDto = Dict[
     str,
     Union[
         StringFieldValueDto,
@@ -21,7 +21,7 @@ ReportColumnDictDto = Dict[
         List[ReferenceIdDto],
     ],
 ]
-ReportRowDictDto = Dict[str, ReportColumnDictDto]
+ReportRowDictDto = Dict[str, ReportDefinitionColumnDictDto]
 
 
 class ReportJoinDto(CamelModel):
@@ -43,7 +43,7 @@ class AttributeBucketDto(CamelModel):
         return row[self.bucket_name][self.attribute_name]
 
 
-class ReportColumnDto(CamelModel):
+class ReportDefinitionColumnDto(CamelModel):
     name: str
     expression: str
     is_visible: bool = True
@@ -66,7 +66,7 @@ class ReportStructureDto(CamelModel):
     formula_attribute: AttributeBucketDto
     datasheet_attribute: AttributeBucketDto
     joins_cache: List[ReportJoinDto]
-    columns: List[ReportColumnDto]
+    columns: List[ReportDefinitionColumnDto]
     group_by: List[AttributeBucketDto]
     order_by: List[AttributeBucketDto]
     stage: StageGroupingDto

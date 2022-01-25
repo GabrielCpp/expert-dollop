@@ -102,7 +102,7 @@ def creat_app(container: Injector = None):
         GraphQL(
             schema,
             debug=False,
-            introspection=False,
+            introspection=True,
             context_value=lambda request: GraphqlContext(
                 container=request.state.container, request=request
             ),

@@ -8,6 +8,12 @@ from .values_union import PrimitiveUnion
 
 
 @dataclass
+class ReportColumn:
+    value: PrimitiveUnion
+    unit: Optional[str]
+
+
+@dataclass
 class ReportRow:
     project_id: UUID
     report_def_id: UUID
@@ -18,7 +24,7 @@ class ReportRow:
     datasheet_id: UUID
     element_id: UUID
     child_reference_id: UUID
-    columns: List[PrimitiveUnion]
+    columns: List[ReportColumn]
     row: ReportRowDict
 
 

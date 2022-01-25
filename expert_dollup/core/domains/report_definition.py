@@ -4,8 +4,10 @@ from decimal import Decimal
 from typing import List, Dict, Union, Optional
 from expert_dollup.shared.database_services import QueryFilter
 
-ReportColumnDict = Dict[str, Union[str, Decimal, bool, int, UUID, List[UUID], None]]
-ReportRowDict = Dict[str, ReportColumnDict]
+ReportDefinitionColumnDict = Dict[
+    str, Union[str, Decimal, bool, int, UUID, List[UUID], None]
+]
+ReportRowDict = Dict[str, ReportDefinitionColumnDict]
 ReportRowsCache = List[ReportRowDict]
 
 
@@ -43,7 +45,7 @@ class ReportComputation:
 
 
 @dataclass
-class ReportColumn:
+class ReportDefinitionColumn:
     name: str
     expression: str
     unit_id: Optional[str] = None
@@ -63,7 +65,7 @@ class ReportStructure:
     formula_attribute: AttributeBucket
     datasheet_attribute: AttributeBucket
     joins_cache: List[ReportJoin]
-    columns: List[ReportColumn]
+    columns: List[ReportDefinitionColumn]
     group_by: List[AttributeBucket]
     order_by: List[AttributeBucket]
     stage: StageGrouping

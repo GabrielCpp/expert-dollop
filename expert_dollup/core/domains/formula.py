@@ -41,8 +41,14 @@ class AstNodeValue:
 class AstNode:
     kind: str
     values: Dict[str, Union[AstNodeValue, str]] = field(default_factory=dict)
-    properties: Dict[str, "AstNode"] = field(default_factory=dict)
-    children: Dict[str, List["AstNode"]] = field(default_factory=dict)
+    properties: Dict[str, int] = field(default_factory=dict)
+    children: Dict[str, List[int]] = field(default_factory=dict)
+
+
+@dataclass
+class FlatAst:
+    nodes: List[AstNode]
+    root_index: int
 
     def dict(self) -> dict:
         return asdict(self)
@@ -104,16 +110,6 @@ UnitInstanceCache = List[UnitInstance]
 @dataclass
 class UnitInstanceCacheKey:
     project_id: UUID
-
-
-@dataclass
-class FieldNode:
-    id: UUID
-    name: str
-    path: List[UUID]
-    type_id: UUID
-    type_path: List[UUID]
-    expression: PrimitiveUnion
 
 
 class FormulaFilter(QueryFilter):

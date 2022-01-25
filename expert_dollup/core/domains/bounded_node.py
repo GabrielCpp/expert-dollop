@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from typing import List
 from .project_node import ProjectNode
-from .project_definition import ProjectDefinition
+from .project_definition_node import ProjectDefinitionNode
 from .formula import UnitInstance
 
 
 @dataclass
 class BoundedNode:
     node: ProjectNode
-    definition: ProjectDefinition
+    definition: ProjectDefinitionNode
 
 
 @dataclass

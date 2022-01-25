@@ -85,12 +85,13 @@ from .report_dto import (
     MinimalReportDto,
     MinimalReportStageDto,
     MinimalReportRowDto,
+    ReportColumnDto,
 )
 from .report_definition_dto import (
     ReportDefinitionDto,
     ReportStructureDto,
     AttributeBucketDto,
-    ReportColumnDto,
+    ReportDefinitionColumnDto,
     ReportJoinDto,
     StageGroupingDto,
     ReportComputationDto,

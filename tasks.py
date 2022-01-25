@@ -17,9 +17,10 @@ def drop_db():
 def truncate_db(tables=None):
     from dotenv import load_dotenv
     from expert_dollup.shared.database_services import create_connection
+    import expert_dollup.infra.expert_dollup_db as daos
 
     load_dotenv()
-    connection = create_connection(os.getenv("DATABASE_URL"))
+    connection = create_connection(os.getenv("DATABASE_URL"), daos)
     asyncio.run(connection.truncate_db(tables))
 
 
@@ -204,7 +205,9 @@ def upload_base_project(c):
 @task(name="upload-project")
 def upload_project(c):
     cwd = os.getcwd()
-    truncate_db(["project", "project_node", "project_node_metadata"])
+    c.run(
+        f"curl -X DELETE http://localhost:8000/api/project/11ec4bbb-ebe8-fa7c-bcc3-42010a800002"
+    )
     c.run(
         f"curl -X POST -F 'file=@{cwd}/project.jsonl' http://localhost:8000/api/import"
     )

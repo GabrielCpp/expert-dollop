@@ -409,7 +409,7 @@ class AttributeBucketDao(BaseModel):
     attribute_name: str = Field(max_length=64)
 
 
-class ReportColumnDao(BaseModel):
+class ReportDefinitionColumnDao(BaseModel):
     name: str = Field(max_length=64)
     expression: str
     is_visible: bool
@@ -432,7 +432,7 @@ class ReportStructureDao(BaseModel):
     formula_attribute: AttributeBucketDao
     datasheet_attribute: AttributeBucketDao
     joins_cache: List[ReportJoinDao]
-    columns: List[ReportColumnDao]
+    columns: List[ReportDefinitionColumnDao]
     group_by: List[AttributeBucketDao]
     order_by: List[AttributeBucketDao]
     stage: StageGroupingDao
