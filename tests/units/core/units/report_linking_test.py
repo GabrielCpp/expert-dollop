@@ -18,256 +18,57 @@ from expert_dollup.infra.services import *
 from tests.fixtures import *
 
 
-project_seed = ProjectSeed(
-    {
-        "rootA": DefNodeSeed(
-            {
-                "1": NodeSeed(
-                    formulas={
-                        "formulaA": FormulaSeed(
-                            expression="fieldB*fieldA",
-                            formula_dependencies=[],
-                            node_dependencies=["fieldB", "fieldA"],
-                            calculation_details="<fieldB, 2> * sum(<fieldA, 12>)",
-                            result=24,
-                        ),
-                        "formulaB": FormulaSeed(
-                            expression="fieldB*sectionA_formula",
-                            formula_dependencies=["sectionA_formula"],
-                            node_dependencies=["fieldB"],
-                        ),
-                    }
-                )
-            }
-        ),
-        "rootB": DefNodeSeed(),
-        "subSectionA": DefNodeSeed({"1": NodeSeed(parent="rootA-1")}),
-        "formA": DefNodeSeed({"1": NodeSeed(parent="subSectionA-1")}),
-        "sectionA": DefNodeSeed(
-            {
-                "1": NodeSeed(
-                    parent="formA-1",
-                    formulas={
-                        "sectionA_formula": FormulaSeed(
-                            expression="fieldA-2",
-                            formula_dependencies=[],
-                            node_dependencies=["fieldA"],
-                        ),
-                    },
-                ),
-                "2": NodeSeed(
-                    parent="formA-1",
-                    formulas={
-                        "sectionA_formula": FormulaSeed(
-                            expression="fieldA-2",
-                            formula_dependencies=[],
-                            node_dependencies=["fieldA"],
-                        ),
-                    },
-                ),
-                "3": NodeSeed(
-                    parent="formA-1",
-                    formulas={
-                        "sectionA_formula": FormulaSeed(
-                            expression="fieldA-2",
-                            formula_dependencies=[],
-                            node_dependencies=["fieldA"],
-                        ),
-                    },
-                ),
-            }
-        ),
-        "fieldA": DefNodeSeed(
-            {
-                "1": NodeSeed(
-                    parent="sectionA-1",
-                    value=5,
-                ),
-                "2": NodeSeed(
-                    parent="sectionA-2",
-                    value=4,
-                ),
-                "3": NodeSeed(
-                    parent="sectionA-3",
-                    value=3,
-                ),
-            }
-        ),
-        "sectionB": DefNodeSeed({"1": NodeSeed(parent="formA-1")}),
-        "fieldB": DefNodeSeed({"1": NodeSeed(parent="sectionB-1", value=2)}),
-    }
-)
-
-
-datasheet_seed = DatasheetSeed(
-    properties={"price": Decimal, "factor": Decimal},
-    element_seeds={
-        "wood_plank": ElementSeed(
-            tags=["productcategory_label_0"],
-            unit_id="m",
-        ),
-        "concrete": ElementSeed(
-            tags=["productcategory_label_1"],
-            unit_id="m",
-        ),
-        "ceramix": ElementSeed(
-            tags=["productcategory_label_2"], unit_id="m", is_collection=True
-        ),
-    },
-    collection_seeds={
-        "datasheetelement_binding": CollectionSeed(
-            label_count=10,
-            schemas={
-                "formula": FormulaAggregate("*"),
-                "special_condition": bool,
-                "quantity": Decimal,
-                "stage": CollectionAggregate("stage"),
-                "orderformcategory": CollectionAggregate("orderformcategory"),
-                "datasheet_element": DatasheetAggregate("*"),
-            },
-        ),
-        "substage": CollectionSeed(
-            label_count=10,
-            schemas={
-                "formula": FormulaAggregate("*"),
-                "special_condition": bool,
-                "quantity": Decimal,
-                "stage": CollectionAggregate("stage"),
-                "orderformcategory": CollectionAggregate("orderformcategory"),
-                "datasheet_element": DatasheetAggregate("*"),
-            },
-        ),
-        "stage": CollectionSeed(
-            label_count=5,
-            schemas={
-                "localisation": str,
-                "associated_global_section": str,
-                "compile_in_one": bool,
-                "floor": CollectionAggregate("floor"),
-            },
-        ),
-        "orderformcategory": CollectionSeed(
-            label_count=3, schemas={"worksection": CollectionAggregate("worksection")}
-        ),
-        "worksection": CollectionSeed(label_count=3),
-        "productcategory": CollectionSeed(label_count=3),
-        "floor": CollectionSeed(label_count=3),
-    },
-    formulas=project_seed.formulas,
-)
-
-post_transform_factor_snippet = """
-def get_post_transform_factor(unit_id, conversion_factor, special_condition):
-    linear_unit_id = "linearunit" # 2
-    brick_to_foot_id = "bricktofoot" # 11
-    mul_conversion_factor = 1.0
-
-    if (unit_id == linear_unit_id and special_condition) or unit_id != linear_unit_id:
-        mul_conversion_factor = conversion_factor
-
-    if mul_conversion_factor == 0:
-        mul_conversion_factor = 1
-    elif unit_id != brick_to_foot_id:
-        mul_conversion_factor = 1/mul_conversion_factor
-    
-    return round_number(mul_conversion_factor, 8, 'truncate')
-
-
-get_post_transform_factor(row['abstractproduct']['unit_id'], row['datasheet_element']['factor'], row['substage']['special_condition'])
-"""
-
-
 def make_general_report(project_def_id: UUID) -> ReportDefinition:
     return ReportDefinitionFactory(
         project_def_id=project_def_id,
         name="general_report",
         structure=ReportStructure(
             columns=[
-                ReportColumn(
+                ReportComputation(
                     name="post_transform_factor",
-                    expression=post_transform_factor_snippet,
+                    expression="1.0",
                     is_visible=False,
                 ),
-                ReportColumn(
+                ReportComputation(
                     name="stage",
                     expression="row['floor']['name']",
                 ),
-                ReportColumn(
+                ReportComputation(
                     name="substage_description",
                     expression="row['substage']['name']",
                 ),
-                ReportColumn(
+                ReportComputation(
                     name="abstract_product_description",
                     expression="row['abstractproduct']['name']",
                 ),
-                ReportColumn(
+                ReportComputation(
                     name="cost_per_unit",
                     expression="round_number(row['datasheet_element']['price'], 2, 'truncate')",
                 ),
-                ReportColumn(
+                ReportComputation(
                     name="result",
                     expression="sum(row['formula']['result'] * row['columns']['post_transform_factor'] for row in rows)",
                 ),
-                ReportColumn(
+                ReportComputation(
                     name="cost",
                     expression="round_number( round_number( sum(row['formula']['result'] * row['columns']['post_transform_factor'] for row in rows), 2, 'truncate') * row['datasheet_element']['price'], 2, 'truncate')",
                 ),
-                ReportColumn(
+                ReportComputation(
                     name="order_form_category_description",
                     expression="row['orderformcategory']['name']",
                 ),
             ],
             datasheet_selection_alias="abstractproduct",
-            joins_cache=[
-                ReportJoin(
-                    from_object_name="abstractproduct",
-                    from_property_name="id",
-                    join_on_collection="substage",
-                    join_on_attribute="datasheet_element",
-                    alias_name="substage",
-                ),
-                ReportJoin(
-                    from_object_name="substage",
-                    from_property_name="stage",
-                    join_on_collection="stage",
-                    join_on_attribute="id",
-                    alias_name="stage",
-                ),
-                ReportJoin(
-                    from_object_name="stage",
-                    from_property_name="floor",
-                    join_on_collection="floor",
-                    join_on_attribute="id",
-                    alias_name="floor",
-                ),
-                ReportJoin(
-                    from_object_name="abstractproduct",
-                    from_property_name="tags",
-                    join_on_collection="productcategory",
-                    join_on_attribute="id",
-                    alias_name="productcategory",
-                ),
-                ReportJoin(
-                    from_object_name="substage",
-                    from_property_name="orderformcategory",
-                    join_on_collection="orderformcategory",
-                    join_on_attribute="id",
-                    alias_name="orderformcategory",
-                ),
-                ReportJoin(
-                    from_object_name="orderformcategory",
-                    from_property_name="worksection",
-                    join_on_collection="worksection",
-                    join_on_attribute="id",
-                    alias_name="worksection",
-                ),
-            ],
-            stage=StageGrouping(
+            joins_cache=[],
+            stage_summary=StageSummary(
                 label=AttributeBucket(bucket_name="columns", attribute_name="stage"),
                 summary=ReportComputation(
-                    expression="sum(row['cost'] for row in rows)", unit_id="$"
+                    expression="sum(row['cost'] for row in rows)",
+                    unit="$",
+                    name="total",
                 ),
             ),
+            report_summary=[],
             formula_attribute=AttributeBucket(
                 bucket_name="substage", attribute_name="formula"
             ),
@@ -290,7 +91,10 @@ def make_general_report(project_def_id: UUID) -> ReportDefinition:
 
 @pytest.mark.asyncio
 async def test_given_row_cache_should_produce_correct_report():
-    datasheet_fixture = DatasheetInstanceFactory.build(datasheet_seed)
+    project_seed = make_base_project_seed()
+    datasheet_fixture = DatasheetInstanceFactory.build(
+        make_base_datasheet(project_seed)
+    )
     project_fixture = ProjectInstanceFactory.build(
         project_seed,
         default_datasheet_id=datasheet_fixture.datasheet.id,
@@ -313,54 +117,14 @@ async def test_given_row_cache_should_produce_correct_report():
                 "name": "floor_label_0",
                 "order_index": 0,
             },
-            "formula": {
-                "attached_to_type_id": UUID("37adfdd5-6143-9446-66fe-23b183399b25"),
-                "expression": "fieldB*fieldA",
-                "name": "formulaA",
-            },
-            "orderformcategory": {
-                "id": UUID("444ea1f0-5338-5998-265d-1700d4327f51"),
-                "name": "orderformcategory_label_0",
-                "order_index": 0,
-                "worksection": UUID("407be730-a7a7-9d39-183f-85a1b8017b47"),
-            },
-            "productcategory": {
-                "id": UUID("b24c883f-5831-cc9d-3607-d292d265af9a"),
-                "name": "productcategory_label_0",
-                "order_index": 0,
-            },
-            "stage": {
-                "associated_global_section": "value0",
-                "compile_in_one": True,
-                "floor": UUID("6524c49c-93e7-0606-4d62-1ac982d40027"),
-                "id": UUID("68e30dbc-7508-6e56-8a1e-59ee389483d9"),
-                "localisation": "value0",
-                "name": "stage_label_0",
-                "order_index": 0,
-            },
-            "substage": {
-                "datasheet_element": UUID("9edcbbf4-3696-80e9-59b5-aa8c5f94958b"),
-                "formula": UUID("f1f1e0ff-2344-48bc-e757-8c9dcd3c671e"),
-                "id": UUID("6fce3c97-2660-2ad4-9f6f-4c4921c8c59b"),
-                "name": "substage_label_0",
-                "order_index": 0,
-                "orderformcategory": UUID("444ea1f0-5338-5998-265d-1700d4327f51"),
-                "quantity": "0",
-                "special_condition": True,
-                "stage": UUID("68e30dbc-7508-6e56-8a1e-59ee389483d9"),
-            },
-            "worksection": {
-                "id": UUID("407be730-a7a7-9d39-183f-85a1b8017b47"),
-                "name": "worksection_label_0",
-                "order_index": 0,
-            },
         }
     ]
 
     report_def_row_cache = StrictInterfaceSetup(ObjectStorage)
-    unit_instance_storage = StrictInterfaceSetup(ObjectStorage)
-    datasheet_element_plucker = StrictInterfaceSetup(Plucker)
+    datasheet_element_service = StrictInterfaceSetup(DatasheetElementService)
     expression_evaluator = StrictInterfaceSetup(ExpressionEvaluator)
+    report_row_cache = StrictInterfaceSetup(ReportRowCache)
+    formula_resolver = StrictInterfaceSetup(FormulaResolver)
     clock = StaticClock(datetime(2000, 4, 3, 1, 1, 1, 7, timezone.utc))
 
     report_def_row_cache.setup(
@@ -371,33 +135,6 @@ async def test_given_row_cache_should_produce_correct_report():
             )
         ),
         returns_async=report_rows_cache,
-    )
-
-    unit_instance_storage.setup(
-        lambda x: x.load(UnitInstanceCacheKey(project_id=project_fixture.project.id)),
-        returns_async=project_fixture.unit_instances,
-    )
-
-    missing_element_ids = {
-        report_definition.structure.datasheet_attribute.get(report_row_cache)
-        for report_row_cache in report_rows_cache
-    }
-
-    datasheet_element_plucker.setup(
-        lambda x: x.pluck_subressources(
-            DatasheetElementFilter(
-                datasheet_id=datasheet_fixture.datasheet.id,
-                child_element_reference=zero_uuid(),
-            ),
-            lambda y: True,
-            missing_element_ids,
-        ),
-        returns_async=[
-            datasheet_element
-            for datasheet_element in datasheet_fixture.datasheet_elements
-            if datasheet_element.element_def_id in missing_element_ids
-        ],
-        compare_method=compare_per_arg,
     )
 
     expression_evaluator.setup(
@@ -423,10 +160,10 @@ async def test_given_row_cache_should_produce_correct_report():
     )
 
     report_linking = ReportLinking(
-        report_def_row_cache.object,
-        unit_instance_storage.object,
-        datasheet_element_plucker.object,
+        datasheet_element_service.object,
         expression_evaluator.object,
+        report_row_cache.object,
+        formula_resolver.object,
         clock,
     )
 

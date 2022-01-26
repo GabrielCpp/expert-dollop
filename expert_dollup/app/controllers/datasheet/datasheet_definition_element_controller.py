@@ -35,9 +35,10 @@ async def find_datasheet_definition_elements(
     datasheet_definition_id: UUID,
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = Query(alias="limit", default=100),
-    handler=Depends(Inject(HttpPageHandler)),
+    handler=Depends(Inject(HttpPageHandler[DatasheetDefinitionElement])),
 ):
     return await handler.handle(
+        DatasheetDefinitionElementDto,
         DatasheetDefinitionElementFilter(datasheet_def_id=datasheet_definition_id),
         limit,
         next_page_token,

@@ -1,37 +1,36 @@
-import json
+from orjson import dumps, loads
 import dataclasses
-from typing import Any
+from typing import Any, Union
 from uuid import UUID
 from datetime import datetime, date
 from pydantic import BaseModel
 from decimal import Decimal
 
 
-class ExtraEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, UUID):
-            return str(obj)
+def default(obj):
+    if isinstance(obj, UUID):
+        return str(obj)
 
-        if dataclasses.is_dataclass(obj):
-            return dataclasses.asdict(obj)
+    if dataclasses.is_dataclass(obj):
+        return dataclasses.asdict(obj)
 
-        if isinstance(obj, Decimal):
-            return str(obj)
+    if isinstance(obj, Decimal):
+        return str(obj)
 
-        if isinstance(obj, (date, datetime)):
-            return obj.isoformat()
+    if isinstance(obj, (date, datetime)):
+        return obj.isoformat()
 
-        if isinstance(obj, BaseModel):
-            return obj.dict()
+    if isinstance(obj, BaseModel):
+        return obj.dict()
 
-        return json.JSONEncoder.default(self, obj)
+    raise TypeError()
 
 
 class JsonSerializer:
     @staticmethod
-    def encode(x: str, indent=2) -> str:
-        return json.dumps(x, indent=indent, sort_keys=True, cls=ExtraEncoder)
+    def encode(x: str) -> bytes:
+        return dumps(x, default=default)
 
     @staticmethod
-    def decode(x: str) -> Any:
-        return json.loads(x)
+    def decode(x: Union[bytes, bytearray, memoryview, str]) -> Any:
+        return loads(x)

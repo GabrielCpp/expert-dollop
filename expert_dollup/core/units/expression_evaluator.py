@@ -56,7 +56,7 @@ class AstVirtualMachine:
             if result:
                 for element in node.body:
                     self.compute(element, scope)
-            elif node.orelse:
+            else:
                 for element in node.orelse:
                     self.compute(element, scope)
 

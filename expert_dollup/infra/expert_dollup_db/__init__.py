@@ -94,6 +94,12 @@ class ProjectDefinitionNodeDao(BaseModel):
         pk = "id"
         version = 1
         version_mappers = {}
+        options = {
+            "firestore": {
+                "collection_count": False,
+                "key_counts": set([frozenset(["project_def_id"])]),
+            }
+        }
 
     class Config:
         title = "project_definition_node"
@@ -181,6 +187,14 @@ class RessourceDao(BaseModel):
 class TranslationDao(BaseModel):
     class Meta:
         pk = ("ressource_id", "scope", "locale", "name")
+        options = {
+            "firestore": {
+                "collection_count": True,
+                "key_counts": set(
+                    [frozenset(["ressource_id"]), frozenset(["ressource_id", "locale"])]
+                ),
+            }
+        }
 
     class Config:
         title = "translation"
@@ -218,6 +232,12 @@ class FormulaDependencyGraphDao(BaseModel):
 class ProjectDefinitionFormulaDao(BaseModel):
     class Meta:
         pk = "id"
+        options = {
+            "firestore": {
+                "collection_count": False,
+                "key_counts": set([frozenset(["project_def_id"])]),
+            }
+        }
 
     class Config:
         title = "project_definition_formula"
@@ -227,7 +247,6 @@ class ProjectDefinitionFormulaDao(BaseModel):
     attached_to_type_id: UUID
     name: str = Field(max_length=64)
     expression: str
-    final_ast: dict
     dependency_graph: FormulaDependencyGraphDao
 
 
@@ -287,6 +306,12 @@ class LabelCollectionDao(BaseModel):
 class LabelDao(BaseModel):
     class Meta:
         pk = "id"
+        options = {
+            "firestore": {
+                "collection_count": False,
+                "key_counts": set([frozenset(["label_collection_id"])]),
+            }
+        }
 
     class Config:
         title = "datasheet_definition_label"
@@ -306,6 +331,12 @@ class DatasheetDefinitionElementPropertyDao(BaseModel):
 class DatasheetDefinitionElementDao(BaseModel):
     class Meta:
         pk = "id"
+        options = {
+            "firestore": {
+                "collection_count": False,
+                "key_counts": set([frozenset(["datasheet_def_id"])]),
+            }
+        }
 
     class Config:
         title = "datasheet_definition_element"
@@ -317,7 +348,7 @@ class DatasheetDefinitionElementDao(BaseModel):
     datasheet_def_id: UUID
     order_index: int
     default_properties: Dict[str, DatasheetDefinitionElementPropertyDao]
-    tags: List[str]
+    tags: List[UUID]
     creation_date_utc: datetime
 
 
@@ -339,6 +370,17 @@ class DatasheetDao(BaseModel):
 class DatasheetElementDao(BaseModel):
     class Meta:
         pk = ("datasheet_id", "element_def_id", "child_element_reference")
+        options = {
+            "firestore": {
+                "collection_count": False,
+                "key_counts": set(
+                    [
+                        frozenset(["datasheet_id"]),
+                        frozenset(["datasheet_id", "element_def_id"]),
+                    ]
+                ),
+            }
+        }
 
     class Config:
         title = "datasheet_element"
@@ -367,20 +409,14 @@ class AttributeBucketDao(BaseModel):
     attribute_name: str = Field(max_length=64)
 
 
-class ReportColumnDao(BaseModel):
+class ReportComputationDao(BaseModel):
     name: str = Field(max_length=64)
     expression: str
+    unit: Union[StrictStr, AttributeBucketDao, None]
     is_visible: bool
-    unit_id: Optional[str] = None
-    unit: Optional[AttributeBucketDao] = None
 
 
-class ReportComputationDao(BaseModel):
-    expression: str
-    unit_id: Optional[str] = None
-
-
-class StageGroupingDao(BaseModel):
+class StageSummaryDao(BaseModel):
     label: AttributeBucketDao
     summary: ReportComputationDao
 
@@ -390,10 +426,11 @@ class ReportStructureDao(BaseModel):
     formula_attribute: AttributeBucketDao
     datasheet_attribute: AttributeBucketDao
     joins_cache: List[ReportJoinDao]
-    columns: List[ReportColumnDao]
+    columns: List[ReportComputationDao]
     group_by: List[AttributeBucketDao]
     order_by: List[AttributeBucketDao]
-    stage: StageGroupingDao
+    stage_summary: StageSummaryDao
+    report_summary: List[ReportComputationDao]
 
 
 class ReportDefinitionDao(BaseModel):

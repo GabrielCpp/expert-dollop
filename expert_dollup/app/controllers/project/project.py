@@ -52,6 +52,5 @@ async def clone_project(
 async def delete_project(
     id: UUID,
     usecase=Depends(Inject(ProjectUseCase)),
-    handler=Depends(Inject(RequestHandler)),
 ):
     await usecase.delete_by_id(id)

@@ -1,6 +1,6 @@
 from os import environ
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, List, Optional, Union, Type, Tuple, Literal
+from typing import Generic, TypeVar, List, Optional, Union, Type, Dict, Any, Callable
 from inspect import isclass
 from urllib.parse import urlparse
 from pydantic import BaseModel
@@ -29,85 +29,52 @@ class DbConnection(ABC):
         pass
 
 
-def create_connection(
-    connection_string: str, dao_module=None, **kwargs
-) -> DbConnection:
-    scheme = urlparse(connection_string).scheme
+class QueryBuilder(ABC):
+    @abstractmethod
+    def select(self, *names: List[str]) -> "QueryBuilder":
+        pass
 
-    if len(DbConnection._REGISTRY) == 0:
-        connectors = environ.get("DB_CONNECTORS", "postgresql").split()
+    @abstractmethod
+    def limit(self, limit: int) -> "QueryBuilder":
+        pass
 
-        for connector in connectors:
-            if connector == "postgresql":
-                from .database_adapters.postgres_adapter import PostgresConnection
+    @abstractmethod
+    def orderby(self, *orders) -> "QueryBuilder":
+        pass
 
-                DbConnection._REGISTRY["postgresql"] = PostgresConnection
+    @abstractmethod
+    def where(self, *ops) -> "QueryBuilder":
+        pass
 
-    build_connection = DbConnection._REGISTRY.get(scheme)
+    @abstractmethod
+    def construct(self, name, *ops) -> "QueryBuilder":
+        pass
 
-    if build_connection is None:
-        raise KeyError(f"No key for schem {scheme}")
+    @abstractmethod
+    def apply(self, builder: callable, *args, **kargs) -> "QueryBuilder":
+        pass
 
-    connection = build_connection(connection_string, **kwargs)
-
-    if not dao_module is None:
-        connection.load_metadatas(
-            [
-                class_type
-                for class_type in dao_module.__dict__.values()
-                if isclass(class_type) and issubclass(class_type, BaseModel)
-            ]
-        )
-
-    return connection
+    @abstractmethod
+    def clone(self) -> "QueryBuilder":
+        pass
 
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")
-
-
-class QueryBuilder(ABC):
-    @abstractmethod
-    def select_fields(self, *names: List[str]) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def order_by(self, name: str, direction: str) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def find_by(self, query_filter: QueryFilter) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def startwiths(self, query_filter: QueryFilter) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def pluck(self, query_filter: QueryFilter) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def save(self, name: str) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def any_of(self, *names: List[str]) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def all_of(self, *names: List[str]) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def finalize(self) -> "QueryBuilder":
-        pass
-
-
 WhereFilter = Union[QueryFilter, QueryBuilder]
 
 
 class CollectionService(ABC, Generic[Domain]):
+    @property
+    @abstractmethod
+    def domain(self) -> Type:
+        pass
+
+    @property
+    @abstractmethod
+    def dao(self) -> Type:
+        pass
+
     @abstractmethod
     async def insert(self, domain: Domain):
         pass
@@ -125,28 +92,7 @@ class CollectionService(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
-    async def find_all_paginated(
-        self, limit: int = 1000, next_page_token: Optional[str] = None
-    ) -> Page[Domain]:
-        pass
-
-    @abstractmethod
-    async def find_by(
-        self,
-        query_filter: WhereFilter,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        order_by: Optional[Tuple[str, Literal["desc", "asc"]]] = None,
-    ) -> List[Domain]:
-        pass
-
-    @abstractmethod
-    async def find_by_paginated(
-        self,
-        query_filter: WhereFilter,
-        limit: int,
-        next_page_token: Optional[str] = None,
-    ) -> Page[Domain]:
+    async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
         pass
 
     @abstractmethod
@@ -176,21 +122,74 @@ class CollectionService(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
+    async def exists(self, query_filter: WhereFilter) -> bool:
+        pass
+
+    @abstractmethod
     async def count(self, query_filter: Optional[WhereFilter] = None) -> int:
         pass
 
     @abstractmethod
-    def make_record_token(self, domain: Domain) -> str:
-        """
-        Return next page token for a domain object.
-        """
-
-    @abstractmethod
     def get_builder(self) -> QueryBuilder:
-        """
-        Return new query builder
-        """
+        pass
 
     @abstractmethod
-    async def fetch_all_records(self, builder: QueryBuilder) -> dict:
+    async def fetch_all_records(
+        self,
+        builder: QueryBuilder,
+        mappings: Dict[str, Callable[[Mapper], Callable[[Any], Any]]] = {},
+    ) -> dict:
         pass
+
+
+class Paginator(ABC, Generic[Domain]):
+    @abstractmethod
+    async def find_page(
+        self,
+        builder: Optional[WhereFilter],
+        limit: int,
+        next_page_token: Optional[str] = None,
+    ) -> Page[Domain]:
+        pass
+
+    @abstractmethod
+    def make_record_token(self, domain: Domain) -> str:
+        pass
+
+
+def create_connection(
+    connection_string: str, dao_module=None, **kwargs
+) -> DbConnection:
+    scheme = urlparse(connection_string).scheme
+
+    if len(DbConnection._REGISTRY) == 0:
+        connectors = environ.get("DB_CONNECTORS", "postgresql+asyncpg").split()
+
+        for connector in connectors:
+            if connector == "postgresql+asyncpg":
+                from .database_adapters.postgres_adapter import PostgresConnection
+
+                DbConnection._REGISTRY["postgresql+asyncpg"] = PostgresConnection
+
+            if connector == "firestore+async":
+                from .database_adapters.firestore_adapter import FirestoreConnection
+
+                DbConnection._REGISTRY["firestore+async"] = FirestoreConnection
+
+    build_connection = DbConnection._REGISTRY.get(scheme)
+
+    if build_connection is None:
+        raise KeyError(f"No key for schem {scheme}")
+
+    connection = build_connection(connection_string, **kwargs)
+
+    if not dao_module is None:
+        connection.load_metadatas(
+            [
+                class_type
+                for class_type in dao_module.__dict__.values()
+                if isclass(class_type) and issubclass(class_type, BaseModel)
+            ]
+        )
+
+    return connection

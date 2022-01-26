@@ -55,7 +55,6 @@ from .formula import (
     UnitInstance,
     UnitInstanceCacheKey,
     UnitInstanceCache,
-    FieldNode,
     FormulaFilter,
     FormulaPluckFilter,
     FormulaCachePluckFilter,
@@ -63,6 +62,10 @@ from .formula import (
     FormulaDependency,
     AstNode,
     AstNodeValue,
+    FlatAst,
+    StagedFormula,
+    StagedFormulas,
+    StagedFormulasKey,
 )
 
 from .datasheet_definition import DatasheetDefinition, ElementPropertySchema
@@ -98,7 +101,6 @@ from .datasheet_element import (
 from .bounded_node import BoundedNode, BoundedNodeSlice
 from .report_definition import (
     ReportDefinition,
-    ReportColumn,
     ReportStructure,
     AttributeBucket,
     ReportJoin,
@@ -106,14 +108,22 @@ from .report_definition import (
     ReportRowsCache,
     ReportRowKey,
     ReportDefinitionFilter,
-    StageGrouping,
+    StageSummary,
     ReportComputation,
 )
 from .report_definition_row_cache import (
     ReportDefinitionRowCache,
     ReportDefinitionRowCacheFilter,
 )
-from .report import ReportRow, ReportRowFilter, ReportStage, Report, ReportKey
+from .report import (
+    ReportRow,
+    ReportRowFilter,
+    ReportStage,
+    Report,
+    ReportKey,
+    ReportColumn,
+    ComputedValue,
+)
 from .measure_unit import MeasureUnit
 from .values_union import (
     PrimitiveUnion,

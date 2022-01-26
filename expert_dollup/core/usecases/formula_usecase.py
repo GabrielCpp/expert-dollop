@@ -50,9 +50,10 @@ class FormulaUseCase:
 
     async def compute_project_formulas(self, project_id) -> UnitInstanceCache:
         project_details = await self.project_service.find_by_id(project_id)
-        instances = await self.formula_resolver.compute_all_project_formula(
+        injector = await self.formula_resolver.compute_all_project_formula(
             project_id, project_details.project_def_id
         )
+        instances = injector.unit_instances
         await self.formula_instance_service.save(
             UnitInstanceCacheKey(project_id=project_id), instances
         )

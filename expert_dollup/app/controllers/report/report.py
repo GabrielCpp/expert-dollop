@@ -25,3 +25,21 @@ async def get_project_report(
             out_dto=ReportDto,
         ),
     )
+
+
+@router.get("/project/{project_id}/report/{report_definition_id}/minimal")
+async def get_project_report(
+    project_id: UUID,
+    report_definition_id: UUID,
+    usecase: ReportUseCase = Depends(Inject(ReportUseCase)),
+    handler=Depends(Inject(RequestHandler)),
+):
+
+    return await handler.forward(
+        usecase.get_report,
+        dict(project_id=project_id, report_definition_id=report_definition_id),
+        MappingChain(
+            domain=Report,
+            out_dto=MinimalReportDto,
+        ),
+    )

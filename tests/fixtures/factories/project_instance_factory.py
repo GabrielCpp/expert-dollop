@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 from decimal import Decimal
-from expert_dollup.core.logits import serialize_post_processed_expression
 from expert_dollup.core.domains import *
 from .helpers import make_uuid
 
@@ -358,7 +357,6 @@ class ProjectInstanceFactory:
                 attached_to_type_id=formula_seed.node.definition.id,
                 expression=formula_seed.expression,
                 name=formula_seed.name,
-                final_ast=serialize_post_processed_expression(formula_seed.expression),
                 dependency_graph=FormulaDependencyGraph(
                     formulas=[
                         FormulaDependency(

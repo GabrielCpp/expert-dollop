@@ -4,8 +4,8 @@ from uuid import UUID
 from collections import defaultdict
 from functools import cached_property
 from expert_dollup.core.domains.project_node import ProjectNode
-import expert_dollup.core.logits.formula_processor as formula_processor
 from expert_dollup.core.domains import UnitInstance, PrimitiveUnion, ProjectNode
+import expert_dollup.core.logits.formula_processor as formula_processor
 
 
 class UnitLike(Protocol):
@@ -18,6 +18,14 @@ class FormulaInjector:
     def __init__(self):
         self.unit_map: Dict[str, List[UnitLike]] = defaultdict(list)
         self.units: List[UnitLike] = []
+
+    def precompute(self) -> None:
+        for unit in self.units:
+            unit.computed
+
+    @property
+    def unit_instances(self) -> List[UnitLike]:
+        return [unit.computed for unit in self.units]
 
     def add_unit(self, unit: UnitLike) -> None:
         for item in unit.path:
@@ -45,6 +53,7 @@ class FormulaInjector:
         return []
 
     def get_one_value(self, node_id: UUID, path: List[UUID], name: str, default):
+        name = name.lower()
         units = self.get_unit(node_id, path, name)
 
         if len(units) == 0:
@@ -54,8 +63,18 @@ class FormulaInjector:
             return units[0].value
 
         # TODO: Fix me
-        return "<Error>"
-        raise Exception(f"Too many value for {name} in node {node_id}")
+        return f"<Error, {name}>"
+
+    def get_one_value_by_name(self, name: str, default=0):
+        units = self.get_unit(None, [], name)
+
+        if len(units) == 0:
+            return default
+
+        if len(units) == 1:
+            return units[0].value
+
+        raise Exception(f"<Error, {name}>")
 
 
 class FrozenUnit:

@@ -1,9 +1,8 @@
 from uuid import UUID, uuid4
-from typing import List
 from expert_dollup.core.domains.datasheet_definition_element import (
     DatasheetDefinitionElementFilter,
 )
-from expert_dollup.shared.database_services import Page
+from expert_dollup.shared.database_services import Page, Paginator
 from expert_dollup.core.domains import (
     Datasheet,
     DatasheetElement,
@@ -28,12 +27,14 @@ class DatasheetUseCase:
         datasheet_element_service: DatasheetElementService,
         schema_validator: SchemaValidator,
         datasheet_definition_element_service: DatasheetDefinitionElementService,
+        datasheet_element_paginator: Paginator[DatasheetElement],
         clock: Clock,
     ):
         self.datasheet_service = datasheet_service
         self.datasheet_element_service = datasheet_element_service
         self.datasheet_definition_element_service = datasheet_definition_element_service
         self.schema_validator = schema_validator
+        self.datasheet_element_paginator = datasheet_element_paginator
         self.clock = clock
 
     async def find_by_id(self, datasheet_id: UUID) -> Datasheet:
@@ -56,7 +57,7 @@ class DatasheetUseCase:
         cloned_elements = []
 
         while len(page.results) == page.limit:
-            page = await self.datasheet_element_service.find_by_paginated(
+            page = await self.datasheet_element_paginator.find_page(
                 DatasheetElementFilter(
                     datasheet_id=datasheet_clone_target.target_datasheet_id
                 ),

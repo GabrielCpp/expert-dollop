@@ -21,13 +21,10 @@ class ProjectDefinitonUseCase:
         self.word_provider = word_provider
 
     async def add(self, domain: ProjectDefinition) -> Awaitable:
-        suffix_name = self.word_provider.pick_joined(3)
-        name = "project_definition_" + suffix_name + domain.id.hex
         ressource = Ressource(id=domain.id, kind="project_definition", owner_id=uuid4())
-
         await self.ressource_service.insert(ressource)
         await self.service.insert(domain)
-        return await self.find_by_id(domain.id)
+        return domain
 
     async def delete_by_id(self, id: UUID) -> Awaitable:
         await self.service.delete_by_id(id)

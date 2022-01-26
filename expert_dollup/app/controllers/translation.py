@@ -88,11 +88,12 @@ async def delete_translation(
 async def get_all_translation_for_ressource(
     ressource_id: UUID,
     locale: str,
-    handler=Depends(Inject(HttpPageHandler[TranslationService, TranslationDto])),
+    handler=Depends(Inject(HttpPageHandler[Translation])),
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = 10,
 ):
     return await handler.handle(
+        TranslationDto,
         TranslationRessourceLocaleQuery(ressource_id=ressource_id, locale=locale),
         limit,
         next_page_token,

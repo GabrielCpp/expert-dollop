@@ -1,5 +1,6 @@
 from typing import List, Optional
 from uuid import UUID
+from expert_dollup.core.domains.bounded_node import BoundedNode
 from expert_dollup.core.units import NodeValueValidation, NodeEventDispatcher
 from expert_dollup.core.builders import ProjectNodeSliceBuilder, ProjectTreeBuilder
 from expert_dollup.core.domains import (
@@ -101,6 +102,20 @@ class ProjectNodeUseCase:
             project_id, updates
         )
         return results
+
+    async def imports(self, nodes: List[ProjectNode]):
+        if len(nodes) == 0:
+            return
+
+        await self.project_node_service.insert_many(nodes)
+        project_id = nodes[0].project_id
+        definitions = await self.project_node_meta.find_project_defs(project_id)
+        definitions_by_id = {definition.id: definition for definition in definitions}
+
+        for node in nodes:
+            definition = definitions_by_id[node.type_id]
+            bounded_node = BoundedNode(node=node, definition=definition)
+            await self.node_event_dispatcher.execute_node_trigger(bounded_node)
 
     async def add_collection(
         self,

@@ -41,8 +41,14 @@ class AstNodeValue:
 class AstNode:
     kind: str
     values: Dict[str, Union[AstNodeValue, str]] = field(default_factory=dict)
-    properties: Dict[str, "AstNode"] = field(default_factory=dict)
-    children: Dict[str, List["AstNode"]] = field(default_factory=dict)
+    properties: Dict[str, int] = field(default_factory=dict)
+    children: Dict[str, List[int]] = field(default_factory=dict)
+
+
+@dataclass
+class FlatAst:
+    nodes: List[AstNode]
+    root_index: int
 
     def dict(self) -> dict:
         return asdict(self)
@@ -60,7 +66,19 @@ class FormulaExpression:
 @dataclass
 class Formula(FormulaExpression):
     dependency_graph: FormulaDependencyGraph
+
+
+@dataclass
+class StagedFormula(Formula):
     final_ast: dict
+
+
+StagedFormulas = List[StagedFormula]
+
+
+@dataclass
+class StagedFormulasKey:
+    project_definition_id: UUID
 
 
 @dataclass
@@ -92,16 +110,6 @@ UnitInstanceCache = List[UnitInstance]
 @dataclass
 class UnitInstanceCacheKey:
     project_id: UUID
-
-
-@dataclass
-class FieldNode:
-    id: UUID
-    name: str
-    path: List[UUID]
-    type_id: UUID
-    type_path: List[UUID]
-    expression: PrimitiveUnion
 
 
 class FormulaFilter(QueryFilter):

@@ -1,27 +1,14 @@
-from typing import (
-    List,
-    TypeVar,
-    Optional,
-    Awaitable,
-    Dict,
-    Type,
-    Tuple,
-    Union,
-)
+from typing import List, TypeVar, Optional, Dict, Type, Union, Callable, Any
 from pydantic import BaseModel, ConstrainedStr
 from pydantic.fields import ModelField
-from dataclasses import dataclass
 from inspect import isclass
 from uuid import UUID
 from datetime import datetime
-from databases import Database
-from databases.backends.postgres import PostgresBackend
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import (
     MetaData,
-    create_engine,
     and_,
     func,
-    or_,
     desc,
     asc,
     Table,
@@ -30,12 +17,11 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     Integer,
+    text,
 )
-from sqlalchemy.schema import FetchedValue
 from sqlalchemy.sql import select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.postgresql import insert as pg_insert, ARRAY
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.engine.interfaces import Dialect
 from expert_dollup.shared.automapping import Mapper
 from ..adapter_interfaces import (
     CollectionService,
@@ -43,42 +29,33 @@ from ..adapter_interfaces import (
     WhereFilter,
     DbConnection,
 )
-from ..page import Page
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 from ..batch_helper import batch
 from ..json_serializer import JsonSerializer
-
+from ..collection_mapper import CollectionMapper
+from ..db_agnotist_query_builder import DbAgnotistQueryBuilder
 
 NoneType = type(None)
 
 
-def create_postgres_dialect():
-    dialect = postgresql.dialect(
-        json_deserializer=lambda x: x,
-        json_serializer=lambda x: x,
-        paramstyle="pyformat",
-    )
-
-    dialect.implicit_returning = True
-    dialect.supports_native_enum = True
-    dialect.supports_smallserial = True  # 9.2+
-    dialect._backslash_escapes = False
-    dialect.supports_sane_multi_rowcount = True  # psycopg 2.0.9+
-    dialect._has_native_hstore = True
-    dialect.supports_native_decimal = True
-
-    return dialect
+import sqlalchemy.types as types
 
 
-class AiopgBackendWithCustomSerializer(PostgresBackend):
-    def _get_dialect(self) -> Dialect:
-        return create_postgres_dialect()
+class UUIDWrap(types.TypeDecorator):
+    """
+    Wrap asyncpg uuid to ensure they are converted to python uuid
+    """
 
+    impl = postgresql.UUID(as_uuid=True)
 
-Database.SUPPORTED_BACKENDS[
-    "postgresql"
-] = "expert_dollup.shared.database_services.database_adapters.postgres_adapter:AiopgBackendWithCustomSerializer"
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        return value
+
+    def process_result_value(self, value, dialect):
+        return UUID(bytes=value.bytes)
 
 
 class PostgresColumnBuilder:
@@ -87,7 +64,7 @@ class PostgresColumnBuilder:
             Union: self._build_union,
             Dict: self._build_dict,
             dict: self._build_dict,
-            List: self._build_list,
+            list: self._build_list,
             UUID: self._build_uuid,
             int: self._build_int,
             str: self._build_str,
@@ -99,8 +76,8 @@ class PostgresColumnBuilder:
         }
 
     def build(self, meta: Type, schema: dict, field: ModelField):
-        db_type = self._build_column_type(schema, field.type_)
         options = {"nullable": field.required}
+        db_type = self._build_column_type(schema, field, options)
 
         if field.name == meta.pk or (
             isinstance(meta.pk, tuple) and field.name in meta.pk
@@ -109,9 +86,9 @@ class PostgresColumnBuilder:
 
         return Column(field.name, db_type, **options)
 
-    def _build_column_type(self, schema: dict, field_type: Type) -> Column:
-        type_origin = getattr(field_type, "__origin__", field_type)
-        type_args = getattr(field_type, "__args__", [])
+    def _build_column_type(self, schema: dict, field, options) -> Column:
+        type_origin = getattr(field.outer_type_, "__origin__", field.type_)
+        type_args = getattr(field.outer_type_, "__args__", [])
 
         if type_origin == Union and len(type_args) == 2 and NoneType in type_args:
             type_origin = [
@@ -144,7 +121,7 @@ class PostgresColumnBuilder:
         return String
 
     def _build_uuid(self, schema: dict, type_args: List[Type]):
-        return postgresql.UUID(as_uuid=True)
+        return UUIDWrap()
 
     def _build_bool(self, schema: dict, type_args: List[Type]):
         return Boolean
@@ -166,7 +143,7 @@ class PostgresColumnBuilder:
             return postgresql.ARRAY(String, dimensions=1)
 
         if type_args[0] is UUID:
-            return postgresql.ARRAY(self._build_uuid(schema, type_args), dimensions=1)
+            return ARRAY(UUIDWrap(), dimensions=1)
 
         return self._make_json_column_type()
 
@@ -177,17 +154,17 @@ class PostgresColumnBuilder:
 
 class PostgresConnection(DbConnection):
     def __init__(self, connection_string: str, **kwargs):
-        self.connection_string = connection_string
-        self._database = Database(
-            connection_string,
-            init=PostgresConnection._init_connection,
-            **kwargs,
-        )
         self.metadata = MetaData()
         self.tables: Dict[Type, Table] = {}
+        self._engine = create_async_engine(
+            connection_string,
+            json_serializer=lambda x: JsonSerializer.encode(x).decode("utf8"),
+            json_deserializer=JsonSerializer.decode,
+            **kwargs,
+        )
 
     def get_collection_service(self, meta: Type, mapper: Mapper):
-        return PostgresTableService(meta, self.tables, self._database, mapper)
+        return PostgresTableService(meta, self.tables, self._engine, mapper)
 
     def load_metadatas(self, dao_types):
         column_builder = PostgresColumnBuilder()
@@ -217,183 +194,99 @@ class PostgresConnection(DbConnection):
             self.tables[dao_type] = table
 
     async def truncate_db(self, tables: Optional[List[str]] = None):
-        engine = create_engine(self.connection_string)
-        con = engine.connect()
-        trans = con.begin()
+        async with self._engine.begin() as con:
+            if tables is None:
+                tables = [table.name for table in self.tables.values()]
 
-        if tables is None:
-            meta = MetaData()
-            meta.reflect(bind=engine)
-
-            for table in meta.sorted_tables:
-                con.execute(f'ALTER TABLE "{table.name}" DISABLE TRIGGER ALL;')
-                con.execute(table.delete())
-                con.execute(f'ALTER TABLE "{table.name}" ENABLE TRIGGER ALL;')
-        else:
             for table in tables:
-                con.execute(f'ALTER TABLE "{table}" DISABLE TRIGGER ALL;')
-                con.execute(f"DELETE FROM {table};")
-                con.execute(f'ALTER TABLE "{table}" ENABLE TRIGGER ALL;')
-
-        trans.commit()
+                await con.execute(text(f'ALTER TABLE "{table}" DISABLE TRIGGER ALL;'))
+                await con.execute(text(f"DELETE FROM {table};"))
+                await con.execute(text(f'ALTER TABLE "{table}" ENABLE TRIGGER ALL;'))
 
     async def drop_db(self):
-        engine = create_engine(self.connection_string)
-        meta = MetaData()
-        meta.reflect(bind=engine)
-        for tbl in reversed(meta.sorted_tables):
-            tbl.drop(engine)
+        async with self._engine.begin() as conn:
+            await conn.execute(text(f"DROP SCHEMA public CASCADE;"))
+            await conn.execute(text(f"CREATE SCHEMA public;"))
 
     async def connect(self) -> None:
-        await self._database.connect()
+        pass
 
     async def disconnect(self) -> None:
-        await self._database.disconnect()
+        await self._engine.dispose()
 
     @property
     def is_connected(self) -> bool:
-        return self._database.is_connected
+        return True
+
+
+BATCH_SIZE = 1000
+SUPPORTED_OPS = {
+    "==": lambda lhs, rhs: lhs == rhs,
+    "<": lambda lhs, rhs: lhs < rhs,
+    "in": lambda lhs, rhs: lhs.in_(rhs),
+    "startwiths": lambda lhs, rhs: lhs.like(f"{rhs}%"),
+}
+
+
+class QueryCompiler:
+    @staticmethod
+    def compile_query(builder, table):
+        query = (
+            table.select()
+            if builder._selections is None
+            else select([getattr(table.c, name) for name in builder._selections])
+        )
+
+        where_filter = QueryCompiler.build_where_filter(builder, table)
+
+        if not where_filter is None:
+            query = query.where(where_filter)
+
+        if not builder._orders is None:
+            ordering = []
+
+            for column_name, direction in builder._orders:
+                assert direction in ("desc", "asc")
+                apply_order = desc if direction == "desc" else asc
+                ordering.append(apply_order(getattr(table.c, column_name)))
+
+            query = query.order_by(*ordering)
+
+        if not builder._max_records is None:
+            query = query.limit(builder._max_records)
+
+        return query
 
     @staticmethod
-    async def _init_connection(conn):
-        def get_bytes(u):
-            if isinstance(u, str):
-                return UUID(u).bytes
+    def build_where_filter(builder, table):
+        where_filter = None
 
-            return u.bytes
+        for (column_name, op, value) in builder._wheres:
+            apply_op = SUPPORTED_OPS[op]
+            operator = apply_op(getattr(table.c, column_name), value)
 
-        await conn.set_type_codec(
-            "uuid",
-            encoder=get_bytes,
-            decoder=lambda u: UUID(bytes=u),
-            schema="pg_catalog",
-            format="binary",
-        )
+            if where_filter is None:
+                where_filter = operator
+            else:
+                where_filter = and_(where_filter, operator)
 
-        await conn.set_type_codec(
-            "json",
-            encoder=JsonSerializer.encode,
-            decoder=JsonSerializer.decode,
-            schema="pg_catalog",
-        )
+        return where_filter
 
-        await conn.set_type_codec(
-            "json",
-            encoder=lambda x: JsonSerializer.encode(x).encode("utf8"),
-            decoder=lambda x: JsonSerializer.decode(x.decode("utf8")),
-            schema="pg_catalog",
-            format="binary",
-        )
+    @staticmethod
+    def build_and_column_filter(table, fields: dict):
+        condition = None
+
+        for column_name, value in fields.items():
+            if condition is None:
+                condition = getattr(table.c, column_name) == value
+            else:
+                condition = and_(condition, getattr(table.c, column_name) == value)
+
+        return condition
 
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")
-
-
-@dataclass
-class TableColumnProcessor:
-    name: str
-    processor: callable
-
-
-class PostgresQueryBuilder(QueryBuilder):
-    @staticmethod
-    def order_by_clause(table, name: str, direction: str):
-        assert direction in ("desc", "asc")
-        order = desc if direction == "desc" else asc
-
-        return order(getattr(table.c, name))
-
-    def __init__(self, table, mapper, build_filter):
-        self._table = table
-        self._mapper = mapper
-        self._build_filter = build_filter
-        self._conditions = []
-        self._saved = {}
-        self.final_query = None
-        self.fields = None
-        self.order = None
-
-    def select_fields(self, *names: List[str]) -> "QueryBuilder":
-        self.fields = []
-
-        for name in names:
-            field = getattr(self._table.c, name)
-            self.fields.append(field)
-
-        return self
-
-    def order_by(self, name: str, direction: str) -> "QueryBuilder":
-        self.order = PostgresQueryBuilder.order_by_clause(self._table, name, direction)
-        return self
-
-    def find_by(self, query_filter: QueryFilter) -> "QueryBuilder":
-        where_filter = self._build_filter(query_filter)
-        self._conditions.append(where_filter)
-        return self
-
-    def startwiths(self, query_filter: QueryFilter) -> "QueryBuilder":
-        filter_fields = self._mapper.map(query_filter, dict, query_filter.__class__)
-
-        for name, path_filter in filter_fields.items():
-            where_filter = getattr(self._table.c, name).like(f"{path_filter}%")
-            self._conditions.append(where_filter)
-
-        return self
-
-    def pluck(self, pluck_filter: QueryFilter) -> "QueryBuilder":
-        filter_fields = self._mapper.map(pluck_filter, dict, pluck_filter.__class__)
-
-        for name, values in filter_fields.items():
-            assert (
-                len(values) <= 1000
-            ), f"Len of batch must be less than 1000, now {len(values)}"
-            where_filter = getattr(self._table.c, name).in_(values)
-            self._conditions.append(where_filter)
-
-        return self
-
-    def save(self, name) -> "QueryBuilder":
-        self._saved[name] = self._conditions
-        self._conditions = []
-        return self
-
-    def any_of(self, *names: List[str]) -> "QueryBuilder":
-        if len(names) == 0 and len(self._conditions) > 0:
-            self._conditions = [or_(*self._conditions)]
-
-        if len(names) > 0:
-            merged_conditions = []
-            for name in names:
-                merged_conditions.extend(self._saved[name])
-
-            self._conditions.append(or_(*names))
-
-        return self
-
-    def all_of(self, *names: List[str]) -> "QueryBuilder":
-        if len(names) == 0 and len(self._conditions) > 0:
-            self._conditions = [and_(*self._conditions)]
-
-        if len(names) > 0:
-            merged_conditions = []
-            for name in names:
-                merged_conditions.extend(self._saved[name])
-
-            self._conditions.append(and_(*merged_conditions))
-
-        return self
-
-    def finalize(self) -> "QueryBuilder":
-        assert (
-            len(self._conditions) > 0
-        ), "Query builder must contains at leas a condition"
-
-        if len(self._conditions) == 1:
-            self.final_query = self._conditions[0]
-
-        self.final_query = and_(*self._conditions)
-        return self
 
 
 class PostgresTableService(CollectionService[Domain]):
@@ -401,19 +294,22 @@ class PostgresTableService(CollectionService[Domain]):
         self,
         meta: Type,
         tables: Dict[Type, Table],
-        connector: Database,
+        engine,
         mapper: Mapper,
     ):
-        self._mapper = mapper
-        self._database = connector
         self._dao = meta.dao
         self._domain = meta.domain
-        self._paginator_factory = getattr(meta, "paginator", lambda _: None)
-        self._version = getattr(self._dao.Meta, "version", None)
-        self._version_mappers = getattr(self._dao.Meta, "version_mappers", {})
-        self._table = tables.get(self._dao)
-        self._paginator = self._paginator_factory(self._table)
-        self._column_processors = self._build_table_raw_processors()
+        self._mapper = mapper
+        self._database = engine
+        self._table = tables.get(meta.dao)
+        self._dao_mapper = CollectionMapper(
+            mapper,
+            meta.domain,
+            meta.dao,
+            getattr(meta.dao.Meta, "version", None),
+            getattr(meta.dao.Meta, "version_mappers", {}),
+            record_to_dict=lambda r: r._asdict(),
+        )
 
         self.table_id_names = [
             pk.name for pk in self._table.primary_key.columns.values()
@@ -424,293 +320,197 @@ class PostgresTableService(CollectionService[Domain]):
             for table_id_name in self.table_id_names
         ]
 
+    @property
+    def domain(self) -> Type:
+        return self._domain
+
+    @property
+    def dao(self) -> Type:
+        return self._dao
+
     async def insert(self, domain: Domain):
-        query = self._table.insert()
-        value = self._map_to_dict(domain)
-        await self._database.execute(query=query, values=value)
+        value = self._dao_mapper.map_to_dict(domain)
+        query = self._table.insert().values(value)
 
-    async def insert_many(self, domains: List[Domain], bulk=False):
-        dicts = self._map_many_to_dict(domains)
+        await self._execute(query)
 
-        for dicts_batch in batch(dicts, 1000):
-            if bulk:
-                await self._insert_many_raw(dicts_batch)
-            else:
-                query = pg_insert(self._table, dicts_batch)
-                await self._database.execute(query=query)
+    async def insert_many(self, domains: List[Domain]):
+        dicts = self._dao_mapper.map_many_to_dict(domains)
+
+        for dicts_batch in batch(dicts, BATCH_SIZE):
+            query = pg_insert(self._table, dicts_batch)
+            await self._execute(query)
 
     async def upserts(self, domains: List[Domain]) -> None:
         if len(domains) == 0:
             return
 
-        dicts = self._map_many_to_dict(domains)
+        dicts = self._dao_mapper.map_many_to_dict(domains)
         constraint = f"{self._table.name}_pkey"
 
-        for items in batch(dicts, 1000):
+        for items in batch(dicts, BATCH_SIZE):
             query = pg_insert(self._table, items)
             set_ = {c.name: c for c in query.excluded if not c.primary_key}
             query = query.on_conflict_do_update(
                 constraint=constraint,
                 set_=set_,
             )
-            await self._database.execute(query=query)
+
+            await self._execute(query=query)
 
     async def find_all(self, limit: int = 1000) -> List[Domain]:
         query = self._table.select().limit(limit)
-        records = await self._database.fetch_all(query=query)
-        results = self._map_many_to_domain(records)
+        records = await self._fetch_all(query=query)
+        results = self._dao_mapper.map_many_to_domain(records)
         return results
 
-    async def find_all_paginated(
-        self, limit: int = 1000, next_page_token: Optional[str] = None
-    ) -> Page[Domain]:
-        assert not self._paginator is None, "Paginator required"
-        query = self._paginator.build_query(None, limit, next_page_token)
-        records = await self._database.fetch_all(query=query)
-        results = self._map_many_to_domain(records)
-        new_next_page_token = (
-            self._paginator.default_token
-            if len(records) == 0
-            else self._paginator.encode_record(records[-1])
-        )
-
-        return Page(
-            next_page_token=new_next_page_token,
-            limit=limit,
-            results=results,
-        )
-
-    async def find_by(
-        self,
-        query_filter: WhereFilter,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        order_by: Optional[Tuple[str, str]] = None,
-    ) -> List[Domain]:
-        where_filter = self._build_filter(query_filter)
-        query = self._table.select().where(where_filter)
-
-        if not limit is None:
-            query = query.limit(limit)
-
-        if not offset is None:
-            query = query.offset(offset)
-
-        if not order_by is None:
-            name, direction = order_by
-            query = query.order_by(
-                PostgresQueryBuilder.order_by_clause(self._table, name, direction)
-            )
-
-        records = await self._database.fetch_all(query=query)
-        results = self._map_many_to_domain(records)
+    async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
+        query = self._build_query(query_filter)
+        records = await self._fetch_all(query=query)
+        results = self._dao_mapper.map_many_to_domain(records)
 
         return results
-
-    async def find_by_paginated(
-        self,
-        query_filter: WhereFilter,
-        limit: int,
-        next_page_token: Optional[str] = None,
-    ) -> Page[Domain]:
-        assert not self._paginator is None, "Paginator required"
-        where_filter = self._build_filter(query_filter)
-        query = self._paginator.build_query(where_filter, limit, next_page_token)
-        records = await self._database.fetch_all(query=query)
-        results = self._map_many_to_domain(records)
-
-        new_next_page_token = (
-            self._paginator.default_token
-            if len(records) == 0
-            else self._paginator.encode_record(records[-1])
-        )
-
-        return Page[Domain](
-            next_page_token=new_next_page_token,
-            limit=limit,
-            results=results,
-        )
 
     async def find_one_by(self, query_filter: WhereFilter) -> Domain:
-        where_filter = self._build_filter(query_filter)
-        query = self._table.select().where(where_filter)
-        record = await self._database.fetch_one(query=query)
+        query = self._build_query(query_filter)
+        record = await self._fetch_one(query)
 
         if record is None:
             raise RecordNotFound()
 
-        result = self._map_to_domain(record)
+        result = self._dao_mapper.map_to_domain(record)
 
         return result
 
     async def delete_by(self, query_filter: WhereFilter):
         where_filter = self._build_filter(query_filter)
         query = self._table.delete().where(where_filter)
-        await self._database.execute(query)
+        await self._execute(query)
 
     async def count(self, query_filter: Optional[WhereFilter] = None) -> int:
-        if query_filter is None:
-            query = select([func.count()]).select_from(self._table)
-        else:
-            where_filter = self._build_filter(query_filter)
-            query = select([func.count()]).select_from(self._table).where(where_filter)
+        query = select([func.count()]).select_from(self._table)
 
-        count = await self._database.fetch_val(query=query)
+        if not query_filter is None:
+            where_filter = self._build_filter(query_filter)
+            query = query.where(where_filter)
+
+        count = await self._fetch_val(query=query)
         return count
 
     async def delete_by_id(self, pk_id: Id):
         where_filter = self._build_id_filter(pk_id)
         query = self._table.delete().where(where_filter)
-        await self._database.execute(query=query)
+        await self._execute(query=query)
+
+    async def exists(self, query_filter: WhereFilter) -> bool:
+        query = self._build_query(query_filter)
+        record = await self._fetch_one(query)
+        return not record is None
 
     async def has(self, pk_id: Id) -> bool:
         where_filter = self._build_id_filter(pk_id)
         query = select(self.table_ids).where(where_filter)
-        value = await self._database.fetch_one(query=query)
+        value = await self._fetch_one(query=query)
         return not value is None
 
     async def find_by_id(self, pk_id: Id) -> Domain:
         where_filter = self._build_id_filter(pk_id)
         query = self._table.select().where(where_filter)
-        record = await self._database.fetch_one(query=query)
+        record = await self._fetch_one(query=query)
 
         if record is None:
             raise RecordNotFound()
 
-        result = self._map_to_domain(record)
+        result = self._dao_mapper.map_to_domain(record)
         return result
 
     async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):
         where_filter = self._build_filter(query_filter)
         update_fields = self._mapper.map(value_filter, dict, value_filter.__class__)
         query = self._table.update().where(where_filter).values(update_fields)
-        await self._database.execute(query=query)
-
-    def make_record_token(self, domain: Domain) -> str:
-        assert not self._paginator is None, "Paginator required"
-        dao = self._mapper.map(domain, self._dao)
-        next_page_token = self._paginator.encode_dao(dao)
-        return next_page_token
+        await self._execute(query)
 
     def get_builder(self) -> QueryBuilder:
-        return PostgresQueryBuilder(self._table, self._mapper, self._build_filter)
+        return DbAgnotistQueryBuilder()
 
-    async def fetch_all_records(self, builder: QueryBuilder) -> dict:
-        query = select(builder.fields or []).where(builder.final_query)
-        records = await self._database.fetch_all(query=query)
-        return records
+    async def fetch_all_records(
+        self,
+        builder: WhereFilter,
+        mappings: Dict[str, Callable[[Mapper], Callable[[Any], Any]]] = {},
+    ) -> List[dict]:
+        value_mapper = {
+            name: mapping(self._mapper) for name, mapping in mappings.items()
+        }
 
-    def _map_to_dict(self, domain: Domain) -> dict:
-        dao = self._mapper.map(domain, self._dao)
-        d = self._add_version_to_dao(dao)
+        query = self._build_query(builder)
+        records = await self._fetch_all(query=query)
 
-        return d
-
-    def _map_many_to_dict(self, domains: List[Domain]) -> List[dict]:
-        dicts = self._mapper.map_many(
-            domains, self._dao, after=self._add_version_to_dao
-        )
-        return dicts
-
-    def _map_to_domain(self, record) -> Domain:
-        dao = self._remap_record_to_lastest(record)
-        result = self._mapper.map(dao, self._domain)
-        return result
-
-    def _map_many_to_domain(self, records: list) -> List[Domain]:
-        daos = [self._remap_record_to_lastest(record) for record in records]
-        results = self._mapper.map_many(daos, self._domain)
-        return results
-
-    def _remap_record_to_lastest(self, record):
-        version = record.get("_version", None)
-
-        if version is None or version == self._version:
-            return self._dao.parse_obj(record)
-
-        return self._version_mappers[version][self._version](
-            self._version_mappers, record
-        )
-
-    def _add_version_to_dao(self, dao: BaseModel) -> dict:
-        d = dao.dict()
-
-        if not self._version is None:
-            d["_version"] = self._version
-
-        return d
-
-    async def _insert_many_raw(self, dicts: List[dict]) -> Awaitable:
-        """
-        Postgres specific bulk insert of daos
-        """
-        columns_name = [
-            column_processor.name for column_processor in self._column_processors
+        return [
+            {
+                name: value_mapper[name](value) if name in value_mapper else value
+                for name, value in record._asdict().items()
+            }
+            for record in records
         ]
 
-        records = [
-            [d[column_processor.name] for column_processor in self._column_processors]
-            for d in dicts
-        ]
+    async def bulk_insert(self, daos: List[BaseModel]):
+        columns_name = [column.name for column in self._table.c]
+        records = []
 
-        async with self._database.connection() as connection:
-            n = 300
-            for i in range(0, len(records), n):
-                await connection.raw_connection.copy_records_to_table(
-                    self._table.name, records=records[i : i + n], columns=columns_name
-                )
+        for dao in daos:
+            d = self._dao_mapper.add_version_to_dao(dao)
+            records.append([d[column_name] for column_name in columns_name])
 
-    def _build_filter(self, query_filter: QueryFilter):
-        query_type = type(query_filter)
+        async with self._database.connect() as connection:
+            conn = await connection.get_raw_connection()
+            await conn.driver_connection.copy_records_to_table(
+                self._table.name, records=records, columns=columns_name
+            )
 
-        if query_type is PostgresQueryBuilder:
-            assert (
-                not query_filter.final_query is None
-            ), "Query builder query must be finalized"
-            return query_filter.final_query
+    def _build_query(self, builder: WhereFilter):
+        if isinstance(builder, DbAgnotistQueryBuilder):
+            return QueryCompiler.compile_query(builder, self._table)
 
-        filter_fields = self._mapper.map(query_filter, dict, query_filter.__class__)
-        where_filter = self._build_and_column_filter(filter_fields)
+        return self._table.select().where(self._build_filter(builder))
 
+    def _build_filter(self, builder: WhereFilter):
+        if isinstance(builder, DbAgnotistQueryBuilder):
+            return QueryCompiler.build_where_filter(builder, self._table)
+
+        filter_fields = self._mapper.map(builder, dict, builder.__class__)
+        where_filter = QueryCompiler.build_and_column_filter(self._table, filter_fields)
         return where_filter
 
     def _build_id_filter(self, pk_id):
         if len(self.table_ids) == 1:
             return self.table_ids[0] == pk_id
 
-        identifier = self._mapper.map(pk_id, dict)
+        identifier = self._mapper.map(pk_id, dict, pk_id.__class__)
         name = self.table_id_names[0]
         condition = getattr(self._table.c, name) == identifier[name]
 
-        for index in range(0, len(self.table_id_names)):
-            name = self.table_id_names[index]
+        for name in self.table_id_names:
             comparaison = getattr(self._table.c, name) == identifier[name]
             condition = and_(condition, comparaison)
 
         return condition
 
-    def _build_table_raw_processors(self) -> List[TableColumnProcessor]:
-        noop = lambda x: x
-        tuned_postgres_dialect = create_postgres_dialect()
+    async def _fetch_all(self, query) -> List[dict]:
+        async with self._database.begin() as conn:
+            result = await conn.execute(query)
+            return result.fetchall()
 
-        return [
-            TableColumnProcessor(
-                name=column.name,
-                processor=column.type.bind_processor(tuned_postgres_dialect) or noop,
-            )
-            for column in self._table.c
-            if not isinstance(column.server_default, FetchedValue)
-        ]
+    async def _fetch_one(self, query) -> List[dict]:
+        async with self._database.begin() as conn:
+            result = await conn.execute(query)
+            return result.fetchone()
 
-    def _build_and_column_filter(self, fields: dict):
-        condition = None
+    async def _fetch_val(self, query) -> List[dict]:
+        async with self._database.begin() as conn:
+            result = await conn.execute(query)
+            row = result.fetchone()
+            return row if row is None else row[0]
 
-        for column_name, value in fields.items():
-            if condition is None:
-                condition = getattr(self._table.c, column_name) == value
-            else:
-                condition = and_(
-                    condition, getattr(self._table.c, column_name) == value
-                )
-
-        return condition
+    async def _execute(self, query):
+        async with self._database.begin() as conn:
+            return await conn.execute(query)

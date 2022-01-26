@@ -29,19 +29,18 @@ def resolve_default_properties(
 
 
 @query.field("findDatasheetDefinitionElements")
-@inject_graphql_handler(
-    GraphqlPageHandler[DatasheetDefinitionElementService, DatasheetDefinitionElementDto]
-)
+@inject_graphql_handler(GraphqlPageHandler[DatasheetDefinitionElement])
 @convert_kwargs_to_snake_case
 async def resolve_find_datasheet_definition_elements(
     _: Any,
     info: GraphQLResolveInfo,
     datasheet_definition_id: UUID,
     first: int,
-    handler: GraphqlPageHandler[DatasheetDefinitionService, DatasheetDefinitionDto],
+    handler: GraphqlPageHandler[DatasheetDefinition],
     after: Optional[str] = None,
 ):
     return await handler.handle(
+        DatasheetDefinitionElementDto,
         DatasheetDefinitionElementFilter(datasheet_def_id=datasheet_definition_id),
         first,
         after,
@@ -49,9 +48,7 @@ async def resolve_find_datasheet_definition_elements(
 
 
 @query.field("queryDatasheetDefinitionElements")
-@inject_graphql_handler(
-    GraphqlPageHandler[DatasheetDefinitionElementService, DatasheetDefinitionElementDto]
-)
+@inject_graphql_handler(GraphqlPageHandler[DatasheetDefinitionElement])
 @convert_kwargs_to_snake_case
 async def resolve_query_datasheet_definition_elements(
     _: Any,
@@ -59,11 +56,12 @@ async def resolve_query_datasheet_definition_elements(
     datasheet_definition_id: UUID,
     query: str,
     first: int,
-    handler: GraphqlPageHandler[DatasheetDefinitionService, DatasheetDefinitionDto],
+    handler: GraphqlPageHandler[DatasheetDefinition],
     after: Optional[str] = None,
 ):
 
     return await handler.find_all(
+        DatasheetDefinitionElementDto,
         first,
         after,
     )

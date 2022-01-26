@@ -78,14 +78,22 @@ from .datasheet_element_dto import (
     DatasheetElementPageDto,
     DatasheetElementImportDto,
 )
-from .report_dto import ReportRowDto, ReportStageDto, ReportDto
+from .report_dto import (
+    ReportRowDto,
+    ReportStageDto,
+    ReportDto,
+    MinimalReportDto,
+    MinimalReportStageDto,
+    MinimalReportRowDto,
+    ReportColumnDto,
+    ComputedValueDto,
+)
 from .report_definition_dto import (
     ReportDefinitionDto,
     ReportStructureDto,
     AttributeBucketDto,
-    ReportColumnDto,
     ReportJoinDto,
-    StageGroupingDto,
+    StageSummaryDto,
     ReportComputationDto,
 )
 from .measure_unit_dto import MeasureUnitDto

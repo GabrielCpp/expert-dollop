@@ -16,17 +16,17 @@ from .types import query, mutation
 
 
 @query.field("findProjects")
-@inject_graphql_handler(GraphqlPageHandler[ProjectService, ProjectDetailsDto])
+@inject_graphql_handler(GraphqlPageHandler[ProjectDetails])
 @convert_kwargs_to_snake_case
 async def resolve_find_projects(
     _: Any,
     info: GraphQLResolveInfo,
     query: str,
     first: int,
-    handler: GraphqlPageHandler[ProjectService, ProjectDetailsDto],
+    handler: GraphqlPageHandler[ProjectDetails],
     after: Optional[str] = None,
 ):
-    result = await handler.find_all(first, after)
+    result = await handler.find_all(ProjectDetailsDto, first, after)
     return result
 
 

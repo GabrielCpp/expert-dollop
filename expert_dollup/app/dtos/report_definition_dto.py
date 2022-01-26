@@ -1,6 +1,6 @@
 from uuid import UUID
 from typing import List, Dict, Union, Optional
-from decimal import Decimal
+from pydantic import StrictStr
 from expert_dollup.shared.starlette_injection import CamelModel
 from .dynamic_primitive import (
     StringFieldValueDto,
@@ -10,7 +10,7 @@ from .dynamic_primitive import (
     ReferenceIdDto,
 )
 
-ReportColumnDictDto = Dict[
+ReportDefinitionColumnDictDto = Dict[
     str,
     Union[
         StringFieldValueDto,
@@ -21,7 +21,7 @@ ReportColumnDictDto = Dict[
         List[ReferenceIdDto],
     ],
 ]
-ReportRowDictDto = Dict[str, ReportColumnDictDto]
+ReportRowDictDto = Dict[str, ReportDefinitionColumnDictDto]
 
 
 class ReportJoinDto(CamelModel):
@@ -43,20 +43,14 @@ class AttributeBucketDto(CamelModel):
         return row[self.bucket_name][self.attribute_name]
 
 
-class ReportColumnDto(CamelModel):
+class ReportComputationDto(CamelModel):
     name: str
     expression: str
+    unit: Union[StrictStr, AttributeBucketDto, None] = None
     is_visible: bool = True
-    unit_id: Optional[str] = None
-    unit: Optional[AttributeBucketDto] = None
 
 
-class ReportComputationDto(CamelModel):
-    expression: str
-    unit_id: Optional[str] = None
-
-
-class StageGroupingDto(CamelModel):
+class StageSummaryDto(CamelModel):
     label: AttributeBucketDto
     summary: ReportComputationDto
 
@@ -66,10 +60,11 @@ class ReportStructureDto(CamelModel):
     formula_attribute: AttributeBucketDto
     datasheet_attribute: AttributeBucketDto
     joins_cache: List[ReportJoinDto]
-    columns: List[ReportColumnDto]
+    columns: List[ReportComputationDto]
     group_by: List[AttributeBucketDto]
     order_by: List[AttributeBucketDto]
-    stage: StageGroupingDto
+    stage_summary: StageSummaryDto
+    report_summary: List[ReportComputationDto]
 
 
 class ReportDefinitionDto(CamelModel):

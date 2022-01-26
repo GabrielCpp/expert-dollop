@@ -113,7 +113,6 @@ def create_project_definition_tables():
         Column("attached_to_type_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
         Column("expression", String, nullable=False),
-        Column("final_ast", postgresql.JSON(), nullable=False),
         Column("dependency_graph", postgresql.JSON(), nullable=False),
     )
 
@@ -234,7 +233,7 @@ def create_datasheet_tables():
         Column("datasheet_def_id", postgresql.UUID(), nullable=False),
         Column("order_index", Integer, nullable=False),
         Column("default_properties", postgresql.JSON(), nullable=False),
-        Column("tags", ARRAY(String, dimensions=1), nullable=False),
+        Column("tags", ARRAY(postgresql.UUID(), dimensions=1), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 

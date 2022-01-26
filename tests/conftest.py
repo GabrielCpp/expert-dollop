@@ -35,8 +35,7 @@ Faker.add_provider(PyProvider)
 @pytest.fixture
 async def dal() -> DbConnection:
     DATABASE_URL = os.environ["DATABASE_URL"]
-    force_rollback = os.getenv("FORCE_ROLLBACK", True) in [True, "True"]
-    connection = create_connection(DATABASE_URL, daos, force_rollback=False)
+    connection = create_connection(DATABASE_URL, daos)
 
     await connection.connect()
     yield connection
