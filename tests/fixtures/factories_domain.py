@@ -69,9 +69,9 @@ class ReportStructureFactory(factory.Factory):
     order_by = factory.List([])
 
 
-class ReportDefinitionColumnFactory(factory.Factory):
+class ReportComputationFactory(factory.Factory):
     class Meta:
-        model = ReportDefinitionColumn
+        model = ReportComputation
 
     name = factory.Sequence(lambda n: f"property_{n}")
     expression = factory.Sequence(lambda n: f"property_{n}*2+1")

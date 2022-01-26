@@ -445,7 +445,7 @@ type AttributeBucket {
   attributeName: String!
 }
 
-type ReportDefinitionColumn {
+type ReportComputation {
   name: String!
   expression: String!
   isVisible: Boolean!
@@ -455,7 +455,7 @@ type ReportDefinitionColumn {
 type ReportDefinitionStructure {
   formulaAttribute: AttributeBucket!
   datasheetAttribute: AttributeBucket!
-  columns: [ReportDefinitionColumn!]!
+  columns: [ReportComputation!]!
 }
 
 type ReportDefinition {
@@ -473,20 +473,26 @@ type ReportColumn {
 type ReportRow {
     nodeId: String!
     formulaId: String!
-    elementId: String!
+    elementDefId: String!
     childReferenceId: String!
     columns: [ReportColumn!]!
 }
 
+type ComputedValue {
+    label: String!
+    value: FieldValue!
+    unit: String
+}
+
 type ReportStage {
-  label: String
-  summary: FieldValue
+  summary: ComputedValue!
   rows: [ReportRow!]!
 }
 
 type Report {
   stages: [ReportStage!]!
   creationDateUtc: String
+  summaries: [ComputedValue!]!
 }
 
 type Translation {

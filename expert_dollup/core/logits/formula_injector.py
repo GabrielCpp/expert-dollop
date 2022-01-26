@@ -64,7 +64,17 @@ class FormulaInjector:
 
         # TODO: Fix me
         return f"<Error, {name}>"
-        raise Exception(f"Too many value for {name} in node {node_id}")
+
+    def get_one_value_by_name(self, name: str, default=0):
+        units = self.get_unit(None, [], name)
+
+        if len(units) == 0:
+            return default
+
+        if len(units) == 1:
+            return units[0].value
+
+        raise Exception(f"<Error, {name}>")
 
 
 class FrozenUnit:

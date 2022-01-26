@@ -20,6 +20,9 @@ from expert_dollup.shared.starlette_injection import Clock
 from .expression_evaluator import ExpressionEvaluator
 from expert_dollup.shared.database_services import log_execution_time
 
+FORMULA_BUCKET_NAME = "formula"
+COLUMNS_BUCKET_NAME = "columns"
+
 
 def round_number(number: Decimal, digits: int, method: str) -> Decimal:
     assert method == "truncate", "method is the only method supported"
@@ -63,9 +66,9 @@ class ReportLinking:
         )
 
         steps = [
-            self._join_row_cache_with_unit_instances,  # 6.7121s
+            self._join_row_cache_with_unit_instances,
             self._fill_datasheet_element_in_rows,
-            self._fill_row_columns,  # 16.9073s
+            self._fill_row_columns,
             self._fill_row_order,
             self._fill_ordered_columns,
         ]
@@ -74,8 +77,11 @@ class ReportLinking:
             rows = step(rows, linking_data)
 
         stages = self._build_stage_groups(rows, linking_data)
+        summaries = self._build_report_summary(linking_data, stages)
 
-        return Report(stages=stages, creation_date_utc=self.clock.utcnow())
+        return Report(
+            stages=stages, summaries=summaries, creation_date_utc=self.clock.utcnow()
+        )
 
     @log_execution_time_async
     async def _preload_data(
@@ -119,9 +125,6 @@ class ReportLinking:
         report_definition = linking_data.report_definition
         element_attribute = report_definition.structure.datasheet_attribute
         formula_attribute = report_definition.structure.formula_attribute
-        project_id = linking_data.project_details.id
-        datasheet_id = linking_data.project_details.datasheet_id
-        report_def_id = linking_data.report_definition.id
         null_uuid = zero_uuid()
 
         formula_instances = [
@@ -142,10 +145,10 @@ class ReportLinking:
         }
 
         for row in rows:
-            element_id = element_attribute.get(row)
-            assert isinstance(element_id, UUID)
+            element_def_id = element_attribute.get(row)
+            assert isinstance(element_def_id, UUID)
             formula_id = formula_attribute.get(row)
-            assert isinstance(element_id, UUID)
+            assert isinstance(formula_id, UUID)
 
             if not formula_id in unit_instances_by_def_id:
                 continue
@@ -154,17 +157,14 @@ class ReportLinking:
 
             new_rows.extend(
                 ReportRow(
-                    project_id=project_id,
-                    report_def_id=report_def_id,
                     group_digest="",
-                    datasheet_id=datasheet_id,
                     node_id=formula_instance.node_id,
                     formula_id=formula_instance.formula_id,
-                    element_id=element_id,
+                    element_def_id=element_def_id,
                     order_index=0,
                     child_reference_id=null_uuid,
                     columns=[],
-                    row={**row, "formula": formula_instance.report_dict},
+                    row={**row, FORMULA_BUCKET_NAME: formula_instance.report_dict},
                 )
                 for formula_instance in unit_instances
             )
@@ -181,7 +181,7 @@ class ReportLinking:
         elements_by_id = linking_data.datasheet_elements_by_id
 
         for report_row in report_rows:
-            element_dict = elements_by_id[report_row.element_id].report_dict
+            element_dict = elements_by_id[report_row.element_def_id].report_dict
             report_row.row[datasheet_bucket_name] = element_dict
 
         return report_rows
@@ -194,7 +194,7 @@ class ReportLinking:
         footprint_columns = {
             g.attribute_name
             for g in report_definition.structure.group_by
-            if g.bucket_name == "columns"
+            if g.bucket_name == COLUMNS_BUCKET_NAME
         }
 
         first_pass_columns = (
@@ -226,7 +226,7 @@ class ReportLinking:
 
         for report_row in report_rows:
             columns = {}
-            report_row.row["columns"] = columns
+            report_row.row[COLUMNS_BUCKET_NAME] = columns
 
             for column in first_pass_columns:
                 columns[column.name] = self._evaluate(
@@ -250,7 +250,7 @@ class ReportLinking:
         for group_report_rows in rows_by_group.values():
             rows = [group_report_row.row for group_report_row in group_report_rows]
             report_row = group_report_rows[0]
-            columns = report_row.row["columns"]
+            columns = report_row.row[COLUMNS_BUCKET_NAME]
 
             for column in second_pass_column:
                 columns[column.name] = self._evaluate(
@@ -258,7 +258,9 @@ class ReportLinking:
                 )
 
             if columns["cost"] != 0:
-                stage = report_definition.structure.stage.label.get(report_row.row)
+                stage = report_definition.structure.stage_summary.label.get(
+                    report_row.row
+                )
                 grouped_rows[stage].append(report_row)
 
         return list(chain(*grouped_rows.values()))
@@ -290,24 +292,31 @@ class ReportLinking:
     ) -> List[ReportStage]:
         groups = OrderedDict()
         report_definition = linking_data.report_definition
+        stage_groups = []
 
         for report_row in report_rows:
-            key = report_definition.structure.stage.label.get(report_row.row)
+            key = report_definition.structure.stage_summary.label.get(report_row.row)
 
             if not key in groups:
-                groups[key] = ReportStage(label=key, rows=[], summary="")
+                groups[key] = []
 
-            groups[key].rows.append(report_row)
+            groups[key].append(report_row)
 
-        for stage_group in groups.values():
-            stage_group.summary = self._evaluate(
-                report_definition.structure.stage.summary.expression,
+        for label, rows in groups.items():
+            value = self._evaluate(
+                report_definition.structure.stage_summary.summary.expression,
                 None,
-                (x.row for x in stage_group.rows),
+                rows,
                 None,
             )
 
-        return list(groups.values())
+            stage_groups.append(
+                ReportStage(
+                    rows=rows, summary=ComputedValue(value=value, label=label, unit="$")
+                )
+            )
+
+        return stage_groups
 
     @log_execution_time
     def _fill_ordered_columns(
@@ -319,18 +328,47 @@ class ReportLinking:
         for report_row in report_rows:
             for column in columns:
                 unit = (
-                    column.unit_id
-                    if column.unit is None
-                    else column.unit.get(report_row.row)
+                    column.unit.get(report_row.row)
+                    if isinstance(column.unit, AttributeBucket)
+                    else column.unit
                 )
 
                 report_row.columns.append(
                     ReportColumn(
-                        value=report_row.row["columns"][column.name], unit=unit
+                        value=report_row.row[COLUMNS_BUCKET_NAME][column.name],
+                        unit=unit,
                     )
                 )
 
         return report_rows
+
+    def _build_report_summary(
+        self, linking_data: LinkingData, stages
+    ) -> List[ComputedValue]:
+        metas = {}
+        summaries: List[ComputedValue] = []
+
+        for summary in linking_data.report_definition.structure.report_summary:
+            value = self.expression_evaluator.evaluate(
+                summary.expression,
+                {
+                    "stages": stages,
+                    "round_number": round_number,
+                    "sum": sum,
+                    "injector": linking_data.injector,
+                    "metas": metas,
+                },
+            )
+            metas[summary.name] = value
+            summaries.append(
+                ComputedValue(
+                    label=summary.name,
+                    value=value,
+                    unit=summary.unit,
+                )
+            )
+
+        return summaries
 
     def _evaluate(self, expression, row, rows_group, injector):
         try:

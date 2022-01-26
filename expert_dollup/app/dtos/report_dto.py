@@ -12,14 +12,11 @@ class ReportColumnDto(CamelModel):
 
 
 class ReportRowDto(CamelModel):
-    project_id: UUID
-    report_def_id: UUID
     node_id: UUID
     formula_id: UUID
     group_digest: str
     order_index: int
-    datasheet_id: UUID
-    element_id: UUID
+    element_def_id: UUID
     child_reference_id: UUID
     columns: List[ReportColumnDto]
     row: ReportRowDictDto
@@ -28,27 +25,33 @@ class ReportRowDto(CamelModel):
 class MinimalReportRowDto(CamelModel):
     node_id: UUID
     formula_id: UUID
-    element_id: UUID
+    element_def_id: UUID
     child_reference_id: UUID
     columns: List[ReportColumnDto]
 
 
-class ReportStageDto(CamelModel):
+class ComputedValueDto(CamelModel):
     label: str
-    summary: PrimitiveUnionDto
+    value: PrimitiveUnionDto
+    unit: str
+
+
+class ReportStageDto(CamelModel):
+    summary: ComputedValueDto
     rows: List[ReportRowDto]
 
 
 class MinimalReportStageDto(CamelModel):
-    label: str
-    summary: PrimitiveUnionDto
+    summary: ComputedValueDto
     rows: List[MinimalReportRowDto]
 
 
 class ReportDto(CamelModel):
     stages: List[ReportStageDto]
+    summaries: List[ComputedValueDto]
     creation_date_utc: datetime
 
 
 class MinimalReportDto(CamelModel):
     stages: List[MinimalReportStageDto]
+    summaries: List[ComputedValueDto]

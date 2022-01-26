@@ -1137,9 +1137,10 @@ def map_report_structure_from_dao(
         datasheet_selection_alias=src.datasheet_selection_alias,
         formula_attribute=mapper.map(src.formula_attribute, AttributeBucket),
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucket),
-        stage=mapper.map(src.stage, StageGrouping),
+        stage_summary=mapper.map(src.stage_summary, StageSummary),
+        report_summary=mapper.map_many(src.report_summary, ReportComputation),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoin),
-        columns=mapper.map_many(src.columns, ReportDefinitionColumn),
+        columns=mapper.map_many(src.columns, ReportComputation),
         group_by=mapper.map_many(src.group_by, AttributeBucket),
         order_by=mapper.map_many(src.order_by, AttributeBucket),
     )
@@ -1152,23 +1153,24 @@ def map_report_structure_to_dao(
         datasheet_selection_alias=src.datasheet_selection_alias,
         formula_attribute=mapper.map(src.formula_attribute, AttributeBucketDao),
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucketDao),
-        stage=mapper.map(src.stage, StageGroupingDao),
+        stage_summary=mapper.map(src.stage_summary, StageSummaryDao),
+        report_summary=mapper.map_many(src.report_summary, ReportComputationDao),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoinDao),
-        columns=mapper.map_many(src.columns, ReportDefinitionColumnDao),
+        columns=mapper.map_many(src.columns, ReportComputationDao),
         group_by=mapper.map_many(src.group_by, AttributeBucketDao),
         order_by=mapper.map_many(src.order_by, AttributeBucketDao),
     )
 
 
-def map_stage_grouping_from_dao(src: StageGroupingDao, mapper: Mapper) -> StageGrouping:
-    return StageGrouping(
+def map_stage_grouping_from_dao(src: StageSummaryDao, mapper: Mapper) -> StageSummary:
+    return StageSummary(
         label=mapper.map(src.label, AttributeBucket),
         summary=mapper.map(src.summary, ReportComputation),
     )
 
 
-def map_stage_grouping_to_dao(src: StageGrouping, mapper: Mapper) -> StageGroupingDao:
-    return StageGroupingDao(
+def map_stage_grouping_to_dao(src: StageSummary, mapper: Mapper) -> StageSummaryDao:
+    return StageSummaryDao(
         label=mapper.map(src.label, AttributeBucketDao),
         summary=mapper.map(src.summary, ReportComputationDao),
     )
@@ -1177,13 +1179,27 @@ def map_stage_grouping_to_dao(src: StageGrouping, mapper: Mapper) -> StageGroupi
 def map_report_computation_to_dao(
     src: ReportComputation, mapper: Mapper
 ) -> ReportComputationDao:
-    return ReportComputationDao(expression=src.expression, unit_id=src.unit_id)
+    return ReportComputationDao(
+        name=src.name,
+        is_visible=src.is_visible,
+        expression=src.expression,
+        unit=mapper.map(src.unit, AttributeBucketDao)
+        if isinstance(src.unit, AttributeBucket)
+        else src.unit,
+    )
 
 
 def map_report_computation_from_dao(
     src: ReportComputationDao, mapper: Mapper
 ) -> ReportComputation:
-    return ReportComputation(expression=src.expression, unit_id=src.unit_id)
+    return ReportComputation(
+        name=src.name,
+        is_visible=src.is_visible,
+        expression=src.expression,
+        unit=mapper.map(src.unit, AttributeBucket)
+        if isinstance(src.unit, AttributeBucketDao)
+        else src.unit,
+    )
 
 
 def map_attribute_bucket_from_dao(
@@ -1225,30 +1241,6 @@ def map_report_join_to_dao(src: ReportJoin, mapper: Mapper) -> ReportJoinDao:
         warn_about_idle_items=src.warn_about_idle_items,
         same_cardinality=src.same_cardinality,
         allow_dicard_element=src.allow_dicard_element,
-    )
-
-
-def map_report_definition_column_from_dao(
-    src: ReportDefinitionColumnDao, mapper: Mapper
-) -> ReportDefinitionColumn:
-    return ReportDefinitionColumn(
-        name=src.name,
-        expression=src.expression,
-        is_visible=src.is_visible,
-        unit_id=src.unit_id,
-        unit=src.unit and mapper.map(src.unit, AttributeBucket),
-    )
-
-
-def map_report_definition_column_to_dao(
-    src: ReportDefinitionColumn, mapper: Mapper
-) -> ReportDefinitionColumnDao:
-    return ReportDefinitionColumnDao(
-        name=src.name,
-        expression=src.expression,
-        is_visible=src.is_visible,
-        unit_id=src.unit_id,
-        unit=src.unit and mapper.map(src.unit, AttributeBucketDao),
     )
 
 
@@ -1310,9 +1302,26 @@ def map_datasheet_element_pluck_filter(
     )
 
 
+def map_computed_value_to_dao(src: ComputedValue, mapper: Mapper) -> ComputedValueDao:
+    return ComputedValueDao(
+        label=src.label,
+        value=mapper.map(src.value, primitive_union_dao_mappings.to_origin),
+        unit=src.unit,
+    )
+
+
+def map_computed_value_from_dao(src: ComputedValueDao, mapper: Mapper) -> ComputedValue:
+    return ComputedValue(
+        label=src.label,
+        value=mapper.map(src.value, primitive_union_dao_mappings.from_origin),
+        unit=src.unit,
+    )
+
+
 def map_report_to_dao(src: Report, mapper: Mapper) -> ReportDao:
     return ReportDao(
         creation_date_utc=src.creation_date_utc,
+        summaries=mapper.map_many(src.summaries, ComputedValueDao),
         stages=mapper.map_many(src.stages, ReportStageDao),
     )
 
@@ -1320,6 +1329,7 @@ def map_report_to_dao(src: Report, mapper: Mapper) -> ReportDao:
 def map_report_from_dao(src: ReportDao, mapper: Mapper) -> Report:
     return Report(
         creation_date_utc=src.creation_date_utc,
+        summaries=mapper.mamap_manyp(src.summaries, ComputedValue),
         stages=mapper.map_many(src.stages, ReportStage),
     )
 
@@ -1327,7 +1337,7 @@ def map_report_from_dao(src: ReportDao, mapper: Mapper) -> Report:
 def map_report_group_to_dao(src: ReportStage, mapper: Mapper) -> ReportStageDao:
     return ReportStageDao(
         label=src.label,
-        summary=mapper.map(src.summary, primitive_union_dao_mappings.to_origin),
+        summary=mapper.map(src.summary, ComputedValueDao),
         rows=mapper.map_many(src.rows, ReportRowDao),
     )
 
@@ -1335,21 +1345,18 @@ def map_report_group_to_dao(src: ReportStage, mapper: Mapper) -> ReportStageDao:
 def map_report_group_from_dao(src: ReportStageDao, mapper: Mapper) -> ReportStage:
     return ReportStage(
         label=src.label,
-        summary=mapper.map(src.summary, primitive_union_dao_mappings.from_origin),
+        summary=mapper.map(src.summary, ComputedValue),
         rows=mapper.map_many(src.rows, ReportRow),
     )
 
 
 def map_report_row_to_dao(src: ReportRow, mapper: Mapper) -> ReportRowDao:
     return ReportRowDao(
-        project_id=src.project_id,
-        report_def_id=src.report_def_id,
         node_id=src.node_id,
         formula_id=src.formula_id,
         group_digest=src.group_digest,
         order_index=src.order_index,
-        datasheet_id=src.datasheet_id,
-        element_id=src.element_id,
+        element_def_id=src.element_def_id,
         child_reference_id=src.child_reference_id,
         columns=mapper.map_many(src.columns, primitive_union_dao_mappings.to_origin),
         row=map_report_rows_dict_to_dao(src.row, mapper),
@@ -1358,14 +1365,11 @@ def map_report_row_to_dao(src: ReportRow, mapper: Mapper) -> ReportRowDao:
 
 def map_report_row_from_dao(src: ReportRowDao, mapper: Mapper) -> ReportRow:
     return ReportRow(
-        project_id=src.project_id,
-        report_def_id=src.report_def_id,
         node_id=src.node_id,
         formula_id=src.formula_id,
         group_digest=src.group_digest,
         order_index=src.order_index,
-        datasheet_id=src.datasheet_id,
-        element_id=src.element_id,
+        element_def_id=src.element_def_id,
         child_reference_id=src.child_reference_id,
         columns=mapper.map_many(src.columns, primitive_union_dao_mappings.from_origin),
         row=map_report_rows_dict_from_dao(src.row, mapper),

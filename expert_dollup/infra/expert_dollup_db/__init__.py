@@ -409,20 +409,14 @@ class AttributeBucketDao(BaseModel):
     attribute_name: str = Field(max_length=64)
 
 
-class ReportDefinitionColumnDao(BaseModel):
+class ReportComputationDao(BaseModel):
     name: str = Field(max_length=64)
     expression: str
+    unit: Union[StrictStr, AttributeBucketDao, None]
     is_visible: bool
-    unit_id: Optional[str] = None
-    unit: Optional[AttributeBucketDao] = None
 
 
-class ReportComputationDao(BaseModel):
-    expression: str
-    unit_id: Optional[str] = None
-
-
-class StageGroupingDao(BaseModel):
+class StageSummaryDao(BaseModel):
     label: AttributeBucketDao
     summary: ReportComputationDao
 
@@ -432,10 +426,11 @@ class ReportStructureDao(BaseModel):
     formula_attribute: AttributeBucketDao
     datasheet_attribute: AttributeBucketDao
     joins_cache: List[ReportJoinDao]
-    columns: List[ReportDefinitionColumnDao]
+    columns: List[ReportComputationDao]
     group_by: List[AttributeBucketDao]
     order_by: List[AttributeBucketDao]
-    stage: StageGroupingDao
+    stage_summary: StageSummaryDao
+    report_summary: List[ReportComputationDao]
 
 
 class ReportDefinitionDao(BaseModel):

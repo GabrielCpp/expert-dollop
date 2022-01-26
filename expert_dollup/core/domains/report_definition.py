@@ -40,21 +40,14 @@ class AttributeBucket:
 
 @dataclass
 class ReportComputation:
-    expression: str
-    unit_id: Optional[str] = None
-
-
-@dataclass
-class ReportDefinitionColumn:
     name: str
     expression: str
-    unit_id: Optional[str] = None
-    unit: Optional[AttributeBucket] = None
+    unit: Union[str, AttributeBucket, None] = None
     is_visible: bool = True
 
 
 @dataclass
-class StageGrouping:
+class StageSummary:
     label: AttributeBucket
     summary: ReportComputation
 
@@ -65,10 +58,11 @@ class ReportStructure:
     formula_attribute: AttributeBucket
     datasheet_attribute: AttributeBucket
     joins_cache: List[ReportJoin]
-    columns: List[ReportDefinitionColumn]
+    columns: List[ReportComputation]
     group_by: List[AttributeBucket]
     order_by: List[AttributeBucket]
-    stage: StageGrouping
+    stage_summary: StageSummary
+    report_summary: List[ReportComputation]
 
 
 @dataclass

@@ -86,14 +86,14 @@ from .report_dto import (
     MinimalReportStageDto,
     MinimalReportRowDto,
     ReportColumnDto,
+    ComputedValueDto,
 )
 from .report_definition_dto import (
     ReportDefinitionDto,
     ReportStructureDto,
     AttributeBucketDto,
-    ReportDefinitionColumnDto,
     ReportJoinDto,
-    StageGroupingDto,
+    StageSummaryDto,
     ReportComputationDto,
 )
 from .measure_unit_dto import MeasureUnitDto

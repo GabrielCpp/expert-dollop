@@ -14,30 +14,37 @@ class ReportColumn:
 
 
 @dataclass
+class ComputedValue:
+    label: str
+    value: PrimitiveUnion
+    unit: str
+
+
+@dataclass
 class ReportRow:
-    project_id: UUID
-    report_def_id: UUID
     node_id: UUID
     formula_id: UUID
     group_digest: str
     order_index: int
-    datasheet_id: UUID
-    element_id: UUID
+    element_def_id: UUID
     child_reference_id: UUID
     columns: List[ReportColumn]
     row: ReportRowDict
 
+    def __getitem__(self, bucket_name: str):
+        return self.row[bucket_name]
+
 
 @dataclass
 class ReportStage:
-    label: str
-    summary: PrimitiveUnion
+    summary: ComputedValue
     rows: List[ReportRow]
 
 
 @dataclass
 class Report:
     stages: List[ReportStage]
+    summaries: List[ComputedValue]
     creation_date_utc: datetime
 
 

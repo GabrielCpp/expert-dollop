@@ -24,48 +24,51 @@ def make_general_report(project_def_id: UUID) -> ReportDefinition:
         name="general_report",
         structure=ReportStructure(
             columns=[
-                ReportDefinitionColumn(
+                ReportComputation(
                     name="post_transform_factor",
                     expression="1.0",
                     is_visible=False,
                 ),
-                ReportDefinitionColumn(
+                ReportComputation(
                     name="stage",
                     expression="row['floor']['name']",
                 ),
-                ReportDefinitionColumn(
+                ReportComputation(
                     name="substage_description",
                     expression="row['substage']['name']",
                 ),
-                ReportDefinitionColumn(
+                ReportComputation(
                     name="abstract_product_description",
                     expression="row['abstractproduct']['name']",
                 ),
-                ReportDefinitionColumn(
+                ReportComputation(
                     name="cost_per_unit",
                     expression="round_number(row['datasheet_element']['price'], 2, 'truncate')",
                 ),
-                ReportDefinitionColumn(
+                ReportComputation(
                     name="result",
                     expression="sum(row['formula']['result'] * row['columns']['post_transform_factor'] for row in rows)",
                 ),
-                ReportDefinitionColumn(
+                ReportComputation(
                     name="cost",
                     expression="round_number( round_number( sum(row['formula']['result'] * row['columns']['post_transform_factor'] for row in rows), 2, 'truncate') * row['datasheet_element']['price'], 2, 'truncate')",
                 ),
-                ReportDefinitionColumn(
+                ReportComputation(
                     name="order_form_category_description",
                     expression="row['orderformcategory']['name']",
                 ),
             ],
             datasheet_selection_alias="abstractproduct",
             joins_cache=[],
-            stage=StageGrouping(
+            stage_summary=StageSummary(
                 label=AttributeBucket(bucket_name="columns", attribute_name="stage"),
                 summary=ReportComputation(
-                    expression="sum(row['cost'] for row in rows)", unit_id="$"
+                    expression="sum(row['cost'] for row in rows)",
+                    unit="$",
+                    name="total",
                 ),
             ),
+            report_summary=[],
             formula_attribute=AttributeBucket(
                 bucket_name="substage", attribute_name="formula"
             ),

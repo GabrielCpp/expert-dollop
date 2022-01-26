@@ -101,7 +101,6 @@ from .datasheet_element import (
 from .bounded_node import BoundedNode, BoundedNodeSlice
 from .report_definition import (
     ReportDefinition,
-    ReportDefinitionColumn,
     ReportStructure,
     AttributeBucket,
     ReportJoin,
@@ -109,7 +108,7 @@ from .report_definition import (
     ReportRowsCache,
     ReportRowKey,
     ReportDefinitionFilter,
-    StageGrouping,
+    StageSummary,
     ReportComputation,
 )
 from .report_definition_row_cache import (
@@ -123,6 +122,7 @@ from .report import (
     Report,
     ReportKey,
     ReportColumn,
+    ComputedValue,
 )
 from .measure_unit import MeasureUnit
 from .values_union import (

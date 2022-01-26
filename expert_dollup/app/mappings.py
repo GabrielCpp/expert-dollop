@@ -1,7 +1,6 @@
 from uuid import UUID, uuid4
 from typing import List
 from decimal import Decimal
-from pydantic.utils import almost_equal_floats
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.automapping import Mapper, RevervibleUnionMapping
 from expert_dollup.shared.database_services import Page
@@ -908,9 +907,10 @@ def map_report_structure_from_dto(
         datasheet_selection_alias=src.datasheet_selection_alias,
         formula_attribute=mapper.map(src.formula_attribute, AttributeBucket),
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucket),
-        stage=mapper.map(src.stage, StageGrouping),
+        stage_summary=mapper.map(src.stage_summary, StageSummary),
+        report_summary=mapper.map_many(src.report_summary, ReportComputation),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoin),
-        columns=mapper.map_many(src.columns, ReportDefinitionColumn),
+        columns=mapper.map_many(src.columns, ReportComputation),
         group_by=mapper.map_many(src.group_by, AttributeBucket),
         order_by=mapper.map_many(src.order_by, AttributeBucket),
     )
@@ -923,23 +923,24 @@ def map_report_structure_to_dto(
         datasheet_selection_alias=src.datasheet_selection_alias,
         formula_attribute=mapper.map(src.formula_attribute, AttributeBucketDto),
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucketDto),
-        stage=mapper.map(src.stage, StageGroupingDto),
+        stage_summary=mapper.map(src.stage_summary, StageSummaryDto),
+        report_summary=mapper.map_many(src.report_summary, ReportComputationDto),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoinDto),
-        columns=mapper.map_many(src.columns, ReportDefinitionColumnDto),
+        columns=mapper.map_many(src.columns, ReportComputationDto),
         group_by=mapper.map_many(src.group_by, AttributeBucketDto),
         order_by=mapper.map_many(src.order_by, AttributeBucketDto),
     )
 
 
-def map_stage_grouping_to_dto(src: StageGrouping, mapper: Mapper) -> StageGroupingDto:
-    return StageGroupingDto(
+def map_stage_grouping_to_dto(src: StageSummary, mapper: Mapper) -> StageSummaryDto:
+    return StageSummaryDto(
         label=mapper.map(src.label, AttributeBucketDto),
         summary=mapper.map(src.summary, ReportComputationDto),
     )
 
 
-def map_stage_grouping_from_dto(src: StageGroupingDto, mapper: Mapper) -> StageGrouping:
-    return StageGrouping(
+def map_stage_grouping_from_dto(src: StageSummaryDto, mapper: Mapper) -> StageSummary:
+    return StageSummary(
         label=mapper.map(src.label, AttributeBucket),
         summary=mapper.map(src.summary, ReportComputation),
     )
@@ -948,13 +949,27 @@ def map_stage_grouping_from_dto(src: StageGroupingDto, mapper: Mapper) -> StageG
 def map_report_computation_to_dto(
     src: ReportComputation, mapper: Mapper
 ) -> ReportComputationDto:
-    return ReportComputationDto(expression=src.expression, unit_id=src.unit_id)
+    return ReportComputationDto(
+        name=src.name,
+        is_visible=src.is_visible,
+        expression=src.expression,
+        unit=mapper.map(src.unit, AttributeBucketDto)
+        if isinstance(src.unit, AttributeBucket)
+        else src.unit,
+    )
 
 
 def map_report_computation_from_dto(
     src: ReportComputationDto, mapper: Mapper
 ) -> ReportComputation:
-    return ReportComputation(expression=src.expression, unit_id=src.unit_id)
+    return ReportComputation(
+        name=src.name,
+        is_visible=src.is_visible,
+        expression=src.expression,
+        unit=mapper.map(src.unit, AttributeBucket)
+        if isinstance(src.unit, AttributeBucketDto)
+        else src.unit,
+    )
 
 
 def map_attribute_bucket_from_dto(
@@ -999,40 +1014,13 @@ def map_report_join_to_dto(src: ReportJoin, mapper: Mapper) -> ReportJoinDto:
     )
 
 
-def map_report_definition_column_from_dto(
-    src: ReportDefinitionColumnDto, mapper: Mapper
-) -> ReportDefinitionColumn:
-    return ReportDefinitionColumn(
-        name=src.name,
-        expression=src.expression,
-        is_visible=src.is_visible,
-        unit_id=src.unit_id,
-        unit=src.unit and mapper.map(src.unit, AttributeBucket),
-    )
-
-
-def map_report_definition_column_to_dto(
-    src: ReportDefinitionColumn, mapper: Mapper
-) -> ReportDefinitionColumnDto:
-    return ReportDefinitionColumnDto(
-        name=src.name,
-        expression=src.expression,
-        is_visible=src.is_visible,
-        unit_id=src.unit_id,
-        unit=src.unit and mapper.map(src.unit, AttributeBucketDto),
-    )
-
-
 def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportRowDto:
     return ReportRowDto(
-        project_id=src.project_id,
-        report_def_id=src.report_def_id,
         node_id=src.node_id,
         formula_id=src.formula_id,
         group_digest=src.group_digest,
         order_index=src.order_index,
-        datasheet_id=src.datasheet_id,
-        element_id=src.element_id,
+        element_def_id=src.element_def_id,
         child_reference_id=src.child_reference_id,
         columns=mapper.map_many(src.columns, ReportColumnDto),
         row={
@@ -1049,17 +1037,33 @@ def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportRowDto:
     )
 
 
+def map_computed_value_to_dto(src: ComputedValue, mapper: Mapper) -> ComputedValueDto:
+    return ComputedValueDto(
+        label=src.label,
+        value=mapper.map(src.value, primitive_union_dto_mappings.to_origin),
+        unit=src.unit,
+    )
+
+
+def map_computed_value_from_dto(src: ComputedValueDto, mapper: Mapper) -> ComputedValue:
+    return ComputedValue(
+        label=src.label,
+        value=mapper.map(src.value, primitive_union_dto_mappings.from_origin),
+        unit=src.unit,
+    )
+
+
 def map_report_to_dto(src: Report, mapper: Mapper) -> ReportDto:
     return ReportDto(
         stages=mapper.map_many(src.stages, ReportStageDto),
+        summaries=mapper.map_many(src.summaries, ComputedValueDto),
         creation_date_utc=src.creation_date_utc,
     )
 
 
 def map_report_group_to_dto(src: ReportStage, mapper: Mapper) -> ReportStageDto:
     return ReportStageDto(
-        label=src.label,
-        summary=mapper.map(src.summary, primitive_union_dto_mappings.to_origin),
+        summary=mapper.map(src.summary, ComputedValueDto),
         rows=mapper.map_many(src.rows, ReportRowDto),
     )
 
@@ -1083,6 +1087,7 @@ def map_translations_to_json_bundle(src: List[Translation], mapper: Mapper) -> d
 def map_minimal_report_dto(src: Report, mapper: Mapper) -> MinimalReportDto:
     return MinimalReportDto(
         stages=mapper.map_many(src.stages, MinimalReportStageDto),
+        summaries=mapper.map_many(src.summaries, ComputedValueDto),
     )
 
 
@@ -1090,8 +1095,7 @@ def map_minimal_report_stage_dto(
     src: ReportStage, mapper: Mapper
 ) -> MinimalReportStageDto:
     return MinimalReportStageDto(
-        label=src.label,
-        summary=mapper.map(src.summary, primitive_union_dto_mappings.to_origin),
+        summary=mapper.map(src.summary, ComputedValueDto),
         rows=mapper.map_many(src.rows, MinimalReportRowDto),
     )
 
@@ -1100,7 +1104,7 @@ def map_minimal_report_row_dto(src: ReportRow, mapper: Mapper) -> MinimalReportR
     return MinimalReportRowDto(
         node_id=src.node_id,
         formula_id=src.formula_id,
-        element_id=src.element_id,
+        element_def_id=src.element_def_id,
         child_reference_id=src.child_reference_id,
         columns=mapper.map_many(src.columns, ReportColumnDto),
     )
