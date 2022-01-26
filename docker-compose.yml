@@ -38,11 +38,25 @@ services:
       networks:
           - backend
 
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${POSTGRES_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+    - mongodb_data:/data/db
+    networks:
+      - backend
 volumes:
   firebase_data:
     name: firebase_data
   postgres_data:
     name: postgres_data
+  mongodb_data:
+    name: mongodb_data
 
 networks:
   backend:

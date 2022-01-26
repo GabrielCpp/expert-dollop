@@ -53,7 +53,6 @@ class FormulaInjector:
         return []
 
     def get_one_value(self, node_id: UUID, path: List[UUID], name: str, default):
-        name = name.lower()
         units = self.get_unit(node_id, path, name)
 
         if len(units) == 0:
