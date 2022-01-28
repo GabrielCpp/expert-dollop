@@ -24,8 +24,6 @@ class ComputedValue:
 class ReportRow:
     node_id: UUID
     formula_id: UUID
-    group_digest: str
-    order_index: int
     element_def_id: UUID
     child_reference_id: UUID
     columns: List[ReportColumn]
@@ -57,8 +55,6 @@ class ReportKey:
 class ReportRowFilter(QueryFilter):
     project_id: Optional[UUID]
     report_def_id: Optional[UUID]
-    group_digest: Optional[str]
-    order_index: Optional[int]
     datasheet_id: Optional[UUID]
     element_id: Optional[UUID]
     child_reference_id: Optional[UUID]

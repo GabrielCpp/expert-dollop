@@ -14,8 +14,6 @@ class ReportColumnDto(CamelModel):
 class ReportRowDto(CamelModel):
     node_id: UUID
     formula_id: UUID
-    group_digest: str
-    order_index: int
     element_def_id: UUID
     child_reference_id: UUID
     columns: List[ReportColumnDto]

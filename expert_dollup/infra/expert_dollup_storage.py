@@ -51,8 +51,6 @@ class ComputedValueDao(BaseModel):
 class ReportRowDao(BaseModel):
     node_id: UUID
     formula_id: UUID
-    group_digest: str
-    order_index: int
     element_id: UUID
     child_reference_id: UUID
     columns: List[PrimitiveUnionDao]

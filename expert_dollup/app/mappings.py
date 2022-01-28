@@ -1018,8 +1018,6 @@ def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportRowDto:
     return ReportRowDto(
         node_id=src.node_id,
         formula_id=src.formula_id,
-        group_digest=src.group_digest,
-        order_index=src.order_index,
         element_def_id=src.element_def_id,
         child_reference_id=src.child_reference_id,
         columns=mapper.map_many(src.columns, ReportColumnDto),

@@ -67,6 +67,14 @@ class FormulaExpression:
 class Formula(FormulaExpression):
     dependency_graph: FormulaDependencyGraph
 
+    @property
+    def report_dict(self):
+        return {
+            "name": self.name,
+            "expression": self.expression,
+            "attached_to_type_id": self.attached_to_type_id,
+        }
+
 
 @dataclass
 class StagedFormula(Formula):

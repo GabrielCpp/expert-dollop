@@ -1282,8 +1282,6 @@ def map_report_row_filter(src: ReportRowFilter, mapper: Mapper) -> dict:
         {
             "project_id": ("project_id", None),
             "report_def_id": ("report_def_id", None),
-            "group_digest": ("group_digest", None),
-            "order_index": ("order_index", None),
             "datasheet_id": ("datasheet_id", None),
             "element_id": ("element_id", None),
             "child_reference_id": ("child_reference_id", None),
@@ -1354,8 +1352,6 @@ def map_report_row_to_dao(src: ReportRow, mapper: Mapper) -> ReportRowDao:
     return ReportRowDao(
         node_id=src.node_id,
         formula_id=src.formula_id,
-        group_digest=src.group_digest,
-        order_index=src.order_index,
         element_def_id=src.element_def_id,
         child_reference_id=src.child_reference_id,
         columns=mapper.map_many(src.columns, primitive_union_dao_mappings.to_origin),
@@ -1367,8 +1363,6 @@ def map_report_row_from_dao(src: ReportRowDao, mapper: Mapper) -> ReportRow:
     return ReportRow(
         node_id=src.node_id,
         formula_id=src.formula_id,
-        group_digest=src.group_digest,
-        order_index=src.order_index,
         element_def_id=src.element_def_id,
         child_reference_id=src.child_reference_id,
         columns=mapper.map_many(src.columns, primitive_union_dao_mappings.from_origin),

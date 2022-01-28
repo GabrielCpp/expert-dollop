@@ -56,25 +56,112 @@ class AttributeBucketFactory(factory.Factory):
     attribute_name = "attribute"
 
 
-class ReportStructureFactory(factory.Factory):
-    class Meta:
-        model = ReportStructure
-
-    datasheet_selection_alias = "datasheet_element"
-    joins = factory.List([factory.SubFactory(ReportJoinFactory) for _ in range(3)])
-    formula_attribute = factory.SubFactory(AttributeBucketFactory)
-    datasheet_attribute = factory.SubFactory(AttributeBucketFactory)
-    columns = factory.List([])
-    group_by = factory.List([])
-    order_by = factory.List([])
-
-
 class ReportComputationFactory(factory.Factory):
     class Meta:
         model = ReportComputation
 
     name = factory.Sequence(lambda n: f"property_{n}")
     expression = factory.Sequence(lambda n: f"property_{n}*2+1")
+    unit = "unit"
+    is_visible = True
+
+
+class StageSummaryFactory(factory.Factory):
+    class Meta:
+        model = StageSummary
+
+    label = factory.SubFactory(
+        AttributeBucketFactory,
+        bucket_name="columns",
+        attribute_name="stage",
+    )
+
+    summary = factory.SubFactory(
+        ReportComputationFactory,
+        name="total",
+        expression="sum(row['columns']['cost'] for row in rows)",
+    )
+
+
+class ReportStructureFactory(factory.Factory):
+    class Meta:
+        model = ReportStructure
+
+    datasheet_selection_alias = "abstractproduct"
+    formula_attribute = factory.SubFactory(
+        AttributeBucketFactory, bucket_name="substage", attribute_name="formula"
+    )
+    datasheet_attribute = factory.SubFactory(
+        AttributeBucketFactory,
+        bucket_name="substage",
+        attribute_name="datasheet_element",
+    )
+    stage_summary = factory.SubFactory(StageSummaryFactory)
+    joins_cache = factory.List([])
+    columns = factory.List(
+        [
+            factory.SubFactory(
+                ReportComputationFactory,
+                name="stage",
+                expression="row['stage']['name']",
+            ),
+            factory.SubFactory(
+                ReportComputationFactory,
+                name="quantity",
+                expression="row['formula']['result']",
+            ),
+            factory.SubFactory(
+                ReportComputationFactory,
+                name="product_name",
+                expression="row['datasheet_element']['name']",
+            ),
+            factory.SubFactory(
+                ReportComputationFactory,
+                name="cost_per_unit",
+                expression="row['datasheet_element']['price']",
+                unit="$",
+            ),
+            factory.SubFactory(
+                ReportComputationFactory,
+                name="cost",
+                expression="row['columns']['quantity'] * row['columns']['cost_per_unit']",
+                unit="$",
+            ),
+        ]
+    )
+    group_by = factory.List(
+        [
+            factory.SubFactory(
+                AttributeBucketFactory,
+                bucket_name="columns",
+                attribute_name="stage",
+            ),
+            factory.SubFactory(
+                AttributeBucketFactory,
+                bucket_name="columns",
+                attribute_name="product_name",
+            ),
+        ]
+    )
+    order_by = factory.List(
+        [
+            factory.SubFactory(
+                AttributeBucketFactory,
+                bucket_name="substage",
+                attribute_name="order_index",
+            )
+        ]
+    )
+    report_summary = factory.List(
+        [
+            factory.SubFactory(
+                ReportComputationFactory,
+                name="subtotal",
+                expression="sum(stage.summary.value for stage in stages)",
+                unit="$",
+            ),
+        ]
+    )
 
 
 class ReportDefinitionFactory(factory.Factory):

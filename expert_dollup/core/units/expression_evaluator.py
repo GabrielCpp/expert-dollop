@@ -231,7 +231,8 @@ class ExpressionEvaluator:
                 result = ast_vm.compute(element, scope)
             except Exception as e:
                 raise AstEvaluationError(
-                    "Error during evaluation of expression", original_message=str(e)
+                    "Error during evaluation of expression",
+                    original_message=e,
                 ) from e
 
         return result

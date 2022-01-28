@@ -44,7 +44,9 @@ class ReportRowCache:
         self.formula_plucker = formula_plucker
         self.report_def_row_cache = report_def_row_cache
 
-    async def refresh_cache(self, report_definition: ReportDefinition):
+    async def refresh_cache(
+        self, report_definition: ReportDefinition
+    ) -> ReportRowsCache:
         key = ReportRowKey(
             project_def_id=report_definition.project_def_id,
             report_definition_id=report_definition.id,
@@ -168,11 +170,7 @@ class ReportRowCache:
         for report_bucket in report_buckets:
             formula_id = report_bucket[collection_name][attribute_name]
             formula = formulas_by_id[formula_id]
-            report_bucket["formula"] = {
-                "name": formula.name,
-                "expression": formula.expression,
-                "attached_to_type_id": formula.attached_to_type_id,
-            }
+            report_bucket["formula"] = formula.report_dict
 
     def _join_on(
         self,

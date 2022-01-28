@@ -1,5 +1,6 @@
 from decimal import Decimal
-from typing import List, Dict, Protocol
+from multiprocessing import ProcessError
+from typing import List, Dict, Protocol, Iterable
 from uuid import UUID
 from collections import defaultdict
 from functools import cached_property
@@ -34,6 +35,12 @@ class FormulaInjector:
         self.unit_map[unit.name].append(unit)
         self.unit_map[f"{unit.node_id}.{unit.name}"].append(unit)
         self.units.append(unit)
+
+    def add_units(self, units: Iterable[UnitLike]) -> "FormulaInjector":
+        for unit in units:
+            self.add_unit(unit)
+
+        return self
 
     def get_unit(self, node_id: UUID, path: List[UUID], name: str) -> List[UnitLike]:
         unit_id = f"{node_id}.{name}"
@@ -95,6 +102,10 @@ class FrozenUnit:
     @property
     def value(self) -> PrimitiveUnion:
         return self._formula_instance.result
+
+    @property
+    def computed(self) -> UnitInstance:
+        return self._formula_instance
 
 
 class FormulaUnit:
