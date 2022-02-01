@@ -54,5 +54,5 @@ async def resolve_create_project(
     id: str,
     find_project_details: callable,
 ):
-    result = await find_project_details(info, id)
+    result = await find_project_details(info, UUID(id))
     return result

@@ -27,25 +27,25 @@ services:
       - backend
   
   firestore:
-      build:
-          context: .
-          dockerfile: firestore.dockerfile
-      ports:
-      - 8806:8806
-      command: gcloud beta emulators firestore start --host-port=0.0.0.0:8806
-      volumes:
-          - firebase_data:/opt/data
-      networks:
-          - backend
+    build:
+      context: .
+      dockerfile: firestore.dockerfile
+    ports:
+    - 8806:8806
+    command: gcloud beta emulators firestore start --host-port=0.0.0.0:8806
+    volumes:
+        - firebase_data:/opt/data
+    networks:
+        - backend
 
   mongo:
-    image: mongo
+    image: mongo:4.4 
     restart: always
     ports:
-      - 8081:8081
+      - 27017:27017
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${POSTGRES_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${POSTGRES_PASSWORD}
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
     volumes:
     - mongodb_data:/data/db
     networks:

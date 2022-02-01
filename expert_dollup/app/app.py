@@ -1,14 +1,11 @@
-import structlog
-from datetime import datetime, timezone
 from injector import Injector
+from logging import Logger
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.responses import JSONResponse
 from expert_dollup.shared.fastapi_jwt_auth import AuthJWT
 from expert_dollup.shared.fastapi_jwt_auth.exceptions import AuthJWTException
 from ariadne.asgi import GraphQL
 from dotenv import load_dotenv
-from structlog import configure
-from structlog.contextvars import merge_contextvars
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 import expert_dollup.app.controllers as api_routers
 from .settings import load_app_settings
@@ -21,30 +18,6 @@ from .middlewares import (
     ExceptionHandlerDict,
 )
 
-
-def add_timestamp(_, __, event_dict):
-    event_dict["timestamp"] = str(datetime.now(timezone.utc).isoformat())
-    return event_dict
-
-
-configure(
-    processors=[
-        merge_contextvars,
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.add_logger_name,
-        add_timestamp,
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.dev.ConsoleRenderer(),
-        structlog.processors.JSONRenderer(indent=1, sort_keys=True),
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
 
 load_dotenv()
 
@@ -69,6 +42,7 @@ def bind_request_modules(request: Request):
 def creat_app(container: Injector = None):
     container = container or build_container()
     exception_handler = container.get(ExceptionHandlerDict)
+    logger = container.get(Logger)
 
     app = FastAPI(debug=False)
 
@@ -91,7 +65,7 @@ def creat_app(container: Injector = None):
         )
     )
     app.add_middleware(LoggerMiddleware)
-    app.add_middleware(create_error_middleware(exception_handler))
+    app.add_middleware(create_error_middleware(exception_handler, logger))
 
     for router in api_routers.__dict__.values():
         if isinstance(router, APIRouter):

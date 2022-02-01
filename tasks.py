@@ -14,14 +14,14 @@ def drop_db():
     asyncio.run(connection.drop_db())
 
 
-def truncate_db(tables=None):
+async def truncate_db(tables=None):
     from dotenv import load_dotenv
     from expert_dollup.shared.database_services import create_connection
     import expert_dollup.infra.expert_dollup_db as daos
 
     load_dotenv()
     connection = create_connection(os.getenv("DATABASE_URL"), daos)
-    asyncio.run(connection.truncate_db(tables))
+    await connection.truncate_db(tables)
 
 
 @task(name="start-https")
@@ -90,7 +90,7 @@ def fill_db_with_fixture(c, name, truncate=False, poetry=False):
         from expert_dollup.shared.database_services import create_connection
 
         if truncate is True:
-            truncate_db()
+            asyncio.run(truncate_db())
 
         if name == "simple_project":
             load_simple_project()
@@ -109,7 +109,7 @@ def db_truncate(c, poetry=False):
     if not poetry:
         c.run("poetry run invoke db:truncate --poetry")
 
-    truncate_db()
+    asyncio.run(truncate_db())
 
 
 @task(name="db:drop")
@@ -196,7 +196,7 @@ def generate_env(c, hostname="predykt.dev"):
 @task(name="upload-base-project")
 def upload_base_project(c):
     cwd = os.getcwd()
-    truncate_db()
+    asyncio.run(truncate_db())
     c.run(
         f"curl -X POST -F 'file=@{cwd}/project-setup.jsonl' http://localhost:8000/api/import"
     )

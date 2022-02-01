@@ -1,4 +1,3 @@
-import structlog
 from typing import Awaitable, Optional, List
 from uuid import UUID
 from expert_dollup.core.exceptions import InvalidObject
@@ -11,10 +10,9 @@ from expert_dollup.infra.services import (
     ProjectDefinitionService,
 )
 from expert_dollup.shared.database_services import Page, Paginator
+from expert_dollup.shared.starlette_injection import LoggerFactory
 from expert_dollup.core.builders import ProjectDefinitionTreeBuilder
 from expert_dollup.core.units import NodeValueValidation
-
-logger = structlog.get_logger(__name__)
 
 
 class ProjectDefinitionNodeUseCase:
@@ -26,6 +24,7 @@ class ProjectDefinitionNodeUseCase:
         project_definition_node_service: ProjectDefinitionNodeService,
         project_definition_tree_builder: ProjectDefinitionTreeBuilder,
         node_value_validation: NodeValueValidation,
+        logger: LoggerFactory,
     ):
         self.service = service
         self.project_definition_node_paginator = project_definition_node_paginator
@@ -33,6 +32,7 @@ class ProjectDefinitionNodeUseCase:
         self.project_definition_node_service = project_definition_node_service
         self.project_definition_tree_builder = project_definition_tree_builder
         self.node_value_validation = node_value_validation
+        self.logger = logger.create(__name__)
 
     async def add(
         self, domain: ProjectDefinitionNode

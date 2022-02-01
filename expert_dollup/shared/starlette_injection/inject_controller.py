@@ -1,8 +1,7 @@
-import structlog
 from typing import TypeVar, Type
 from starlette.requests import Request
+from logging import Logger
 
-logger = structlog.get_logger(__name__)
 
 T = TypeVar("T")
 
@@ -18,6 +17,7 @@ class Inject:
         try:
             return container.get(self.object_class)
         except Exception as e:
+            logger = container.get(Logger)
             logger.error(
                 f"Fail to inject class {getattr(self.object_class, '__name__', self.object_class)}"
             )

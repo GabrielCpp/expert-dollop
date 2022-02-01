@@ -21,9 +21,11 @@ from .types import query, mutation
 async def resolve_find_project_report(
     _: Any,
     info: GraphQLResolveInfo,
-    project_id: UUID,
-    report_definition_id: UUID,
+    project_id: str,
+    report_definition_id: str,
     get_project_report: callable,
 ):
-    result = await get_project_report(info, project_id, report_definition_id)
+    result = await get_project_report(
+        info, UUID(project_id), UUID(report_definition_id)
+    )
     return result

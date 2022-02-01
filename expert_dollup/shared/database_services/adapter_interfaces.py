@@ -176,6 +176,11 @@ def create_connection(
 
                 DbConnection._REGISTRY["firestore+async"] = FirestoreConnection
 
+            if connector == "mongodb":
+                from .database_adapters.mongo_adapter import MongoConnection
+
+                DbConnection._REGISTRY["mongodb"] = MongoConnection
+
     build_connection = DbConnection._REGISTRY.get(scheme)
 
     if build_connection is None:

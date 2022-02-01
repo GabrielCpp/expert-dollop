@@ -9,6 +9,7 @@ from expert_dollup.core.domains.formula import (
 from expert_dollup.shared.database_services import log_execution_time_async, StopWatch
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.exceptions import RessourceNotFound
+from expert_dollup.shared.starlette_injection import LoggerFactory
 from expert_dollup.core.domains import (
     Formula,
     FormulaExpression,
@@ -39,12 +40,14 @@ class FormulaResolver:
         project_definition_node_service: ProjectDefinitionNodeService,
         unit_instance_builder: UnitInstanceBuilder,
         stage_formulas_storage: ObjectStorage[StagedFormulas, StagedFormulasKey],
+        logger: LoggerFactory,
     ):
         self.formula_service = formula_service
         self.project_node_service = project_node_service
         self.project_definition_node_service = project_definition_node_service
         self.unit_instance_builder = unit_instance_builder
         self.stage_formulas_storage = stage_formulas_storage
+        self.logger = logger.create(__name__)
 
     async def parse_many(self, formula_expressions: List[FormulaExpression]) -> Formula:
         project_def_id = formula_expressions[0].project_def_id
@@ -230,7 +233,7 @@ class FormulaResolver:
     ) -> FormulaInjector:
         injector = FormulaInjector()
 
-        with StopWatch("Fetching formula data"):
+        with StopWatch(self.logger, "Fetching formula data"):
             nodes, staged_formulas = await gather(
                 self.project_node_service.get_all_fields(project_id),
                 self.get_staged_formulas(project_def_id),
@@ -255,7 +258,7 @@ class FormulaResolver:
                 )
             )
 
-        with StopWatch("Computing formulas"):
+        with StopWatch(self.logger, "Computing formulas"):
             injector.precompute()
 
         return injector

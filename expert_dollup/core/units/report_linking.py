@@ -15,9 +15,8 @@ from expert_dollup.core.exceptions import (
 )
 from expert_dollup.core.domains import *
 from expert_dollup.shared.database_services.time_it import log_execution_time_async
-from expert_dollup.shared.starlette_injection import Clock
+from expert_dollup.shared.starlette_injection import Clock, LoggerFactory
 from .expression_evaluator import ExpressionEvaluator
-from expert_dollup.shared.database_services import log_execution_time
 
 FORMULA_BUCKET_NAME = "formula"
 COLUMNS_BUCKET_NAME = "columns"
@@ -408,12 +407,14 @@ class ReportLinking:
         report_row_cache_builder: ReportRowCache,
         formula_resolver: FormulaResolver,
         clock: Clock,
+        logger: LoggerFactory,
     ):
         self.datasheet_element_service = datasheet_element_service
         self.expression_evaluator = expression_evaluator
         self.report_row_cache_builder = report_row_cache_builder
         self.formula_resolver = formula_resolver
         self.clock = clock
+        self.logger = logger.create(__name__)
 
     @log_execution_time_async
     async def link_report(

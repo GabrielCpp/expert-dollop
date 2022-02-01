@@ -84,7 +84,7 @@ async def resolve_find_datasheet_definitions(
 async def resolve_find_datasheet_definition(
     _: Any,
     info: GraphQLResolveInfo,
-    datasheet_definition_id: UUID,
+    datasheet_definition_id: str,
     find_datasheet_definition_by_id: callable,
 ):
-    return await find_datasheet_definition_by_id(info, datasheet_definition_id)
+    return await find_datasheet_definition_by_id(info, UUID(datasheet_definition_id))

@@ -11,6 +11,7 @@ from expert_dollup.shared.starlette_injection import (
     get_classes,
     get_base,
     get_arg,
+    is_development,
 )
 from expert_dollup.shared.database_services import create_connection, Paginator
 from expert_dollup.shared.automapping import Mapper
@@ -30,10 +31,6 @@ from expert_dollup.infra.storage_connectors import ObjectNotFound
 from expert_dollup.core.exceptions import RessourceNotFound
 
 storage_exception_mappings = {ObjectNotFound: lambda e: RessourceNotFound()}
-
-
-def is_development():
-    return environ.get("FASTAPI_ENV", "production") == "development"
 
 
 def bind_database(binder: Binder) -> None:

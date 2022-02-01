@@ -19,9 +19,9 @@ from .types import query, datasheet, mutation
 @inject_graphql_route(find_datasheet_by_id)
 @convert_kwargs_to_snake_case
 async def resolve_find_datasheet(
-    _: Any, info: GraphQLResolveInfo, id: UUID, find_datasheet_by_id: callable
+    _: Any, info: GraphQLResolveInfo, id: str, find_datasheet_by_id: callable
 ):
-    return await find_datasheet_by_id(info, id)
+    return await find_datasheet_by_id(info, UUID(id))
 
 
 @datasheet.field("elements")

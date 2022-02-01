@@ -34,10 +34,10 @@ async def resolve_project_definition_root_sections(
 async def resolve_project_definition_root_section_nodes(
     parent: ProjectDefinitionDto,
     info: GraphQLResolveInfo,
-    root_section_id: UUID,
+    root_section_id: str,
     find_root_section_nodes: callable,
 ):
-    result = await find_root_section_nodes(info, parent.id, root_section_id)
+    result = await find_root_section_nodes(info, parent.id, UUID(root_section_id))
     return result
 
 
@@ -47,11 +47,11 @@ async def resolve_project_definition_root_section_nodes(
 async def resolve_project_definition_form_content(
     parent: ProjectDefinitionDto,
     info: GraphQLResolveInfo,
-    project_def_id: UUID,
-    form_id: UUID,
+    project_def_id: str,
+    form_id: str,
     find_form_content: callable,
 ):
-    result = await find_form_content(info, parent.id, form_id)
+    result = await find_form_content(info, parent.id, UUID(form_id))
     return result
 
 
@@ -61,10 +61,10 @@ async def resolve_project_definition_form_content(
 async def resolve_root_sections(
     _: Any,
     info: GraphQLResolveInfo,
-    project_def_id: UUID,
+    project_def_id: str,
     find_root_sections: callable,
 ):
-    result = await find_root_sections(info, project_def_id)
+    result = await find_root_sections(info, UUID(project_def_id))
     return result
 
 
@@ -74,11 +74,13 @@ async def resolve_root_sections(
 async def resolve_root_section_nodes(
     _: Any,
     info: GraphQLResolveInfo,
-    project_def_id: UUID,
-    root_section_id: UUID,
+    project_def_id: str,
+    root_section_id: str,
     find_root_section_nodes: callable,
 ):
-    result = await find_root_section_nodes(info, project_def_id, root_section_id)
+    result = await find_root_section_nodes(
+        info, UUID(project_def_id), UUID(root_section_id)
+    )
     return result
 
 
@@ -88,11 +90,11 @@ async def resolve_root_section_nodes(
 async def resolve_form_content(
     _: Any,
     info: GraphQLResolveInfo,
-    project_def_id: UUID,
-    form_id: UUID,
+    project_def_id: str,
+    form_id: str,
     find_form_content: callable,
 ):
-    result = await find_form_content(info, project_def_id, form_id)
+    result = await find_form_content(info, UUID(project_def_id), UUID(form_id))
     return result
 
 
@@ -102,11 +104,11 @@ async def resolve_form_content(
 async def resolve_find_project_definition_node(
     _: Any,
     info: GraphQLResolveInfo,
-    project_def_id: UUID,
-    id: UUID,
+    project_def_id: str,
+    id: str,
     find_project_definition_node: callable,
 ):
-    result = await find_project_definition_node(info, project_def_id, id)
+    result = await find_project_definition_node(info, UUID(project_def_id), UUID(id))
     return result
 
 

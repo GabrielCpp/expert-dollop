@@ -21,10 +21,10 @@ from .types import query, mutation
 async def resolve_find_project_definition_reports(
     _: Any,
     info: GraphQLResolveInfo,
-    project_def_id: UUID,
+    project_def_id: str,
     get_project_def_reports_definitions: callable,
 ):
-    result = await get_project_def_reports_definitions(info, project_def_id)
+    result = await get_project_def_reports_definitions(info, UUID(project_def_id))
     return result
 
 
@@ -34,8 +34,8 @@ async def resolve_find_project_definition_reports(
 async def resolve_find_report_definition(
     _: Any,
     info: GraphQLResolveInfo,
-    report_definition_id: UUID,
+    report_definition_id: str,
     get_report_definition: callable,
 ):
-    result = await get_report_definition(info, report_definition_id)
+    result = await get_report_definition(info, UUID(report_definition_id))
     return result

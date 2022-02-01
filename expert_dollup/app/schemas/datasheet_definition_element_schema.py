@@ -34,14 +34,16 @@ def resolve_default_properties(
 async def resolve_find_datasheet_definition_elements(
     _: Any,
     info: GraphQLResolveInfo,
-    datasheet_definition_id: UUID,
+    datasheet_definition_id: str,
     first: int,
     handler: GraphqlPageHandler[DatasheetDefinition],
     after: Optional[str] = None,
 ):
     return await handler.handle(
         DatasheetDefinitionElementDto,
-        DatasheetDefinitionElementFilter(datasheet_def_id=datasheet_definition_id),
+        DatasheetDefinitionElementFilter(
+            datasheet_def_id=UUID(datasheet_definition_id)
+        ),
         first,
         after,
     )

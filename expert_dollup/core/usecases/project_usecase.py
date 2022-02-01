@@ -1,4 +1,3 @@
-import structlog
 from typing import Awaitable
 from uuid import UUID
 from expert_dollup.core.domains import (
@@ -14,7 +13,7 @@ from expert_dollup.infra.services import (
     ProjectNodeMetaService,
 )
 
-logger = structlog.get_logger(__name__)
+from expert_dollup.shared.starlette_injection import LoggerFactory
 
 
 class ProjectUseCase:
@@ -25,12 +24,14 @@ class ProjectUseCase:
         project_node_meta_service: ProjectNodeMetaService,
         ressource_service: RessourceService,
         project_builder: ProjectBuilder,
+        logger: LoggerFactory,
     ):
         self.project_service = project_service
         self.project_node_service = project_node_service
         self.project_node_meta_service = project_node_meta_service
         self.ressource_service = ressource_service
         self.project_builder = project_builder
+        self.logger = logger.create(__name__)
 
     async def add(self, project_details: ProjectDetails) -> Awaitable[ProjectDetails]:
         project = await self.project_builder.build_new(project_details)

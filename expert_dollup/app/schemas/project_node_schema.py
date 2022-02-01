@@ -20,9 +20,9 @@ from pydantic import parse_obj_as
 @inject_graphql_route(find_root_sections)
 @convert_kwargs_to_snake_case
 async def resolve_find_root_sections(
-    _: Any, info: GraphQLResolveInfo, project_id: UUID, find_root_sections: callable
+    _: Any, info: GraphQLResolveInfo, project_id: str, find_root_sections: callable
 ):
-    return await find_root_sections(info, project_id)
+    return await find_root_sections(info, UUID(project_id))
 
 
 @query.field("findProjectRootSectionContainers")
@@ -31,11 +31,11 @@ async def resolve_find_root_sections(
 async def resolve_find_root_section_nodes(
     _: Any,
     info: GraphQLResolveInfo,
-    project_id: UUID,
-    root_section_id: UUID,
+    project_id: str,
+    root_section_id: str,
     find_root_section_nodes: callable,
 ):
-    return await find_root_section_nodes(info, project_id, root_section_id)
+    return await find_root_section_nodes(info, UUID(project_id), UUID(root_section_id))
 
 
 @query.field("findProjectFormContent")
@@ -44,11 +44,11 @@ async def resolve_find_root_section_nodes(
 async def resolve_find_root_section_nodes(
     _: Any,
     info: GraphQLResolveInfo,
-    project_id: UUID,
-    form_id: UUID,
+    project_id: str,
+    form_id: str,
     find_form_content: callable,
 ):
-    return await find_form_content(info, project_id, form_id)
+    return await find_form_content(info, UUID(project_id), UUID(form_id))
 
 
 @mutation.field("updateProjectField")
@@ -57,8 +57,8 @@ async def resolve_find_root_section_nodes(
 async def resolve_update_project_field(
     _: Any,
     info: GraphQLResolveInfo,
-    project_id: UUID,
-    node_id: UUID,
+    project_id: str,
+    node_id: str,
     value: PrimitiveWithNoneUnion,
     mutate_project_field: callable,
 ):
@@ -73,7 +73,7 @@ async def resolve_update_project_field(
         },
     )
 
-    return await mutate_project_field(info, project_id, node_id, value)
+    return await mutate_project_field(info, UUID(project_id), UUID(node_id), value)
 
 
 @mutation.field("updateProjectFields")
@@ -101,7 +101,7 @@ async def resolve_update_project_fields(
     ]
 
     return await mutate_project_fields(
-        info, project_id, parse_obj_as(List[FieldUpdateInputDto], updates)
+        info, UUID(project_id), parse_obj_as(List[FieldUpdateInputDto], updates)
     )
 
 
@@ -111,13 +111,13 @@ async def resolve_update_project_fields(
 async def resolve_add_project_collection_item(
     _: Any,
     info: GraphQLResolveInfo,
-    project_id: UUID,
+    project_id: str,
     collection_target: dict,
     add_project_collection: callable,
 ):
     return await add_project_collection(
         info,
-        project_id,
+        UUID(project_id),
         parse_obj_as(ProjectNodeCollectionTargetDto, collection_target),
     )
 
@@ -128,12 +128,12 @@ async def resolve_add_project_collection_item(
 async def resolve_clone_project_collection(
     _: Any,
     info: GraphQLResolveInfo,
-    project_id: UUID,
-    collection_node_id: UUID,
+    project_id: str,
+    collection_node_id: str,
     clone_project_collection: callable,
 ):
     return await clone_project_collection(
         info,
-        project_id,
-        collection_node_id,
+        UUID(project_id),
+        UUID(collection_node_id),
     )

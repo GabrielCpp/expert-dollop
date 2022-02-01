@@ -1,5 +1,5 @@
-import structlog
 from typing import Type, Dict, Callable, TypeVar
+from logging import Logger
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -7,8 +7,6 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 ExceptionHandler = Dict[Type, Callable[[Exception, Request], Response]]
 InteralErrorHandler = Callable[[], Response]
 ExceptionHandlerDict = TypeVar("ExceptionHandlerDict")
-
-logger = structlog.get_logger(__name__)
 
 
 def create_default_internal_error_response() -> Response:
@@ -21,6 +19,7 @@ def create_default_internal_error_response() -> Response:
 
 def create_error_middleware(
     handlers: ExceptionHandler,
+    logger: Logger,
     internal_error: InteralErrorHandler = create_default_internal_error_response,
 ):
     class ErrorMiddleware(BaseHTTPMiddleware):

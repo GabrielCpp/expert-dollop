@@ -10,7 +10,7 @@ class Clock(ABC):
 
 class DateTimeClock(Clock):
     def utcnow(self) -> datetime:
-        return datetime.now(timezone.utc)
+        return datetime.now(timezone.utc).replace(microsecond=0)
 
 
 class StaticClock(Clock):

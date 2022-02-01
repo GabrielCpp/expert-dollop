@@ -26,7 +26,7 @@ async def resolve_add_translationst(
     results = []
     for translation in translations:
         result = await create_translation(
-            info, NewTranslationDto.parse_obj(translation)
+            info, TranslationInputDto.parse_obj(translation)
         )
         results.append(result)
 

@@ -1,4 +1,5 @@
 import json
+from uuid import UUID
 from ariadne import (
     ObjectType,
     QueryType,
@@ -26,6 +27,7 @@ field_details_union_type = UnionType("FieldDetailsUnion")
 datasheet = ObjectType("Datasheet")
 datasheet_element = ObjectType("DatasheetElement")
 json_schema_scalar = ScalarType("JsonSchema")
+graphql_uuid = ScalarType("UUID")
 
 types = [
     mutation,
@@ -58,6 +60,26 @@ def parse_json_schema_value(value):
 def parse_json_schema_litteral(ast):
     value = str(ast.value)
     return parse_json_schema_value(value)
+
+
+#
+
+
+@graphql_uuid.serializer
+def serialize_graphql_uuid(value):
+    return str(value)
+
+
+@graphql_uuid.value_parser
+def parse_graphql_uuid_value(value):
+    if value:
+        return UUID(value)
+
+
+@graphql_uuid.literal_parser
+def parse_graphql_uuid_litteral(ast):
+    value = str(ast.value)
+    return parse_graphql_uuid_value(value)
 
 
 def build_schema():

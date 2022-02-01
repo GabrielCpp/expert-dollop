@@ -22,12 +22,15 @@ from .types import query
 async def resolve_find_project_definition_formulas(
     _: Any,
     info: GraphQLResolveInfo,
-    project_def_id: UUID,
+    project_def_id: str,
     query: str,
     first: int,
     handler: GraphqlPageHandler[Formula],
     after: Optional[str] = None,
 ):
     return await handler.handle(
-        FormulaExpressionDto, FormulaFilter(project_def_id=project_def_id), first, after
+        FormulaExpressionDto,
+        FormulaFilter(project_def_id=UUID(project_def_id)),
+        first,
+        after,
     )

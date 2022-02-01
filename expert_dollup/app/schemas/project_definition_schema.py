@@ -18,9 +18,9 @@ from .types import query
 @inject_graphql_route(find_project_definition)
 @convert_kwargs_to_snake_case
 async def resolve_find_project_definition(
-    _: Any, info: GraphQLResolveInfo, id: UUID, find_project_definition: callable
+    _: Any, info: GraphQLResolveInfo, id: str, find_project_definition: callable
 ):
-    return await find_project_definition(info, id)
+    return await find_project_definition(info, UUID(id))
 
 
 @query.field("findProjectDefintions")
