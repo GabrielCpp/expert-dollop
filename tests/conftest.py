@@ -14,6 +14,8 @@ from expert_dollup.shared.database_services import DbConnection
 import expert_dollup.infra.services as services
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import create_connection
+from expert_dollup.shared.starlette_injection.logger_factory import LoggerFactory
+from .fixtures.injector_override.mock_services import logger_observer
 from .fixtures import *
 from factory.random import reseed_random
 from factory import Faker
@@ -78,3 +80,8 @@ async def ac(app, caplog) -> TestClient:
 
     async with TestClient(app) as ac:
         yield ac
+
+
+@pytest.fixture
+def logger_factory(container, logger_observer):
+    return container.get(LoggerFactory)

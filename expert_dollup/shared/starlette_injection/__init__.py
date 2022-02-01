@@ -9,6 +9,6 @@ from .modeling import CamelModel
 from .handlers import *
 from .detailed_error import DetailedError
 from .type_utils import get_classes, get_base, get_arg
-from .logger_factory import LoggerFactory
+from .logger_factory import LoggerFactory, LoggerObserver
 from .late_binding import PureBinding, LateBinder
 from .helpers import is_development

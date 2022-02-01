@@ -73,7 +73,9 @@ def report_seed() -> ReportSeed:
 
 
 @pytest.mark.asyncio
-async def test_given_row_cache_should_produce_correct_report(report_seed: ReportSeed):
+async def test_given_row_cache_should_produce_correct_report(
+    report_seed: ReportSeed, logger_factory
+):
     element_def = report_seed.element_def
     datasheet_element = report_seed.datasheet_element
     formula = report_seed.formula
@@ -134,6 +136,7 @@ async def test_given_row_cache_should_produce_correct_report(report_seed: Report
         report_row_cache.object,
         formula_resolver.object,
         clock,
+        logger_factory,
     )
 
     report = await report_linking.link_report(

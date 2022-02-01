@@ -12,7 +12,7 @@ from tests.fixtures import *
 
 
 @pytest.mark.asyncio
-async def test_given_unit_instances_should_compute_collection():
+async def test_given_unit_instances_should_compute_collection(logger_factory):
     project_node_service = StrictInterfaceSetup(ProjectNodeService)
     unit_instance_builder = StrictInterfaceSetup(UnitInstanceBuilder)
     stage_formulas_storage = StrictInterfaceSetup(ObjectStorage)
@@ -41,6 +41,7 @@ async def test_given_unit_instances_should_compute_collection():
         StrictInterfaceSetup(ProjectDefinitionNodeService).object,
         unit_instance_builder.object,
         stage_formulas_storage.object,
+        logger_factory,
     )
 
     injector = await formula_resolver.compute_all_project_formula(
