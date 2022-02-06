@@ -5,22 +5,22 @@ import os
 import asyncio
 
 
-def drop_db():
+async def drop_db(db_url_name: str):
     from dotenv import load_dotenv
     from expert_dollup.shared.database_services import create_connection
 
     load_dotenv()
-    connection = create_connection(os.getenv("DATABASE_URL"))
-    asyncio.run(connection.drop_db())
+    connection = create_connection(os.getenv(db_url_name))
+    await connection.drop_db()
 
 
-async def truncate_db(tables=None):
+async def truncate_db(db_url_name: str, tables=None):
     from dotenv import load_dotenv
     from expert_dollup.shared.database_services import create_connection
     import expert_dollup.infra.expert_dollup_db as daos
 
     load_dotenv()
-    connection = create_connection(os.getenv("DATABASE_URL"), daos)
+    connection = create_connection(os.getenv(db_url_name), daos)
     await connection.truncate_db(tables)
 
 
@@ -109,7 +109,8 @@ def db_truncate(c, poetry=False):
     if not poetry:
         c.run("poetry run invoke db:truncate --poetry")
 
-    asyncio.run(truncate_db())
+    asyncio.run(truncate_db("EXPERT_DOLLUP_DB_URL"))
+    asyncio.run(truncate_db("RESSOURCE_DB_URL"))
 
 
 @task(name="db:drop")
@@ -117,7 +118,8 @@ def db_drop(c, poetry=False):
     if not poetry:
         c.run("poetry run invoke db:drop --poetry")
 
-    drop_db()
+    asyncio.run(drop_db("EXPERT_DOLLUP_DB_URL"))
+    asyncio.run(drop_db("RESSOURCE_DB_URL"))
 
 
 @task
@@ -171,17 +173,33 @@ def generate_cert(c, folder: Path, domain_name: str, ca_name: str = "myCA"):
     return cert_path, key_path
 
 
+def generate_jwt_key_pair(c, folder: Path, name: str):
+    folder.mkdir(parents=True, exist_ok=True)
+    c.run(f"openssl genrsa -out {folder / name}-private.pem 2048")
+    c.run(
+        f"openssl rsa -in {folder / name}-private.pem -pubout > {folder / name}-public.pem"
+    )
+
+    private_path = folder / f"{name}-private.pem"
+    public_path = folder / f"{name}-public.pem"
+
+    return public_path, private_path
+
+
 @task(name="init")
 def generate_env(c, hostname="predykt.dev"):
-    cert_path, key_path = generate_cert(c, Path(".local"), hostname)
+    public_path, private_path = generate_jwt_key_pair(c, Path(".local"), "jwt")
 
-    with open(cert_path, "rb") as key_file:
+    with open(public_path, "rb") as key_file:
         key = key_file.read()
         key_base64 = base64.b64encode(key).decode("ascii")
 
-    with open(key_path, "rb") as key_file:
+    with open(private_path, "rb") as key_file:
         private_key = key_file.read()
         private_key_base64 = base64.b64encode(private_key).decode("ascii")
+
+    if os.exists(".env"):
+        print("Environement file already exists")
 
     with open(".env", "w") as f:
         f.write("POSTGRES_USERNAME=predyktuser\n")
@@ -191,12 +209,13 @@ def generate_env(c, hostname="predykt.dev"):
         f.write(f"JWT_PUBLIC_KEY={key_base64}\n")
         f.write(f"JWT_PRIVATE_KEY={private_key_base64}\n")
         f.write(f"HOSTNAME={hostname}\n")
+        f.write("FASTAPI_ENV=development\n")
 
 
 @task(name="upload-base-project")
 def upload_base_project(c):
     cwd = os.getcwd()
-    asyncio.run(truncate_db())
+    db_truncate(c, poetry=True)
     c.run(
         f"curl -X POST -F 'file=@{cwd}/project-setup.jsonl' http://localhost:8000/api/import"
     )

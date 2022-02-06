@@ -1,34 +1,38 @@
 from uuid import UUID, uuid4
 from typing import Awaitable
+from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.core.exceptions import RessourceNotFound
-from expert_dollup.core.domains import ProjectDefinition, Ressource
-from expert_dollup.infra.services import (
-    ProjectDefinitionService,
-    RessourceService,
+from expert_dollup.core.domains import (
+    ProjectDefinition,
+    Ressource,
+    User,
+    RessourceFilter,
 )
+from expert_dollup.infra.services import ProjectDefinitionService
 from expert_dollup.infra.providers import WordProvider
+from expert_dollup.core.utils.ressource_permissions import make_ressource
 
 
 class ProjectDefinitonUseCase:
     def __init__(
         self,
         service: ProjectDefinitionService,
-        ressource_service: RessourceService,
+        ressource_service: CollectionService[Ressource],
         word_provider: WordProvider,
     ):
         self.service = service
         self.ressource_service = ressource_service
         self.word_provider = word_provider
 
-    async def add(self, domain: ProjectDefinition) -> Awaitable:
-        ressource = Ressource(id=domain.id, kind="project_definition", owner_id=uuid4())
+    async def add(self, domain: ProjectDefinition, user: User) -> Awaitable:
+        ressource = make_ressource(ProjectDefinition, domain, user.id)
         await self.ressource_service.insert(ressource)
         await self.service.insert(domain)
         return domain
 
     async def delete_by_id(self, id: UUID) -> Awaitable:
         await self.service.delete_by_id(id)
-        await self.ressource_service.delete_by_id(id)
+        await self.ressource_service.delete_by((RessourceFilter(id=id)))
 
     async def update(self, domain: ProjectDefinition) -> Awaitable:
         await self.service.update(domain)

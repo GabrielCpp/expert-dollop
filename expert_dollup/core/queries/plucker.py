@@ -12,7 +12,7 @@ class Plucker(ABC, Generic[Domain]):
     async def plucks(
         self,
         build_pluck_filter: Callable[[VarArg(UUID)], QueryFilter],
-        *ids_lists: List[Iterable[UUID]]
+        ids_lists: Iterable[UUID],
     ) -> List[Domain]:
         pass
 
@@ -21,6 +21,6 @@ class Plucker(ABC, Generic[Domain]):
         self,
         ressource_filter: QueryFilter,
         build_pluck_filter: Callable[[VarArg(UUID)], QueryFilter],
-        *ids_lists: List[Iterable[UUID]]
+        ids_lists: Iterable[UUID],
     ) -> List[Domain]:
         pass

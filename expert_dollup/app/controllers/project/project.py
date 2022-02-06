@@ -5,6 +5,7 @@ from expert_dollup.shared.starlette_injection import RequestHandler, MappingChai
 from expert_dollup.app.dtos import ProjectDetailsDto, ProjectDetailsInputDto
 from expert_dollup.core.domains import ProjectDetails
 from expert_dollup.core.usecases import ProjectUseCase
+from expert_dollup.app.jwt_auth import CanPerformOnRequired, CanPerformRequired
 
 router = APIRouter()
 
@@ -25,12 +26,17 @@ async def create_project(
     project: ProjectDetailsInputDto,
     usecase=Depends(Inject(ProjectUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformRequired("project:create")),
 ):
-    return await handler.handle(
+    return await handler.forward_mapped(
         usecase.add,
-        project,
-        MappingChain(
-            dto=ProjectDetailsInputDto, domain=ProjectDetails, out_dto=ProjectDetailsDto
+        dict(project_details=project, user=user),
+        MappingChain(out_dto=ProjectDetailsDto),
+        map_keys=dict(
+            project_details=MappingChain(
+                dto=ProjectDetailsInputDto,
+                domain=ProjectDetails,
+            ),
         ),
     )
 
@@ -40,10 +46,13 @@ async def clone_project(
     project_id: UUID,
     usecase=Depends(Inject(ProjectUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_id", ["project:read"], ["project:clone"])
+    ),
 ):
-    return await handler.handle(
+    return await handler.forward(
         usecase.clone,
-        project_id,
+        dict(project_id=project_id, user=user),
         MappingChain(out_dto=ProjectDetailsDto),
     )
 

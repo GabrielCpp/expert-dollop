@@ -1,5 +1,6 @@
 from uuid import UUID
 from typing import List, Dict
+from datetime import datetime
 from expert_dollup.shared.starlette_injection import CamelModel
 from .dynamic_primitive import PrimitiveUnionDto
 
@@ -18,3 +19,4 @@ class DatasheetDefinitionElementDto(CamelModel):
     name: str
     tags: List[UUID]
     default_properties: Dict[str, DatasheetDefinitionElementPropertyDto]
+    creation_date_utc: datetime

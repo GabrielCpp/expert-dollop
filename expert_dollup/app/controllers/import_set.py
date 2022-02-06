@@ -6,8 +6,10 @@ from pydantic.main import BaseModel
 from pydantic.tools import parse_obj_as
 from injector import Injector
 from json import loads
+from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.shared.starlette_injection import Inject
 from expert_dollup.shared.automapping import Mapper
+from expert_dollup.core.utils.ressource_permissions import make_ressource
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.usecases import *
@@ -90,15 +92,17 @@ class InsertProjectWithRessourceAction:
         self.domain = ProjectDetails
 
     async def __call__(self, injector: Injector, ressource_specs: List[BaseModel]):
-        ressource_service = injector.get(RessourceService)
+        ressource_service = injector.get(CollectionService[Ressource])
         project_service = injector.get(ProjectService)
         mapper = injector.get(Mapper)
 
         for ressource_spec in ressource_specs:
             project_details = mapper.map(ressource_spec, ProjectDetails)
             await ressource_service.insert(
-                Ressource(
-                    id=project_details.id, kind="project", owner_id=project_details.id
+                make_ressource(
+                    ProjectDetails,
+                    project_details,
+                    UUID("41e10284-f63a-438e-b5e2-d951a9e94c21"),
                 )
             )
             await project_service.insert(project_details)

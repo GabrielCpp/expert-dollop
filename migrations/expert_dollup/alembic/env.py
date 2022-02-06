@@ -28,7 +28,7 @@ target_metadata = None
 
 load_dotenv()
 
-DATABASE_URL = os.environ["DATABASE_URL"]
+DATABASE_URL = os.environ["EXPERT_DOLLUP_DB_URL"]
 
 
 def run_migrations_offline():

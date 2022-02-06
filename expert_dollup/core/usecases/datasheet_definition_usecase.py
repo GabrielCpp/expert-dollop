@@ -1,10 +1,12 @@
 from uuid import UUID, uuid4
 from typing import List
+from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.core.exceptions import ValidationError
-from expert_dollup.core.domains import DatasheetDefinition, Ressource
-from expert_dollup.infra.services import DatasheetDefinitionService, RessourceService
+from expert_dollup.core.domains import DatasheetDefinition, Ressource, User
+from expert_dollup.infra.services import DatasheetDefinitionService
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
 from expert_dollup.infra.providers import WordProvider
+from expert_dollup.core.utils.ressource_permissions import make_ressource
 
 
 class DatasheetDefinitionUseCase:
@@ -12,7 +14,7 @@ class DatasheetDefinitionUseCase:
         self,
         datasheet_definition_service: DatasheetDefinitionService,
         schema_validator: SchemaValidator,
-        ressource_service: RessourceService,
+        ressource_service: CollectionService[Ressource],
         word_provider: WordProvider,
     ):
         self.datasheet_definition_service = datasheet_definition_service
@@ -23,10 +25,8 @@ class DatasheetDefinitionUseCase:
     async def find_by_id(self, id: UUID):
         return await self.datasheet_definition_service.find_by_id(id)
 
-    async def add(self, domain: DatasheetDefinition) -> DatasheetDefinition:
-        ressource = Ressource(
-            id=domain.id, kind="datsheet_definition", owner_id=uuid4()
-        )
+    async def add(self, domain: DatasheetDefinition, user: User) -> DatasheetDefinition:
+        ressource = make_ressource(DatasheetDefinition, domain, user.id)
         self.validate_datasheet(domain)
         await self.ressource_service.insert(ressource)
         await self.datasheet_definition_service.insert(domain)

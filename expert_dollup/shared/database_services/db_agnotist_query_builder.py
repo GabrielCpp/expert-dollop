@@ -54,6 +54,6 @@ class DbAgnotistQueryBuilder(QueryBuilder):
             self._selections,
             self._max_records,
             self._orders,
-            self._wheres,
+            [*self._wheres],
             self._constructs,
         )

@@ -12,6 +12,7 @@ from expert_dollup.core.utils.path_transform import (
 )
 
 from expert_dollup.infra.expert_dollup_db import *
+from expert_dollup.infra.ressource_auth_db import *
 from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_storage import *
 
@@ -83,7 +84,7 @@ def map_project_definition_to_dao(
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
         datasheet_def_id=src.datasheet_def_id,
-        creation_date_utc=mapper.get(Clock).utcnow(),
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -276,7 +277,7 @@ def map_project_definition_node_to_dao(
         path=join_uuid_path(src.path),
         display_query_internal_id=display_query_internal_id,
         level=len(src.path),
-        creation_date_utc=mapper.get(Clock).utcnow(),
+        creation_date_utc=src.creation_date_utc,
         default_value=mapper.map(
             src.default_value, primitive_with_none_union_dao_mappings.to_origin
         ),
@@ -290,6 +291,7 @@ def map_project_from_dao(src: ProjectDao, mapper: Mapper) -> ProjectDetails:
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -300,7 +302,7 @@ def map_project_to_dao(src: ProjectDetails, mapper: Mapper) -> ProjectDao:
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
-        creation_date_utc=mapper.get(Clock).utcnow(),
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -318,7 +320,6 @@ def map_project_node_to_dao(src: ProjectNode, mapper: Mapper) -> ProjectNodeDao:
         type_path=join_uuid_path(src.type_path),
         level=len(src.path),
         display_query_internal_id=display_query_internal_id,
-        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
@@ -376,11 +377,26 @@ def map_project_node_meta_state_from_dao(
     )
 
 
+def map_user_from_dao(src: UserDao, mapper: Mapper) -> User:
+    return User(
+        oauth_id=src.oauth_id, id=src.id, email=src.email, permissions=src.permissions
+    )
+
+
+def map_user_to_dao(src: User, mapper: Mapper) -> UserDao:
+    return UserDao(
+        oauth_id=src.oauth_id, id=src.id, email=src.email, permissions=src.permissions
+    )
+
+
 def map_ressource_from_dao(src: RessourceDao, mapper: Mapper) -> Ressource:
     return Ressource(
         id=src.id,
         kind=src.kind,
-        owner_id=src.owner_id,
+        user_id=src.user_id,
+        permissions=src.permissions,
+        name=src.name,
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -388,7 +404,11 @@ def map_ressource_to_dao(src: Ressource, mapper: Mapper) -> RessourceDao:
     return RessourceDao(
         id=src.id,
         kind=src.kind,
-        owner_id=src.owner_id,
+        user_id=src.user_id,
+        permissions=src.permissions,
+        name=src.name,
+        creation_date_utc=src.creation_date_utc,
+        date_ordering=src.creation_date_utc.strftime("%Y%m%d%H%M%S") + src.id.hex,
     )
 
 
@@ -666,6 +686,7 @@ def map_datasheet_definition_to_dao(
             key: mapper.map(element, ElementPropertySchemaDao)
             for key, element in src.properties.items()
         },
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -679,6 +700,7 @@ def map_datasheet_definition_from_dao(
             key: mapper.map(element, ElementPropertySchema, ElementPropertySchemaDao)
             for key, element in src.properties.items()
         },
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -1067,6 +1089,17 @@ def map_translation_filter(src: TranslationFilter, mapper: Mapper) -> dict:
             "creation_date_utc": ("creation_date_utc", None),
         },
     )
+
+
+def map_ressource_filter(src: RessourceFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {"id": ("id", None), "user_id": ("user_id", None)},
+    )
+
+
+def map_ressource_id_filter(src: RessourceId, mapper: Mapper) -> dict:
+    return {"id": src.id, "user_id": src.user_id}
 
 
 def map_formula_filter(src: FormulaFilter, mapper: Mapper) -> dict:

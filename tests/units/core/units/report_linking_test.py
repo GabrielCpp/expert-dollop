@@ -101,7 +101,7 @@ async def test_given_row_cache_should_produce_correct_report(
     datasheet_element_service = StrictInterfaceSetup(DatasheetElementService)
     report_row_cache = StrictInterfaceSetup(ReportRowCache)
     formula_resolver = StrictInterfaceSetup(FormulaResolver)
-    clock = StaticClock(datetime(2000, 4, 3, 1, 1, 1, 7, timezone.utc))
+    clock = StaticClock(datetime(2000, 4, 3, 1, 1, 1, 0, timezone.utc))
 
     report_row_cache.setup(
         lambda x: x.refresh_cache(report_definition), returns_async=report_rows_cache
@@ -225,5 +225,5 @@ async def test_given_row_cache_should_produce_correct_report(
             )
         ],
         summaries=[ComputedValue(label="subtotal", value=Decimal("24.24"), unit="$")],
-        creation_date_utc=datetime(2000, 4, 3, 1, 1, 1, 7, tzinfo=timezone.utc),
+        creation_date_utc=datetime(2000, 4, 3, 1, 1, 1, 0, tzinfo=timezone.utc),
     )

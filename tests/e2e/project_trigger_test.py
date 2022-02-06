@@ -6,12 +6,12 @@ from ..fixtures import *
 
 
 async def create_project(ac, fake_db: FakeDb):
-    project = ProjectDetailsDtoFactory(
+    new_project = NewProjectDetailsDtoFactory(
         project_def_id=fake_db.get_only_one(ProjectDefinition).id
     )
-    response = await ac.post("/api/project", data=project.json())
+    response = await ac.post("/api/project", data=new_project.json())
     assert response.status_code == 200
-    assert ProjectDetailsDto(**response.json()) == project
+    project = ProjectDetailsDto.parse_obj(response.json())
     return project
 
 

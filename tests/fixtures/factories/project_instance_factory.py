@@ -319,6 +319,7 @@ class ProjectInstanceFactory:
             is_staged=False,
             project_def_id=project_definition.id,
             datasheet_id=project_definition.default_datasheet_id,
+            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
         )
 
         definition_nodes = [

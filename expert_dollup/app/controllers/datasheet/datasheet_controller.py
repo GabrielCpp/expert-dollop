@@ -20,6 +20,7 @@ from expert_dollup.app.dtos import (
     DatasheetUpdateDto,
 )
 from expert_dollup.core.usecases import DatasheetUseCase
+from expert_dollup.app.jwt_auth import CanPerformOnRequired, CanPerformRequired
 
 router = APIRouter()
 
@@ -45,15 +46,18 @@ async def add_datasheet(
     datasheet: NewDatasheetDto,
     usecase=Depends(Inject(DatasheetUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformRequired(["datasheet:create"])),
 ):
-    return await handler.handle(
+    return await handler.forward_mapped(
         usecase.add_filled_datasheet,
-        datasheet,
-        MappingChain(
-            dto=NewDatasheetDto,
-            domain=Datasheet,
-            out_dto=DatasheetDto,
-        ),
+        dict(datasheet=datasheet, user=user),
+        MappingChain(out_dto=DatasheetDto),
+        {
+            "datasheet": MappingChain(
+                dto=NewDatasheetDto,
+                domain=Datasheet,
+            ),
+        },
     )
 
 
@@ -79,20 +83,27 @@ async def patch_datasheet(
     )
 
 
-@router.post("/datasheet/clone")
+@router.post("/datasheet/{target_datasheet_id}/clone")
 async def clone_datasheet(
     datasheet_target: DatasheetCloneTargetDto,
     usecase=Depends(Inject(DatasheetUseCase)),
-    handler=Depends(Inject(RequestHandler)),
+    handler: RequestHandler = Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired(
+            "target_datasheet_id", ["datasheet:read"], ["datasheet:clone"]
+        )
+    ),
 ):
-    return await handler.handle(
+    return await handler.forward_mapped(
         usecase.clone,
-        datasheet_target,
-        MappingChain(
-            dto=DatasheetCloneTargetDto,
-            domain=DatasheetCloneTarget,
-            out_dto=DatasheetDto,
-        ),
+        dict(datasheet_clone_target=datasheet_target, user=user),
+        MappingChain(out_dto=DatasheetDto),
+        {
+            "datasheet_clone_target": MappingChain(
+                dto=DatasheetCloneTargetDto,
+                domain=DatasheetCloneTarget,
+            ),
+        },
     )
 
 

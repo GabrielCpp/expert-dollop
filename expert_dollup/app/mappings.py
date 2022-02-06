@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 from typing import List
 from decimal import Decimal
-from expert_dollup.shared.starlette_injection import Clock
+from expert_dollup.shared.starlette_injection import Clock, IdProvider
 from expert_dollup.shared.automapping import Mapper, RevervibleUnionMapping
 from expert_dollup.shared.database_services import Page
 from expert_dollup.app.dtos import *
@@ -52,7 +52,7 @@ def map_project_definition_from_dto(
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
         datasheet_def_id=src.datasheet_def_id,
-        creation_date_utc=mapper.get(Clock).utcnow(),
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -263,7 +263,7 @@ def map_project_definition_node_from_dto(
             src.default_value, primitive_with_none_union_dto_mappings.from_origin
         ),
         path=src.path,
-        creation_date_utc=mapper.get(Clock).utcnow(),
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -282,6 +282,7 @@ def map_project_definition_node_to_dto(
         default_value=mapper.map(
             src.default_value, primitive_with_none_union_dto_mappings.to_origin
         ),
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -318,31 +319,38 @@ def map_project_input_from_dto(
     src: ProjectDetailsInputDto, mapper: Mapper
 ) -> ProjectDetails:
     return ProjectDetails(
-        id=src.id,
+        id=mapper.get(IdProvider).uuid4(),
         name=src.name,
         is_staged=False,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
+        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
-def map_project_from_dto(src: ProjectDetailsDto, mapper: Mapper) -> ProjectDetails:
+def map_project_details_from_dto(
+    src: ProjectDetailsDto, mapper: Mapper
+) -> ProjectDetails:
     return ProjectDetails(
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
+        creation_date_utc=src.creation_date_utc,
     )
 
 
-def map_project_to_dto(src: ProjectDetails, mapper: Mapper) -> ProjectDetailsDto:
+def map_project_details_to_dto(
+    src: ProjectDetails, mapper: Mapper
+) -> ProjectDetailsDto:
     return ProjectDetailsDto(
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
         project_def_id=src.project_def_id,
         datasheet_id=src.datasheet_id,
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -578,6 +586,7 @@ def map_datasheet_definition_to_dto(
             key: ElementPropertySchemaDto(value_validator=value.value_validator)
             for key, value in src.properties.items()
         },
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -591,6 +600,7 @@ def map_datasheet_definition_from_dto(
             key: ElementPropertySchema(value_validator=value.value_validator)
             for key, value in src.properties.items()
         },
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -626,7 +636,7 @@ def map_datasheet_definition_element_from_dto(
             src.default_properties, DatasheetDefinitionElementProperty
         ),
         tags=src.tags,
-        creation_date_utc=mapper.get(Clock).utcnow(),
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -828,7 +838,7 @@ def map_datasheet_element_import_from_dto(
             src.properties, primitive_union_dto_mappings.from_origin
         ),
         original_datasheet_id=src.original_datasheet_id,
-        creation_date_utc=mapper.get(Clock).utcnow(),
+        creation_date_utc=src.creation_date_utc,
     )
 
 

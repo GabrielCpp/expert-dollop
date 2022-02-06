@@ -1,6 +1,7 @@
 from uuid import UUID
 from typing import Optional, List, Union, Dict
 from expert_dollup.shared.starlette_injection import CamelModel
+from datetime import datetime
 from expert_dollup.core.domains import (
     IntFieldConfig,
     DecimalFieldConfig,
@@ -142,6 +143,7 @@ class ProjectDefinitionNodeDto(CamelModel):
     config: NodeConfigDto
     default_value: PrimitiveWithNoneUnionDto
     path: List[UUID]
+    creation_date_utc: datetime
 
 
 class ProjectDefinitionNodePageDto(CamelModel):

@@ -1,35 +1,36 @@
 from uuid import UUID, uuid4
-from expert_dollup.core.domains.datasheet_definition_element import (
-    DatasheetDefinitionElementFilter,
-)
-from expert_dollup.shared.database_services import Page, Paginator
+from expert_dollup.shared.database_services import Page, Paginator, CollectionService
+from expert_dollup.infra.validators.schema_validator import SchemaValidator
+from expert_dollup.shared.starlette_injection import Clock
+from expert_dollup.core.utils.ressource_permissions import make_ressource
 from expert_dollup.core.domains import (
     Datasheet,
     DatasheetElement,
     DatasheetFilter,
     DatasheetElementFilter,
     DatasheetCloneTarget,
+    Ressource,
+    DatasheetDefinitionElement,
+    DatasheetDefinitionElementFilter,
+    User,
     zero_uuid,
 )
-from expert_dollup.infra.services import (
-    DatasheetService,
-    DatasheetDefinitionElementService,
-    DatasheetElementService,
-)
-from expert_dollup.infra.validators.schema_validator import SchemaValidator
-from expert_dollup.shared.starlette_injection import Clock
 
 
 class DatasheetUseCase:
     def __init__(
         self,
-        datasheet_service: DatasheetService,
-        datasheet_element_service: DatasheetElementService,
+        ressource_service: CollectionService[Ressource],
+        datasheet_service: CollectionService[Datasheet],
+        datasheet_element_service: CollectionService[DatasheetElement],
         schema_validator: SchemaValidator,
-        datasheet_definition_element_service: DatasheetDefinitionElementService,
+        datasheet_definition_element_service: CollectionService[
+            DatasheetDefinitionElement
+        ],
         datasheet_element_paginator: Paginator[DatasheetElement],
         clock: Clock,
     ):
+        self.ressource_service = ressource_service
         self.datasheet_service = datasheet_service
         self.datasheet_element_service = datasheet_element_service
         self.datasheet_definition_element_service = datasheet_definition_element_service
@@ -40,7 +41,7 @@ class DatasheetUseCase:
     async def find_by_id(self, datasheet_id: UUID) -> Datasheet:
         return await self.datasheet_service.find_by_id(datasheet_id)
 
-    async def clone(self, datasheet_clone_target: DatasheetCloneTarget):
+    async def clone(self, datasheet_clone_target: DatasheetCloneTarget, user: User):
         datasheet = await self.datasheet_service.find_by_id(
             datasheet_clone_target.target_datasheet_id
         )
@@ -89,15 +90,21 @@ class DatasheetUseCase:
             creation_date_utc=self.clock.utcnow(),
         )
 
-        await self.add(cloned_datasheet)
+        await self.add(cloned_datasheet, user)
         await self.datasheet_definition_element_service.insert_many(cloned_elements)
 
         return cloned_datasheet
 
-    async def add(self, datasheet: Datasheet) -> Datasheet:
+    async def add(self, datasheet: Datasheet, user: User) -> Datasheet:
+        await self.ressource_service.insert(
+            make_ressource(Datasheet, datasheet, user.id)
+        )
         await self.datasheet_service.insert(datasheet)
 
-    async def add_filled_datasheet(self, datasheet: Datasheet) -> Datasheet:
+    async def add_filled_datasheet(self, datasheet: Datasheet, user: User) -> Datasheet:
+        await self.ressource_service.insert(
+            make_ressource(Datasheet, datasheet, user.id)
+        )
         await self.datasheet_service.insert(datasheet)
         definition_elements = await self.datasheet_definition_element_service.find_by(
             DatasheetDefinitionElementFilter(

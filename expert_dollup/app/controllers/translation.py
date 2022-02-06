@@ -20,6 +20,7 @@ from expert_dollup.core.domains import (
     TranslationRessourceLocaleQuery,
     TranslationFilter,
 )
+from expert_dollup.app.jwt_auth import CanPerformOnRequired, CanPerformRequired
 
 router = APIRouter()
 
@@ -32,6 +33,7 @@ async def find_translation(
     name: str,
     usecase=Depends(Inject(TranslationUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("ressource_id", "*:read")),
 ):
     id = TranslationIdDto(
         ressource_id=ressource_id, scope=scope, locale=locale, name=name
@@ -51,6 +53,7 @@ async def create_translation(
     translation: TranslationInputDto,
     usecase=Depends(Inject(TranslationUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformRequired("translation:create")),
 ):
     return await handler.handle(
         usecase.add,
@@ -64,6 +67,7 @@ async def update_translation(
     translation: TranslationDto,
     usecase=Depends(Inject(TranslationUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformRequired("translation:create")),
 ):
     return await handler.handle(
         usecase.update,
@@ -79,6 +83,7 @@ async def delete_translation(
     locale: str,
     name: str,
     usecase=Depends(Inject(TranslationUseCase)),
+    user=Depends(CanPerformRequired("translation:delete")),
 ):
     id = TranslationId(ressource_id=ressource_id, locale=locale, scope=scope, name=name)
     await usecase.delete_by_id(id)
@@ -89,6 +94,7 @@ async def get_all_translation_for_ressource(
     ressource_id: UUID,
     locale: str,
     handler=Depends(Inject(HttpPageHandler[Translation])),
+    user=Depends(CanPerformRequired("translation:read")),
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = 10,
 ):
@@ -106,6 +112,7 @@ async def find_translation_in_scope(
     scope,
     handler=Depends(Inject(RequestHandler)),
     usecase=Depends(Inject(TranslationService)),
+    user=Depends(CanPerformRequired("translation:read")),
 ):
     return await handler.handle_many(
         usecase.find_by,
@@ -120,6 +127,7 @@ async def get_json_bundle_for_ressource_locale(
     locale: str,
     handler: RequestHandler = Depends(Inject(RequestHandler)),
     usecase: TranslationUseCase = Depends(Inject(TranslationUseCase)),
+    user=Depends(CanPerformRequired("translation:read")),
 ):
     return await handler.handle(
         usecase.get_translation_bundle,

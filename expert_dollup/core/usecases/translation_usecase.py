@@ -1,28 +1,26 @@
 from typing import Optional, List
 from itertools import chain
+from expert_dollup.shared.database_services import Page, Paginator, CollectionService
 from expert_dollup.core.exceptions import RessourceNotFound, ValidationError
 from expert_dollup.core.domains import (
     Translation,
     TranslationId,
     TranslationRessourceLocaleQuery,
+    ProjectDetails,
+    Ressource,
+    Datasheet,
+    RessourceFilter,
 )
-from expert_dollup.infra.services import (
-    TranslationService,
-    RessourceService,
-    ProjectService,
-    DatasheetService,
-)
-from expert_dollup.shared.database_services import Page, Paginator
 
 
 class TranslationUseCase:
     def __init__(
         self,
-        service: TranslationService,
+        service: CollectionService[Translation],
         translation_paginator: Paginator[Translation],
-        ressource_service: RessourceService,
-        project_details_service: ProjectService,
-        datasheet_service: DatasheetService,
+        ressource_service: CollectionService[Ressource],
+        project_details_service: CollectionService[ProjectDetails],
+        datasheet_service: CollectionService[Datasheet],
     ):
         self.service = service
         self.translation_paginator = translation_paginator
@@ -31,7 +29,9 @@ class TranslationUseCase:
         self.datasheet_service = datasheet_service
 
     async def add(self, domain: Translation):
-        if not await self.ressource_service.has(domain.ressource_id):
+        if not await self.ressource_service.exists(
+            RessourceFilter(id=domain.ressource_id)
+        ):
             raise ValidationError.for_field(
                 "ressource_id", "Missing an attached ressource"
             )

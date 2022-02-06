@@ -150,7 +150,6 @@ class ProjectNodeDao(BaseModel):
     level: int
     type_path: str
     display_query_internal_id: UUID
-    creation_date_utc: datetime
 
 
 class ProjectNodeMetaStateDao(BaseModel):
@@ -170,18 +169,6 @@ class ProjectNodeMetaDao(BaseModel):
     state: ProjectNodeMetaStateDao
     definition: ProjectDefinitionNodeDao
     display_query_internal_id: UUID
-
-
-class RessourceDao(BaseModel):
-    class Meta:
-        pk = "id"
-
-    class Config:
-        title = "ressource"
-
-    id: UUID
-    kind: str = Field(max_length=64)
-    owner_id: UUID
 
 
 class TranslationDao(BaseModel):
@@ -264,6 +251,7 @@ class DatasheetDefinitionDao(BaseModel):
     id: UUID
     name: str = Field(max_length=64)
     properties: Dict[str, ElementPropertySchemaDao]
+    creation_date_utc: datetime
 
 
 class CollectionAggregateDao(BaseModel):

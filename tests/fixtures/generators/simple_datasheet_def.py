@@ -41,6 +41,7 @@ class SimpleDatasheetDef(DbFixtureGenerator):
                     }
                 ),
             },
+            creation_date_utc=self.fake.date_time(),
         )
         self.db.add(datasheet_definition)
         self.db.add(

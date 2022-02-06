@@ -1,14 +1,10 @@
-from injector import Injector
+from injector import Injector, Binder
 from logging import Logger
 from fastapi import FastAPI, APIRouter, Request
-from fastapi.responses import JSONResponse
-from expert_dollup.shared.fastapi_jwt_auth import AuthJWT
-from expert_dollup.shared.fastapi_jwt_auth.exceptions import AuthJWTException
 from ariadne.asgi import GraphQL
 from dotenv import load_dotenv
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 import expert_dollup.app.controllers as api_routers
-from .settings import load_app_settings
 from .schemas import schema, GraphqlContext
 from .modules import build_container
 from .middlewares import (
@@ -19,43 +15,20 @@ from .middlewares import (
 )
 
 
-load_dotenv()
-
-
-def auth_jwt_singleton():
-    AuthJWT
-
-
-from injector import Binder, singleton
-
-
 def bind_request_modules(request: Request):
     def bind_request(binder: Binder) -> None:
-        binder.bind(Request, to=request, scope=singleton)
+        binder.bind(Request, to=request)
 
-    def bind_error_handler(binder: Binder) -> None:
-        binder.bind(AuthJWT, to=AuthJWT(request), scope=singleton)
-
-    return [bind_request, bind_error_handler]
+    return [bind_request]
 
 
 def creat_app(container: Injector = None):
+    load_dotenv()
     container = container or build_container()
     exception_handler = container.get(ExceptionHandlerDict)
     logger = container.get(Logger)
 
     app = FastAPI(debug=False)
-
-    @AuthJWT.load_config
-    def get_config():
-        return load_app_settings()
-
-    @app.exception_handler(AuthJWTException)
-    def authjwt_exception_handler(request: Request, exc: AuthJWTException):
-        return JSONResponse(
-            status_code=exc.status_code, content={"detail": exc.message}
-        )
-
     app.add_middleware(
         create_node_middleware(
             container,

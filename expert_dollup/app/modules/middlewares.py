@@ -5,7 +5,11 @@ from expert_dollup.shared.starlette_injection import problem
 from expert_dollup.app.middlewares import ExceptionHandlerDict
 from expert_dollup.core.exceptions import *
 from expert_dollup.shared.database_services import RecordNotFound
-
+from expert_dollup.app.jwt_auth import (
+    NoBearerAuthorizationHeader,
+    InvalidBearerToken,
+    PermissionMissing,
+)
 
 exception_handlers = {
     RessourceNotFound: lambda e, r: JSONResponse(
@@ -19,6 +23,18 @@ exception_handlers = {
     ValidationError: lambda e, r: JSONResponse(
         problem(title=e.message, type="validation-error", errors=e.errors),
         status_code=httplib.UNPROCESSABLE_ENTITY,
+    ),
+    NoBearerAuthorizationHeader: lambda e, r: JSONResponse(
+        problem(title="Unauthorized", type="unauthorized", errors=["Unauthorized"]),
+        status_code=httplib.UNAUTHORIZED,
+    ),
+    InvalidBearerToken: lambda e, r: JSONResponse(
+        problem(title="Unauthorized", type="unauthorized", errors=["Unauthorized"]),
+        status_code=httplib.UNAUTHORIZED,
+    ),
+    PermissionMissing: lambda e, r: JSONResponse(
+        problem(title="Forbidden", type="forbidden", errors=[e.props["permission"]]),
+        status_code=httplib.FORBIDDEN,
     ),
 }
 

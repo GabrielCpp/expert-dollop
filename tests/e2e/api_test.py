@@ -19,7 +19,7 @@ async def test_given_project_definition_should_be_able_to_create_delete_update(a
     response = await ac.post(
         "/api/project_definition", data=expected_project_definition.json()
     )
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
 
     response = await ac.get(f"/api/project_definition/{expected_project_definition.id}")
     assert response.status_code == 200

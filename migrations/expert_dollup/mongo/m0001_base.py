@@ -6,16 +6,14 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 
 load_dotenv()
-u = urlsplit(environ["DATABASE_URL"])
+u = urlsplit(environ["EXPERT_DOLLUP_DB_URL"])
 db_name = u.path.strip(" /")
 c = urlunsplit((u.scheme, u.netloc, "admin", u.query, u.fragment))
 
 
 async def create_global_table(db):
     await db.create_collection("settings")
-    await db.create_collection("ressource")
     translation = await db.create_collection("translation")
-
     await translation.create_index("translation")
     await translation.create_index([("ressource_id", DESCENDING), ("scope", ASCENDING)])
 

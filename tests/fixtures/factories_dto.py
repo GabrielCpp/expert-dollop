@@ -1,4 +1,5 @@
 import factory
+from datetime import timezone
 from expert_dollup.app.dtos import *
 
 
@@ -10,6 +11,7 @@ class ProjectDefinitionDtoFactory(factory.Factory):
     name = factory.Sequence(lambda n: f"Gab{n}")
     datasheet_def_id = factory.Faker("pyuuid4")
     default_datasheet_id = factory.Faker("pyuuid4")
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
 class ProjectDefinitionNodeDtoFactory(factory.Factory):
@@ -35,6 +37,7 @@ class ProjectDefinitionNodeDtoFactory(factory.Factory):
     )
     default_value = IntFieldValueDto(integer=0)
     path = []
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
 class TranslationDtoFactory(factory.Factory):
@@ -47,7 +50,7 @@ class TranslationDtoFactory(factory.Factory):
     locale = "fr_CA"
     name = factory.Sequence(lambda n: f"hello{n}")
     value = factory.Sequence(lambda n: f"translation{n}")
-    creation_date_utc = factory.Faker("date_time")
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
 class TranslationInputDtoFactory(factory.Factory):
@@ -67,6 +70,17 @@ class ProjectDetailsDtoFactory(factory.Factory):
         model = ProjectDetailsDto
 
     id = factory.Faker("pyuuid4")
+    name = factory.Sequence(lambda n: f"project{n}")
+    is_staged = False
+    project_def_id = factory.Faker("pyuuid4")
+    datasheet_id = factory.Faker("pyuuid4")
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
+
+
+class NewProjectDetailsDtoFactory(factory.Factory):
+    class Meta:
+        model = ProjectDetailsInputDto
+
     name = factory.Sequence(lambda n: f"project{n}")
     is_staged = False
     project_def_id = factory.Faker("pyuuid4")
@@ -96,6 +110,7 @@ class DatasheetDefinitionDtoFactory(factory.Factory):
         ),
         "lost": ElementPropertySchemaDto(value_validator={"type": "number"}),
     }
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
 class DatasheetDefinitionElementDtoFactory(factory.Factory):
@@ -119,6 +134,7 @@ class DatasheetDefinitionElementDtoFactory(factory.Factory):
             ),
         }
     )
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
 class LabelCollectionDtoFactory(factory.Factory):

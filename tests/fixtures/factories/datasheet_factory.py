@@ -251,6 +251,7 @@ class DatasheetInstanceFactory:
                 name: dict(DEFAULT_VALUE_MAPPING[property_type])
                 for name, property_type in datasheet_seed.properties.items()
             },
+            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
         )
 
         datasheet = Datasheet(

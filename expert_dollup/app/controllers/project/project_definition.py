@@ -6,6 +6,7 @@ from expert_dollup.shared.starlette_injection import Inject
 from expert_dollup.app.dtos import ProjectDefinitionDto
 from expert_dollup.core.domains.project_definition import ProjectDefinition
 from expert_dollup.core.usecases import ProjectDefinitonUseCase
+from expert_dollup.app.jwt_auth import CanPerformOnRequired, CanPerformRequired
 
 router = APIRouter()
 
@@ -26,14 +27,17 @@ async def create_project_definition(
     project_definition: ProjectDefinitionDto,
     usecase=Depends(Inject(ProjectDefinitonUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformRequired("project_definition:create")),
 ):
-    return await request_handler.handle(
+    return await request_handler.forward_mapped(
         usecase.add,
-        project_definition,
-        MappingChain(
-            dto=ProjectDefinitionDto,
-            domain=ProjectDefinition,
-            out_dto=ProjectDefinitionDto,
+        dict(domain=project_definition, user=user),
+        MappingChain(out_dto=ProjectDefinitionDto),
+        map_keys=dict(
+            domain=MappingChain(
+                dto=ProjectDefinitionDto,
+                domain=ProjectDefinition,
+            ),
         ),
     )
 

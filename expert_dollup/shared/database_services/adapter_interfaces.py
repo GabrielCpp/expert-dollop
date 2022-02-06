@@ -163,23 +163,26 @@ def create_connection(
     scheme = urlparse(connection_string).scheme
 
     if len(DbConnection._REGISTRY) == 0:
-        connectors = environ.get("DB_CONNECTORS", "postgresql+asyncpg").split()
+        try:
+            from .database_adapters.postgres_adapter import PostgresConnection
 
-        for connector in connectors:
-            if connector == "postgresql+asyncpg":
-                from .database_adapters.postgres_adapter import PostgresConnection
+            DbConnection._REGISTRY["postgresql+asyncpg"] = PostgresConnection
+        except:
+            pass
 
-                DbConnection._REGISTRY["postgresql+asyncpg"] = PostgresConnection
+        try:
+            from .database_adapters.firestore_adapter import FirestoreConnection
 
-            if connector == "firestore+async":
-                from .database_adapters.firestore_adapter import FirestoreConnection
+            DbConnection._REGISTRY["firestore+async"] = FirestoreConnection
+        except:
+            pass
 
-                DbConnection._REGISTRY["firestore+async"] = FirestoreConnection
+        try:
+            from .database_adapters.mongo_adapter import MongoConnection
 
-            if connector == "mongodb":
-                from .database_adapters.mongo_adapter import MongoConnection
-
-                DbConnection._REGISTRY["mongodb"] = MongoConnection
+            DbConnection._REGISTRY["mongodb"] = MongoConnection
+        except:
+            pass
 
     build_connection = DbConnection._REGISTRY.get(scheme)
 

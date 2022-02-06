@@ -164,6 +164,7 @@ SUPPORTED_OPS = {
     "==": lambda lhs, rhs: [{lhs: {"$eq": rhs}}],
     "in": lambda lhs, rhs: [{lhs: {"$in": rhs}}],
     "startwiths": startwiths_op,
+    "contain_one": lambda lhs, rhs: [{lhs: rhs}],
 }
 SIMLIFIERS = {Decimal: lambda v: Decimal128(str(v)), set: lambda value: list(value)}
 
@@ -253,7 +254,7 @@ class MongoCollection(CollectionService[Domain]):
         self._domain = meta.domain
         self._mapper = mapper
         self._client = client
-        self._table_details = tables_details.get(meta.dao)
+        self._table_details = tables_details[meta.dao]
         self._collection = client.get_collection(self._table_details.name)
         self._query_compiler = QueryCompiler(mapper, self._collection)
         self._dao_mapper = CollectionMapper(

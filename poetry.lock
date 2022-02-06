@@ -766,6 +766,9 @@ category = "main"
 optional = false
 python-versions = ">=3.6"
 
+[package.dependencies]
+cryptography = {version = ">=3.3.1", optional = true, markers = "extra == \"crypto\""}
+
 [package.extras]
 crypto = ["cryptography (>=3.3.1)"]
 dev = ["sphinx", "sphinx-rtd-theme", "zope.interface", "cryptography (>=3.3.1)", "pytest (>=6.0.0,<7.0.0)", "coverage[toml] (==5.0.4)", "mypy", "pre-commit"]
@@ -1114,7 +1117,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8.0"
-content-hash = "daf46f6225d5a53c7c2f050ae103ac0a0ed09bbe41a765258e6d5b3cbe28f74b"
+content-hash = "6b6600003f132e445c6d80e188b87f846962194e95a61ca9bc00b4bb958cdab9"
 
 [metadata.files]
 alembic = [

@@ -5,6 +5,7 @@ from expert_dollup.shared.starlette_injection import RequestHandler, MappingChai
 from expert_dollup.core.domains import DatasheetDefinition
 from expert_dollup.app.dtos import DatasheetDefinitionDto
 from expert_dollup.core.usecases import DatasheetDefinitionUseCase
+from expert_dollup.app.jwt_auth import CanPerformOnRequired, CanPerformRequired
 
 router = APIRouter()
 
@@ -27,14 +28,14 @@ async def add_datasheet_definition(
     datasheet_definition: DatasheetDefinitionDto,
     usecase=Depends(Inject(DatasheetDefinitionUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformRequired("datasheet_definition:create")),
 ):
-    return await handler.handle(
+    return await handler.forward_mapped(
         usecase.add,
-        datasheet_definition,
-        MappingChain(
-            dto=DatasheetDefinitionDto,
-            domain=DatasheetDefinition,
-            out_dto=DatasheetDefinitionDto,
+        dict(domain=datasheet_definition, user=user),
+        MappingChain(out_dto=DatasheetDefinitionDto),
+        map_keys=dict(
+            domain=MappingChain(dto=DatasheetDefinitionDto, domain=DatasheetDefinition)
         ),
     )
 

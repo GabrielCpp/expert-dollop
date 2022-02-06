@@ -11,7 +11,7 @@ class ProjectDefinitionFactory(factory.Factory):
     name = factory.Sequence(lambda n: f"project_definition_{n}")
     default_datasheet_id = factory.Faker("pyuuid4")
     datasheet_def_id = factory.Faker("pyuuid4")
-    creation_date_utc = factory.Faker("date_time", tzinfo=timezone.utc)
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
 class ProjectDefinitionNodeFactory(factory.Factory):
@@ -33,7 +33,7 @@ class ProjectDefinitionNodeFactory(factory.Factory):
     )
     default_value = None
     path = factory.List([])
-    creation_date_utc = factory.Faker("date_time", tzinfo=timezone.utc)
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
 class ReportJoinFactory(factory.Factory):
@@ -181,6 +181,7 @@ class DatasheetDefinitionFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"datasheet_definition_{n}")
     properties = factory.Dict({})
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
 class DatasheetDefinitionElementFactory(factory.Factory):
@@ -195,7 +196,7 @@ class DatasheetDefinitionElementFactory(factory.Factory):
     name: str
     default_properties = factory.Dict({})
     tags = factory.List([factory.Faker("pyuuid4")])
-    creation_date_utc = factory.Faker("date_time", tzinfo=timezone.utc)
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
 class LabelFactory(factory.Factory):
@@ -229,4 +230,16 @@ class TranslationFactory(factory.Factory):
     scope = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"translation_{n}")
     value = factory.Sequence(lambda n: f"translation_value_{n}")
-    creation_date_utc = factory.Faker("date_time", tzinfo=timezone.utc)
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
+
+
+class ProjectDetailsFactory(factory.Factory):
+    class Meta:
+        model = ProjectDetails
+
+    id = factory.Faker("pyuuid4")
+    name = factory.Sequence(lambda n: f"project{n}")
+    is_staged = False
+    project_def_id = factory.Faker("pyuuid4")
+    datasheet_id = factory.Faker("pyuuid4")
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)

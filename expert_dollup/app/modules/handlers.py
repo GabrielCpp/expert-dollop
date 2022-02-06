@@ -1,20 +1,34 @@
 from injector import Binder, inject
-from expert_dollup.shared.database_services.adapter_interfaces import Paginator
+from fastapi.requests import Request
+from expert_dollup.app.settings import load_app_settings
+from expert_dollup.core.domains import User, Ressource
+from expert_dollup.app.jwt_auth import AuthJWT
+import expert_dollup.infra.services as services
+from expert_dollup.shared.automapping import Mapper
+from expert_dollup.shared.database_services import CollectionService, Paginator
 from expert_dollup.shared.starlette_injection import (
+    RequestHandler,
+    GraphqlPageHandler,
+    HttpPageHandler,
+    factory_of,
+    Constant,
     factory_of,
     get_classes,
     get_base,
     get_arg,
 )
-from expert_dollup.shared.automapping import Mapper
-from expert_dollup.shared.starlette_injection import (
-    RequestHandler,
-    GraphqlPageHandler,
-    HttpPageHandler,
-)
-from expert_dollup.infra.services import *
-from expert_dollup.app.dtos import *
-import expert_dollup.infra.services as services
+
+
+def bind_auth_jwt(binder: Binder) -> None:
+    binder.bind(
+        AuthJWT,
+        to=factory_of(
+            AuthJWT,
+            settings=Constant(load_app_settings()),
+            user_service=CollectionService[User],
+            ressource_service=CollectionService[Ressource],
+        ),
+    )
 
 
 def bind_graphql_handlers(binder: Binder) -> None:

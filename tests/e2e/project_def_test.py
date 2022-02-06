@@ -27,10 +27,10 @@ async def test_project_creation(ac, mapper):
         ProjectDefinitionNode,
     )
 
-    for project_definiton_node_dto in project_definition_nodes_dto:
+    for project_definition_node_dto in project_definition_nodes_dto:
         response = await ac.post(
             "/api/project_definition_node",
-            data=project_definiton_node_dto.json(),
+            data=project_definition_node_dto.json(),
         )
 
         assert response.status_code == 200, response.json()

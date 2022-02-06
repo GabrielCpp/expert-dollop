@@ -1,8 +1,10 @@
 from typing import List
 from uuid import UUID, uuid4
 from collections import defaultdict, OrderedDict
+from expert_dollup.core.utils.ressource_permissions import make_ressource
+from expert_dollup.shared.starlette_injection import Clock
+from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.core.domains import *
-from expert_dollup.infra.services import *
 
 
 class TriggerHandler:
@@ -24,15 +26,19 @@ class TriggerHandler:
 class ProjectBuilder:
     def __init__(
         self,
-        project_node_service: ProjectNodeService,
-        project_node_meta_service: ProjectNodeMetaService,
-        project_definition_node_service: ProjectDefinitionNodeService,
+        project_node_service: CollectionService[ProjectNode],
+        project_node_meta_service: CollectionService[ProjectNodeMeta],
+        project_definition_node_service: CollectionService[ProjectDefinitionNode],
+        clock: Clock,
     ):
         self.project_definition_node_service = project_definition_node_service
         self.project_node_meta_service = project_node_meta_service
         self.project_node_service = project_node_service
+        self.clock = clock
 
-    async def build_new(self, project_details: ProjectDetails) -> Project:
+    async def build_new(
+        self, project_details: ProjectDetails, user_id: UUID
+    ) -> Project:
         node_definitions = await self.project_definition_node_service.find_by(
             ProjectDefinitionNodeFilter(project_def_id=project_details.project_def_id)
         )
@@ -86,21 +92,20 @@ class ProjectBuilder:
             details=project_details,
             nodes=nodes,
             metas=node_metas,
-            ressource=Ressource(
-                id=project_details.id, kind="project", owner_id=uuid4()
-            ),
+            ressource=make_ressource(ProjectDetails, project_details, user_id),
         )
 
-    async def clone(self, project_details: ProjectDetails) -> Project:
+    async def clone(self, project_details: ProjectDetails, user_id: UUID) -> Project:
         cloned_project = ProjectDetails(
             id=uuid4(),
             name=project_details.name,
             is_staged=False,
             project_def_id=project_details.project_def_id,
             datasheet_id=project_details.datasheet_id,
+            creation_date_utc=self.clock.utcnow(),
         )
 
-        ressource = Ressource(cloned_project.id, "project", uuid4())
+        ressource = make_ressource(ProjectDetails, cloned_project, user_id)
         cloned_nodes = await self._clone_project_nodes(
             project_details.id, cloned_project
         )

@@ -27,13 +27,6 @@ def create_global_table():
     )
 
     op.create_table(
-        "ressource",
-        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("owner_id", postgresql.UUID(), nullable=False),
-        Column("kind", String, nullable=False),
-    )
-
-    op.create_table(
         "translation",
         Column("id", postgresql.UUID(), nullable=False),
         Column("ressource_id", postgresql.UUID(), nullable=False, primary_key=True),

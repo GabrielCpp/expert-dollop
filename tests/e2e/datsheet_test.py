@@ -152,7 +152,7 @@ async def test_datasheet_crud(ac, db_helper: DbFixtureHelper):
             target_datasheet_id=datasheet.id, new_name="Renamed datasheet"
         )
         response = await ac.post(
-            f"/api/datasheet/clone", data=datasheet_clone_target.json()
+            f"/api/datasheet/{datasheet.id}/clone", data=datasheet_clone_target.json()
         )
         assert response.status_code == 200, response.json()
 
