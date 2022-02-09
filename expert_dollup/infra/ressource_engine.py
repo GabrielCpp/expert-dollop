@@ -3,13 +3,14 @@ from uuid import UUID
 from asyncio import gather
 from expert_dollup.core.utils.ressource_permissions import get_ressource_kind
 from expert_dollup.core.domains import Ressource, zero_uuid
-from expert_dollup.core.queries import UserRessourcePaginator, UserRessourceQuery
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import (
     FieldTokenEncoder,
     Page,
     CollectionService,
     batch,
+    UserRessourcePaginator,
+    UserRessourceQuery,
 )
 
 
@@ -57,8 +58,7 @@ class RessourceEngine(UserRessourcePaginator[Domain]):
 
         if len(results) > 0:
             last_result = results[-1]
-            last_dao = self._mapper.map(last_result, self.ressource_service.dao)
-            new_next_page_token = self._default_page_encoder.encode(last_dao)
+            new_next_page_token = self.make_record_token(last_result)
 
             for results_batch in batch(results, 20):
                 ids = [result.id for result in results_batch]
@@ -73,3 +73,9 @@ class RessourceEngine(UserRessourcePaginator[Domain]):
             results=domains,
             total_count=total_count,
         )
+
+    def make_record_token(self, domain: Domain) -> str:
+        new_next_page_token = self._default_page_encoder.encode_field(
+            domain.creation_date_utc.strftime("%Y%m%d%H%M%S") + domain.id.hex
+        )
+        return new_next_page_token

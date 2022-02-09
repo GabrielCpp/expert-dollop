@@ -1091,7 +1091,14 @@ def map_translation_filter(src: TranslationFilter, mapper: Mapper) -> dict:
     )
 
 
-def map_ressource_filter(src: RessourceFilter, mapper: Mapper) -> dict:
+def map_ressource_filter(src: UserFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {"id": ("id", None)},
+    )
+
+
+def map_user_filter(src: UserFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
         {"id": ("id", None), "user_id": ("user_id", None)},

@@ -5,11 +5,16 @@ from expert_dollup.core.domains import User, Ressource
 from expert_dollup.app.jwt_auth import AuthJWT
 import expert_dollup.infra.services as services
 from expert_dollup.shared.automapping import Mapper
-from expert_dollup.shared.database_services import CollectionService, Paginator
+from expert_dollup.shared.database_services import (
+    CollectionService,
+    Paginator,
+    UserRessourcePaginator,
+)
 from expert_dollup.shared.starlette_injection import (
     RequestHandler,
     GraphqlPageHandler,
     HttpPageHandler,
+    AuthService,
     factory_of,
     Constant,
     factory_of,
@@ -21,7 +26,7 @@ from expert_dollup.shared.starlette_injection import (
 
 def bind_auth_jwt(binder: Binder) -> None:
     binder.bind(
-        AuthJWT,
+        AuthService,
         to=factory_of(
             AuthJWT,
             settings=Constant(load_app_settings()),
@@ -39,11 +44,20 @@ def bind_graphql_handlers(binder: Binder) -> None:
 
     for domain_type in service_by_domain.keys():
         binder.bind(
-            GraphqlPageHandler[domain_type],
+            GraphqlPageHandler[Paginator[domain_type]],
             factory_of(
-                GraphqlPageHandler[domain_type],
+                GraphqlPageHandler,
                 mapper=Mapper,
                 paginator=Paginator[domain_type],
+            ),
+        )
+
+        binder.bind(
+            GraphqlPageHandler[UserRessourcePaginator[domain_type]],
+            factory_of(
+                GraphqlPageHandler,
+                mapper=Mapper,
+                paginator=UserRessourcePaginator[domain_type],
             ),
         )
 
@@ -56,9 +70,9 @@ def bind_http_handlers(binder: Binder) -> None:
 
     for domain_type in service_by_domain.keys():
         binder.bind(
-            HttpPageHandler[domain_type],
+            HttpPageHandler[Paginator[domain_type]],
             factory_of(
-                HttpPageHandler[domain_type],
+                HttpPageHandler,
                 mapper=Mapper,
                 paginator=Paginator[domain_type],
             ),

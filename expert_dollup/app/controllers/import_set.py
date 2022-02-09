@@ -36,6 +36,48 @@ class RessourceLoader:
 
         return await self.perform_complex_mapping(injector, ressource_spec)
 
+    async def load_ressources(
+        self, injector: Injector, ressource_specs: List[BaseModel], user: User
+    ) -> None:
+        if len(ressource_specs) == 0:
+            return
+
+        mapper = injector.get(Mapper)
+        usecase = injector.get(self.usecase)
+        do_import = getattr(usecase, self.method)
+        ressources_domain = await self.do_mapping(injector, mapper, ressource_specs)
+
+        if self.method.endswith("many") or self.method.endswith("s"):
+            await do_import(ressources_domain)
+        else:
+            for ressource_domain in ressources_domain:
+                await do_import(ressource_domain)
+
+
+@dataclass
+class ImportRessource:
+    dto: Type
+    domain: Type
+    usecase: Type
+    method: str = "add"
+
+    async def load_ressources(
+        self, injector: Injector, ressource_specs: List[BaseModel], user: User
+    ) -> None:
+        if len(ressource_specs) == 0:
+            return
+
+        mapper = injector.get(Mapper)
+        usecase = injector.get(self.usecase)
+        do_import = getattr(usecase, self.method)
+        ressources_domain = mapper.map_many(ressource_specs, self.domain, self.dto)
+
+        if self.method.endswith("many") or self.method.endswith("s"):
+            await do_import(ressources_domain, user)
+        else:
+            for ressource_domain in ressources_domain:
+                await do_import(ressource_domain, user)
+
 
 class ProjectNodeMetaImport(BaseModel):
     project_id: UUID
@@ -91,7 +133,9 @@ class InsertProjectWithRessourceAction:
         self.dto = ProjectDetailsDto
         self.domain = ProjectDetails
 
-    async def __call__(self, injector: Injector, ressource_specs: List[BaseModel]):
+    async def load_ressources(
+        self, injector: Injector, ressource_specs: List[BaseModel], user: User
+    ) -> None:
         ressource_service = injector.get(CollectionService[Ressource])
         project_service = injector.get(ProjectService)
         mapper = injector.get(Mapper)
@@ -102,7 +146,7 @@ class InsertProjectWithRessourceAction:
                 make_ressource(
                     ProjectDetails,
                     project_details,
-                    UUID("41e10284-f63a-438e-b5e2-d951a9e94c21"),
+                    user.id,
                 )
             )
             await project_service.insert(project_details)
@@ -151,12 +195,12 @@ class RecreateFormulaCacheDto(BaseModel):
 
 
 ressources = {
-    "/api/datasheet_definition": RessourceLoader(
+    "/api/datasheet_definition": ImportRessource(
         dto=DatasheetDefinitionDto,
         domain=DatasheetDefinition,
         usecase=DatasheetDefinitionUseCase,
     ),
-    "/api/datasheet": RessourceLoader(
+    "/api/datasheet": ImportRessource(
         dto=DatasheetImportDto,
         domain=Datasheet,
         usecase=DatasheetUseCase,
@@ -191,7 +235,7 @@ ressources = {
         domain=DatasheetDefinitionElement,
         usecase=DatasheetDefinitionElementUseCase,
     ),
-    "/api/project_definition": RessourceLoader(
+    "/api/project_definition": ImportRessource(
         dto=ProjectDefinitionDto,
         domain=ProjectDefinition,
         usecase=ProjectDefinitonUseCase,
@@ -235,39 +279,16 @@ ressources = {
 }
 
 
-@router.post("/import")
+@router.post("/import/{user_id}")
 async def import_definitiown_set(
+    user_id: UUID,
     file: UploadFile = File(...),
     injector=Depends(Inject(Injector)),
-    mapper=Depends(Inject(Mapper)),
+    user_service=Depends(Inject(CollectionService[User])),
 ):
-    async def load_ressources(
-        ressource_type: str, ressource_specs: List[BaseModel]
-    ) -> None:
-        if len(ressource_specs) == 0:
-            return
-
-        ressource_loader = ressources[ressource_type]
-
-        if callable(ressource_loader):
-            await ressource_loader(injector, ressource_specs)
-            return
-
-        usecase = injector.get(ressource_loader.usecase)
-        method_name = ressource_loader.method
-        do_import = getattr(usecase, method_name)
-        ressources_domain = await ressource_loader.do_mapping(
-            injector, mapper, ressource_specs
-        )
-
-        if method_name.endswith("many") or method_name.endswith("s"):
-            await do_import(ressources_domain)
-        else:
-            for ressource_domain in ressources_domain:
-                await do_import(ressource_domain)
-
     ressource_specs: List[BaseModel] = []
     last_ressource_type = None
+    user = await user_service.find_one_by(UserFilter(id=user_id))
 
     for line in file.file.readlines():
         ressource = loads(line)
@@ -286,8 +307,12 @@ async def import_definitiown_set(
         elif last_ressource_type == ressource_type:
             ressource_specs.append(ressource_spec)
         else:
-            await load_ressources(last_ressource_type, ressource_specs)
+            await ressources[last_ressource_type].load_ressources(
+                injector, ressource_specs, user
+            )
             last_ressource_type = ressource_type
             ressource_specs = [ressource_spec]
 
-    await load_ressources(last_ressource_type, ressource_specs)
+    await ressources[last_ressource_type].load_ressources(
+        injector, ressource_specs, user
+    )

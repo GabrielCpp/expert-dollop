@@ -33,7 +33,7 @@ async def test_given_project_definition_should_be_able_to_create_delete_update(a
     assert response.status_code == 200
 
     response = await ac.get(f"/api/project_definition/{expected_project_definition.id}")
-    assert response.status_code == 404
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio

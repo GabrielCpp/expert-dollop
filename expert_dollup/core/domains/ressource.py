@@ -32,3 +32,7 @@ class RessourceId:
 class RessourceFilter(QueryFilter):
     id: Optional[UUID]
     user_id: Optional[UUID]
+
+
+class UserFilter(QueryFilter):
+    id: Optional[UUID]

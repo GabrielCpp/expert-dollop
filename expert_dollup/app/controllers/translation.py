@@ -1,26 +1,18 @@
 from typing import Optional, List
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
-from expert_dollup.shared.starlette_injection import Inject
+from expert_dollup.shared.database_services import Paginator, CollectionService
 from expert_dollup.shared.starlette_injection import (
     RequestHandler,
     MappingChain,
     HttpPageHandler,
-)
-from expert_dollup.infra.services import TranslationService
-from expert_dollup.app.dtos import (
-    TranslationDto,
-    TranslationIdDto,
-    TranslationInputDto,
+    Inject,
+    CanPerformOnRequired,
+    CanPerformRequired,
 )
 from expert_dollup.core.usecases import TranslationUseCase
-from expert_dollup.core.domains import (
-    Translation,
-    TranslationId,
-    TranslationRessourceLocaleQuery,
-    TranslationFilter,
-)
-from expert_dollup.app.jwt_auth import CanPerformOnRequired, CanPerformRequired
+from expert_dollup.app.dtos import *
+from expert_dollup.core.domains import *
 
 router = APIRouter()
 
@@ -93,7 +85,7 @@ async def delete_translation(
 async def get_all_translation_for_ressource(
     ressource_id: UUID,
     locale: str,
-    handler=Depends(Inject(HttpPageHandler[Translation])),
+    handler=Depends(Inject(HttpPageHandler[Paginator[Translation]])),
     user=Depends(CanPerformRequired("translation:read")),
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = 10,
@@ -111,7 +103,7 @@ async def find_translation_in_scope(
     ressource_id,
     scope,
     handler=Depends(Inject(RequestHandler)),
-    usecase=Depends(Inject(TranslationService)),
+    usecase=Depends(Inject(CollectionService[Translation])),
     user=Depends(CanPerformRequired("translation:read")),
 ):
     return await handler.handle_many(
@@ -129,8 +121,13 @@ async def get_json_bundle_for_ressource_locale(
     usecase: TranslationUseCase = Depends(Inject(TranslationUseCase)),
     user=Depends(CanPerformRequired("translation:read")),
 ):
-    return await handler.handle(
+    return await handler.forward(
         usecase.get_translation_bundle,
-        TranslationRessourceLocaleQuery(ressource_id=ressource_id, locale=locale),
+        {
+            "query": TranslationRessourceLocaleQuery(
+                ressource_id=ressource_id, locale=locale
+            ),
+            "user": user,
+        },
         MappingChain(out_dto=dict, out_domain=List[Translation]),
     )

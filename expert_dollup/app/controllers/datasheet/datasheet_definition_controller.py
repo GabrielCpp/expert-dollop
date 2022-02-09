@@ -1,11 +1,16 @@
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
 from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.starlette_injection import RequestHandler, MappingChain
+from expert_dollup.shared.starlette_injection import (
+    RequestHandler,
+    MappingChain,
+    CanPerformOnRequired,
+    CanPerformRequired,
+)
 from expert_dollup.core.domains import DatasheetDefinition
 from expert_dollup.app.dtos import DatasheetDefinitionDto
 from expert_dollup.core.usecases import DatasheetDefinitionUseCase
-from expert_dollup.app.jwt_auth import CanPerformOnRequired, CanPerformRequired
+
 
 router = APIRouter()
 
@@ -15,6 +20,9 @@ async def find_datasheet_definition_by_id(
     datasheet_definition_id: UUID,
     usecase=Depends(Inject(DatasheetDefinitionUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("datasheet_definition_id", ["datasheet_definition:read"])
+    ),
 ):
     return await handler.handle(
         usecase.find_by_id,
@@ -40,11 +48,14 @@ async def add_datasheet_definition(
     )
 
 
-@router.put("/datasheet_definition")
+@router.put("/datasheet_definition/{datasheet_definition_id}")
 async def update_datasheet_definition(
     datasheet_definition: DatasheetDefinitionDto,
     usecase=Depends(Inject(DatasheetDefinitionUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("datasheet_definition_id", ["datasheet_definition:update"])
+    ),
 ):
     return await handler.handle(
         usecase.update,
@@ -62,5 +73,8 @@ async def delete_datasheet_definition_by_id(
     datasheet_definition_id: UUID,
     usecase=Depends(Inject(DatasheetDefinitionUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("datasheet_definition_id", ["datasheet_definition:delete"])
+    ),
 ):
     return await usecase.delete_by_id(datasheet_definition_id)

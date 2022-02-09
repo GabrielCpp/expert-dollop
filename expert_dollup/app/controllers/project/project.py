@@ -1,23 +1,28 @@
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID, uuid4
-from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.starlette_injection import RequestHandler, MappingChain
+from expert_dollup.shared.starlette_injection import (
+    RequestHandler,
+    MappingChain,
+    CanPerformOnRequired,
+    CanPerformRequired,
+    Inject,
+)
 from expert_dollup.app.dtos import ProjectDetailsDto, ProjectDetailsInputDto
 from expert_dollup.core.domains import ProjectDetails
 from expert_dollup.core.usecases import ProjectUseCase
-from expert_dollup.app.jwt_auth import CanPerformOnRequired, CanPerformRequired
 
 router = APIRouter()
 
 
-@router.get("/project/{id}")
+@router.get("/project/{project_id}")
 async def find_project_details(
-    id: UUID,
+    project_id: UUID,
     usecase=Depends(Inject(ProjectUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
 ):
     return await handler.handle(
-        usecase.find_by_id, id, MappingChain(out_dto=ProjectDetailsDto)
+        usecase.find_by_id, project_id, MappingChain(out_dto=ProjectDetailsDto)
     )
 
 
@@ -57,9 +62,10 @@ async def clone_project(
     )
 
 
-@router.delete("/project/{id}")
+@router.delete("/project/{project_id}")
 async def delete_project(
-    id: UUID,
+    project_id: UUID,
     usecase=Depends(Inject(ProjectUseCase)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:delete"])),
 ):
-    await usecase.delete_by_id(id)
+    await usecase.delete_by_id(project_id)

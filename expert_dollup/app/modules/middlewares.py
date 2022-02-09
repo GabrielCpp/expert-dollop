@@ -33,7 +33,7 @@ exception_handlers = {
         status_code=httplib.UNAUTHORIZED,
     ),
     PermissionMissing: lambda e, r: JSONResponse(
-        problem(title="Forbidden", type="forbidden", errors=[e.props["permission"]]),
+        problem(title="Forbidden", type="forbidden", errors=[e.props["reason"]]),
         status_code=httplib.FORBIDDEN,
     ),
 }

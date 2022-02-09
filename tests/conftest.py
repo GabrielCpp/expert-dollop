@@ -14,7 +14,6 @@ from faker.providers import BaseProvider
 from async_asgi_testclient import TestClient
 from expert_dollup.app.app import creat_app
 from expert_dollup.app.modules import build_container
-from expert_dollup.app.jwt_auth import AuthJWT
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
 from expert_dollup.shared.automapping import Mapper
@@ -23,7 +22,7 @@ from expert_dollup.shared.database_services import (
     DbConnection,
     CollectionService,
 )
-from expert_dollup.shared.starlette_injection.logger_factory import LoggerFactory
+from expert_dollup.shared.starlette_injection import LoggerFactory, AuthService
 from expert_dollup.core.domains import *
 from .fixtures.injector_override.mock_services import logger_observer
 from .fixtures import *
@@ -108,7 +107,7 @@ def app(container: Injector):
 async def ac(app, container: Injector, caplog) -> TestClient:
     caplog.set_level(logging.ERROR)
     user_service = container.get(CollectionService[User])
-    auth_service = container.get(AuthJWT)
+    auth_service = container.get(AuthService)
 
     user = make_superuser()
     await user_service.upserts([user])

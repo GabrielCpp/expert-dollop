@@ -76,7 +76,7 @@ class FieldTokenEncoder:
         self.id_field_name = id_field_name
         self._build_id_field = build_id_field
         self._extract_field_id = extract_field_id
-        self.default_token = self._encode(default_id)
+        self.default_token = self.encode_field(default_id)
 
     def extend_query(
         self, builder: WhereFilter, limit: int, next_page_token: Optional[str]
@@ -91,9 +91,9 @@ class FieldTokenEncoder:
 
     def encode(self, dao: BaseModel):
         dao_id = getattr(dao, self.id_field_name)
-        return self._encode(dao_id)
+        return self.encode_field(dao_id)
 
-    def _encode(self, dao_id: str):
+    def encode_field(self, dao_id: str):
         id_str = self._extract_field_id(dao_id)
         token = base64.urlsafe_b64encode(id_str.encode("utf8"))
         return token.decode("utf8")

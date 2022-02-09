@@ -1,7 +1,7 @@
 from typing import Optional, TypeVar, Generic, Type, List
 from pydantic import BaseModel
 from urllib.parse import unquote
-from ...database_services import Paginator
+from ...database_services import Paginator, QueryFilter
 from ...automapping import Mapper
 from ..modeling import CamelModel
 
@@ -28,12 +28,12 @@ class HttpPageHandler(Generic[Domain]):
     async def handle(
         self,
         out_dto: Type[BaseModel],
-        query_filter,
+        query: QueryFilter,
         limit: int,
         next_page_token: Optional[str] = None,
     ):
         page = await self.paginator.find_page(
-            query_filter,
+            query,
             limit,
             None if next_page_token is None else unquote(next_page_token),
         )

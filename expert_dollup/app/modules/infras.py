@@ -17,6 +17,7 @@ from expert_dollup.shared.database_services import (
     create_connection,
     Paginator,
     CollectionService,
+    UserRessourcePaginator,
 )
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.infra.expert_dollup_storage import ExpertDollupStorage
@@ -35,7 +36,6 @@ import expert_dollup.infra.paginators as paginators
 from expert_dollup.infra.storage_connectors import ObjectNotFound
 from expert_dollup.core.exceptions import RessourceNotFound
 from expert_dollup.infra.ressource_engine import RessourceEngine
-from expert_dollup.core.queries import UserRessourcePaginator
 from expert_dollup.core.utils.ressource_permissions import get_ressource_domain
 from expert_dollup.core.domains import *
 

@@ -6,8 +6,8 @@ from uuid import UUID
 from .settings import AppSettings
 from expert_dollup.core.domains import RessourceId, Ressource, User
 from expert_dollup.shared.database_services import CollectionService
-from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.starlette_injection import DetailedError
+from expert_dollup.shared.starlette_injection import DetailedError, AuthService, Inject
+from expert_dollup.shared.database_services import RecordNotFound
 
 BEARER_AUTH = "Bearer"
 
@@ -25,7 +25,7 @@ class PermissionMissing(DetailedError):
     pass
 
 
-class AuthJWT:
+class AuthJWT(AuthService):
     def __init__(
         self,
         settings: AppSettings,
@@ -57,20 +57,29 @@ class AuthJWT:
         return decoded
 
     async def can_perform_on_required(
-        self, request: Request, ressource_id: UUID, permissions: Union[str, List[str]]
+        self,
+        request: Request,
+        ressource_id: UUID,
+        permissions: Union[str, List[str]],
+        user_permissions: Union[str, List[str]] = [],
     ):
-        oauth_id = self.authentification_required(request).get("sub")
-        user = await self.user_service.find_by_id(oauth_id)
-        ressource = await self.ressource_service.find_by_id(
-            RessourceId(ressource_id, user.id)
-        )
+        user = await self.can_perform_required(request, user_permissions)
+
+        try:
+            ressource = await self.ressource_service.find_by_id(
+                RessourceId(ressource_id, user.id)
+            )
+        except RecordNotFound:
+            raise PermissionMissing(
+                "Permission missing", reason="user has not access to ressource."
+            )
 
         for permission in permissions:
             if permission.startswith("*"):
                 permission = ressource.kind + permission[1:]
 
             if not permission in ressource.permissions:
-                raise PermissionMissing("Permission missing", permission=permission)
+                raise PermissionMissing("Permission missing", reason=permission)
 
         return user
 
@@ -78,11 +87,15 @@ class AuthJWT:
         self, request: Request, permissions: Union[str, List[str]]
     ):
         oauth_id = self.authentification_required(request).get("sub")
-        user = await self.user_service.find_by_id(oauth_id)
+
+        try:
+            user = await self.user_service.find_by_id(oauth_id)
+        except RecordNotFound:
+            raise PermissionMissing("Permission missing", reason="user missing")
 
         for permission in permissions:
             if not permission in user.permissions:
-                raise PermissionMissing("Permission missing", permission=permission)
+                raise PermissionMissing("Permission missing", reason=permission)
 
         return user
 
@@ -92,50 +105,3 @@ class AuthJWT:
             self.settings.authjwt_private_key.encode("ascii"),
             algorithm=self.settings.authjwt_algorithm,
         )
-
-
-class AuthenticationRequired:
-    def __call__(self, request: Request, auth: AuthJWT = Depends(Inject(AuthJWT))):
-        user = auth.authentification_required(request)
-        return user
-
-
-class CanPerformRequired:
-    def __init__(self, permissions: Union[str, List[str]]):
-        self.permissions = (
-            permissions if isinstance(permissions, list) else [permissions]
-        )
-
-    async def __call__(
-        self, request: Request, auth: AuthJWT = Depends(Inject(AuthJWT))
-    ):
-        user = await auth.can_perform_required(request, self.permissions)
-        return user
-
-
-class CanPerformOnRequired:
-    def __init__(
-        self,
-        url_ressource: str,
-        permissions: Union[str, List[str]],
-        user_permissions: Union[str, List[str]] = [],
-    ):
-        self.url_ressource = url_ressource
-        self.permissions = (
-            permissions if isinstance(permissions, list) else [permissions]
-        )
-        self.user_permissions = (
-            user_permissions
-            if isinstance(user_permissions, list)
-            else [user_permissions]
-        )
-
-    async def __call__(
-        self, request: Request, auth: AuthJWT = Depends(Inject(AuthJWT))
-    ):
-        assert self.url_ressource in request.path_params
-        ressource_id = request.path_params[self.url_ressource]
-        user = await auth.can_perform_on_required(
-            request, ressource_id, self.permissions
-        )
-        return user

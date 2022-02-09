@@ -1,8 +1,13 @@
 from fastapi import APIRouter, Depends, Query
 from typing import List, Optional
 from uuid import UUID
-from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.starlette_injection import RequestHandler, MappingChain
+from expert_dollup.shared.starlette_injection import (
+    RequestHandler,
+    MappingChain,
+    CanPerformOnRequired,
+    CanPerformRequired,
+    Inject,
+)
 from expert_dollup.core.usecases import ProjectNodeUseCase
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *
@@ -16,6 +21,7 @@ async def get_project_node(
     node_id: UUID,
     usecase=Depends(Inject(ProjectNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
 ):
     return await handler.handle(
         usecase.find_by_id, node_id, MappingChain(out_dto=ProjectNodeDto)
@@ -28,6 +34,7 @@ async def find_project_nodes_by(
     type_id: UUID = Query(alias="typeId", default=None),
     usecase=Depends(Inject(ProjectNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
 ):
     return await handler.forward_many(
         usecase.find_by_type,
@@ -43,6 +50,7 @@ async def find_project_children_tree(
     level: int = Query(alias="level", default=None),
     usecase=Depends(Inject(ProjectNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
 ):
     return await handler.forward_many(
         usecase.find_by_path,
@@ -57,6 +65,7 @@ async def find_project_subtree(
     path: List[UUID] = Query(alias="path", default=[]),
     usecase=Depends(Inject(ProjectNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
 ):
     return await handler.forward_many(
         usecase.find_subtree,
@@ -70,6 +79,7 @@ async def find_root_sections(
     project_id: UUID,
     usecase=Depends(Inject(ProjectNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
 ):
     return await request_handler.forward(
         usecase.find_root_sections,
@@ -87,6 +97,7 @@ async def find_root_section_nodes(
     root_section_id: UUID,
     usecase=Depends(Inject(ProjectNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
 ):
     return await request_handler.forward(
         usecase.find_root_section_nodes,
@@ -107,6 +118,7 @@ async def find_form_content(
     form_id: UUID,
     usecase=Depends(Inject(ProjectNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
 ):
     return await request_handler.forward(
         usecase.find_form_content,
@@ -125,6 +137,7 @@ async def mutate_project_field(
     value: PrimitiveWithNoneUnionDto,
     usecase=Depends(Inject(ProjectNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:update"])),
 ):
     return await handler.forward_mapped(
         usecase.update_node_value,
@@ -144,6 +157,7 @@ async def mutate_project_fields(
     updates: List[FieldUpdateInputDto],
     usecase=Depends(Inject(ProjectNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:update"])),
 ):
     return await handler.forward_mapped(
         usecase.update_nodes_value,
@@ -163,6 +177,7 @@ async def add_project_collection(
     collection_target: ProjectNodeCollectionTargetDto,
     usecase=Depends(Inject(ProjectNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:update"])),
 ):
     return await handler.forward_many(
         usecase.add_collection,
@@ -177,6 +192,9 @@ async def clone_project_collection(
     collection_node_id: UUID,
     usecase=Depends(Inject(ProjectNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_id", ["project:update"], ["project:clone"])
+    ),
 ):
     return await handler.forward_many(
         usecase.clone_collection,
@@ -190,5 +208,6 @@ async def remove_project_node_collection(
     project_id: UUID,
     node_id: UUID,
     usecase=Depends(Inject(ProjectNodeUseCase)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:update"])),
 ):
     await usecase.remove_collection(project_id, node_id)

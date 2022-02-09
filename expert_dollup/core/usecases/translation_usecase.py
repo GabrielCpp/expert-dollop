@@ -10,6 +10,8 @@ from expert_dollup.core.domains import (
     Ressource,
     Datasheet,
     RessourceFilter,
+    RessourceId,
+    User,
 )
 
 
@@ -80,7 +82,7 @@ class TranslationUseCase:
         )
 
     async def get_translation_bundle(
-        self, query: TranslationRessourceLocaleQuery
+        self, query: TranslationRessourceLocaleQuery, user: User
     ) -> List[Translation]:
         if query.locale == "en":
             query.locale = "en_US"
@@ -88,7 +90,9 @@ class TranslationUseCase:
         if query.locale == "fr":
             query.locale = "fr_CA"
 
-        ressource = await self.ressource_service.find_by_id(query.ressource_id)
+        ressource = await self.ressource_service.find_by_id(
+            RessourceId(id=query.ressource_id, user_id=user.id)
+        )
 
         if ressource.kind == "project":
             project_details = await self.project_details_service.find_by_id(

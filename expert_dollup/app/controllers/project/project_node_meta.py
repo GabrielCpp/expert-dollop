@@ -2,7 +2,13 @@ from fastapi import APIRouter, Depends, Query
 from typing import List, Optional
 from uuid import UUID
 from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.starlette_injection import RequestHandler, MappingChain
+from expert_dollup.shared.starlette_injection import (
+    RequestHandler,
+    MappingChain,
+    CanPerformOnRequired,
+    CanPerformRequired,
+    Inject,
+)
 from expert_dollup.infra.services import ProjectNodeMetaService
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *
@@ -16,6 +22,7 @@ async def get_project_node_meta(
     type_id: UUID,
     service=Depends(Inject(ProjectNodeMetaService)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
 ):
     return await handler.handle(
         service.find_one_by,

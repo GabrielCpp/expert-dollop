@@ -24,6 +24,17 @@ async def truncate_db(db_url_name: str, tables=None):
     await connection.truncate_db(tables)
 
 
+def get_token(oauth: str):
+    from dotenv import load_dotenv
+    from expert_dollup.app.modules import build_container
+    from expert_dollup.shared.starlette_injection import AuthService
+
+    load_dotenv()
+    container = build_container()
+    auth_service = container.get(AuthService)
+    token = auth_service.make_token(oauth)
+
+
 @task(name="start-https")
 def start_https(c):
     c.run(
@@ -216,19 +227,22 @@ def generate_env(c, hostname="predykt.dev"):
 def upload_base_project(c):
     cwd = os.getcwd()
     db_truncate(c, poetry=True)
+    load_default_users(c)
+    token = get_token("testuser")
     c.run(
-        f"curl -X POST -F 'file=@{cwd}/project-setup.jsonl' http://localhost:8000/api/import"
+        f"curl -X POST -H 'Authorization: Bearer {token}' -F 'file=@{cwd}/project-setup.jsonl' http://localhost:8000/api/import/5d9c68c6-c50e-d3d0-2a2f-cf54f63993b6"
     )
 
 
 @task(name="upload-project")
 def upload_project(c):
     cwd = os.getcwd()
+    token = get_token("testuser")
     c.run(
-        f"curl -X DELETE http://localhost:8000/api/project/11ec4bbb-ebe8-fa7c-bcc3-42010a800002"
+        f"curl -X DELETE -H 'Authorization: Bearer {token}'  http://localhost:8000/api/project/11ec4bbb-ebe8-fa7c-bcc3-42010a800002"
     )
     c.run(
-        f"curl -X POST -F 'file=@{cwd}/project.jsonl' http://localhost:8000/api/import"
+        f"curl -X POST -H 'Authorization: Bearer {token}' -F 'file=@{cwd}/project.jsonl' http://localhost:8000/api/import/5d9c68c6-c50e-d3d0-2a2f-cf54f63993b6"
     )
 
 
@@ -245,3 +259,29 @@ def testreport(c):
     c.run(
         "curl http://localhost:8000/api/project/11ec4bbb-ebe8-fa7c-bcc3-42010a800002/report/8e084b1e-b331-4644-8485-5e91e21770b2/minimal"
     )
+
+
+@task(name="token")
+def make_token(c, oauth="testuser"):
+    print(get_token("testuser"))
+
+
+@task(name="load-default-users")
+def load_default_users(c):
+    from dotenv import load_dotenv
+    from expert_dollup.app.modules import build_container
+    from expert_dollup.core.domains import User
+    from expert_dollup.shared.database_services import CollectionService
+    from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
+    from tests.fixtures.seeds import make_default_users
+
+    async def reload_db():
+        load_dotenv()
+        container = build_container()
+        user_db = container.get(RessourceAuthDatabase)
+        user_service = container.get(CollectionService[User])
+
+        await user_db.truncate_db()
+        await user_service.insert_many(make_default_users())
+
+    asyncio.run(reload_db())

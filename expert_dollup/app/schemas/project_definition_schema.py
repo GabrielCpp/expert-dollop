@@ -2,8 +2,13 @@ from uuid import UUID
 from typing import Any, Optional
 from ariadne import ObjectType, QueryType, convert_kwargs_to_snake_case
 from ariadne.types import GraphQLResolveInfo
-from expert_dollup.shared.starlette_injection import GraphqlPageHandler
+from expert_dollup.shared.database_services import (
+    UserRessourcePaginator,
+    UserRessourceQuery,
+)
 from expert_dollup.shared.starlette_injection import (
+    AuthService,
+    GraphqlPageHandler,
     inject_graphql_route,
     inject_graphql_handler,
 )
@@ -24,15 +29,22 @@ async def resolve_find_project_definition(
 
 
 @query.field("findProjectDefintions")
-@inject_graphql_handler(GraphqlPageHandler[ProjectDefinition])
+@inject_graphql_handler(GraphqlPageHandler[UserRessourcePaginator[ProjectDefinition]])
 @convert_kwargs_to_snake_case
 async def resolve_find_project_defintions(
     _: Any,
     info: GraphQLResolveInfo,
     query: str,
     first: int,
-    handler: GraphqlPageHandler[ProjectDefinition],
+    handler: GraphqlPageHandler[UserRessourcePaginator[ProjectDefinition]],
     after: Optional[str] = None,
 ):
-    result = await handler.find_all(ProjectDefinitionDto, first, after)
+    user = await info.context.container.get(AuthService).can_perform_required(
+        info.context.request,
+        ["project_definition:read"],
+    )
+
+    result = await handler.handle(
+        ProjectDefinitionDto, UserRessourceQuery(user.id), first, after
+    )
     return result

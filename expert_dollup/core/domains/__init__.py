@@ -48,7 +48,7 @@ from .translation import (
     TranslationFilter,
     TranslationPluckFilter,
 )
-from .ressource import Ressource, User, RessourceId, RessourceFilter
+from .ressource import Ressource, User, RessourceId, RessourceFilter, UserFilter
 from .formula import (
     Formula,
     FormulaExpression,
