@@ -204,10 +204,10 @@ async def clone_project_collection(
 
 
 @router.delete("/project/{project_id}/container/{node_id}")
-async def remove_project_node_collection(
+async def delete_project_node_collection(
     project_id: UUID,
     node_id: UUID,
     usecase=Depends(Inject(ProjectNodeUseCase)),
     user=Depends(CanPerformOnRequired("project_id", ["project:update"])),
 ):
-    await usecase.remove_collection(project_id, node_id)
+    return await usecase.remove_collection(project_id, node_id)

@@ -136,3 +136,20 @@ async def resolve_clone_project_collection(
         UUID(project_id),
         UUID(collection_node_id),
     )
+
+
+@mutation.field("deleteProjectCollection")
+@inject_graphql_route(delete_project_node_collection)
+@convert_kwargs_to_snake_case
+async def resolve_delete_project_collection(
+    _: Any,
+    info: GraphQLResolveInfo,
+    project_id: str,
+    collection_node_id: str,
+    delete_project_node_collection: callable,
+):
+    return await delete_project_node_collection(
+        info,
+        UUID(project_id),
+        UUID(collection_node_id),
+    )

@@ -149,9 +149,10 @@ class ProjectNodeUseCase:
 
         return nodes
 
-    async def remove_collection(self, project_id: UUID, node_id: UUID):
-        container = await self.project_node_service.find_one_by(
+    async def remove_collection(self, project_id: UUID, node_id: UUID) -> ProjectNode:
+        node = await self.project_node_service.find_one_by(
             ProjectNodeFilter(project_id=project_id, id=node_id)
         )
-        await self.project_node_service.remove_collection(container)
-        await self.project_node_service.delete_by_id(container.id)
+        await self.project_node_service.remove_collection(node)
+        await self.project_node_service.delete_by_id(node.id)
+        return node

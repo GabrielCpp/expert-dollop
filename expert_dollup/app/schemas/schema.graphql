@@ -420,6 +420,12 @@ input ProjectDetailsInput {
   datasheetId: String!
 }
 
+type ProjectNodeMeta {
+  definition: ProjectDefinitionNode!
+  state: ProjectNodeMetaState!
+  typeId: ID!
+}
+
 type ProjectNodeMetaState {
   isVisible: Boolean
   selectedChild: String
@@ -571,6 +577,7 @@ type Query {
     projectId: ID!
     rootSectionId: ID!
   ): ProjectNodeTree!
+  findProjectNodeMetaDefinition(projectId: ID!, nodeId: ID!): ProjectNodeMeta!
   findProjectFormContent(projectId: ID!, formId: ID!): ProjectNodeTree!
   findProjects(query: String!, first: Int!, after: String): ProjectConnection!
   findProjectDetails(id: ID!): ProjectDetails!
@@ -619,11 +626,16 @@ input DatasheetInput {
 }
 
 type Mutation {
+  # Translations
   addTranslations(translations: [TranslationInput!]!): [Translation!]!
   updateTranslations(translations: [TranslationUpdateInput!]!): [Translation!]!
+
+  # ProjectDefinitionNode
   addProjectDefinitionNode(
     node: ProjectDefinitionNodeInput!
   ): ProjectDefinitionNode!
+
+  # ProjectNode
   updateProjectField(
     projectId: ID!
     nodeId: ID!
@@ -633,9 +645,15 @@ type Mutation {
     projectId: ID!
     updates: [FieldUpdateInput!]!
   ): [ProjectNode]!
-  cloneProjectCollection(projectId: ID!, collectionNodeId: ID!): [ProjectNode]!
-  addProjectCollectionItem(projectId: ID!, collectionTarget: ProjectNodeCollectionTargetInput!): [ProjectNode]!
+
+  deleteProjectCollection(projectId: ID!, collectionNodeId: ID!): ProjectNode!
+  cloneProjectCollection(projectId: ID!, collectionNodeId: ID!): [ProjectNode!]!
+  addProjectCollectionItem(projectId: ID!, collectionTarget: ProjectNodeCollectionTargetInput!): [ProjectNode!]!
+
+  # Project
   createProject(projectDetails: ProjectDetailsInput): ProjectDetails!
+
+  # Datasheet
   createDatasheet(datasheet: DatasheetInput): Datasheet!
 }
 

@@ -153,5 +153,5 @@ class ProjectDefinitionNodePageDto(CamelModel):
 
 
 class FieldUpdateInputDto(CamelModel):
-    node_id: str
+    node_id: UUID
     value: PrimitiveWithNoneUnionDto
