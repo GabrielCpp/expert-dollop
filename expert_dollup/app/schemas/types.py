@@ -14,7 +14,6 @@ from expert_dollup.shared.starlette_injection import GraphqlContext
 
 mutation = MutationType()
 query = QueryType()
-datasheet_definition = ObjectType("DatasheetDefinition")
 datasheet_definition_property_schema_dict = ObjectType(
     "DatasheetDefinitionPropertySchemaDict"
 )
@@ -32,7 +31,6 @@ graphql_uuid = ScalarType("UUID")
 types = [
     mutation,
     query,
-    datasheet_definition,
     datasheet_definition_element,
     project_definition,
     datasheet,

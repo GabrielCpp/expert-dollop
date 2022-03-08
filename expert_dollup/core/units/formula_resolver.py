@@ -10,18 +10,8 @@ from expert_dollup.shared.database_services import log_execution_time_async, Sto
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.exceptions import RessourceNotFound
 from expert_dollup.shared.starlette_injection import LoggerFactory
-from expert_dollup.core.domains import (
-    Formula,
-    FormulaExpression,
-    FormulaDependencyGraph,
-    FormulaDependency,
-    FormulaFilter,
-)
-from expert_dollup.infra.services import (
-    FormulaService,
-    ProjectNodeService,
-    ProjectDefinitionNodeService,
-)
+from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.core.domains import *
 from expert_dollup.core.builders import UnitInstanceBuilder
 from expert_dollup.core.logits import (
     FormulaVisitor,
@@ -35,9 +25,9 @@ import expert_dollup.core.logits.formula_processor as formula_processor
 class FormulaResolver:
     def __init__(
         self,
-        formula_service: FormulaService,
-        project_node_service: ProjectNodeService,
-        project_definition_node_service: ProjectDefinitionNodeService,
+        formula_service: CollectionService[Formula],
+        project_node_service: CollectionService[ProjectNode],
+        project_definition_node_service: CollectionService[ProjectDefinitionNode],
         unit_instance_builder: UnitInstanceBuilder,
         stage_formulas_storage: ObjectStorage[StagedFormulas, StagedFormulasKey],
         logger: LoggerFactory,

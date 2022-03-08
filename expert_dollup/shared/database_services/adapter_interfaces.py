@@ -24,10 +24,6 @@ class DbConnection(ABC):
     async def truncate_db(self, tables: Optional[List[str]] = None):
         pass
 
-    @abstractmethod
-    async def drop_db(self):
-        pass
-
 
 class QueryBuilder(ABC):
     @abstractmethod

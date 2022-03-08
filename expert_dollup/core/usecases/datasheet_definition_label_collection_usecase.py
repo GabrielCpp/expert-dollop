@@ -1,11 +1,11 @@
 from uuid import UUID
 from typing import Awaitable
-from expert_dollup.infra.services import LabelCollectionService
+from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.core.domains import LabelCollection
 
 
 class LabelCollectionUseCase:
-    def __init__(self, label_collection_service: LabelCollectionService):
+    def __init__(self, label_collection_service: CollectionService[LabelCollection]):
         self.label_collection_service = label_collection_service
 
     async def find_by_id(self, id: UUID):

@@ -2,18 +2,15 @@ from typing import Optional
 from uuid import UUID, uuid4
 from collections import defaultdict
 from expert_dollup.core.domains import *
-from expert_dollup.infra.services import (
-    ProjectNodeService,
-    ProjectDefinitionNodeService,
-)
+from expert_dollup.shared.database_services import CollectionService
 from .unit_instance_builder import UnitInstanceBuilder
 
 
 class ProjectNodeSliceBuilder:
     def __init__(
         self,
-        project_node_service: ProjectNodeService,
-        project_definition_node_service: ProjectDefinitionNodeService,
+        project_node_service: CollectionService[ProjectNode],
+        project_definition_node_service: CollectionService[ProjectDefinitionNode],
         unit_instance_builder: UnitInstanceBuilder,
     ):
         self.project_node_service = project_node_service

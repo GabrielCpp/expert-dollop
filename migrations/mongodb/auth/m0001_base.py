@@ -1,19 +1,12 @@
-from asyncio import run
 from pymongo import DESCENDING, ASCENDING
+from urllib.parse import urlsplit
 from os import environ
-from urllib.parse import urlsplit, urlunsplit
-from motor.motor_asyncio import AsyncIOMotorClient
-from dotenv import load_dotenv
 
-load_dotenv()
-u = urlsplit(environ["RESSOURCE_DB_URL"])
-db_name = u.path.strip(" /")
-c = urlunsplit((u.scheme, u.netloc, "admin", u.query, u.fragment))
+version = "1"
 
 
-async def upgrade():
-    client = AsyncIOMotorClient(str(c))
-    db = client.get_database(db_name)
+async def upgrade(db):
+    u = urlsplit(environ["DB_URL"])
 
     ressource = await db.create_collection("ressource")
     await ressource.create_index([("user_id", DESCENDING), ("kind", ASCENDING)])
@@ -28,6 +21,3 @@ async def upgrade():
         pwd=u.password,
         roles=["readWrite", "dbAdmin", "dbOwner"],
     )
-
-
-run(upgrade())

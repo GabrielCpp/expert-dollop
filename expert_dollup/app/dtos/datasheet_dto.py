@@ -7,7 +7,7 @@ from pydantic import Field
 
 class NewDatasheetDto(CamelModel):
     name: str
-    datasheet_definition_id: UUID
+    project_definition_id: UUID
     from_datasheet_id: Optional[UUID] = None
     is_staged: bool = False
 
@@ -31,7 +31,7 @@ class DatasheetDto(CamelModel):
     id: UUID
     name: str
     is_staged: bool
-    datasheet_def_id: UUID
+    project_definition_id: UUID
     from_datasheet_id: Optional[UUID]
     creation_date_utc: datetime
 
@@ -39,4 +39,4 @@ class DatasheetDto(CamelModel):
 class DatasheetImportDto(CamelModel):
     id: UUID
     name: str
-    datasheet_definition_id: UUID
+    project_definition_id: UUID

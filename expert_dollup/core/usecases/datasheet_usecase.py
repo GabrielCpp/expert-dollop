@@ -49,7 +49,7 @@ class DatasheetUseCase:
             id=uuid4(),
             name=datasheet.name,
             is_staged=datasheet.is_staged,
-            datasheet_def_id=datasheet.datasheet_def_id,
+            project_definition_id=datasheet.project_definition_id,
             from_datasheet_id=datasheet_clone_target.target_datasheet_id,
             creation_date_utc=self.clock.utcnow(),
         )
@@ -85,7 +85,7 @@ class DatasheetUseCase:
             id=uuid4(),
             name=datasheet_clone_target.new_name,
             is_staged=datasheet.is_staged,
-            datasheet_def_id=datasheet.datasheet_def_id,
+            project_definition_id=datasheet.project_definition_id,
             from_datasheet_id=datasheet.from_datasheet_id,
             creation_date_utc=self.clock.utcnow(),
         )
@@ -108,7 +108,7 @@ class DatasheetUseCase:
         await self.datasheet_service.insert(datasheet)
         definition_elements = await self.datasheet_definition_element_service.find_by(
             DatasheetDefinitionElementFilter(
-                datasheet_def_id=datasheet.datasheet_def_id
+                project_definition_id=datasheet.project_definition_id
             )
         )
 

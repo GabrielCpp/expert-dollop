@@ -75,6 +75,10 @@ LabelAttributeDaoUnion = Union[
 JsonSchemaDao = dict
 
 
+class ElementPropertySchemaDao(BaseModel):
+    value_validator: JsonSchemaDao
+
+
 class ProjectDefinitionDao(BaseModel):
     class Meta:
         pk = "id"
@@ -85,7 +89,7 @@ class ProjectDefinitionDao(BaseModel):
     id: UUID
     name: str = Field(max_length=64)
     default_datasheet_id: UUID
-    datasheet_def_id: UUID
+    properties: Dict[str, ElementPropertySchemaDao]
     creation_date_utc: datetime
 
 
@@ -237,23 +241,6 @@ class ProjectDefinitionFormulaDao(BaseModel):
     dependency_graph: FormulaDependencyGraphDao
 
 
-class ElementPropertySchemaDao(BaseModel):
-    value_validator: JsonSchemaDao
-
-
-class DatasheetDefinitionDao(BaseModel):
-    class Meta:
-        pk = "id"
-
-    class Config:
-        title = "datasheet_definition"
-
-    id: UUID
-    name: str = Field(max_length=64)
-    properties: Dict[str, ElementPropertySchemaDao]
-    creation_date_utc: datetime
-
-
 class CollectionAggregateDao(BaseModel):
     from_collection: str
 
@@ -286,7 +273,7 @@ class LabelCollectionDao(BaseModel):
         title = "datasheet_definition_label_collection"
 
     id: UUID
-    datasheet_definition_id: UUID
+    project_definition_id: UUID
     name: str = Field(max_length=64)
     attributes_schema: Dict[str, LabelAttributeSchemaDaoUnion]
 
@@ -322,7 +309,7 @@ class DatasheetDefinitionElementDao(BaseModel):
         options = {
             "firestore": {
                 "collection_count": False,
-                "key_counts": set([frozenset(["datasheet_def_id"])]),
+                "key_counts": set([frozenset(["project_definition_id"])]),
             }
         }
 
@@ -333,7 +320,7 @@ class DatasheetDefinitionElementDao(BaseModel):
     unit_id: str
     is_collection: bool
     name: str = Field(max_length=64)
-    datasheet_def_id: UUID
+    project_definition_id: UUID
     order_index: int
     default_properties: Dict[str, DatasheetDefinitionElementPropertyDao]
     tags: List[UUID]
@@ -350,7 +337,7 @@ class DatasheetDao(BaseModel):
     id: UUID
     name: str = Field(max_length=64)
     is_staged: bool
-    datasheet_def_id: UUID
+    project_definition_id: UUID
     from_datasheet_id: Optional[UUID]
     creation_date_utc: datetime
 

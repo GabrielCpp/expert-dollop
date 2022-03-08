@@ -2,13 +2,7 @@ from uuid import UUID, uuid4
 from typing import Awaitable
 from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.core.exceptions import RessourceNotFound
-from expert_dollup.core.domains import (
-    ProjectDefinition,
-    Ressource,
-    User,
-    RessourceFilter,
-)
-from expert_dollup.infra.services import ProjectDefinitionService
+from expert_dollup.core.domains import *
 from expert_dollup.infra.providers import WordProvider
 from expert_dollup.core.utils.ressource_permissions import make_ressource
 
@@ -16,7 +10,7 @@ from expert_dollup.core.utils.ressource_permissions import make_ressource
 class ProjectDefinitonUseCase:
     def __init__(
         self,
-        service: ProjectDefinitionService,
+        service: CollectionService[ProjectDefinition],
         ressource_service: CollectionService[Ressource],
         word_provider: WordProvider,
     ):

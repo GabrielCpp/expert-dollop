@@ -9,26 +9,6 @@ type DatasheetDefinitionPropertySchemaDict {
   schema: DatasheetDefinitionPropertySchema!
 }
 
-type DatasheetDefinition {
-  id: ID!
-  name: String!
-  properties: [DatasheetDefinitionPropertySchemaDict!]!
-  elementsDefinition(
-    first: Int!
-    after: String
-  ): DatasheetDefinitionElementConnection
-}
-
-type DatasheetDefinitionEdge {
-  node: DatasheetDefinition!
-  cursor: String!
-}
-
-type DatasheetDefinitionConnection {
-  edges: [DatasheetDefinitionEdge!]!
-  pageInfo: PageInfo!
-}
-
 type DatasheetDefinitionElementEdge {
   node: DatasheetDefinitionElement!
   cursor: String!
@@ -53,8 +33,8 @@ type DatasheetDefinitionElement {
   id: ID!
   unitId: String!
   isCollection: Boolean!
-  datasheetDefId: String!
-  datasheetDefinition: DatasheetDefinition
+  projectDefId: String!
+  projectDefinition: ProjectDefinition
   orderIndex: Int!
   name: String!
   defaultProperties: [DatasheetDefinitionElementPropertyDict!]!
@@ -86,7 +66,7 @@ type Datasheet {
   id: ID!
   name: String!
   isStaged: Boolean!
-  datasheetDefId: String!
+  projectDefId: String!
   fromDatasheetId: String
   elements(first: Int!, after: String): DatasheetElementConnection!
 }
@@ -343,14 +323,19 @@ type ProjectDefinition {
   name: String!
   defaultDatasheetId: String!
   defaultDatasheet: Datasheet!
-  datasheetDefId: String!
-  datasheetDefinition: DatasheetDefinition!
+  projectDefId: String!
+  projectDefinition: ProjectDefinition!
   rootSections(projectDefId: ID!): ProjectDefinitionNodeTree!
   rootSectionContainers(
     projectDefId: ID!
     rootSectionId: ID!
   ): ProjectDefinitionNodeTree!
   formContent(projectDefId: ID!, formId: ID!): ProjectDefinitionNodeTree!
+  properties: [DatasheetDefinitionPropertySchemaDict!]!
+  elementsDefinition(
+    first: Int!
+    after: String
+  ): DatasheetDefinitionElementConnection
 }
 
 type ProjectDefinitionEdge {
@@ -533,19 +518,13 @@ type Query {
     first: Int!
     after: String
   ): DatasheetConnection!
-  findDatasheetDefinitions(
-    query: String!
-    first: Int!
-    after: String
-  ): DatasheetDefinitionConnection!
-  findDatasheetDefinition(datasheetDefinitionId: ID!): DatasheetDefinition!
   findDatasheetDefinitionElements(
-    datasheetDefinitionId: ID!
+    projectDefinitionId: ID!
     first: Int!
     after: String
   ): DatasheetDefinitionElementConnection!
   queryDatasheetDefinitionElements(
-    datasheetDefinitionId: ID!
+    projectDefinitionId: ID!
     query: String!
     first: Int!
     after: String
@@ -621,7 +600,7 @@ input ProjectNodeCollectionTargetInput {
 
 input DatasheetInput {
   name: String! 
-  datasheetDefinitionId: String!
+  projectDefinitionId: String!
   fromDatasheetId: String
 }
 

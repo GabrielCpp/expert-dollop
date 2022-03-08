@@ -34,7 +34,7 @@ LabelAttributeSchemaUnion = Union[
 @dataclass
 class LabelCollection:
     id: UUID
-    datasheet_definition_id: UUID
+    project_definition_id: UUID
     name: str
     attributes_schema: Dict[str, LabelAttributeSchemaUnion] = field(
         default_factory=dict
@@ -43,5 +43,5 @@ class LabelCollection:
 
 class LabelCollectionFilter(QueryFilter):
     id: Optional[UUID]
-    datasheet_definition_id: Optional[UUID]
+    project_definition_id: Optional[UUID]
     name: Optional[str]

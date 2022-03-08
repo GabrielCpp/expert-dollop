@@ -1,5 +1,4 @@
 from .datasheet_definition_element_paginator import DatasheetDefinitionElementPaginator
-from .datasheet_definition_paginator import DatasheetDefinitionPaginator
 from .datasheet_element_paginator import DatasheetElementPaginator
 from .datasheet_paginator import DatasheetPaginator
 from .formula_paginator import FormulaPaginator

@@ -35,7 +35,7 @@ class FormulaLike(Protocol):
 
 @dataclass
 class CustomDatasheetInstancePackage:
-    datasheet_definition: DatasheetDefinition
+    project_definition: ProjectDefinition
     datasheet_definition_elements: List[DatasheetDefinitionElement]
     datasheet: Datasheet
     datasheet_elements: List[DatasheetElement]
@@ -243,21 +243,18 @@ class DatasheetSeed:
 
 class DatasheetInstanceFactory:
     @staticmethod
-    def build(datasheet_seed: DatasheetSeed) -> CustomDatasheetInstancePackage:
-        datasheet_definition = DatasheetDefinition(
-            id=make_uuid(f"{datasheet_seed.name}-definition"),
-            name=f"{datasheet_seed.name}-definition",
-            properties={
-                name: dict(DEFAULT_VALUE_MAPPING[property_type])
-                for name, property_type in datasheet_seed.properties.items()
-            },
-            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
-        )
+    def build(
+        datasheet_seed: DatasheetSeed, project_definition: ProjectDefinition
+    ) -> CustomDatasheetInstancePackage:
+        project_definition.properties = {
+            name: dict(DEFAULT_VALUE_MAPPING[property_type])
+            for name, property_type in datasheet_seed.properties.items()
+        }
 
         datasheet = Datasheet(
             id=make_uuid(datasheet_seed.name),
             is_staged=False,
-            datasheet_def_id=datasheet_definition.id,
+            project_definition_id=project_definition.id,
             name=datasheet_seed.name,
             from_datasheet_id=make_uuid(datasheet_seed.name),
             creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
@@ -268,7 +265,7 @@ class DatasheetInstanceFactory:
                 id=element_seed.id,
                 unit_id=element_seed.unit_id,
                 is_collection=element_seed.is_collection,
-                datasheet_def_id=datasheet_definition.id,
+                project_definition_id=project_definition.id,
                 order_index=index,
                 name=element_seed.name,
                 default_properties={
@@ -302,7 +299,7 @@ class DatasheetInstanceFactory:
         label_collections = [
             LabelCollection(
                 id=collection_seed.id,
-                datasheet_definition_id=datasheet_definition.id,
+                project_definition_id=project_definition.id,
                 name=collection_seed.name,
                 attributes_schema=collection_seed.attributes_schema,
             )
@@ -332,7 +329,7 @@ class DatasheetInstanceFactory:
             translations.extend(collection_seed.translations)
 
         return CustomDatasheetInstancePackage(
-            datasheet_definition=datasheet_definition,
+            project_definition=project_definition,
             datasheet=datasheet,
             datasheet_definition_elements=datasheet_definition_elements,
             datasheet_elements=datasheet_elements,

@@ -26,9 +26,7 @@ from expert_dollup.shared.starlette_injection import LoggerFactory, AuthService
 from expert_dollup.core.domains import *
 from .fixtures.injector_override.mock_services import logger_observer
 from .fixtures import *
-
 from faker.providers.date_time import Provider
-from datetime import timezone
 
 
 class DateTimeProvider(Provider):
@@ -51,7 +49,7 @@ Faker.add_provider(DateTimeProvider)
 
 @pytest.fixture
 async def auth_dal() -> DbConnection:
-    DATABASE_URL = os.environ["RESSOURCE_DB_URL"]
+    DATABASE_URL = os.environ["AUTH_DB_URL"]
     connection = create_connection(DATABASE_URL, ressource_auth_db_daos)
 
     await connection.connect()

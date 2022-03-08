@@ -287,7 +287,7 @@ async def test_remove_project(ac, db_helper: DbFixtureHelper):
     assert response.status_code == 200, response.text
 
     response = await ac.get(f"/api/project/{project.id}")
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
 
 
 @pytest.mark.asyncio

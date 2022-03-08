@@ -5,7 +5,7 @@ from decimal import Decimal
 from collections import defaultdict
 from dataclasses import dataclass
 from asyncio import gather
-from expert_dollup.infra.services import DatasheetElementService
+from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.core.logits import FormulaInjector
 from .formula_resolver import FormulaResolver
 from .report_row_cache import ReportRowCache
@@ -402,7 +402,7 @@ class ReportBuilder:
 class ReportLinking:
     def __init__(
         self,
-        datasheet_element_service: DatasheetElementService,
+        datasheet_element_service: CollectionService[DatasheetElement],
         expression_evaluator: ExpressionEvaluator,
         report_row_cache_builder: ReportRowCache,
         formula_resolver: FormulaResolver,

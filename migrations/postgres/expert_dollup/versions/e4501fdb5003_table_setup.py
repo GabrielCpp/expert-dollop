@@ -57,7 +57,7 @@ def create_project_definition_tables():
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("name", String, nullable=False),
         Column("default_datasheet_id", postgresql.UUID(), nullable=False),
-        Column("datasheet_def_id", postgresql.UUID(), nullable=False),
+        Column("project_definition_id", postgresql.UUID(), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 
@@ -184,7 +184,7 @@ def create_datasheet_tables():
     )
 
     op.create_table(
-        "datasheet_definition",
+        "project_definition",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("name", String, nullable=False),
         Column("properties", postgresql.JSON(), nullable=False),
@@ -193,7 +193,7 @@ def create_datasheet_tables():
     op.create_table(
         "datasheet_definition_label_collection",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("datasheet_definition_id", postgresql.UUID(), nullable=False),
+        Column("project_definition_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
         Column("attributes_schema", postgresql.JSON(), nullable=False),
     )
@@ -223,7 +223,7 @@ def create_datasheet_tables():
         Column("unit_id", String, nullable=False),
         Column("is_collection", Boolean, nullable=False),
         Column("name", String(64), nullable=False),
-        Column("datasheet_def_id", postgresql.UUID(), nullable=False),
+        Column("project_definition_id", postgresql.UUID(), nullable=False),
         Column("order_index", Integer, nullable=False),
         Column("default_properties", postgresql.JSON(), nullable=False),
         Column("tags", ARRAY(postgresql.UUID(), dimensions=1), nullable=False),
@@ -235,7 +235,7 @@ def create_datasheet_tables():
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("name", String, nullable=False),
         Column("is_staged", Boolean, nullable=False),
-        Column("datasheet_def_id", postgresql.UUID(), nullable=False),
+        Column("project_definition_id", postgresql.UUID(), nullable=False),
         Column("from_datasheet_id", postgresql.UUID(), nullable=True),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )

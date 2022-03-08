@@ -23,11 +23,11 @@ def assert_all_definition_where_impemented(datasheet_definition_elements, result
 async def test_datasheet(ac, db_helper: DbFixtureHelper):
     runner = FlowRunner()
     mini_datasheet = await db_helper.load_fixtures(MiniDatasheet)
-    datasheet_definition_id = mini_datasheet.get_only_one(DatasheetDefinition).id
+    project_definition_id = mini_datasheet.get_only_one(ProjectDefinition).id
 
     @runner.step
     async def create_datasheet():
-        datasheet = DatasheetDtoFactory(datasheet_definition_id=datasheet_definition_id)
+        datasheet = DatasheetDtoFactory(project_definition_id=project_definition_id)
         response = await ac.post("/api/datasheet", data=datasheet.json())
         assert response.status_code == 200, response.json()
 
@@ -135,11 +135,11 @@ async def test_datasheet(ac, db_helper: DbFixtureHelper):
 async def test_datasheet_crud(ac, db_helper: DbFixtureHelper):
     runner = FlowRunner()
     mini_datasheet = await db_helper.load_fixtures(MiniDatasheet)
-    datasheet_definition = mini_datasheet.get_only_one(DatasheetDefinition)
+    project_definition = mini_datasheet.get_only_one(ProjectDefinition)
 
     @runner.step
     async def create_datasheet():
-        datasheet = DatasheetDtoFactory(datasheet_def_id=datasheet_definition.id)
+        datasheet = DatasheetDtoFactory(project_definition_id=project_definition.id)
         response = await ac.post("/api/datasheet", data=datasheet.json())
         assert response.status_code == 200, response.json()
 

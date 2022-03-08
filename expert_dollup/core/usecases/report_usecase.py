@@ -1,21 +1,16 @@
 from typing import List
 from uuid import UUID
-from expert_dollup.core.domains import (
-    Report,
-    ReportDefinitionFilter,
-    ReportDefinition,
-    ReportKey,
-)
+from expert_dollup.core.domains import *
 from expert_dollup.core.units import ReportLinking
 from expert_dollup.core.object_storage import ObjectStorage
-from expert_dollup.infra.services import *
+from expert_dollup.shared.database_services import CollectionService
 
 
 class ReportUseCase:
     def __init__(
         self,
-        report_definition_service: ReportDefinitionService,
-        project_service: ProjectService,
+        report_definition_service: CollectionService[ReportDefinition],
+        project_service: CollectionService[ProjectDetails],
         report_linking: ReportLinking,
         report_storage: ObjectStorage[Report, ReportKey],
     ):

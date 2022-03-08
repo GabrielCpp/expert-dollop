@@ -7,7 +7,6 @@ from expert_dollup.shared.starlette_injection import (
     inject_graphql_handler,
 )
 from expert_dollup.app.dtos import *
-from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.controllers.report.report_definition import (
     get_project_def_reports_definitions,

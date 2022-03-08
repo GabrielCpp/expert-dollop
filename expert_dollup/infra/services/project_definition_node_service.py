@@ -1,9 +1,6 @@
 from typing import List, Dict, Optional
 from uuid import UUID
-from expert_dollup.shared.database_services import (
-    CollectionServiceProxy,
-    FieldTokenEncoder,
-)
+from expert_dollup.shared.database_services import CollectionServiceProxy
 from expert_dollup.core.domains import (
     ProjectDefinitionNode,
     ProjectDefinitionNodeFilter,

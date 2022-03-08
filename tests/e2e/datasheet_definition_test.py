@@ -11,20 +11,20 @@ async def test_datasheet_definition(ac):
 
     @runner.step
     async def create_datasheet_definition():
-        datasheet_definition = DatasheetDefinitionDtoFactory()
+        project_definition = ProjectDefinitionDtoFactory()
         response = await ac.post(
-            "/api/datasheet_definition", data=datasheet_definition.json()
+            "/api/project_definition", data=project_definition.json()
         )
         assert response.status_code == 200, response.json()
 
-        return (datasheet_definition,)
+        return (project_definition,)
 
     @runner.step
     async def create_datasheet_definition_element(
-        datasheet_definition: DatasheetDefinitionDto,
+        project_definition: ProjectDefinitionDto,
     ):
         datasheet_definition_element = DatasheetDefinitionElementDtoFactory(
-            datasheet_def_id=datasheet_definition.id
+            project_definition_id=project_definition.id
         )
         response = await ac.post(
             "/api/datasheet_definition_element",
@@ -32,24 +32,24 @@ async def test_datasheet_definition(ac):
         )
         assert response.status_code == 200, response.json()
 
-        return (datasheet_definition, datasheet_definition_element)
+        return (project_definition, datasheet_definition_element)
 
     @runner.step
     async def get_datasheet_definition(
-        datasheet_definition: DatasheetDefinitionDto,
+        project_definition: ProjectDefinitionDto,
         datasheet_definition_element: DatasheetDefinitionElementDto,
     ):
-        response = await ac.get(f"/api/datasheet_definition/{datasheet_definition.id}")
+        response = await ac.get(f"/api/project_definition/{project_definition.id}")
         assert response.status_code == 200, response.json()
 
-        datasheet_definition_returned = unwrap(response, DatasheetDefinitionDto)
-        assert datasheet_definition == datasheet_definition_returned
+        datasheet_definition_returned = unwrap(response, ProjectDefinitionDto)
+        assert project_definition == datasheet_definition_returned
 
-        return (datasheet_definition, datasheet_definition_element)
+        return (project_definition, datasheet_definition_element)
 
     @runner.step
     async def get_datasheet_definition_element(
-        datasheet_definition: DatasheetDefinitionDto,
+        project_definition: ProjectDefinitionDto,
         datasheet_definition_element: DatasheetDefinitionElementDto,
     ):
         response = await ac.get(
@@ -60,11 +60,11 @@ async def test_datasheet_definition(ac):
         element_definition = unwrap(response, DatasheetDefinitionElementDto)
         assert datasheet_definition_element == element_definition
 
-        return (datasheet_definition, datasheet_definition_element)
+        return (project_definition, datasheet_definition_element)
 
     @runner.step
     async def delete_datasheet_definition_element(
-        datasheet_definition: DatasheetDefinitionDto,
+        project_definition: ProjectDefinitionDto,
         datasheet_definition_element: DatasheetDefinitionElementDto,
     ):
         response = await ac.delete(
@@ -77,22 +77,20 @@ async def test_datasheet_definition(ac):
         )
         assert response.status_code == 404, response.json()
 
-        return (datasheet_definition, datasheet_definition_element)
+        return (project_definition, datasheet_definition_element)
 
     @runner.step
     async def delete_datasheet_definition(
-        datasheet_definition: DatasheetDefinitionDto,
+        project_definition: ProjectDefinitionDto,
         datasheet_definition_element: DatasheetDefinitionElementDto,
     ):
-        response = await ac.delete(
-            f"/api/datasheet_definition/{datasheet_definition.id}"
-        )
+        response = await ac.delete(f"/api/project_definition/{project_definition.id}")
         assert response.status_code == 200, response.json()
 
-        response = await ac.get(f"/api/datasheet_definition/{datasheet_definition.id}")
+        response = await ac.get(f"/api/project_definition/{project_definition.id}")
         assert response.status_code == 404, response.json()
 
-        return (datasheet_definition, datasheet_definition_element)
+        return (project_definition, datasheet_definition_element)
 
     await runner.run()
 
@@ -105,7 +103,7 @@ async def test_label_collection(ac, db_helper: DbFixtureHelper):
     @runner.step
     async def create_label_collection():
         label_collection = LabelCollectionDtoFactory(
-            datasheet_definition_id=mini_datasheet.get_only_one(DatasheetDefinition).id
+            project_definition_id=mini_datasheet.get_only_one(ProjectDefinition).id
         )
         response = await ac.post("/api/label_collection", data=label_collection.json())
         assert response.status_code == 200, response.json()

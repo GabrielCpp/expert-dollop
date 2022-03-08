@@ -21,9 +21,6 @@ RESSOURCE_KIN_BY_DOMAIN = {
     Datasheet: RessourceAuthorisation(
         "datasheet", set(chain(RESSOURCE_ACTIONS, ["clone"]))
     ),
-    DatasheetDefinition: RessourceAuthorisation(
-        "datasheet_definition", RESSOURCE_ACTIONS
-    ),
 }
 
 

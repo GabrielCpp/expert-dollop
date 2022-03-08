@@ -63,7 +63,7 @@ def bind_database_expert_dollup(binder: Binder) -> None:
 
 
 def bind_database_ressource(binder: Binder) -> None:
-    DATABASE_URL = environ["RESSOURCE_DB_URL"]
+    DATABASE_URL = environ["AUTH_DB_URL"]
     database = create_connection(DATABASE_URL, ressource_db_daos)
     binder.bind(RessourceAuthDatabase, to=database, scope=singleton)
 

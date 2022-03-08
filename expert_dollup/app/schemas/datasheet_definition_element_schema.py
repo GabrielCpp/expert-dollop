@@ -13,7 +13,6 @@ from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.controllers.datasheet.datasheet_controller import *
 from expert_dollup.app.controllers.datasheet.datasheet_definition_element_controller import *
-from expert_dollup.app.controllers.datasheet.datasheet_definition_controller import *
 from .types import datasheet_definition_element, query
 
 
@@ -35,21 +34,21 @@ def resolve_default_properties(
 async def resolve_find_datasheet_definition_elements(
     _: Any,
     info: GraphQLResolveInfo,
-    datasheet_definition_id: str,
+    project_definition_id: str,
     first: int,
     handler: GraphqlPageHandler[Paginator[DatasheetDefinitionElement]],
     after: Optional[str] = None,
 ):
     await info.context.container.get(AuthService).can_perform_on_required(
         info.context.request,
-        UUID(datasheet_definition_id),
-        ["datasheet_definition:read"],
+        UUID(project_definition_id),
+        ["project_definition:read"],
     )
 
     return await handler.handle(
         DatasheetDefinitionElementDto,
         DatasheetDefinitionElementFilter(
-            datasheet_def_id=UUID(datasheet_definition_id)
+            project_definition_id=UUID(project_definition_id)
         ),
         first,
         after,
@@ -62,7 +61,7 @@ async def resolve_find_datasheet_definition_elements(
 async def resolve_query_datasheet_definition_elements(
     _: Any,
     info: GraphQLResolveInfo,
-    datasheet_definition_id: str,
+    project_definition_id: str,
     query: str,
     first: int,
     handler: GraphqlPageHandler[Paginator[DatasheetDefinitionElement]],
@@ -70,14 +69,14 @@ async def resolve_query_datasheet_definition_elements(
 ):
     await info.context.container.get(AuthService).can_perform_on_required(
         info.context.request,
-        UUID(datasheet_definition_id),
-        ["datasheet_definition:read"],
+        UUID(project_definition_id),
+        ["project_definition:read"],
     )
 
     return await handler.handle(
         DatasheetDefinitionElementDto,
         DatasheetDefinitionElementFilter(
-            datasheet_def_id=UUID(datasheet_definition_id)
+            project_definition_id=UUID(project_definition_id)
         ),
         first,
         after,

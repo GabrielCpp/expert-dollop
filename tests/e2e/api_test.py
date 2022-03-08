@@ -3,8 +3,8 @@ from uuid import uuid4
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_db import *
-from expert_dollup.infra.services import *
 from expert_dollup.shared.starlette_injection import make_page_model
+from expert_dollup.shared.database_services import CollectionService
 from ..fixtures import *
 
 
@@ -33,7 +33,7 @@ async def test_given_project_definition_should_be_able_to_create_delete_update(a
     assert response.status_code == 200
 
     response = await ac.get(f"/api/project_definition/{expected_project_definition.id}")
-    assert response.status_code == 403
+    assert response.status_code == 404
 
 
 @pytest.mark.asyncio
@@ -156,7 +156,9 @@ async def test_given_translation_should_be_able_to_retrieve_it(
         results=[dto_translations["b_fr"], dto_translations["a_fr"]],
     )
 
-    await db_helper.insert_daos(TranslationService, list(translations.values()))
+    await db_helper.insert_daos(
+        CollectionService[Translation], list(translations.values())
+    )
 
     response = await ac.get(f"/api/translation/{ressource_id}/fr_CA")
     assert response.status_code == 200

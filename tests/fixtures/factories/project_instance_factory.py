@@ -271,10 +271,7 @@ class CustomProjectInstancePackage:
 class ProjectInstanceFactory:
     @staticmethod
     def build(
-        project_seed: ProjectSeed,
-        project_name: str = "test",
-        default_datasheet_id: Optional[UUID] = None,
-        datasheet_def_id: Optional[UUID] = None,
+        project_seed: ProjectSeed, project_name: str = "test"
     ) -> CustomProjectInstancePackage:
         seed_nodes_by_name: Dict[str, NodeSeed] = {}
         unit_instances_by_name: Dict[str, FormulaSeed] = {}
@@ -306,10 +303,8 @@ class ProjectInstanceFactory:
         project_definition = ProjectDefinition(
             id=make_uuid(project_name),
             name=project_name,
-            default_datasheet_id=default_datasheet_id
-            or make_uuid(f"{project_name}-default-datasheet"),
-            datasheet_def_id=datasheet_def_id
-            or make_uuid(f"{project_name}-datasheet-definition"),
+            default_datasheet_id=make_uuid(f"{project_name}-default-datasheet"),
+            properties={},
             creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
         )
 

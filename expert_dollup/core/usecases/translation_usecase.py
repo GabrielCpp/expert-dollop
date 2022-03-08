@@ -111,7 +111,7 @@ class TranslationUseCase:
 
             datasheet_translations = await self.service.find_by(
                 TranslationRessourceLocaleQuery(
-                    ressource_id=datasheet.datasheet_def_id,
+                    ressource_id=datasheet.project_definition_id,
                     locale=query.locale,
                 )
             )

@@ -9,7 +9,6 @@ from expert_dollup.shared.starlette_injection import (
 )
 from expert_dollup.app.controllers.report.report import *
 from expert_dollup.app.dtos import *
-from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
 from .types import query, mutation
 

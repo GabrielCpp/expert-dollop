@@ -1,22 +1,9 @@
 from uuid import UUID, uuid4
 from typing import Dict
+from expert_dollup.core.domains.project_definition import ProjectDefinition
 from expert_dollup.core.exceptions import ValidationError, InvalidUsageError
-from expert_dollup.core.domains import (
-    Datasheet,
-    DatasheetElement,
-    DatasheetElementFilter,
-    DatasheetElementValues,
-    DatasheetElementId,
-    DatasheetDefinitionElement,
-    DatasheetDefinition,
-    PrimitiveUnion,
-)
-from expert_dollup.infra.services import (
-    DatasheetService,
-    DatasheetDefinitionElementService,
-    DatasheetElementService,
-    DatasheetDefinitionService,
-)
+from expert_dollup.core.domains import *
+from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
 from expert_dollup.shared.starlette_injection import Clock
 
@@ -24,18 +11,20 @@ from expert_dollup.shared.starlette_injection import Clock
 class DatasheetElementUseCase:
     def __init__(
         self,
-        datasheet_service: DatasheetService,
-        datasheet_element_service: DatasheetElementService,
+        datasheet_service: CollectionService[Datasheet],
+        datasheet_element_service: CollectionService[DatasheetElement],
         schema_validator: SchemaValidator,
-        datasheet_definition_element_service: DatasheetDefinitionElementService,
-        datasheet_definition_service: DatasheetDefinitionService,
+        datasheet_definition_element_service: CollectionService[
+            DatasheetDefinitionElement
+        ],
+        project_definition_service: CollectionService[ProjectDefinition],
         clock: Clock,
     ):
         self.datasheet_service = datasheet_service
         self.datasheet_element_service = datasheet_element_service
         self.datasheet_definition_element_service = datasheet_definition_element_service
         self.schema_validator = schema_validator
-        self.datasheet_definition_service = datasheet_definition_service
+        self.project_definition_service = project_definition_service
         self.clock = clock
 
     async def import_element(self, element: DatasheetElement):
@@ -57,9 +46,9 @@ class DatasheetElementUseCase:
         self, id: DatasheetElementId, properties: Dict[str, PrimitiveUnion]
     ) -> DatasheetElement:
         datasheet: Datasheet = await self.datasheet_service.find_by_id(id.datasheet_id)
-        datasheet_definition: DatasheetDefinition = (
-            await self.datasheet_definition_service.find_by_id(
-                datasheet.datasheet_def_id
+        project_definition: ProjectDefinition = (
+            await self.project_definition_service.find_by_id(
+                datasheet.project_definition_id
             )
         )
         element_definition: DatasheetDefinitionElement = (
@@ -69,7 +58,7 @@ class DatasheetElementUseCase:
         )
 
         self._validate_datasheet_element_properties(
-            properties, datasheet_definition, element_definition
+            properties, project_definition, element_definition
         )
 
         await self.datasheet_element_service.update(
@@ -87,9 +76,9 @@ class DatasheetElementUseCase:
         self, datasheet_id: UUID, element_def_id: UUID, properties: UUID
     ) -> DatasheetElement:
         datasheet: Datasheet = await self.datasheet_service.find_by_id(datasheet_id)
-        datasheet_definition: DatasheetDefinition = (
-            await self.datasheet_definition_service.find_by_id(
-                datasheet.datasheet_def_id
+        project_definition: ProjectDefinition = (
+            await self.project_definition_service.find_by_id(
+                datasheet.project_definition_id
             )
         )
         element_definition: DatasheetDefinitionElement = (
@@ -100,7 +89,7 @@ class DatasheetElementUseCase:
             raise InvalidUsageError("Non collection element cannot be instanciated.")
 
         self._validate_datasheet_element_properties(
-            properties, datasheet_definition, element_definition
+            properties, project_definition, element_definition
         )
 
         new_element = DatasheetElement(
@@ -140,7 +129,7 @@ class DatasheetElementUseCase:
     def _validate_datasheet_element_properties(
         self,
         properties: Dict[str, PrimitiveUnion],
-        datasheet_definition: DatasheetDefinition,
+        project_definition: ProjectDefinition,
         element_definition: DatasheetDefinitionElement,
     ):
         for name, default_property in element_definition.default_properties.items():
@@ -148,8 +137,8 @@ class DatasheetElementUseCase:
                 if default_property.is_readonly is True:
                     raise ValidationError.for_field(name, "Field is readonly")
 
-                assert name in datasheet_definition.properties
-                property_schema = datasheet_definition.properties[name].value_validator
+                assert name in project_definition.properties
+                property_schema = project_definition.properties[name].value_validator
                 self.schema_validator.validate_instance_of(
                     property_schema, properties[name]
                 )
@@ -158,5 +147,5 @@ class DatasheetElementUseCase:
                 raise ValidationError.for_field(name, "Field is missing")
 
         for name in properties.keys():
-            if not name in datasheet_definition.properties:
+            if not name in project_definition.properties:
                 raise ValidationError.for_field(name, "Field does not exist")

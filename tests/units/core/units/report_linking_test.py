@@ -5,6 +5,7 @@ from decimal import Decimal
 from uuid import UUID
 from expert_dollup.core.logits import FormulaInjector, FrozenUnit
 from expert_dollup.shared.starlette_injection.clock_provider import StaticClock
+from expert_dollup.shared.database_services import CollectionService
 from tests.fixtures.factories.datasheet_factory import CustomDatasheetInstancePackage
 from tests.fixtures.factories.project_instance_factory import (
     CustomProjectInstancePackage,
@@ -16,7 +17,6 @@ from expert_dollup.core.builders import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.queries import *
 from expert_dollup.core.exceptions import *
-from expert_dollup.infra.services import *
 from tests.fixtures import *
 
 
@@ -34,14 +34,11 @@ class ReportSeed:
 @pytest.fixture
 def report_seed() -> ReportSeed:
     project_seed = make_base_project_seed()
+    project_fixture = ProjectInstanceFactory.build(project_seed)
     datasheet_fixture = DatasheetInstanceFactory.build(
-        make_base_datasheet(project_seed)
+        make_base_datasheet(project_seed), project_fixture.project_definition
     )
-    project_fixture = ProjectInstanceFactory.build(
-        project_seed,
-        default_datasheet_id=datasheet_fixture.datasheet.id,
-        datasheet_def_id=datasheet_fixture.datasheet_definition.id,
-    )
+
     report_definition = ReportDefinitionFactory(
         project_def_id=project_fixture.project_definition.id
     )
@@ -98,7 +95,7 @@ async def test_given_row_cache_should_produce_correct_report(
         }
     ]
 
-    datasheet_element_service = StrictInterfaceSetup(DatasheetElementService)
+    datasheet_element_service = StrictInterfaceSetup(CollectionService)
     report_row_cache = StrictInterfaceSetup(ReportRowCache)
     formula_resolver = StrictInterfaceSetup(FormulaResolver)
     clock = StaticClock(datetime(2000, 4, 3, 1, 1, 1, 0, timezone.utc))

@@ -30,6 +30,6 @@ LabelAttributeSchemaDtoUnion = Union[
 
 class LabelCollectionDto(CamelModel):
     id: UUID
-    datasheet_definition_id: UUID
+    project_definition_id: UUID
     name: str
     attributes_schema: Dict[str, LabelAttributeSchemaDtoUnion]

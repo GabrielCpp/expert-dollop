@@ -10,7 +10,7 @@ class ProjectDefinitionFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"project_definition_{n}")
     default_datasheet_id = factory.Faker("pyuuid4")
-    datasheet_def_id = factory.Faker("pyuuid4")
+    properties = factory.Dict({})
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
@@ -174,16 +174,6 @@ class ReportDefinitionFactory(factory.Factory):
     structure = factory.SubFactory(ReportStructureFactory)
 
 
-class DatasheetDefinitionFactory(factory.Factory):
-    class Meta:
-        model = DatasheetDefinition
-
-    id = factory.Faker("pyuuid4")
-    name = factory.Sequence(lambda n: f"datasheet_definition_{n}")
-    properties = factory.Dict({})
-    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
-
-
 class DatasheetDefinitionElementFactory(factory.Factory):
     class Meta:
         model = DatasheetDefinitionElement
@@ -191,7 +181,7 @@ class DatasheetDefinitionElementFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     unit_id: str
     is_collection: bool
-    datasheet_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     order_index: int
     name: str
     default_properties = factory.Dict({})
@@ -215,7 +205,7 @@ class LabelCollectionFactory(factory.Factory):
         model = LabelCollection
 
     id = factory.Faker("pyuuid4")
-    datasheet_definition_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"label_collection_{n}")
     attributes_schema = factory.Dict({})
 

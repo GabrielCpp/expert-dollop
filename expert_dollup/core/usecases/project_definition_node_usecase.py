@@ -1,15 +1,8 @@
 from typing import Awaitable, Optional, List
 from uuid import UUID
 from expert_dollup.core.exceptions import InvalidObject
-from expert_dollup.core.domains import (
-    ProjectDefinitionNode,
-    ProjectDefinitionNodeFilter,
-)
-from expert_dollup.infra.services import (
-    ProjectDefinitionNodeService,
-    ProjectDefinitionService,
-)
-from expert_dollup.shared.database_services import Page, Paginator
+from expert_dollup.core.domains import *
+from expert_dollup.shared.database_services import Page, Paginator, CollectionService
 from expert_dollup.shared.starlette_injection import LoggerFactory
 from expert_dollup.core.builders import ProjectDefinitionTreeBuilder
 from expert_dollup.core.units import NodeValueValidation
@@ -18,10 +11,10 @@ from expert_dollup.core.units import NodeValueValidation
 class ProjectDefinitionNodeUseCase:
     def __init__(
         self,
-        service: ProjectDefinitionNodeService,
+        service: CollectionService[ProjectDefinitionNode],
         project_definition_node_paginator: Paginator[ProjectDefinitionNode],
-        project_definition_service: ProjectDefinitionService,
-        project_definition_node_service: ProjectDefinitionNodeService,
+        project_definition_service: CollectionService[ProjectDefinition],
+        project_definition_node_service: CollectionService[ProjectDefinitionNode],
         project_definition_tree_builder: ProjectDefinitionTreeBuilder,
         node_value_validation: NodeValueValidation,
         logger: LoggerFactory,

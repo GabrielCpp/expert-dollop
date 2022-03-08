@@ -9,8 +9,14 @@ class ProjectDefinitionDtoFactory(factory.Factory):
 
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"Gab{n}")
-    datasheet_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     default_datasheet_id = factory.Faker("pyuuid4")
+    properties = {
+        "conversion_factor": ElementPropertySchemaDto(
+            value_validator={"type": "number"}
+        ),
+        "lost": ElementPropertySchemaDto(value_validator={"type": "number"}),
+    }
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
@@ -98,21 +104,6 @@ class FormulaDtoFactory(factory.Factory):
     expression = "a+b*c/2"
 
 
-class DatasheetDefinitionDtoFactory(factory.Factory):
-    class Meta:
-        model = DatasheetDefinitionDto
-
-    id = factory.Faker("pyuuid4")
-    name = factory.Sequence(lambda n: f"datasheet_definition{n}")
-    properties = {
-        "conversion_factor": ElementPropertySchemaDto(
-            value_validator={"type": "number"}
-        ),
-        "lost": ElementPropertySchemaDto(value_validator={"type": "number"}),
-    }
-    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
-
-
 class DatasheetDefinitionElementDtoFactory(factory.Factory):
     class Meta:
         model = DatasheetDefinitionElementDto
@@ -120,7 +111,7 @@ class DatasheetDefinitionElementDtoFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     unit_id = "inch"
     is_collection = False
-    datasheet_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     order_index = factory.Sequence(lambda n: n)
     tags = factory.LazyFunction(lambda: [])
     name = factory.Sequence(lambda n: f"field_name{n}")
@@ -142,7 +133,7 @@ class LabelCollectionDtoFactory(factory.Factory):
         model = LabelCollectionDto
 
     id = factory.Faker("pyuuid4")
-    datasheet_definition_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"label_collection_{n}")
     attributes_schema = factory.Dict({})
 
@@ -164,5 +155,5 @@ class DatasheetDtoFactory(factory.Factory):
 
     name = factory.Sequence(lambda n: f"datasheet{n}")
     is_staged = False
-    datasheet_definition_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     from_datasheet_id = None

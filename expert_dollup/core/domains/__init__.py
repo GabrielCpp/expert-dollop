@@ -1,4 +1,8 @@
-from .project_definition import ProjectDefinition, ProjectDefinitionFilter
+from .project_definition import (
+    ProjectDefinition,
+    ProjectDefinitionFilter,
+    ElementPropertySchema,
+)
 from .project_definition_node import (
     ProjectDefinitionNode,
     ProjectDefinitionNodeFilter,
@@ -68,7 +72,6 @@ from .formula import (
     StagedFormulasKey,
 )
 
-from .datasheet_definition import DatasheetDefinition, ElementPropertySchema
 from .datasheet_definition_label_collection import (
     LabelCollection,
     LabelAttributeSchemaUnion,

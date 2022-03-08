@@ -3,11 +3,12 @@ from uuid import UUID
 from decimal import Decimal
 from tests.fixtures.mock_interface_utils import StrictInterfaceSetup
 from expert_dollup.core.object_storage import ObjectStorage
+from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.core.services import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.queries import *
 from expert_dollup.core.units import *
 from expert_dollup.core.builders import *
-from expert_dollup.infra.services import *
 from tests.fixtures import *
 
 
@@ -36,7 +37,7 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
     )
 
     formula_resolver = FormulaResolver(
-        StrictInterfaceSetup(FormulaService).object,
+        StrictInterfaceSetup(CollectionService).object,
         project_node_service.object,
         StrictInterfaceSetup(ProjectDefinitionNodeService).object,
         unit_instance_builder.object,

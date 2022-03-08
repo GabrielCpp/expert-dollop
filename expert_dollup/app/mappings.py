@@ -51,7 +51,10 @@ def map_project_definition_from_dto(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        datasheet_def_id=src.datasheet_def_id,
+        properties={
+            key: ElementPropertySchema(value_validator=value.value_validator)
+            for key, value in src.properties.items()
+        },
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -63,7 +66,10 @@ def map_project_definition_to_dto(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        datasheet_def_id=src.datasheet_def_id,
+        properties={
+            key: ElementPropertySchemaDto(value_validator=value.value_validator)
+            for key, value in src.properties.items()
+        },
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -576,34 +582,6 @@ def map_formula_to_expression_dto(src: Formula, mapper: Mapper) -> FormulaExpres
     )
 
 
-def map_datasheet_definition_to_dto(
-    src: DatasheetDefinition, mapper: Mapper
-) -> DatasheetDefinitionDto:
-    return DatasheetDefinitionDto(
-        id=src.id,
-        name=src.name,
-        properties={
-            key: ElementPropertySchemaDto(value_validator=value.value_validator)
-            for key, value in src.properties.items()
-        },
-        creation_date_utc=src.creation_date_utc,
-    )
-
-
-def map_datasheet_definition_from_dto(
-    src: DatasheetDefinitionDto, mapper: Mapper
-) -> DatasheetDefinition:
-    return DatasheetDefinition(
-        id=src.id,
-        name=src.name,
-        properties={
-            key: ElementPropertySchema(value_validator=value.value_validator)
-            for key, value in src.properties.items()
-        },
-        creation_date_utc=src.creation_date_utc,
-    )
-
-
 def map_datasheet_definition_element_to_dto(
     src: DatasheetDefinitionElement, mapper: Mapper
 ) -> DatasheetDefinitionElementDto:
@@ -612,7 +590,7 @@ def map_datasheet_definition_element_to_dto(
         unit_id=src.unit_id,
         is_collection=src.is_collection,
         name=src.name,
-        datasheet_def_id=src.datasheet_def_id,
+        project_definition_id=src.project_definition_id,
         order_index=src.order_index,
         default_properties=mapper.map_dict_values(
             src.default_properties, DatasheetDefinitionElementPropertyDto
@@ -630,7 +608,7 @@ def map_datasheet_definition_element_from_dto(
         unit_id=src.unit_id,
         name=src.name,
         is_collection=src.is_collection,
-        datasheet_def_id=src.datasheet_def_id,
+        project_definition_id=src.project_definition_id,
         order_index=src.order_index,
         default_properties=mapper.map_dict_values(
             src.default_properties, DatasheetDefinitionElementProperty
@@ -675,7 +653,7 @@ def map_label_collection_from_dto(
 ) -> LabelCollection:
     return LabelCollection(
         id=src.id,
-        datasheet_definition_id=src.datasheet_definition_id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
         attributes_schema=mapper.map_dict_values(
             src.attributes_schema, label_attribute_schema_union_dto_mapping.from_origin
@@ -688,7 +666,7 @@ def map_label_collection_to_dto(
 ) -> LabelCollectionDto:
     return LabelCollectionDto(
         id=src.id,
-        datasheet_definition_id=src.datasheet_definition_id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
         attributes_schema=mapper.map_dict_values(
             src.attributes_schema, label_attribute_schema_union_dto_mapping.to_origin
@@ -787,7 +765,7 @@ def map_new_datasheet_from_dto(src: NewDatasheetDto, mapper: Mapper) -> Datashee
         id=datasheet_id,
         name=src.name,
         is_staged=src.is_staged,
-        datasheet_def_id=src.datasheet_definition_id,
+        project_definition_id=src.project_definition_id,
         from_datasheet_id=datasheet_id
         if src.from_datasheet_id is None
         else src.from_datasheet_id,
@@ -800,7 +778,7 @@ def map_datasheet_import_from_dto(src: DatasheetImportDto, mapper: Mapper) -> Da
         id=src.id,
         name=src.name,
         is_staged=False,
-        datasheet_def_id=src.datasheet_definition_id,
+        project_definition_id=src.project_definition_id,
         from_datasheet_id=src.id,
         creation_date_utc=mapper.get(Clock).utcnow(),
     )
@@ -811,7 +789,7 @@ def map_datasheet_to_dto(src: Datasheet, mapper: Mapper) -> DatasheetDto:
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
-        datasheet_def_id=src.datasheet_def_id,
+        project_definition_id=src.project_definition_id,
         from_datasheet_id=src.from_datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )

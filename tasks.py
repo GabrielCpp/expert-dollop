@@ -1,146 +1,31 @@
+from dotenv import load_dotenv
 from invoke import task
 from pathlib import Path
+from urllib.parse import urlparse, urlunparse
+from os import environ, path, getcwd
 import base64
-import os
 import asyncio
 
 
-async def drop_db(db_url_name: str):
-    from dotenv import load_dotenv
-    from expert_dollup.shared.database_services import create_connection
-
-    load_dotenv()
-    connection = create_connection(os.getenv(db_url_name))
-    await connection.drop_db()
-
-
 async def truncate_db(db_url_name: str, tables=None):
-    from dotenv import load_dotenv
     from expert_dollup.shared.database_services import create_connection
     import expert_dollup.infra.expert_dollup_db as daos
 
     load_dotenv()
-    connection = create_connection(os.getenv(db_url_name), daos)
+    connection = create_connection(environ[db_url_name], daos)
     await connection.truncate_db(tables)
 
 
-def get_token(oauth: str):
+async def get_token(oauth: str):
     from dotenv import load_dotenv
     from expert_dollup.app.modules import build_container
     from expert_dollup.shared.starlette_injection import AuthService
 
     load_dotenv()
     container = build_container()
-    auth_service = container.get(AuthService)
+    auth_service: AuthService = container.get(AuthService)
     token = auth_service.make_token(oauth)
-
-
-@task(name="start-https")
-def start_https(c):
-    c.run(
-        "poetry run uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000 --ssl-keyfile .local/predykt.dev.key --ssl-certfile .local/predykt.dev.crt"
-    )
-
-
-@task
-def start(c):
-    c.run(
-        "poetry run uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000"
-    )
-
-
-@task
-def test(c, test=None):
-    if test is None:
-        c.run("poetry run pytest -v")
-    else:
-        print(f"poetry run pytest -k '{test}'")
-        c.run(f"poetry run pytest -k '{test}'")
-
-
-@task
-def black(c):
-    c.run("poetry run black .")
-
-
-@task(name="migration:new")
-def newMigration(c, message=None):
-    if message is None:
-        print("Message required")
-        return
-
-    c.run('poetry run alembic revision -m "{}"'.format(message))
-
-
-@task(name="db:migrate")
-def runMigration(c):
-    c.run("poetry run alembic upgrade head")
-
-
-@task(name="db:upgrade")
-def migrate(c, migration):
-    c.run("poetry run alembic upgrade {} --sql".format(migration))
-
-
-@task(name="docker:clean")
-def deleteDb(c):
-    c.run("docker rm -f $(docker ps -a -q)")
-    c.run("docker volume rm $(docker volume ls -q)")
-
-
-@task(name="db:up")
-def dbUp(c):
-    c.run("docker-compose up --force-recreate adminer postgres")
-
-
-@task(name="db:fixture")
-def fill_db_with_fixture(c, name, truncate=False, poetry=False):
-    if poetry:
-        from dev.init_db import load_simple_project, load_simple_datasheet_def
-        from dotenv import load_dotenv
-        from expert_dollup.shared.database_services import create_connection
-
-        if truncate is True:
-            asyncio.run(truncate_db())
-
-        if name == "simple_project":
-            load_simple_project()
-        elif name == "simple_datasheet_def":
-            load_simple_datasheet_def()
-        else:
-            print(f"Unkown fixture {name}")
-    else:
-        c.run(
-            f"poetry run invoke db:fixture --poetry --name={name} {'--truncate' if truncate else ''}"
-        )
-
-
-@task(name="db:truncate")
-def db_truncate(c, poetry=False):
-    if not poetry:
-        c.run("poetry run invoke db:truncate --poetry")
-
-    asyncio.run(truncate_db("EXPERT_DOLLUP_DB_URL"))
-    asyncio.run(truncate_db("RESSOURCE_DB_URL"))
-
-
-@task(name="db:drop")
-def db_drop(c, poetry=False):
-    if not poetry:
-        c.run("poetry run invoke db:drop --poetry")
-
-    asyncio.run(drop_db("EXPERT_DOLLUP_DB_URL"))
-    asyncio.run(drop_db("RESSOURCE_DB_URL"))
-
-
-@task
-def fixture(c, layer="dao", poetry=False):
-    if poetry:
-        from dev.init_db import generate_json
-
-        generate_json(layer)
-    else:
-        c.run(f"poetry run invoke fixture --poetry --layer {layer}")
+    return token
 
 
 def generate_cert(c, folder: Path, domain_name: str, ca_name: str = "myCA"):
@@ -197,9 +82,47 @@ def generate_jwt_key_pair(c, folder: Path, name: str):
     return public_path, private_path
 
 
-@task(name="init")
-def generate_env(c, hostname="predykt.dev"):
-    public_path, private_path = generate_jwt_key_pair(c, Path(".local"), "jwt")
+def apply_db_migrations(c, url):
+    db_kind = resolve_scheme(url.scheme)
+    migration_folder = Path("migrations") / db_kind / url.path[1:]
+
+    if db_kind == "mongodb":
+        environ["DB_URL"] = urlunparse(url)
+        c.run(f"poetry run python {migration_folder}")
+    elif db_kind == "postgres":
+        c.run("poetry run alembic upgrade head")
+
+
+def resolve_scheme(scheme):
+    return scheme
+
+
+@task(name="start-https")
+def start_https(c):
+    c.run(
+        "poetry run uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000 --ssl-keyfile .local/predykt.dev.key --ssl-certfile .local/predykt.dev.crt"
+    )
+
+
+@task
+def start(c):
+    c.run(
+        "poetry run uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000"
+    )
+
+
+@task(name="env:init")
+def generate_env(
+    c,
+    hostname="127.0.0.1",
+    auth_db="mongodb",
+    expert_dollup_db="mongodb",
+    local_files=".local",
+):
+    if path.exists(".env"):
+        print("Environement file already exists")
+
+    public_path, private_path = generate_jwt_key_pair(c, Path(local_files), "jwt")
 
     with open(public_path, "rb") as key_file:
         key = key_file.read()
@@ -209,26 +132,81 @@ def generate_env(c, hostname="predykt.dev"):
         private_key = key_file.read()
         private_key_base64 = base64.b64encode(private_key).decode("ascii")
 
-    if os.exists(".env"):
-        print("Environement file already exists")
+    configs_lines = [
+        f"EXPERT_DOLLUP_DB_URL={expert_dollup_db}://predyktuser:predyktpassword@{hostname}:27017/expert_dollup",
+        f"AUTH_DB_URL={auth_db}://predyktuser:predyktpassword@{hostname}:27017/auth",
+        f"JWT_PUBLIC_KEY={key_base64}",
+        f"JWT_PRIVATE_KEY={private_key_base64}",
+        f"HOSTNAME={hostname}",
+        "FASTAPI_ENV=development",
+        "DB_USERNAME=predyktuser",
+        "DB_PASSWORD=predyktpassword",
+    ]
 
     with open(".env", "w") as f:
-        f.write("POSTGRES_USERNAME=predyktuser\n")
-        f.write("POSTGRES_PASSWORD=predyktpassword\n")
-        f.write("POSTGRES_HOST=127.0.0.1\n")
-        f.write("POSTGRES_DB=predykt\n")
-        f.write(f"JWT_PUBLIC_KEY={key_base64}\n")
-        f.write(f"JWT_PRIVATE_KEY={private_key_base64}\n")
-        f.write(f"HOSTNAME={hostname}\n")
-        f.write("FASTAPI_ENV=development\n")
+        for configs_line in configs_lines:
+            f.write(f"{configs_line}\n")
+
+
+@task(name="env:reset")
+def resetEnv(c):
+    load_dotenv()
+
+    expert_dollup_db_url = urlparse(environ["EXPERT_DOLLUP_DB_URL"])
+    auth_db_url = urlparse(environ["AUTH_DB_URL"])
+
+    images_to_load = set()
+    images_to_load.add(expert_dollup_db_url.scheme)
+    images_to_load.add(auth_db_url.scheme)
+
+    commands = []
+
+    for file_suffix in images_to_load:
+        commands.append(
+            f"docker-compose -f docker-compose.{file_suffix}.yml down --remove-orphans --volumes"
+        )
+        commands.append(
+            f"docker-compose -f docker-compose.{file_suffix}.yml  up --detach --force-recreate"
+        )
+
+    print(commands)
+    c.run(" && ".join(commands))
+
+    apply_db_migrations(c, expert_dollup_db_url)
+    apply_db_migrations(c, auth_db_url)
+
+
+@task
+def black(c):
+    c.run("poetry run black .")
+
+
+@task(name="db:migrate")
+def migrate_db(c, url):
+    apply_db_migrations(c, urlparse(url))
+
+
+@task(name="db:migration:new")
+def newMigration(c, message=None):
+    if message is None:
+        print("Message required")
+        return
+
+    c.run('poetry run alembic revision -m "{}"'.format(message))
+
+
+@task(name="db:truncate")
+def db_truncate(c):
+    asyncio.run(truncate_db("EXPERT_DOLLUP_DB_URL"))
+    asyncio.run(truncate_db("AUTH_DB_URL"))
 
 
 @task(name="upload-base-project")
 def upload_base_project(c):
-    cwd = os.getcwd()
+    cwd = getcwd()
     db_truncate(c, poetry=True)
     load_default_users(c)
-    token = get_token("testuser")
+    token = asyncio.run(get_token("testuser"))
     c.run(
         f"curl -X POST -H 'Authorization: Bearer {token}' -F 'file=@{cwd}/project-setup.jsonl' http://localhost:8000/api/import/5d9c68c6-c50e-d3d0-2a2f-cf54f63993b6"
     )
@@ -236,8 +214,8 @@ def upload_base_project(c):
 
 @task(name="upload-project")
 def upload_project(c):
-    cwd = os.getcwd()
-    token = get_token("testuser")
+    cwd = getcwd()
+    token = asyncio.run(get_token("testuser"))
     c.run(
         f"curl -X DELETE -H 'Authorization: Bearer {token}'  http://localhost:8000/api/project/11ec4bbb-ebe8-fa7c-bcc3-42010a800002"
     )
@@ -248,7 +226,7 @@ def upload_project(c):
 
 @task(name="refresh-cache")
 def refreshcache(c):
-    cwd = os.getcwd()
+    cwd = getcwd()
     c.run(
         f"curl -X POST -F 'file=@{cwd}/project.jsonl' http://localhost:8000/api/report_definition/8e084b1e-b331-4644-8485-5e91e21770b2/refresh_cache"
     )
@@ -263,7 +241,7 @@ def testreport(c):
 
 @task(name="token")
 def make_token(c, oauth="testuser"):
-    print(get_token("testuser"))
+    print(asyncio.run(get_token("testuser")))
 
 
 @task(name="load-default-users")

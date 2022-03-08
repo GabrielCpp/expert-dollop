@@ -14,7 +14,7 @@ class DatasheetDefinitionElementDto(CamelModel):
     id: UUID
     unit_id: str
     is_collection: bool
-    datasheet_def_id: UUID
+    project_definition_id: UUID
     order_index: int
     name: str
     tags: List[UUID]

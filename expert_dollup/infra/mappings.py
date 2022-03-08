@@ -72,7 +72,11 @@ def map_project_definition_from_dao(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        datasheet_def_id=src.datasheet_def_id,
+        properties={
+            key: mapper.map(element, ElementPropertySchema, ElementPropertySchemaDao)
+            for key, element in src.properties.items()
+        },
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -83,7 +87,10 @@ def map_project_definition_to_dao(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        datasheet_def_id=src.datasheet_def_id,
+        properties={
+            key: mapper.map(element, ElementPropertySchemaDao)
+            for key, element in src.properties.items()
+        },
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -442,30 +449,6 @@ def map_translation_id_to_dict(src: TranslationId, mapper: Mapper) -> dict:
     )
 
 
-def map_project_definition_to_dao(
-    src: ProjectDefinition, mapper: Mapper
-) -> ProjectDefinitionDao:
-    return ProjectDefinitionDao(
-        id=src.id,
-        name=src.name,
-        default_datasheet_id=src.default_datasheet_id,
-        datasheet_def_id=src.datasheet_def_id,
-        creation_date_utc=src.creation_date_utc,
-    )
-
-
-def map_project_definition_from_dao(
-    src: ProjectDefinitionDao, mapper: Mapper
-) -> ProjectDefinition:
-    return ProjectDefinition(
-        id=src.id,
-        name=src.name,
-        default_datasheet_id=src.default_datasheet_id,
-        datasheet_def_id=src.datasheet_def_id,
-        creation_date_utc=src.creation_date_utc,
-    )
-
-
 def map_project_definition_node_filter_to_dict(
     src: ProjectDefinitionNodeFilter, mapper: Mapper
 ) -> dict:
@@ -676,34 +659,6 @@ def map_formula_instance_from_dao(src: UnitInstanceDao, mapper: Mapper) -> UnitI
     )
 
 
-def map_datasheet_definition_to_dao(
-    src: DatasheetDefinition, mapper: Mapper
-) -> DatasheetDefinitionDao:
-    return DatasheetDefinitionDao(
-        id=src.id,
-        name=src.name,
-        properties={
-            key: mapper.map(element, ElementPropertySchemaDao)
-            for key, element in src.properties.items()
-        },
-        creation_date_utc=src.creation_date_utc,
-    )
-
-
-def map_datasheet_definition_from_dao(
-    src: DatasheetDefinitionDao, mapper: Mapper
-) -> DatasheetDefinition:
-    return DatasheetDefinition(
-        id=src.id,
-        name=src.name,
-        properties={
-            key: mapper.map(element, ElementPropertySchema, ElementPropertySchemaDao)
-            for key, element in src.properties.items()
-        },
-        creation_date_utc=src.creation_date_utc,
-    )
-
-
 def map_element_property_schema_to_dao(
     src: ElementPropertySchema, mapper: Mapper
 ) -> ElementPropertySchemaDao:
@@ -724,7 +679,7 @@ def map_datasheet_definition_element_to_dao(
         unit_id=src.unit_id,
         is_collection=src.is_collection,
         name=src.name,
-        datasheet_def_id=src.datasheet_def_id,
+        project_definition_id=src.project_definition_id,
         order_index=src.order_index,
         default_properties={
             name: mapper.map(property_details, DatasheetDefinitionElementPropertyDao)
@@ -743,7 +698,7 @@ def map_datasheet_definition_element_from_dao(
         unit_id=src.unit_id,
         is_collection=src.is_collection,
         name=src.name,
-        datasheet_def_id=src.datasheet_def_id,
+        project_definition_id=src.project_definition_id,
         order_index=src.order_index,
         default_properties={
             name: mapper.map(
@@ -785,7 +740,7 @@ def map_datasheet_definition_element_filter(
             "id": ("id", None),
             "unit_id": ("unit_id", None),
             "is_collection": ("is_collection", None),
-            "datasheet_def_id": ("datasheet_def_id", None),
+            "project_definition_id": ("project_definition_id", None),
             "order_index": ("order_index", None),
             "tags": ("tags", None),
             "creation_date_utc": ("creation_date_utc", None),
@@ -803,7 +758,7 @@ def map_datasheet_definition_label_collection_from_dao(
 ) -> LabelCollection:
     return LabelCollection(
         id=src.id,
-        datasheet_definition_id=src.datasheet_definition_id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
         attributes_schema=mapper.map_dict_values(
             src.attributes_schema, label_attribute_schema_dao_mappings.from_origin
@@ -816,7 +771,7 @@ def map_datasheet_definition_label_collection_to_dao(
 ) -> LabelCollectionDao:
     return LabelCollectionDao(
         id=src.id,
-        datasheet_definition_id=src.datasheet_definition_id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
         attributes_schema=mapper.map_dict_values(
             src.attributes_schema, label_attribute_schema_dao_mappings.to_origin
@@ -958,7 +913,7 @@ def map_datasheet_to_dao(src: Datasheet, mapper: Mapper) -> DatasheetDao:
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
-        datasheet_def_id=src.datasheet_def_id,
+        project_definition_id=src.project_definition_id,
         from_datasheet_id=src.from_datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )
@@ -969,7 +924,7 @@ def map_datasheet_from_dao(src: DatasheetDao, mapper: Mapper) -> Datasheet:
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
-        datasheet_def_id=src.datasheet_def_id,
+        project_definition_id=src.project_definition_id,
         from_datasheet_id=src.from_datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )
@@ -1057,7 +1012,7 @@ def map_datasheet_filter_to_dict(src: DatasheetFilter, mapper: Mapper) -> dict:
             "id": ("id", None),
             "name": ("name", None),
             "is_staged": ("is_staged", None),
-            "datasheet_def_id": ("datasheet_def_id", None),
+            "project_definition_id": ("project_definition_id", None),
             "from_datasheet_id": ("from_datasheet_id", None),
             "creation_date_utc": ("creation_date_utc", None),
         },
@@ -1289,7 +1244,7 @@ def map_label_collection_filter(src: LabelCollectionFilter, mapper: Mapper) -> d
         src.args,
         {
             "id": ("id", None),
-            "datasheet_definition_id": ("datasheet_definition_id", None),
+            "project_definition_id": ("project_definition_id", None),
             "name": ("name", None),
         },
     )
@@ -1438,3 +1393,13 @@ def map_report_rows_dict_from_dao(
         }
         for name, bucket in src.items()
     }
+
+
+def map_ressource_filter_to_dict(src: RessourceFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "id": ("id", None),
+            "user_id": ("user_id", None),
+        },
+    )

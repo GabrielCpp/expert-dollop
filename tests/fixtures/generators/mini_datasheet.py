@@ -13,8 +13,8 @@ class MiniDatasheet(DbFixtureGenerator):
         return self._db
 
     def generate(self):
-        datasheet_definition = self.db.add(
-            DatasheetDefinitionFactory(
+        project_definition = self.db.add(
+            ProjectDefinitionFactory(
                 name=f"datasheet_definition_a",
                 properties={
                     "conversion_factor": ElementPropertySchema(
@@ -27,7 +27,7 @@ class MiniDatasheet(DbFixtureGenerator):
 
         label_collection = self.db.add(
             LabelCollectionFactory(
-                datasheet_definition_id=datasheet_definition.id,
+                project_definition_id=project_definition.id,
                 name="abstract_product",
             )
         )
@@ -52,7 +52,7 @@ class MiniDatasheet(DbFixtureGenerator):
             DatasheetDefinitionElementFactory(
                 unit_id="inch",
                 is_collection=False,
-                datasheet_def_id=datasheet_definition.id,
+                project_definition_id=project_definition.id,
                 order_index=0,
                 name="single_element",
                 default_properties={
@@ -71,7 +71,7 @@ class MiniDatasheet(DbFixtureGenerator):
             DatasheetDefinitionElementFactory(
                 unit_id="inch",
                 is_collection=True,
-                datasheet_def_id=datasheet_definition.id,
+                project_definition_id=project_definition.id,
                 order_index=0,
                 name="collection_element",
                 default_properties={

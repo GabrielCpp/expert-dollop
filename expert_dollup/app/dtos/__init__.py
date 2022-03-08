@@ -1,4 +1,4 @@
-from .project_definition_dto import ProjectDefinitionDto
+from .project_definition_dto import ProjectDefinitionDto, ElementPropertySchemaDto
 from .project_definition_node_dto import (
     ProjectDefinitionNodeDto,
     ProjectDefinitionNodePageDto,
@@ -51,7 +51,6 @@ from .project_node_meta_dto import (
     ProjectNodeMetaStateDto,
 )
 from .formula_dto import FormulaExpressionDto, InputFormulaDto
-from .datasheet_definition_dto import DatasheetDefinitionDto, ElementPropertySchemaDto
 from .datasheet_definition_label_collection_dto import (
     LabelCollectionDto,
     CollectionAggregateDto,

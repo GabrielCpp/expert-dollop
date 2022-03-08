@@ -1,14 +1,8 @@
-from asyncio import run
 from pymongo import DESCENDING, ASCENDING
 from os import environ
-from urllib.parse import urlsplit, urlunsplit
-from motor.motor_asyncio import AsyncIOMotorClient
-from dotenv import load_dotenv
+from urllib.parse import urlsplit
 
-load_dotenv()
-u = urlsplit(environ["EXPERT_DOLLUP_DB_URL"])
-db_name = u.path.strip(" /")
-c = urlunsplit((u.scheme, u.netloc, "admin", u.query, u.fragment))
+version = "1"
 
 
 async def create_global_table(db):
@@ -52,7 +46,6 @@ async def create_project_tables(db):
 
 async def create_datasheet_tables(db):
     await db.create_collection("unit")
-    await db.create_collection("datasheet_definition")
     datasheet_definition_label = await db.create_collection(
         "datasheet_definition_label"
     )
@@ -69,9 +62,8 @@ async def create_report_tables(db):
     await db.create_collection("report_definition")
 
 
-async def upgrade():
-    client = AsyncIOMotorClient(str(c))
-    db = client.get_database(db_name)
+async def upgrade(db):
+    u = urlsplit(environ["DB_URL"])
 
     await create_global_table(db)
     await create_project_definition_tables(db)
@@ -85,6 +77,3 @@ async def upgrade():
         pwd=u.password,
         roles=["readWrite", "dbAdmin", "dbOwner"],
     )
-
-
-run(upgrade())

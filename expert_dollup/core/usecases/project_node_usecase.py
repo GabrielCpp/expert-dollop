@@ -3,30 +3,20 @@ from uuid import UUID
 from expert_dollup.core.domains.bounded_node import BoundedNode
 from expert_dollup.core.units import NodeValueValidation, NodeEventDispatcher
 from expert_dollup.core.builders import ProjectNodeSliceBuilder, ProjectTreeBuilder
-from expert_dollup.core.domains import (
-    ProjectNode,
-    ProjectNodeTree,
-    ProjectNodeFilter,
-    PrimitiveWithNoneUnion,
-    FieldUpdate,
-)
-from expert_dollup.infra.services import (
-    ProjectService,
-    ProjectNodeService,
-    ProjectNodeMetaService,
-)
+from expert_dollup.core.domains import *
+from expert_dollup.shared.database_services import CollectionService
 
 
 class ProjectNodeUseCase:
     def __init__(
         self,
-        project_service: ProjectService,
-        project_node_service: ProjectNodeService,
+        project_service: CollectionService[ProjectDetails],
+        project_node_service: CollectionService[ProjectNode],
         node_event_dispatcher: NodeEventDispatcher,
         node_value_validation: NodeValueValidation,
         project_node_slice_builder: ProjectNodeSliceBuilder,
         project_tree_builder: ProjectTreeBuilder,
-        project_node_meta: ProjectNodeMetaService,
+        project_node_meta: CollectionService[ProjectNodeMeta],
     ):
         self.project_service = project_service
         self.project_node_service = project_node_service

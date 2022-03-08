@@ -15,7 +15,7 @@ from expert_dollup.core.domains import *
 from expert_dollup.core.usecases import *
 from expert_dollup.core.builders import *
 from expert_dollup.core.logits import *
-from expert_dollup.infra.services import *
+
 
 router = APIRouter()
 
@@ -98,14 +98,16 @@ class MapProjectNodeMetaImportToDomain:
         if len(models) == 0:
             return
 
-        project_definition_node_service = injector.get(ProjectDefinitionNodeService)
+        project_definition_node_service = injector.get(
+            CollectionService[ProjectDefinitionNode]
+        )
         project_id = models[0].project_id
 
         for model in models:
             assert model.project_id == project_id
 
         if not project_id in self.node_by_project_id:
-            project_service = injector.get(ProjectService)
+            project_service = injector.get(CollectionService[ProjectDetails])
             project = await project_service.find_by_id(project_id)
             definitions = await project_definition_node_service.find_by(
                 ProjectDefinitionNodeFilter(project_def_id=project.project_def_id)
@@ -137,7 +139,7 @@ class InsertProjectWithRessourceAction:
         self, injector: Injector, ressource_specs: List[BaseModel], user: User
     ) -> None:
         ressource_service = injector.get(CollectionService[Ressource])
-        project_service = injector.get(ProjectService)
+        project_service = injector.get(CollectionService[ProjectDetails])
         mapper = injector.get(Mapper)
 
         for ressource_spec in ressource_specs:
@@ -195,11 +197,6 @@ class RecreateFormulaCacheDto(BaseModel):
 
 
 ressources = {
-    "/api/datasheet_definition": ImportRessource(
-        dto=DatasheetDefinitionDto,
-        domain=DatasheetDefinition,
-        usecase=DatasheetDefinitionUseCase,
-    ),
     "/api/datasheet": ImportRessource(
         dto=DatasheetImportDto,
         domain=Datasheet,
@@ -214,19 +211,19 @@ ressources = {
     "/api/label_collection": RessourceLoader(
         dto=LabelCollectionDto,
         domain=LabelCollection,
-        usecase=LabelCollectionService,
+        usecase=CollectionService[LabelCollection],
         method="insert_many",
     ),
     "/api/label": RessourceLoader(
         dto=LabelDto,
         domain=Label,
-        usecase=LabelService,
+        usecase=CollectionService[Label],
         method="insert_many",
     ),
     "/api/translation": RessourceLoader(
         dto=TranslationDto,
         domain=Translation,
-        usecase=TranslationService,
+        usecase=CollectionService[Translation],
         method="insert_many",
         perform_complex_mapping=DedupTranslations(),
     ),
@@ -254,7 +251,7 @@ ressources = {
     "/api/unit": RessourceLoader(
         dto=MeasureUnitDto,
         domain=MeasureUnit,
-        usecase=MeasureUnitService,
+        usecase=CollectionService[MeasureUnit],
         method="insert_many",
     ),
     "/api/report_definition": RessourceLoader(
@@ -272,7 +269,7 @@ ressources = {
     "node_meta": RessourceLoader(
         dto=ProjectNodeMetaImport,
         domain=ProjectNodeMeta,
-        usecase=ProjectNodeMetaService,
+        usecase=CollectionService[ProjectNodeMeta],
         method="insert_many",
         perform_complex_mapping=MapProjectNodeMetaImportToDomain(),
     ),

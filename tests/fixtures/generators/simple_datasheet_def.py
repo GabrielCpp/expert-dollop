@@ -2,6 +2,7 @@ from uuid import uuid4
 from faker import Faker
 from expert_dollup.core.domains import *
 from ..fake_db_helpers import FakeDb, DbFixtureGenerator
+from ..factories_domain import *
 
 
 class SimpleDatasheetDef(DbFixtureGenerator):
@@ -15,8 +16,7 @@ class SimpleDatasheetDef(DbFixtureGenerator):
         return self._db
 
     def generate(self):
-        datasheet_definition = DatasheetDefinition(
-            id=uuid4(),
+        project_definition = ProjectDefinitionFactory(
             name="".join(self.fake.words()),
             properties={
                 "price": ElementPropertySchema(
@@ -43,11 +43,11 @@ class SimpleDatasheetDef(DbFixtureGenerator):
             },
             creation_date_utc=self.fake.date_time(),
         )
-        self.db.add(datasheet_definition)
+        self.db.add(project_definition)
         self.db.add(
             DatasheetDefinitionElement(
                 id=uuid4(),
-                datasheet_def_id=datasheet_definition.id,
+                project_definition_id=project_definition.id,
                 unit_id="cube_meter",
                 is_collection=False,
                 order_index=0,
@@ -68,7 +68,7 @@ class SimpleDatasheetDef(DbFixtureGenerator):
             ),
             DatasheetDefinitionElement(
                 id=uuid4(),
-                datasheet_def_id=datasheet_definition.id,
+                project_definition_id=project_definition.id,
                 unit_id="cube_meter",
                 is_collection=False,
                 order_index=1,
@@ -89,7 +89,7 @@ class SimpleDatasheetDef(DbFixtureGenerator):
             ),
             DatasheetDefinitionElement(
                 id=uuid4(),
-                datasheet_def_id=datasheet_definition.id,
+                project_definition_id=project_definition.id,
                 unit_id="square_foot",
                 is_collection=True,
                 order_index=2,
@@ -112,7 +112,7 @@ class SimpleDatasheetDef(DbFixtureGenerator):
 
         order_form_category = LabelCollection(
             id=uuid4(),
-            datasheet_definition_id=datasheet_definition.id,
+            project_definition_id=project_definition.id,
             name="orderformcategory",
         )
 
@@ -120,7 +120,7 @@ class SimpleDatasheetDef(DbFixtureGenerator):
 
         product_category = LabelCollection(
             id=uuid4(),
-            datasheet_definition_id=datasheet_definition.id,
+            project_definition_id=project_definition.id,
             name="_".join(self.fake.words()),
         )
 
@@ -146,7 +146,7 @@ class SimpleDatasheetDef(DbFixtureGenerator):
             self.db.add(
                 Translation(
                     id=uuid4(),
-                    ressource_id=datasheet_definition.id,
+                    ressource_id=project_definition.id,
                     locale="fr_CA",
                     name="_".join(words),
                     scope=label.label_collection_id,
@@ -158,7 +158,7 @@ class SimpleDatasheetDef(DbFixtureGenerator):
             self.db.add(
                 Translation(
                     id=uuid4(),
-                    ressource_id=datasheet_definition.id,
+                    ressource_id=project_definition.id,
                     locale="en_US",
                     name="_".join(words),
                     scope=label.label_collection_id,

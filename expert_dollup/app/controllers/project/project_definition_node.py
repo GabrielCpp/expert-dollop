@@ -14,8 +14,7 @@ from expert_dollup.core.domains import (
 )
 from expert_dollup.core.usecases import ProjectDefinitionNodeUseCase
 from expert_dollup.shared.database_services import Page
-from expert_dollup.infra.services import ProjectDefinitionNodeService
-from expert_dollup.core.exceptions import RessourceNotFound
+
 
 router = APIRouter()
 
@@ -68,9 +67,7 @@ async def replace_project_definition_node(
 
 @router.delete("/project_definition/{project_def_id}/node/{id}")
 async def delete_project_definition_node(
-    id: UUID,
-    usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
-    request_handler=Depends(Inject(RequestHandler)),
+    id: UUID, usecase=Depends(Inject(ProjectDefinitionNodeUseCase))
 ):
     await usecase.delete_by_id(id)
 

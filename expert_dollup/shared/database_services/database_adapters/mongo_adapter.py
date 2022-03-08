@@ -118,20 +118,13 @@ class MongoConnection(DbConnection):
 
     async def truncate_db(self, names: Optional[List[str]] = None):
         if names is None:
-            db = self._client.get_database(self.db_name)
-            for name in await db.list_collection_names():
-                await db.get_collection(name).delete_many({})
+            names = [c.name for c in self.collections.values()]
 
-        else:
-            db = self._client.get_database(self.db_name)
+        db = self._client.get_database(self.db_name)
 
-            for name in names:
-                collection = db.get_collection(name)
-                await collection.delete_many()
-
-    async def drop_db(self):
-        self._client.drop_database(self.db_name)
-        self._client.get_database(self.db_name)
+        for name in names:
+            collection = db.get_collection(name)
+            await collection.delete_many({})
 
     async def connect(self) -> None:
         pass

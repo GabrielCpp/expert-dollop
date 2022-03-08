@@ -17,7 +17,7 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
 
     async def find_children(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None
-    ) -> Awaitable[ProjectNode]:
+    ) -> ProjectNode:
         builder = self.get_builder().where("project_id", "==", project_id)
 
         if not level is None:
@@ -30,7 +30,7 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
 
         return sorted(results, key=lambda x: len(x.path))
 
-    async def remove_collection(self, container: ProjectNode) -> Awaitable:
+    async def remove_collection(self, container: ProjectNode) -> None:
         builder = (
             self.get_builder()
             .where("project_id", "==", container.project_id)
@@ -39,9 +39,7 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
 
         await self.delete_by(builder)
 
-    async def find_root_sections(
-        self, project_id: UUID
-    ) -> Awaitable[List[ProjectDefinitionNode]]:
+    async def find_root_sections(self, project_id: UUID) -> List[ProjectDefinitionNode]:
         builder = (
             self.get_builder()
             .where("project_id", "==", project_id)
@@ -53,7 +51,7 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
 
     async def find_root_section_nodes(
         self, project_id: UUID, root_section_id: UUID
-    ) -> Awaitable[List[ProjectDefinitionNode]]:
+    ) -> List[ProjectDefinitionNode]:
         builder = (
             self.get_builder()
             .where("project_id", "==", project_id)
@@ -65,7 +63,7 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
 
     async def find_form_content(
         self, project_id: UUID, form_id: UUID
-    ) -> Awaitable[List[ProjectDefinitionNode]]:
+    ) -> List[ProjectDefinitionNode]:
         builder = (
             self.get_builder()
             .where("project_id", "==", project_id)
@@ -84,7 +82,7 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
 
     async def find_node_on_path_by_type(
         self, project_id: UUID, start_with_path: List[UUID], type_id: UUID
-    ) -> Awaitable[List[ProjectNode]]:
+    ) -> List[ProjectNode]:
         assert len(start_with_path) >= 1, "Cannot start with an path"
 
         by_id_query = (
