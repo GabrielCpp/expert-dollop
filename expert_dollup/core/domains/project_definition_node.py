@@ -108,7 +108,7 @@ class NodeConfig:
 @dataclass
 class ProjectDefinitionNode:
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     name: str
     is_collection: bool
     instanciate_by_default: bool
@@ -125,7 +125,7 @@ class ProjectDefinitionNode:
 
 class ProjectDefinitionNodeFilter(QueryFilter):
     id: Optional[UUID]
-    project_def_id: Optional[UUID]
+    project_definition_id: Optional[UUID]
     name: Optional[str]
     is_collection: Optional[bool]
     instanciate_by_default: Optional[bool]

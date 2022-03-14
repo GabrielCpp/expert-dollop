@@ -40,19 +40,19 @@ class FormulaResolver:
         self.logger = logger.create(__name__)
 
     async def parse_many(self, formula_expressions: List[FormulaExpression]) -> Formula:
-        project_def_id = formula_expressions[0].project_def_id
+        project_definition_id = formula_expressions[0].project_definition_id
         for formula_expression in formula_expressions:
-            if formula_expression.project_def_id != project_def_id:
+            if formula_expression.project_definition_id != project_definition_id:
                 raise Exception(
-                    "When importing a batch of formula they must all have same project_def_id"
+                    "When importing a batch of formula they must all have same project_definition_id"
                 )
 
         formulas_id_by_name = await self.formula_service.get_formulas_id_by_name(
-            project_def_id
+            project_definition_id
         )
         fields_id_by_name = (
             await self.project_definition_node_service.get_fields_id_by_name(
-                project_def_id
+                project_definition_id
             )
         )
 
@@ -92,7 +92,7 @@ class FormulaResolver:
         formulas = [
             Formula(
                 id=formula_expression.id,
-                project_def_id=formula_expression.project_def_id,
+                project_definition_id=formula_expression.project_definition_id,
                 attached_to_type_id=formula_expression.attached_to_type_id,
                 name=formula_expression.name,
                 expression=formula_expression.expression,
@@ -134,11 +134,11 @@ class FormulaResolver:
                 raise Exception(f"Function {name} not found in [{fn_names}]")
 
         formulas_id_by_name = await self.formula_service.get_formulas_id_by_name(
-            formula_expression.project_def_id, visitor.var_names
+            formula_expression.project_definition_id, visitor.var_names
         )
         fields_id_by_name = (
             await self.project_definition_node_service.get_fields_id_by_name(
-                formula_expression.project_def_id, visitor.var_names
+                formula_expression.project_definition_id, visitor.var_names
             )
         )
         unkowns_names = (
@@ -155,7 +155,7 @@ class FormulaResolver:
 
         formula = Formula(
             id=formula_expression.id,
-            project_def_id=formula_expression.project_def_id,
+            project_definition_id=formula_expression.project_definition_id,
             attached_to_type_id=formula_expression.attached_to_type_id,
             name=formula_expression.name,
             expression=formula_expression.expression,
@@ -178,7 +178,7 @@ class FormulaResolver:
         return [
             StagedFormula(
                 id=formula.id,
-                project_def_id=formula.project_def_id,
+                project_definition_id=formula.project_definition_id,
                 attached_to_type_id=formula.attached_to_type_id,
                 name=formula.name,
                 expression=formula.expression,
@@ -190,43 +190,47 @@ class FormulaResolver:
             for formula in formulas
         ]
 
-    async def build_staged_formulas(self, project_def_id: UUID) -> StagedFormulas:
+    async def build_staged_formulas(
+        self, project_definition_id: UUID
+    ) -> StagedFormulas:
         formulas = await self.formula_service.find_by(
-            FormulaFilter(project_def_id=project_def_id)
+            FormulaFilter(project_definition_id=project_definition_id)
         )
 
         return FormulaResolver.stage_formulas(formulas)
 
     async def refresh_staged_formulas_cache(
-        self, project_def_id: UUID
+        self, project_definition_id: UUID
     ) -> StagedFormulas:
-        staged_formulas = await self.build_staged_formulas(project_def_id)
+        staged_formulas = await self.build_staged_formulas(project_definition_id)
         await self.stage_formulas_storage.save(
-            StagedFormulasKey(project_def_id), staged_formulas
+            StagedFormulasKey(project_definition_id), staged_formulas
         )
         return staged_formulas
 
     @log_execution_time_async
-    async def get_staged_formulas(self, project_def_id: UUID) -> StagedFormulas:
+    async def get_staged_formulas(self, project_definition_id: UUID) -> StagedFormulas:
         try:
             staged_formulas = await self.stage_formulas_storage.load(
-                StagedFormulasKey(project_def_id)
+                StagedFormulasKey(project_definition_id)
             )
         except RessourceNotFound:
-            staged_formulas = await self.refresh_staged_formulas_cache(project_def_id)
+            staged_formulas = await self.refresh_staged_formulas_cache(
+                project_definition_id
+            )
 
         return staged_formulas
 
     @log_execution_time_async
     async def compute_all_project_formula(
-        self, project_id: UUID, project_def_id: UUID
+        self, project_id: UUID, project_definition_id: UUID
     ) -> FormulaInjector:
         injector = FormulaInjector()
 
         with StopWatch(self.logger, "Fetching formula data"):
             nodes, staged_formulas = await gather(
                 self.project_node_service.get_all_fields(project_id),
-                self.get_staged_formulas(project_def_id),
+                self.get_staged_formulas(project_definition_id),
             )
 
         formula_by_id = {formula.id: formula for formula in staged_formulas}

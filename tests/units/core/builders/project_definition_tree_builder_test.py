@@ -10,7 +10,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
     nodes = [
         ProjectDefinitionNode(
             id=UUID("ab94e29a-33c6-42c1-9296-582769b19153"),
-            project_def_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
+            project_definition_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
             name="root_a_subsection_1_form_2",
             is_collection=False,
             instanciate_by_default=True,
@@ -34,7 +34,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
         ),
         ProjectDefinitionNode(
             id=UUID("372b51fc-e2f1-4ec5-a97a-17a03c81e9b3"),
-            project_def_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
+            project_definition_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
             name="root_a_subsection_0_form_0",
             is_collection=True,
             instanciate_by_default=True,
@@ -58,7 +58,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
         ),
         ProjectDefinitionNode(
             id=UUID("40178511-d737-4da9-be83-7da37afa7a3d"),
-            project_def_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
+            project_definition_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
             name="root_a_subsection_0_form_2",
             is_collection=False,
             instanciate_by_default=True,
@@ -82,7 +82,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
         ),
         ProjectDefinitionNode(
             id=UUID("ca9217a1-44f1-4cf2-96f0-dd76bfadf341"),
-            project_def_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
+            project_definition_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
             name="root_a_subsection_1_form_0",
             is_collection=True,
             instanciate_by_default=True,
@@ -106,7 +106,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
         ),
         ProjectDefinitionNode(
             id=UUID("3dde424f-8d33-49fc-bc6e-68a9a212556e"),
-            project_def_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
+            project_definition_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
             name="root_a_subsection_1_form_1",
             is_collection=False,
             instanciate_by_default=True,
@@ -130,7 +130,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
         ),
         ProjectDefinitionNode(
             id=UUID("a5263556-bacf-4f5f-9604-787428ce1b6e"),
-            project_def_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
+            project_definition_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
             name="root_a_subsection_0_form_1",
             is_collection=False,
             instanciate_by_default=True,
@@ -154,7 +154,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
         ),
         ProjectDefinitionNode(
             id=UUID("25062ca9-64ad-4926-94ed-862c19229142"),
-            project_def_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
+            project_definition_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
             name="a",
             is_collection=False,
             instanciate_by_default=True,
@@ -175,7 +175,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
         ),
         ProjectDefinitionNode(
             id=UUID("d1d3a783-af73-4c3a-842d-e1cc1cf3b2bc"),
-            project_def_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
+            project_definition_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
             name="root_a_subsection_1",
             is_collection=False,
             instanciate_by_default=True,
@@ -196,7 +196,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
         ),
         ProjectDefinitionNode(
             id=UUID("a844ad25-3d6f-4c5e-a824-8b200e5befc2"),
-            project_def_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
+            project_definition_id=UUID("80abeca9-bf7a-4d11-a565-94e834485a17"),
             name="root_a_subsection_0",
             is_collection=True,
             instanciate_by_default=True,

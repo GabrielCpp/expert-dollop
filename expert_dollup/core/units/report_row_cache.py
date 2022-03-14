@@ -46,7 +46,7 @@ class ReportRowCache:
         self, report_definition: ReportDefinition
     ) -> ReportRowsCache:
         key = ReportRowKey(
-            project_def_id=report_definition.project_def_id,
+            project_definition_id=report_definition.project_definition_id,
             report_definition_id=report_definition.id,
         )
 
@@ -75,11 +75,11 @@ class ReportRowCache:
         self, report_definition: ReportDefinition
     ) -> ReportCache:
         project_definition = await self.project_definition_service.find_by_id(
-            report_definition.project_def_id
+            report_definition.project_definition_id
         )
 
         project_definition = await self.project_definition_service.find_by_id(
-            project_definition.project_definition_id
+            project_definition.id
         )
 
         label_collections = await self.label_collection_service.find_by(

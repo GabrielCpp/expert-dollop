@@ -48,45 +48,48 @@ class ProjectDefinitionNodeUseCase:
         return result
 
     async def find_project_nodes(
-        self, project_def_id: UUID, limit: int, next_page_token: Optional[str] = None
+        self,
+        project_definition_id: UUID,
+        limit: int,
+        next_page_token: Optional[str] = None,
     ) -> Awaitable[Page[ProjectDefinitionNode]]:
         results = await self.project_definition_node_paginator.find_page(
-            ProjectDefinitionNodeFilter(project_def_id=project_def_id),
+            ProjectDefinitionNodeFilter(project_definition_id=project_definition_id),
             limit,
             next_page_token,
         )
         return results
 
     async def find_root_sections(
-        self, project_def_id: UUID
+        self, project_definition_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
         root_sections = await self.project_definition_node_service.find_root_sections(
-            project_def_id
+            project_definition_id
         )
         tree = self.project_definition_tree_builder.build(root_sections)
         return tree
 
     async def find_root_section_nodes(
-        self, project_def_id: UUID, root_section_id: UUID
+        self, project_definition_id: UUID, root_section_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
         nodes = await self.project_definition_node_service.find_root_section_nodes(
-            project_def_id, root_section_id
+            project_definition_id, root_section_id
         )
         tree = self.project_definition_tree_builder.build(nodes)
         return tree
 
     async def find_form_content(
-        self, project_def_id: UUID, form_id: UUID
+        self, project_definition_id: UUID, form_id: UUID
     ) -> Awaitable[List[ProjectDefinitionNode]]:
         form_definitions = await self.project_definition_node_service.find_form_content(
-            project_def_id, form_id
+            project_definition_id, form_id
         )
         tree = self.project_definition_tree_builder.build(form_definitions)
         return tree
 
     async def _ensure_node_is_valid(self, domain: ProjectDefinitionNode):
         has_project_def = await self.project_definition_service.has(
-            domain.project_def_id
+            domain.project_definition_id
         )
 
         if has_project_def is False:

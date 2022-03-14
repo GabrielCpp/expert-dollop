@@ -19,7 +19,7 @@ class ProjectDefinitionNodeFactory(factory.Factory):
         model = ProjectDefinitionNode
 
     id = factory.Faker("pyuuid4")
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"node{n}")
     is_collection = False
     instanciate_by_default = True
@@ -169,7 +169,7 @@ class ReportDefinitionFactory(factory.Factory):
         model = ReportDefinition
 
     id = factory.Faker("pyuuid4")
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"report_name_{n}")
     structure = factory.SubFactory(ReportStructureFactory)
 
@@ -216,7 +216,7 @@ class TranslationFactory(factory.Factory):
 
     id = factory.Faker("pyuuid4")
     ressource_id = factory.Faker("pyuuid4")
-    locale = "fr_CA"
+    locale = "fr-CA"
     scope = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"translation_{n}")
     value = factory.Sequence(lambda n: f"translation_value_{n}")
@@ -230,6 +230,6 @@ class ProjectDetailsFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"project{n}")
     is_staged = False
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     datasheet_id = factory.Faker("pyuuid4")
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)

@@ -22,4 +22,4 @@ async def resolve_find_root_section_nodes(
     info: GraphQLResolveInfo,
     get_project_def_reports_definitions: callable,
 ):
-    return await get_project_def_reports_definitions(info, parent.project_def_id)
+    return await get_project_def_reports_definitions(info, parent.project_definition_id)

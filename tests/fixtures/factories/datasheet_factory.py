@@ -222,7 +222,7 @@ class DatasheetSeed:
     properties: Dict[str, PropertyTypeUnion]
     element_seeds: Dict[str, ElementSeed]
     collection_seeds: Dict[str, CollectionSeed]
-    locales: List[str] = field(default_factory=lambda: ["fr_CA", "en_US"])
+    locales: List[str] = field(default_factory=lambda: ["fr-CA", "en-US"])
     name: str = "test"
     formulas: Optional[List[FormulaLike]] = None
 
@@ -252,7 +252,7 @@ class DatasheetInstanceFactory:
         }
 
         datasheet = Datasheet(
-            id=make_uuid(datasheet_seed.name),
+            id=make_uuid(f"{project_definition.name}-default-datasheet"),
             is_staged=False,
             project_definition_id=project_definition.id,
             name=datasheet_seed.name,

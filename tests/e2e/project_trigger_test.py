@@ -7,7 +7,7 @@ from ..fixtures import *
 
 async def create_project(ac, fake_db: FakeDb):
     new_project = NewProjectDetailsDtoFactory(
-        project_def_id=fake_db.get_only_one(ProjectDefinition).id
+        project_definition_id=fake_db.get_only_one(ProjectDefinition).id
     )
     response = await ac.post("/api/project", data=new_project.json())
     assert response.status_code == 200

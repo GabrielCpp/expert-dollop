@@ -15,7 +15,7 @@ class SimpleProject(DbFixtureGenerator):
     def db(self) -> FakeDb:
         return self._db
 
-    def generate_project_node_definition(self, project_def_id: UUID) -> None:
+    def generate_project_node_definition(self, project_definition_id: UUID) -> None:
         labels = ["root", "subsection", "form", "section", "field"]
 
         def generate_child_node(
@@ -38,7 +38,7 @@ class SimpleProject(DbFixtureGenerator):
 
                 sub_node = ProjectDefinitionNodeFactory(
                     name=name,
-                    project_def_id=project_def_id,
+                    project_definition_id=project_definition_id,
                     path=parents,
                     is_collection=index == 0,
                     instanciate_by_default=True,
@@ -52,7 +52,7 @@ class SimpleProject(DbFixtureGenerator):
 
         root_a = ProjectDefinitionNodeFactory(
             name="root_a",
-            project_def_id=project_def_id,
+            project_definition_id=project_definition_id,
             path=[],
             is_collection=False,
             instanciate_by_default=True,
@@ -70,7 +70,7 @@ class SimpleProject(DbFixtureGenerator):
 
         root_b = ProjectDefinitionNodeFactory(
             name="root_b",
-            project_def_id=project_def_id,
+            project_definition_id=project_definition_id,
             path=[],
             is_collection=True,
             instanciate_by_default=False,
@@ -99,7 +99,7 @@ class SimpleProject(DbFixtureGenerator):
                 TranslationFactory(
                     ressource_id=project_definition.id,
                     scope=project_node_definition.id,
-                    locale="fr_CA",
+                    locale="fr-CA",
                     name=project_node_definition.config.translations.label,
                 )
             )
@@ -108,7 +108,7 @@ class SimpleProject(DbFixtureGenerator):
                 TranslationFactory(
                     ressource_id=project_definition.id,
                     scope=project_node_definition.id,
-                    locale="fr_CA",
+                    locale="fr-CA",
                     name=project_node_definition.config.translations.help_text_name,
                 )
             )
@@ -117,7 +117,7 @@ class SimpleProject(DbFixtureGenerator):
                 TranslationFactory(
                     ressource_id=project_definition.id,
                     scope=project_node_definition.id,
-                    locale="en_US",
+                    locale="en-US",
                     name=project_node_definition.config.translations.label,
                 )
             )
@@ -126,7 +126,7 @@ class SimpleProject(DbFixtureGenerator):
                 TranslationFactory(
                     ressource_id=project_definition.id,
                     scope=project_node_definition.id,
-                    locale="en_US",
+                    locale="en-US",
                     name=project_node_definition.config.translations.help_text_name,
                 )
             )
@@ -139,7 +139,7 @@ class SimpleProject(DbFixtureGenerator):
                         TranslationFactory(
                             ressource_id=project_definition.id,
                             scope=project_node_definition.id,
-                            locale="en_US",
+                            locale="en-US",
                             name=option.label,
                         )
                     )
@@ -148,7 +148,7 @@ class SimpleProject(DbFixtureGenerator):
                         TranslationFactory(
                             ressource_id=project_definition.id,
                             scope=project_node_definition.id,
-                            locale="en_US",
+                            locale="en-US",
                             name=option.help_text,
                         )
                     )

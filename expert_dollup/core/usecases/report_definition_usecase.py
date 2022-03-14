@@ -29,7 +29,7 @@ class ReportDefinitionUseCase:
         )
         await self.report_definition_row_cache_service.save(
             ReportRowKey(
-                project_def_id=report_definition.project_def_id,
+                project_definition_id=report_definition.project_definition_id,
                 report_definition_id=report_definition_id,
             ),
             report_cached_rows,
@@ -39,9 +39,9 @@ class ReportDefinitionUseCase:
         await self.report_definition_service.insert(report_definition)
 
     async def find_all_reports_definitions(
-        self, project_def_id: UUID
+        self, project_definition_id: UUID
     ) -> List[ReportDefinition]:
         report_definitions = await self.report_definition_service.find_by(
-            ReportDefinitionFilter(project_def_id=project_def_id)
+            ReportDefinitionFilter(project_definition_id=project_definition_id)
         )
         return report_definitions

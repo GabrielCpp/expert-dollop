@@ -15,13 +15,13 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
         domain = ProjectDefinitionNode
 
     async def get_fields_id_by_name(
-        self, project_def_id: UUID, names: Optional[List[str]] = None
+        self, project_definition_id: UUID, names: Optional[List[str]] = None
     ) -> Dict[str, UUID]:
 
         query = (
             self.get_builder()
             .select("id", "name")
-            .where("project_def_id", "==", project_def_id)
+            .where("project_definition_id", "==", project_definition_id)
         )
 
         if not names is None:
@@ -50,16 +50,18 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
         value = await self.find_by_id(id)
         query = (
             self.get_builder()
-            .where("project_def_id", "==", value.project_def_id)
+            .where("project_definition_id", "==", value.project_definition_id)
             .where("path", "startwiths", join_uuid_path(value.subpath))
         )
 
         await self.delete_by(query)
 
     async def find_children(
-        self, project_def_id: UUID, path: List[UUID]
+        self, project_definition_id: UUID, path: List[UUID]
     ) -> List[ProjectDefinitionNode]:
-        query = self.get_builder().where("project_def_id", "==", project_def_id)
+        query = self.get_builder().where(
+            "project_definition_id", "==", project_definition_id
+        )
 
         if len(path) > 0:
             query.where("path", "startwiths", join_uuid_path(path))
@@ -69,12 +71,12 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
         return sorted(results, key=lambda x: len(x.path))
 
     async def find_root_sections(
-        self, project_def_id: UUID
+        self, project_definition_id: UUID
     ) -> List[ProjectDefinitionNode]:
         query = (
             self.get_builder()
-            .where("project_def_id", "==", project_def_id)
-            .where("display_query_internal_id", "==", project_def_id)
+            .where("project_definition_id", "==", project_definition_id)
+            .where("display_query_internal_id", "==", project_definition_id)
             .orderby(("level", "desc"))
         )
 
@@ -83,11 +85,11 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
         return results
 
     async def find_root_section_nodes(
-        self, project_def_id: UUID, root_section_id: UUID
+        self, project_definition_id: UUID, root_section_id: UUID
     ) -> List[ProjectDefinitionNode]:
         query = (
             self.get_builder()
-            .where("project_def_id", "==", project_def_id)
+            .where("project_definition_id", "==", project_definition_id)
             .where("display_query_internal_id", "==", root_section_id)
             .orderby(("level", "desc"))
         )
@@ -97,11 +99,11 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
         return results
 
     async def find_form_content(
-        self, project_def_id: UUID, form_id: UUID
+        self, project_definition_id: UUID, form_id: UUID
     ) -> List[ProjectDefinitionNode]:
         query = (
             self.get_builder()
-            .where("project_def_id", "==", project_def_id)
+            .where("project_definition_id", "==", project_definition_id)
             .where("display_query_internal_id", "==", form_id)
             .orderby(("level", "desc"))
         )

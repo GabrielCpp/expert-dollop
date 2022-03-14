@@ -58,7 +58,7 @@ async def resolve_create_project(
 
 
 @query.field("findProjectDetails")
-@inject_graphql_route(find_project_details)
+@inject_graphql_route(find_project_details, ["project_id"])
 @convert_kwargs_to_snake_case
 async def resolve_create_project(
     _: Any,

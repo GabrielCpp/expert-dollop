@@ -135,7 +135,7 @@ value_type_lookup_map = {
 
 class ProjectDefinitionNodeDto(CamelModel):
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     name: str
     is_collection: bool
     instanciate_by_default: bool

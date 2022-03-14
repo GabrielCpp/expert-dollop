@@ -21,7 +21,7 @@ class ProjectWithTrigger(DbFixtureGenerator):
 
         root_a = ProjectDefinitionNodeFactory(
             name="root_a",
-            project_def_id=project_definition.id,
+            project_definition_id=project_definition.id,
             path=[],
             is_collection=False,
             instanciate_by_default=True,
@@ -45,7 +45,7 @@ class ProjectWithTrigger(DbFixtureGenerator):
 
         root_b = ProjectDefinitionNodeFactory(
             name="root_b",
-            project_def_id=project_definition.id,
+            project_definition_id=project_definition.id,
             path=[],
             is_collection=True,
             instanciate_by_default=False,
@@ -85,7 +85,7 @@ class ProjectWithTrigger(DbFixtureGenerator):
 
         node = ProjectDefinitionNodeFactory(
             name=name,
-            project_def_id=parent.project_def_id,
+            project_definition_id=parent.project_definition_id,
             path=parent.subpath,
             is_collection=is_collection,
             instanciate_by_default=True,
@@ -109,7 +109,7 @@ class ProjectWithTrigger(DbFixtureGenerator):
 
         node = ProjectDefinitionNodeFactory(
             name=name,
-            project_def_id=parent.project_def_id,
+            project_definition_id=parent.project_definition_id,
             path=parent.subpath,
             is_collection=is_collection,
             instanciate_by_default=True,
@@ -140,7 +140,7 @@ class ProjectWithTrigger(DbFixtureGenerator):
 
         node = ProjectDefinitionNodeFactory(
             name=name,
-            project_def_id=parent.project_def_id,
+            project_definition_id=parent.project_definition_id,
             path=parent.subpath,
             is_collection=False,
             instanciate_by_default=True,
@@ -168,7 +168,7 @@ class ProjectWithTrigger(DbFixtureGenerator):
 
         node = ProjectDefinitionNodeFactory(
             name=name,
-            project_def_id=parent.project_def_id,
+            project_definition_id=parent.project_definition_id,
             path=parent.subpath,
             is_collection=False,
             instanciate_by_default=True,

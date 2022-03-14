@@ -259,7 +259,7 @@ def map_project_definition_node_from_dto(
 ) -> ProjectDefinitionNode:
     return ProjectDefinitionNode(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
@@ -278,7 +278,7 @@ def map_project_definition_node_to_dto(
 ) -> ProjectDefinitionNodeDto:
     return ProjectDefinitionNodeDto(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
@@ -328,7 +328,7 @@ def map_project_input_from_dto(
         id=mapper.get(IdProvider).uuid4(),
         name=src.name,
         is_staged=False,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         datasheet_id=src.datasheet_id,
         creation_date_utc=mapper.get(Clock).utcnow(),
     )
@@ -341,7 +341,7 @@ def map_project_details_from_dto(
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         datasheet_id=src.datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )
@@ -354,7 +354,7 @@ def map_project_details_to_dto(
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         datasheet_id=src.datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )
@@ -541,7 +541,7 @@ def map_input_formula_expression_from_dto(
 ) -> FormulaExpression:
     return FormulaExpression(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
@@ -553,7 +553,7 @@ def map_formula_expression_to_dto(
 ) -> FormulaExpressionDto:
     return FormulaExpressionDto(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
@@ -565,7 +565,7 @@ def map_formula_expression_from_dto(
 ) -> FormulaExpression:
     return FormulaExpression(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
@@ -575,7 +575,7 @@ def map_formula_expression_from_dto(
 def map_formula_to_expression_dto(src: Formula, mapper: Mapper) -> FormulaExpressionDto:
     return FormulaExpressionDto(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
@@ -871,7 +871,7 @@ def map_report_definition_from_dto(
 ) -> ReportDefinition:
     return ReportDefinition(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
         structure=mapper.map(src.structure, ReportStructure),
     )
@@ -882,7 +882,7 @@ def map_report_definition_to_dto(
 ) -> ReportDefinitionDto:
     return ReportDefinitionDto(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
         structure=mapper.map(src.structure, ReportStructureDto),
     )

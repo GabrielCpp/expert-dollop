@@ -40,7 +40,7 @@ def report_seed() -> ReportSeed:
     )
 
     report_definition = ReportDefinitionFactory(
-        project_def_id=project_fixture.project_definition.id
+        project_definition_id=project_fixture.project_definition.id
     )
 
     element_def = next(
@@ -106,7 +106,7 @@ async def test_given_row_cache_should_produce_correct_report(
 
     formula_resolver.setup(
         lambda x: x.compute_all_project_formula(
-            project_fixture.project.id, report_definition.project_def_id
+            project_fixture.project.id, report_definition.project_definition_id
         ),
         returns_async=FormulaInjector().add_units(
             FrozenUnit(i) for i in project_fixture.unit_instances
@@ -182,7 +182,7 @@ async def test_given_row_cache_should_produce_correct_report(
                                     "00000000-0000-0000-0000-000000000000"
                                 ),
                                 "original_datasheet_id": UUID(
-                                    "098f6bcd-4621-d373-cade-4e832627b4f6"
+                                    "0fc7fe86-ab22-a17d-6037-9fccc7d7f8f8"
                                 ),
                             },
                             "formula": {
@@ -222,5 +222,5 @@ async def test_given_row_cache_should_produce_correct_report(
             )
         ],
         summaries=[ComputedValue(label="subtotal", value=Decimal("24.24"), unit="$")],
-        creation_date_utc=datetime(2000, 4, 3, 1, 1, 1, 0, tzinfo=timezone.utc),
+        creation_date_utc=datetime(2000, 4, 3, 1, 1, 1, tzinfo=timezone.utc),
     )

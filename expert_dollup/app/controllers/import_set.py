@@ -110,7 +110,9 @@ class MapProjectNodeMetaImportToDomain:
             project_service = injector.get(CollectionService[ProjectDetails])
             project = await project_service.find_by_id(project_id)
             definitions = await project_definition_node_service.find_by(
-                ProjectDefinitionNodeFilter(project_def_id=project.project_def_id)
+                ProjectDefinitionNodeFilter(
+                    project_definition_id=project.project_definition_id
+                )
             )
 
             self.node_by_project_id[project_id] = {
@@ -192,7 +194,7 @@ class DedupTranslations:
 
 
 class RecreateFormulaCacheDto(BaseModel):
-    project_def_id: UUID
+    project_definition_id: UUID
     project_id: UUID
 
 

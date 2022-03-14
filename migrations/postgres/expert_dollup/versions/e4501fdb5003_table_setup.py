@@ -66,7 +66,7 @@ def create_project_definition_tables():
     op.create_table(
         "project_definition_node",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("project_def_id", postgresql.UUID(), nullable=False),
+        Column("project_definition_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
         Column("is_collection", Boolean, nullable=False),
         Column("instanciate_by_default", Boolean, nullable=False),
@@ -81,9 +81,9 @@ def create_project_definition_tables():
     )
 
     op.create_index(
-        op.f("ix_project_definition_node_project_def_id_path"),
+        op.f("ix_project_definition_node_project_definition_id_path"),
         "project_definition_node",
-        ["project_def_id", "path"],
+        ["project_definition_id", "path"],
     )
 
     op.create_index(
@@ -95,14 +95,14 @@ def create_project_definition_tables():
     op.create_index(
         op.f("ix_project_definition_node_def_id_name"),
         "project_definition_node",
-        ["project_def_id", "name"],
+        ["project_definition_id", "name"],
         unique=True,
     )
 
     op.create_table(
         "project_definition_formula",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("project_def_id", postgresql.UUID(), nullable=False),
+        Column("project_definition_id", postgresql.UUID(), nullable=False),
         Column("attached_to_type_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
         Column("expression", String, nullable=False),
@@ -112,7 +112,7 @@ def create_project_definition_tables():
     op.create_index(
         op.f("ix_project_definition_formula_def_id_name"),
         "project_definition_formula",
-        ["project_def_id", "name"],
+        ["project_definition_id", "name"],
         unique=True,
     )
 
@@ -123,7 +123,7 @@ def create_project_tables():
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("name", String, nullable=False),
         Column("is_staged", Boolean, nullable=False),
-        Column("project_def_id", postgresql.UUID(), nullable=False),
+        Column("project_definition_id", postgresql.UUID(), nullable=False),
         Column("datasheet_id", postgresql.UUID(), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
@@ -272,7 +272,7 @@ def create_report_tables():
     op.create_table(
         "report_definition",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("project_def_id", postgresql.UUID(), nullable=False),
+        Column("project_definition_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
         Column("structure", postgresql.JSON(), nullable=False),
     )

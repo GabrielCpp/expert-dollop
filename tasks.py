@@ -204,7 +204,7 @@ def db_truncate(c):
 @task(name="upload-base-project")
 def upload_base_project(c):
     cwd = getcwd()
-    db_truncate(c, poetry=True)
+    db_truncate(c)
     load_default_users(c)
     token = asyncio.run(get_token("testuser"))
     c.run(

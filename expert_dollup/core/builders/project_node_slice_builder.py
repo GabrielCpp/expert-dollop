@@ -28,7 +28,7 @@ class ProjectNodeSliceBuilder:
                 id=project_details.id,
                 project_id=project_details.id,
                 type_path=[],
-                type_id=project_details.project_def_id,
+                type_id=project_details.project_definition_id,
                 type_name="",
                 path=[],
                 value=None,
@@ -40,12 +40,13 @@ class ProjectNodeSliceBuilder:
 
         root_def_node = await self.project_definition_node_service.find_one_by(
             ProjectDefinitionNodeFilter(
-                project_def_id=project_details.project_def_id, id=collection_type_id
+                project_definition_id=project_details.project_definition_id,
+                id=collection_type_id,
             )
         )
 
         definition_nodes = await self.project_definition_node_service.find_children(
-            project_details.project_def_id, root_def_node.subpath
+            project_details.project_definition_id, root_def_node.subpath
         )
 
         type_to_instance_id = defaultdict(
@@ -78,7 +79,7 @@ class ProjectNodeSliceBuilder:
         ]
 
         unit_instances = await self.unit_instance_builder.build(
-            project_details.project_def_id,
+            project_details.project_definition_id,
             [bounded_node.node for bounded_node in bounded_nodes],
         )
 
@@ -100,7 +101,7 @@ class ProjectNodeSliceBuilder:
         )
 
         definition_nodes = await self.project_definition_node_service.find_children(
-            root_def_node.project_def_id, root_def_node.subpath
+            root_def_node.project_definition_id, root_def_node.subpath
         )
 
         id_mapping = defaultdict(uuid4, iter((item, item) for item in parent_node.path))
@@ -129,7 +130,7 @@ class ProjectNodeSliceBuilder:
         ]
 
         unit_instances = await self.unit_instance_builder.build(
-            root_def_node.project_def_id,
+            root_def_node.project_definition_id,
             [bounded_node.node for bounded_node in bounded_nodes],
         )
 

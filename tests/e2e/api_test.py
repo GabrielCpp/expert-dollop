@@ -42,7 +42,7 @@ async def test_given_project_definition_node_should_be_able_to_create_update_del
 ):
     project_definition = ProjectDefinitionDtoFactory()
     expected_project_definition_node = ProjectDefinitionNodeDtoFactory(
-        project_def_id=project_definition.id
+        project_definition_id=project_definition.id
     )
 
     response = await ac.post("/api/project_definition", data=project_definition.json())
@@ -118,7 +118,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             id=UUID("96492b2d-49fa-4250-b655-ff8cf5030953"),
             ressource_id=ressource_id,
             scope=ressource_id,
-            locale="fr_CA",
+            locale="fr-CA",
             name="a",
             value="a_fr",
             creation_date_utc=static_clock.utcnow(),
@@ -127,7 +127,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             id=UUID("96492b2d-49fa-4250-b655-ff8cf5030954"),
             ressource_id=ressource_id,
             scope=ressource_id,
-            locale="en_US",
+            locale="en-US",
             name="a",
             value="a_en",
             creation_date_utc=static_clock.utcnow(),
@@ -136,7 +136,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             id=UUID("96492b2d-49fa-4250-b655-ff8cf5030955"),
             ressource_id=ressource_id,
             scope=ressource_id,
-            locale="fr_CA",
+            locale="fr-CA",
             name="b",
             value="b_fr",
             creation_date_utc=static_clock.utcnow(),
@@ -160,7 +160,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
         CollectionService[Translation], list(translations.values())
     )
 
-    response = await ac.get(f"/api/translation/{ressource_id}/fr_CA")
+    response = await ac.get(f"/api/translation/{ressource_id}/fr-CA")
     assert response.status_code == 200
 
     actual = unwrap(response, PageDto)

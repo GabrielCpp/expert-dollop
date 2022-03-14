@@ -307,12 +307,8 @@ class MongoCollection(CollectionService[Domain]):
         return domains
 
     async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
-        results = []
         query = self._query_compiler.find(query_filter)
-
-        async for doc in query:
-            results.append(doc)
-
+        results = await query.to_list(length=None)
         domains = self._dao_mapper.map_many_to_domain(results)
         return domains
 

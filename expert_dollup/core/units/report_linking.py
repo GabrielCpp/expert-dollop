@@ -453,7 +453,7 @@ class ReportLinking:
         rows, injector, datasheet_elements = await gather(
             self.report_row_cache_builder.refresh_cache(report_definition),
             self.formula_resolver.compute_all_project_formula(
-                project_details.id, project_details.project_def_id
+                project_details.id, project_details.project_definition_id
             ),
             self.datasheet_element_service.find_by(
                 DatasheetElementFilter(

@@ -100,7 +100,7 @@ def map_project_definition_node_from_dao(
 ) -> ProjectDefinitionNode:
     return ProjectDefinitionNode(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
@@ -271,11 +271,13 @@ def map_field_details_union_to_dao(
 def map_project_definition_node_to_dao(
     src: ProjectDefinitionNode, mapper: Mapper
 ) -> ProjectDefinitionNodeDao:
-    display_query_internal_id = get_display_query_id(src.project_def_id, src.path)
+    display_query_internal_id = get_display_query_id(
+        src.project_definition_id, src.path
+    )
 
     return ProjectDefinitionNodeDao(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
@@ -296,7 +298,7 @@ def map_project_from_dao(src: ProjectDao, mapper: Mapper) -> ProjectDetails:
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         datasheet_id=src.datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )
@@ -307,7 +309,7 @@ def map_project_to_dao(src: ProjectDetails, mapper: Mapper) -> ProjectDao:
         id=src.id,
         name=src.name,
         is_staged=src.is_staged,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         datasheet_id=src.datasheet_id,
         creation_date_utc=src.creation_date_utc,
     )
@@ -456,7 +458,7 @@ def map_project_definition_node_filter_to_dict(
         src.args,
         {
             "id": ("id", None),
-            "project_def_id": ("project_def_id", None),
+            "project_definition_id": ("project_definition_id", None),
             "name": ("name", None),
             "is_collection": ("is_collection", None),
             "instanciate_by_default": ("instanciate_by_default", None),
@@ -471,7 +473,7 @@ def map_project_definition_node_filter_to_dict(
 def map_report_definition_filter(src: ReportDefinitionFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
-        {"project_def_id": ("project_def_id", None)},
+        {"project_definition_id": ("project_definition_id", None)},
     )
 
 
@@ -542,7 +544,7 @@ def map_project_node_meta_filter_to_dict(
 def map_formula_to_dao(src: Formula, mapper: Mapper) -> ProjectDefinitionFormulaDao:
     return ProjectDefinitionFormulaDao(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
@@ -566,7 +568,7 @@ def map_formula_to_dao(src: Formula, mapper: Mapper) -> ProjectDefinitionFormula
 def map_formula_from_dao(src: ProjectDefinitionFormulaDao, mapper: Mapper) -> Formula:
     return Formula(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
@@ -590,7 +592,7 @@ def map_formula_from_dao(src: ProjectDefinitionFormulaDao, mapper: Mapper) -> Fo
 def map_staged_formula_to_dao(src: StagedFormula, mapper: Mapper) -> StagedFormulaDao:
     return StagedFormulaDao(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
@@ -615,7 +617,7 @@ def map_staged_formula_to_dao(src: StagedFormula, mapper: Mapper) -> StagedFormu
 def map_staged_formula_from_dao(src: StagedFormulaDao, mapper: Mapper) -> StagedFormula:
     return StagedFormula(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
@@ -1069,7 +1071,7 @@ def map_formula_filter(src: FormulaFilter, mapper: Mapper) -> dict:
         src.args,
         {
             "id": ("id", None),
-            "project_def_id": ("project_def_id", None),
+            "project_definition_id": ("project_definition_id", None),
             "attached_to_type_id": ("attached_to_type_id", None),
             "name": ("name", None),
             "expression": ("expression", None),
@@ -1108,7 +1110,7 @@ def map_report_definition_from_dao(
 ) -> ReportDefinition:
     return ReportDefinition(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
         structure=mapper.map(src.structure, ReportStructure),
     )
@@ -1119,7 +1121,7 @@ def map_report_definition_to_dao(
 ) -> ReportDefinitionDao:
     return ReportDefinitionDao(
         id=src.id,
-        project_def_id=src.project_def_id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
         structure=mapper.map(src.structure, ReportStructureDao),
     )

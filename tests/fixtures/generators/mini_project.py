@@ -18,7 +18,7 @@ class MiniProject(DbFixtureGenerator):
         root = self.db.add(
             ProjectDefinitionNodeFactory(
                 name="root",
-                project_def_id=project_definition.id,
+                project_definition_id=project_definition.id,
                 path=[],
                 is_collection=False,
                 instanciate_by_default=True,
@@ -50,7 +50,7 @@ class MiniProject(DbFixtureGenerator):
             self.db.add(
                 ProjectDefinitionNodeFactory(
                     name=name,
-                    project_def_id=project_definition.id,
+                    project_definition_id=project_definition.id,
                     path=parents,
                     is_collection=False,
                     instanciate_by_default=True,
@@ -67,7 +67,7 @@ class MiniProject(DbFixtureGenerator):
         self.db.add(
             ProjectDefinitionNodeFactory(
                 name=name,
-                project_def_id=project_definition.id,
+                project_definition_id=project_definition.id,
                 path=parents,
                 is_collection=True,
                 instanciate_by_default=True,

@@ -312,7 +312,7 @@ class ProjectInstanceFactory:
             id=make_uuid(f"{project_name}-instance"),
             name=project_name,
             is_staged=False,
-            project_def_id=project_definition.id,
+            project_definition_id=project_definition.id,
             datasheet_id=project_definition.default_datasheet_id,
             creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
         )
@@ -320,7 +320,7 @@ class ProjectInstanceFactory:
         definition_nodes = [
             ProjectDefinitionNode(
                 id=node_def_seed.id,
-                project_def_id=project_definition.id,
+                project_definition_id=project_definition.id,
                 name=node_def_seed.name,
                 is_collection=node_def_seed.is_collection,
                 instanciate_by_default=True,
@@ -349,7 +349,7 @@ class ProjectInstanceFactory:
         formulas = [
             Formula(
                 id=formula_seed.id,
-                project_def_id=project_definition.id,
+                project_definition_id=project_definition.id,
                 attached_to_type_id=formula_seed.node.definition.id,
                 expression=formula_seed.expression,
                 name=formula_seed.name,

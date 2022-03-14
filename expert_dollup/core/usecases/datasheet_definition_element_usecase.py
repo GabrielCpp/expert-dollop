@@ -24,7 +24,7 @@ class DatasheetDefinitionElementUseCase:
 
     async def add(
         self, datasheet_definition_element: DatasheetDefinitionElement
-    ) -> Awaitable[DatasheetDefinitionElement]:
+    ) -> DatasheetDefinitionElement:
         await self._validate_element(datasheet_definition_element)
         await self.datasheet_definition_element_service.insert(
             datasheet_definition_element
@@ -33,7 +33,7 @@ class DatasheetDefinitionElementUseCase:
 
     async def update(
         self, datasheet_definition_element: DatasheetDefinitionElement
-    ) -> Awaitable[DatasheetDefinitionElement]:
+    ) -> DatasheetDefinitionElement:
         await self._validate_element(datasheet_definition_element)
         await self.datasheet_definition_element_service.update(
             datasheet_definition_element
@@ -48,7 +48,7 @@ class DatasheetDefinitionElementUseCase:
     async def _validate_element(
         self,
         datasheet_definition_element: DatasheetDefinitionElement,
-    ) -> Awaitable:
+    ):
         project_definition = await self.project_definition_service.find_by_id(
             datasheet_definition_element.project_definition_id
         )

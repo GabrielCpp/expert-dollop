@@ -85,10 +85,10 @@ class TranslationUseCase:
         self, query: TranslationRessourceLocaleQuery, user: User
     ) -> List[Translation]:
         if query.locale == "en":
-            query.locale = "en_US"
+            query.locale = "en-US"
 
         if query.locale == "fr":
-            query.locale = "fr_CA"
+            query.locale = "fr-CA"
 
         ressource = await self.ressource_service.find_by_id(
             RessourceId(id=query.ressource_id, user_id=user.id)
@@ -104,7 +104,7 @@ class TranslationUseCase:
 
             project_def_translations = await self.service.find_by(
                 TranslationRessourceLocaleQuery(
-                    ressource_id=project_details.project_def_id,
+                    ressource_id=project_details.project_definition_id,
                     locale=query.locale,
                 )
             )

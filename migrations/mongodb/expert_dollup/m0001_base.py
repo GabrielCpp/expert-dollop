@@ -18,18 +18,18 @@ async def create_project_definition_tables(db):
 
     project_definition_node = await db.create_collection("project_definition_node")
     await project_definition_node.create_index(
-        [("project_def_id", DESCENDING), ("path", ASCENDING)]
+        [("project_definition_id", DESCENDING), ("path", ASCENDING)]
     )
     await project_definition_node.create_index("display_query_internal_id")
     await project_definition_node.create_index(
-        [("project_def_id", DESCENDING), ("name", ASCENDING)]
+        [("project_definition_id", DESCENDING), ("name", ASCENDING)]
     )
 
     project_definition_formula = await db.create_collection(
         "project_definition_formula"
     )
     await project_definition_formula.create_index(
-        [("project_def_id", DESCENDING), ("name", ASCENDING)]
+        [("project_definition_id", DESCENDING), ("name", ASCENDING)]
     )
 
 

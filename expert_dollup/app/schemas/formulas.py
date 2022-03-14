@@ -23,7 +23,7 @@ from .types import query
 async def resolve_find_project_definition_formulas(
     _: Any,
     info: GraphQLResolveInfo,
-    project_def_id: str,
+    project_definition_id: str,
     query: str,
     first: int,
     handler: GraphqlPageHandler[Paginator[Formula]],
@@ -36,7 +36,7 @@ async def resolve_find_project_definition_formulas(
 
     return await handler.handle(
         FormulaExpressionDto,
-        FormulaFilter(project_def_id=UUID(project_def_id)),
+        FormulaFilter(project_definition_id=UUID(project_definition_id)),
         first,
         after,
     )

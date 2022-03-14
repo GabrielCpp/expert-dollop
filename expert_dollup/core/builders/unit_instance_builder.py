@@ -12,7 +12,7 @@ class UnitInstanceBuilder:
 
     async def build(
         self,
-        project_def_id: UUID,
+        project_definition_id: UUID,
         nodes: List[ProjectNode],
     ) -> List[UnitInstance]:
         formulas_result: List[UnitInstance] = []
@@ -22,7 +22,7 @@ class UnitInstanceBuilder:
             nodes_by_type_id[node.type_id].append(node)
 
         formulas = await self.formula_plucker.pluck_subressources(
-            FormulaFilter(project_def_id=project_def_id),
+            FormulaFilter(project_definition_id=project_definition_id),
             lambda ids: FormulaPluckFilter(attached_to_type_ids=ids),
             list(nodes_by_type_id.keys()),
         )

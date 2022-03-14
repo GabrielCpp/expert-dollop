@@ -12,15 +12,17 @@ from expert_dollup.core.usecases import FormulaUseCase
 router = APIRouter()
 
 
-@router.get("/project_definition/{project_def_id}/formulas")
+@router.get("/project_definition/{project_definition_id}/formulas")
 async def get_formulas(
-    project_def_id: UUID,
+    project_definition_id: UUID,
     limit: int = 10,
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     handler=Depends(Inject(HttpPageHandler[FormulaExpression])),
 ):
     return await handler.handle(
-        FormulaFilter(project_def_id=project_def_id), limit, next_page_token
+        FormulaFilter(project_definition_id=project_definition_id),
+        limit,
+        next_page_token,
     )
 
 

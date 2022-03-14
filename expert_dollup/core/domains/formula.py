@@ -57,7 +57,7 @@ class FlatAst:
 @dataclass
 class FormulaExpression:
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     attached_to_type_id: UUID
     name: str
     expression: str
@@ -122,7 +122,7 @@ class UnitInstanceCacheKey:
 
 class FormulaFilter(QueryFilter):
     id: Optional[UUID]
-    project_def_id: Optional[UUID]
+    project_definition_id: Optional[UUID]
     attached_to_type_id: Optional[UUID]
     name: Optional[str]
     expression: Optional[str]

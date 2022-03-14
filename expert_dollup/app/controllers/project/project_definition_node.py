@@ -19,9 +19,9 @@ from expert_dollup.shared.database_services import Page
 router = APIRouter()
 
 
-@router.get("/project_definition/{project_def_id}/node/{id}")
+@router.get("/project_definition/{project_definition_id}/node/{id}")
 async def find_project_definition_node(
-    project_def_id: UUID,
+    project_definition_id: UUID,
     id: UUID,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
@@ -65,16 +65,16 @@ async def replace_project_definition_node(
     )
 
 
-@router.delete("/project_definition/{project_def_id}/node/{id}")
+@router.delete("/project_definition/{project_definition_id}/node/{id}")
 async def delete_project_definition_node(
     id: UUID, usecase=Depends(Inject(ProjectDefinitionNodeUseCase))
 ):
     await usecase.delete_by_id(id)
 
 
-@router.get("/{project_def_id}/project_definition_nodes")
+@router.get("/{project_definition_id}/project_definition_nodes")
 async def get_project_definition_node_by_project(
-    project_def_id: UUID,
+    project_definition_id: UUID,
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = Query(alias="limit", default=100),
     request_handler=Depends(Inject(RequestHandler)),
@@ -85,7 +85,7 @@ async def get_project_definition_node_by_project(
         dict(
             next_page_token=next_page_token,
             limit=limit,
-            project_def_id=project_def_id,
+            project_definition_id=project_definition_id,
         ),
         MappingChain(
             out_domain=Page[ProjectDefinitionNode],
@@ -94,15 +94,15 @@ async def get_project_definition_node_by_project(
     )
 
 
-@router.get("/project_definition/{project_def_id}/root_sections")
+@router.get("/project_definition/{project_definition_id}/root_sections")
 async def find_root_sections(
-    project_def_id: UUID,
+    project_definition_id: UUID,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
     return await request_handler.forward(
         usecase.find_root_sections,
-        dict(project_def_id=project_def_id),
+        dict(project_definition_id=project_definition_id),
         MappingChain(
             out_domain=ProjectDefinitionNodeTree,
             out_dto=ProjectDefinitionNodeTreeDto,
@@ -110,9 +110,11 @@ async def find_root_sections(
     )
 
 
-@router.get("/project_definition/{project_def_id}/root_section_nodes/{root_section_id}")
+@router.get(
+    "/project_definition/{project_definition_id}/root_section_nodes/{root_section_id}"
+)
 async def find_root_section_nodes(
-    project_def_id: UUID,
+    project_definition_id: UUID,
     root_section_id: UUID,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
@@ -120,7 +122,7 @@ async def find_root_section_nodes(
     return await request_handler.forward(
         usecase.find_root_section_nodes,
         dict(
-            project_def_id=project_def_id,
+            project_definition_id=project_definition_id,
             root_section_id=root_section_id,
         ),
         MappingChain(
@@ -130,16 +132,16 @@ async def find_root_section_nodes(
     )
 
 
-@router.get("/project_definition/{project_def_id}/form_content/{form_id}")
+@router.get("/project_definition/{project_definition_id}/form_content/{form_id}")
 async def find_form_content(
-    project_def_id: UUID,
+    project_definition_id: UUID,
     form_id: UUID,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
 ):
     return await request_handler.forward(
         usecase.find_form_content,
-        dict(project_def_id=project_def_id, form_id=form_id),
+        dict(project_definition_id=project_definition_id, form_id=form_id),
         MappingChain(
             out_domain=ProjectDefinitionNodeTree,
             out_dto=ProjectDefinitionNodeTreeDto,

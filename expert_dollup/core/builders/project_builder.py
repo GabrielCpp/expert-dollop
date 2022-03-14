@@ -40,7 +40,9 @@ class ProjectBuilder:
         self, project_details: ProjectDetails, user_id: UUID
     ) -> Project:
         node_definitions = await self.project_definition_node_service.find_by(
-            ProjectDefinitionNodeFilter(project_def_id=project_details.project_def_id)
+            ProjectDefinitionNodeFilter(
+                project_definition_id=project_details.project_definition_id
+            )
         )
 
         children_to_skip = set()
@@ -100,7 +102,7 @@ class ProjectBuilder:
             id=uuid4(),
             name=project_details.name,
             is_staged=False,
-            project_def_id=project_details.project_def_id,
+            project_definition_id=project_details.project_definition_id,
             datasheet_id=project_details.datasheet_id,
             creation_date_utc=self.clock.utcnow(),
         )

@@ -33,7 +33,7 @@ type DatasheetDefinitionElement {
   id: ID!
   unitId: String!
   isCollection: Boolean!
-  projectDefId: String!
+  projectDefinitionId: String!
   projectDefinition: ProjectDefinition
   orderIndex: Int!
   name: String!
@@ -66,7 +66,7 @@ type Datasheet {
   id: ID!
   name: String!
   isStaged: Boolean!
-  projectDefId: String!
+  projectDefinitionId: String!
   fromDatasheetId: String
   elements(first: Int!, after: String): DatasheetElementConnection!
 }
@@ -285,7 +285,6 @@ input FieldValueInput {
 
 input ProjectDefinitionNodeInput {
   id: ID!
-  projectDefId: String!
   name: String!
   isCollection: Boolean!
   instanciateByDefault: Boolean!
@@ -297,7 +296,7 @@ input ProjectDefinitionNodeInput {
 
 type ProjectDefinitionNode {
   id: ID!
-  projectDefId: String!
+  projectDefinitionId: String!
   name: String!
   isCollection: Boolean!
   instanciateByDefault: Boolean!
@@ -323,14 +322,14 @@ type ProjectDefinition {
   name: String!
   defaultDatasheetId: String!
   defaultDatasheet: Datasheet!
-  projectDefId: String!
+  projectDefinitionId: String!
   projectDefinition: ProjectDefinition!
-  rootSections(projectDefId: ID!): ProjectDefinitionNodeTree!
+  rootSections(projectDefinitionId: ID!): ProjectDefinitionNodeTree!
   rootSectionContainers(
-    projectDefId: ID!
+    projectDefinitionId: ID!
     rootSectionId: ID!
   ): ProjectDefinitionNodeTree!
-  formContent(projectDefId: ID!, formId: ID!): ProjectDefinitionNodeTree!
+  formContent(projectDefinitionId: ID!, formId: ID!): ProjectDefinitionNodeTree!
   properties: [DatasheetDefinitionPropertySchemaDict!]!
   elementsDefinition(
     first: Int!
@@ -350,7 +349,7 @@ type ProjectDefinitionConnection {
 
 type Formula {
   id: ID!
-  projectDefId: String!
+  projectDefinitionId: String!
   attachedToTypeId: String!
   name: String!
   expression: String!
@@ -391,7 +390,7 @@ type ProjectDetails {
   id: ID!
   name: String!
   isStaged: Boolean
-  projectDefId: String!
+  projectDefinitionId: String!
   projectDefinition: ProjectDefinition!
   datasheetId: String!
   datasheet: Datasheet!
@@ -401,7 +400,7 @@ type ProjectDetails {
 input ProjectDetailsInput {
   id: ID!
   name: String!
-  projectDefId: String!
+  projectDefinitionId: String!
   datasheetId: String!
 }
 
@@ -451,7 +450,7 @@ type ReportDefinitionStructure {
 
 type ReportDefinition {
     id: String!
-    projectDefId: String!
+    projectDefinitionId: String!
     name: String!
     structure: ReportDefinitionStructure!
 }
@@ -531,17 +530,17 @@ type Query {
   ): DatasheetDefinitionElementConnection!
   findProjectDefinition(id: ID!): ProjectDefinition!
   findProjectDefinitionRootSections(
-    projectDefId: ID!
+    projectDefinitionId: ID!
   ): ProjectDefinitionNodeTree!
   findProjectDefinitionRootSectionContainers(
-    projectDefId: ID!
+    projectDefinitionId: ID!
     rootSectionId: ID!
   ): ProjectDefinitionNodeTree!
   findProjectDefinitionFormContent(
-    projectDefId: ID!
+    projectDefinitionId: ID!
     formId: ID!
   ): ProjectDefinitionNodeTree!
-  findProjectDefinitionNode(projectDefId: ID!, id: ID!): ProjectDefinitionNode!
+  findProjectDefinitionNode(projectDefinitionId: ID!, id: ID!): ProjectDefinitionNode!
   findRessourceTranslation(
     ressourceId: ID!
     language: String!
@@ -561,12 +560,12 @@ type Query {
   findProjects(query: String!, first: Int!, after: String): ProjectConnection!
   findProjectDetails(id: ID!): ProjectDetails!
   findProjectDefinitionFormulas(
-    projectDefId: ID!
+    projectDefinitionId: ID!
     query: String!
     first: Int!
     after: String
   ): FormulaConnection!
-  findReportDefinitions(projectDefId: ID!): [ReportDefinition!]!
+  findReportDefinitions(projectDefinitionId: ID!): [ReportDefinition!]!
   findReportDefinition(reportDefinitionId: ID!): ReportDefinition!
   findProjectReport(projectId: ID!, reportDefinitionId: ID!): Report!
 }

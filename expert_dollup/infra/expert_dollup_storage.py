@@ -71,7 +71,7 @@ class ReportDao(BaseModel):
 class StagedFormulaDao(BaseModel):
 
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     attached_to_type_id: UUID
     name: str = Field(max_length=64)
     expression: str

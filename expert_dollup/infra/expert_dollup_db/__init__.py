@@ -101,7 +101,7 @@ class ProjectDefinitionNodeDao(BaseModel):
         options = {
             "firestore": {
                 "collection_count": False,
-                "key_counts": set([frozenset(["project_def_id"])]),
+                "key_counts": set([frozenset(["project_definition_id"])]),
             }
         }
 
@@ -109,7 +109,7 @@ class ProjectDefinitionNodeDao(BaseModel):
         title = "project_definition_node"
 
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     name: str = Field(max_length=64)
     is_collection: bool
     instanciate_by_default: bool
@@ -132,7 +132,7 @@ class ProjectDao(BaseModel):
     id: UUID
     name: str = Field(max_length=64)
     is_staged: bool
-    project_def_id: UUID
+    project_definition_id: UUID
     datasheet_id: UUID
     creation_date_utc: datetime
 
@@ -226,7 +226,7 @@ class ProjectDefinitionFormulaDao(BaseModel):
         options = {
             "firestore": {
                 "collection_count": False,
-                "key_counts": set([frozenset(["project_def_id"])]),
+                "key_counts": set([frozenset(["project_definition_id"])]),
             }
         }
 
@@ -234,7 +234,7 @@ class ProjectDefinitionFormulaDao(BaseModel):
         title = "project_definition_formula"
 
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     attached_to_type_id: UUID
     name: str = Field(max_length=64)
     expression: str
@@ -416,7 +416,7 @@ class ReportDefinitionDao(BaseModel):
         title = "report_definition"
 
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     name: str = Field(max_length=64)
     structure: ReportStructureDao
 

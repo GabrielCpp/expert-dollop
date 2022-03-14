@@ -25,7 +25,7 @@ class ProjectDefinitionNodeDtoFactory(factory.Factory):
         model = ProjectDefinitionNodeDto
 
     id = factory.Faker("pyuuid4")
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"Container{n}")
     is_collection = False
     instanciate_by_default = True
@@ -53,7 +53,7 @@ class TranslationDtoFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     ressource_id = factory.Faker("pyuuid4")
     scope = factory.Faker("pyuuid4")
-    locale = "fr_CA"
+    locale = "fr-CA"
     name = factory.Sequence(lambda n: f"hello{n}")
     value = factory.Sequence(lambda n: f"translation{n}")
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
@@ -66,7 +66,7 @@ class TranslationInputDtoFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     ressource_id = factory.Faker("pyuuid4")
     scope = factory.Faker("pyuuid4")
-    locale = "fr_CA"
+    locale = "fr-CA"
     name = factory.Sequence(lambda n: f"hello{n}")
     value = factory.Sequence(lambda n: f"translation{n}")
 
@@ -78,7 +78,7 @@ class ProjectDetailsDtoFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"project{n}")
     is_staged = False
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     datasheet_id = factory.Faker("pyuuid4")
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
@@ -89,7 +89,7 @@ class NewProjectDetailsDtoFactory(factory.Factory):
 
     name = factory.Sequence(lambda n: f"project{n}")
     is_staged = False
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     datasheet_id = factory.Faker("pyuuid4")
 
 
@@ -98,7 +98,7 @@ class FormulaDtoFactory(factory.Factory):
         model = FormulaExpressionDto
 
     id = factory.Faker("pyuuid4")
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     attached_to_type_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"formula{n}")
     expression = "a+b*c/2"
