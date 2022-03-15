@@ -1,9 +1,10 @@
 from typing import Awaitable, List, Optional
 from uuid import UUID
-from expert_dollup.core.units import NodeValueValidation
-from expert_dollup.core.builders import ProjectNodeSliceBuilder, ProjectTreeBuilder
-from expert_dollup.core.domains import *
 from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.core.builders import *
+from expert_dollup.core.domains import *
+from expert_dollup.core.units import *
+from expert_dollup.core.logits import *
 
 
 class NodeEventDispatcher:
@@ -15,6 +16,7 @@ class NodeEventDispatcher:
         project_node_slice_builder: ProjectNodeSliceBuilder,
         project_tree_builder: ProjectTreeBuilder,
         project_node_meta: CollectionService[ProjectNodeMeta],
+        formula_resolver: FormulaResolver,
     ):
         self.project_service = project_service
         self.project_node_service = project_node_service
@@ -22,6 +24,7 @@ class NodeEventDispatcher:
         self.project_node_slice_builder = project_node_slice_builder
         self.project_tree_builder = project_tree_builder
         self.project_node_meta = project_node_meta
+        self.formula_resolver = formula_resolver
 
     async def update_node_value(
         self, project_id: UUID, node_id: UUID, value: PrimitiveWithNoneUnion
@@ -48,6 +51,27 @@ class NodeEventDispatcher:
             nodes.append(node)
 
         return nodes
+
+    async def update_value_inplace(
+        self, nodes: List[ProjectNode], metas: List[ProjectNodeMeta]
+    ):
+        meta_by_names = {meta.definition.name: meta for meta in metas}
+        formula_references = []
+        for node in nodes:
+            meta = meta_by_names[node.type_name]
+            field_details = meta.definition.config.field_details
+
+            if isinstance(field_details, StaticNumberFieldConfig):
+                formula_references.append(
+                    UnitRef(node_id=node.id, path=node.path, name=node.value)
+                )
+
+        results = await self.formula_resolver.compute_formula(
+            node.project_id, meta.definition.project_definition_id, formula_references
+        )
+
+        for node, value in zip(nodes, results):
+            node.value = str(value)
 
     async def _get_bounded_node(
         self, project_id: UUID, node_id: UUID

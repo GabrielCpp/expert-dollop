@@ -44,13 +44,13 @@ class CollapsibleContainerFieldConfigDao(BaseModel):
 
 
 FieldDetailsUnionDao = Union[
+    StaticNumberFieldConfigDao,
     DecimalFieldConfigDao,
     IntFieldConfigDao,
     StringFieldConfigDao,
     BoolFieldConfigDao,
     StaticChoiceFieldConfigDao,
     CollapsibleContainerFieldConfigDao,
-    StaticNumberFieldConfigDao,
     None,
 ]
 

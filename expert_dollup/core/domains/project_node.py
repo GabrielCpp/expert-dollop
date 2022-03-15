@@ -54,3 +54,4 @@ class FieldUpdate:
 
 class NodePluckFilter(QueryFilter):
     ids: Optional[List[UUID]]
+    type_ids: Optional[List[UUID]]

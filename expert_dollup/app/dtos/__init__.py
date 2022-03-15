@@ -5,6 +5,7 @@ from .project_definition_node_dto import (
     FieldUpdateInputDto,
     IntFieldConfigDto,
     DecimalFieldConfigDto,
+    StaticNumberFieldConfigDto,
     StringFieldConfigDto,
     BoolFieldConfigDto,
     StaticChoiceOptionDto,

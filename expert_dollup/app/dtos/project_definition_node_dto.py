@@ -62,11 +62,11 @@ class CollapsibleContainerFieldConfigDto(CamelModel):
 FieldDetailsUnionDto = Union[
     BoolFieldConfigDto,
     CollapsibleContainerFieldConfigDto,
+    StaticNumberFieldConfigDto,
     DecimalFieldConfigDto,
     StaticChoiceFieldConfigDto,
     StringFieldConfigDto,
     IntFieldConfigDto,
-    StaticNumberFieldConfigDto,
     None,
 ]
 

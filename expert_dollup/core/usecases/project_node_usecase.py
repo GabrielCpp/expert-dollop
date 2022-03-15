@@ -75,6 +75,7 @@ class ProjectNodeUseCase:
         form = await self.project_node_service.find_by_id(form_id)
         roots = await self.project_node_service.find_form_content(project_id, form_id)
         metas = await self.project_node_meta.find_form_content(project_id, form.type_id)
+        await self.node_event_dispatcher.update_value_inplace(roots, metas)
         tree = self.project_tree_builder.build(roots, metas)
         return tree
 

@@ -206,12 +206,119 @@ def map_trigger_to_dto(src: Trigger, mapper: Mapper) -> TriggerDto:
     )
 
 
+field_details_union_dto_mappings = RevervibleUnionMapping(
+    FieldDetailsUnionDto,
+    FieldDetailsUnion,
+    field_details_to_domain_map,
+)
+
+
+def map_bool_field_config_from_dto(
+    src: BoolFieldConfigDto, mapper: Mapper
+) -> BoolFieldConfig:
+    return BoolFieldConfig(is_checkbox=src.is_checkbox)
+
+
+def map_bool_field_config_to_dto(
+    src: BoolFieldConfig, mapper: Mapper
+) -> BoolFieldConfigDto:
+    return BoolFieldConfigDto(is_checkbox=src.is_checkbox)
+
+
+def map_collapsible_container_field_config_from_dto(
+    src: CollapsibleContainerFieldConfigDto, mapper: Mapper
+) -> CollapsibleContainerFieldConfig:
+    return CollapsibleContainerFieldConfig(is_collapsible=src.is_collapsible)
+
+
+def map_collapsible_container_field_config_to_dto(
+    src: CollapsibleContainerFieldConfig, mapper: Mapper
+) -> CollapsibleContainerFieldConfigDto:
+    return CollapsibleContainerFieldConfigDto(is_collapsible=src.is_collapsible)
+
+
+def map_static_number_field_config_from_dto(
+    src: StaticNumberFieldConfigDto, mapper: Mapper
+) -> StaticNumberFieldConfig:
+    return StaticNumberFieldConfig(
+        pass_to_translation=src.pass_to_translation,
+        precision=src.precision,
+        unit=src.unit,
+    )
+
+
+def map_static_number_field_config_to_dto(
+    src: StaticNumberFieldConfig, mapper: Mapper
+) -> StaticNumberFieldConfigDto:
+    return StaticNumberFieldConfigDto(
+        pass_to_translation=src.pass_to_translation,
+        precision=src.precision,
+        unit=src.unit,
+    )
+
+
+def map_decimal_field_config_from_dto(
+    src: DecimalFieldConfigDto, mapper: Mapper
+) -> DecimalFieldConfig:
+    return DecimalFieldConfig(precision=src.precision, unit=src.unit)
+
+
+def map_decimal_field_config_to_dto(
+    src: DecimalFieldConfig, mapper: Mapper
+) -> DecimalFieldConfigDto:
+    return DecimalFieldConfigDto(precision=src.precision, unit=src.unit)
+
+
+def map_static_choice_field_config_from_dto(
+    src: StaticChoiceFieldConfigDto, mapper: Mapper
+) -> StaticChoiceFieldConfig:
+    return StaticChoiceFieldConfig(
+        options=[
+            StaticChoiceOption(option.id, option.label, option.help_text)
+            for option in src.options
+        ]
+    )
+
+
+def map_static_choice_field_config_to_dto(
+    src: StaticChoiceFieldConfig, mapper: Mapper
+) -> StaticChoiceFieldConfigDto:
+    return StaticChoiceFieldConfigDto(
+        options=[
+            StaticChoiceOptionDto(option.id, option.label, option.help_text)
+            for option in src.options
+        ]
+    )
+
+
+def map_string_field_config_from_dto(
+    src: StringFieldConfigDto, mapper: Mapper
+) -> StringFieldConfig:
+    return StringFieldConfig(transforms=src.transforms)
+
+
+def map_string_field_config_to_dto(
+    src: StringFieldConfig, mapper: Mapper
+) -> StringFieldConfigDto:
+    return StringFieldConfigDto(transforms=src.transforms)
+
+
+def map_int_field_config_from_dto(
+    src: IntFieldConfigDto, mapper: Mapper
+) -> IntFieldConfig:
+    return IntFieldConfig(unit=src.unit)
+
+
+def map_int_field_config_to_dto(
+    src: IntFieldConfig, mapper: Mapper
+) -> IntFieldConfigDto:
+    return IntFieldConfigDto(unit=src.unit)
+
+
 def map_node_config_from_dto(src: NodeConfigDto, mapper: Mapper) -> NodeConfig:
     return NodeConfig(
-        field_details=None
-        if src.field_details is None
-        else mapper.map(
-            src.field_details, field_details_to_domain_map[type(src.field_details)]
+        field_details=mapper.map(
+            src.field_details, field_details_union_dto_mappings.from_origin
         ),
         translations=mapper.map(src.translations, TranslationConfig),
         triggers=mapper.map_many(src.triggers, Trigger),
@@ -221,23 +328,16 @@ def map_node_config_from_dto(src: NodeConfigDto, mapper: Mapper) -> NodeConfig:
 
 
 def map_node_config_to_dto(src: NodeConfig, mapper: Mapper) -> NodeConfigDto:
-    field_details_dto = (
-        None
-        if src.field_details is None
-        else mapper.map(
-            src.field_details, field_details_from_domain[type(src.field_details)]
-        )
-    )
+
     mapped_config = NodeConfigDto(
-        field_details=field_details_dto,
+        field_details=mapper.map(
+            src.field_details, field_details_union_dto_mappings.to_origin
+        ),
         value_validator=src.value_validator,
         translations=mapper.map(src.translations, TranslationConfigDto),
         triggers=mapper.map_many(src.triggers, TriggerDto),
         meta=mapper.map(src.meta, NodeMetaConfigDto, NodeMetaConfig),
     )
-    assert type(mapped_config.field_details) is type(
-        field_details_dto
-    ), "Union has change type of config"
 
     return mapped_config
 

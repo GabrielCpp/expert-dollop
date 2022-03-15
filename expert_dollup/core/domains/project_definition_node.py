@@ -81,10 +81,10 @@ class TranslationConfig:
 
 FieldDetailsUnion = Union[
     IntFieldConfig,
+    StaticChoiceFieldConfig,
     DecimalFieldConfig,
     StringFieldConfig,
     BoolFieldConfig,
-    StaticChoiceFieldConfig,
     CollapsibleContainerFieldConfig,
     StaticNumberFieldConfig,
     None,

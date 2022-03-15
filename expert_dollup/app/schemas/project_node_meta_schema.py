@@ -15,7 +15,7 @@ from pydantic import parse_obj_as
 
 
 @query.field("findProjectNodeMetaDefinition")
-@inject_graphql_route(get_project_node_meta_definition)
+@inject_graphql_route(get_project_node_meta_definition, ["project_id", "node_id"])
 @convert_kwargs_to_snake_case
 async def find_project_node_meta_definition(
     parent: Any,

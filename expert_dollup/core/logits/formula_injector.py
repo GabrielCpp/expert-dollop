@@ -3,16 +3,25 @@ from multiprocessing import ProcessError
 from typing import List, Dict, Protocol, Iterable
 from uuid import UUID
 from collections import defaultdict
+from dataclasses import dataclass
 from functools import cached_property
 from expert_dollup.core.domains.project_node import ProjectNode
 from expert_dollup.core.domains import UnitInstance, PrimitiveUnion, ProjectNode
 import expert_dollup.core.logits.formula_processor as formula_processor
 
 
+@dataclass
+class UnitRef:
+    node_id: UUID
+    path: List[UUID]
+    name: str
+
+
 class UnitLike(Protocol):
     name: str
     path: List[UUID]
     node_id: UUID
+    value: PrimitiveUnion
 
 
 class FormulaInjector:

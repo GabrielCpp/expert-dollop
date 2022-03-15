@@ -1093,7 +1093,7 @@ def map_fomula_pluck_filter(src: FormulaPluckFilter, mapper: Mapper) -> dict:
 def map_node_pluck_filter(src: NodePluckFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
-        {"ids": ("id", None)},
+        {"ids": ("id", None), "type_ids": ("type_id", None)},
     )
 
 
