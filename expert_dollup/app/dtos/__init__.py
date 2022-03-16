@@ -97,3 +97,4 @@ from .report_definition_dto import (
     ReportComputationDto,
 )
 from .measure_unit_dto import MeasureUnitDto
+from .user_dto import UserDto

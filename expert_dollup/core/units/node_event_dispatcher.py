@@ -66,6 +66,9 @@ class NodeEventDispatcher:
                     UnitRef(node_id=node.id, path=node.path, name=node.value)
                 )
 
+        if len(formula_references) == 0:
+            return
+
         results = await self.formula_resolver.compute_formula(
             node.project_id, meta.definition.project_definition_id, formula_references
         )

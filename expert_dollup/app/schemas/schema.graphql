@@ -509,8 +509,16 @@ type PageInfo {
   endCursor: String!
   totalCount: Int!
 }
+type User {
+    oauthId: ID!
+    id: String!
+    email: String!
+    permissions: [String!]!
+
+}
 
 type Query {
+  currentUser: User!
   findDatasheet(id: ID!): Datasheet!
   findDatasheets(
     query: String!

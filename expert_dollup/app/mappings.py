@@ -274,7 +274,9 @@ def map_static_choice_field_config_from_dto(
 ) -> StaticChoiceFieldConfig:
     return StaticChoiceFieldConfig(
         options=[
-            StaticChoiceOption(option.id, option.label, option.help_text)
+            StaticChoiceOption(
+                id=option.id, label=option.label, help_text=option.help_text
+            )
             for option in src.options
         ]
     )
@@ -285,7 +287,9 @@ def map_static_choice_field_config_to_dto(
 ) -> StaticChoiceFieldConfigDto:
     return StaticChoiceFieldConfigDto(
         options=[
-            StaticChoiceOptionDto(option.id, option.label, option.help_text)
+            StaticChoiceOptionDto(
+                id=option.id, label=option.label, help_text=option.help_text
+            )
             for option in src.options
         ]
     )
@@ -1207,4 +1211,13 @@ def map_report_column_from_dto(src: ReportColumnDto, mapper: Mapper) -> ReportCo
     return ReportColumn(
         value=mapper.map(src.value, primitive_union_dto_mappings.from_origin),
         unit=src.unit,
+    )
+
+
+def map_user_to_dto(src: User, mapper: Mapper) -> UserDto:
+    return UserDto(
+        oauth_id=src.oauth_id,
+        id=src.id,
+        email=src.email,
+        permissions=src.permissions,
     )
