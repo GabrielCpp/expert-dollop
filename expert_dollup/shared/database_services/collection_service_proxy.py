@@ -32,6 +32,10 @@ class CollectionServiceProxy(CollectionService[Domain]):
     def dao(self) -> Type:
         return self._impl.dao
 
+    @property
+    def batch_size(self) -> int:
+        return self._impl.batch_size
+
     async def insert(self, domain: Domain):
         return await self._impl.insert(domain)
 

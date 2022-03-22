@@ -17,11 +17,7 @@ from expert_dollup.app.modules import build_container
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
 from expert_dollup.shared.automapping import Mapper
-from expert_dollup.shared.database_services import (
-    create_connection,
-    DbConnection,
-    CollectionService,
-)
+from expert_dollup.shared.database_services import *
 from expert_dollup.shared.starlette_injection import LoggerFactory, AuthService
 from expert_dollup.core.domains import *
 from .fixtures.injector_override.mock_services import logger_observer
@@ -104,12 +100,13 @@ def app(container: Injector):
 @pytest.fixture
 async def ac(app, container: Injector, caplog) -> TestClient:
     caplog.set_level(logging.ERROR)
-    user_service = container.get(CollectionService[User])
+    database_context = container.get(DatabaseContext)
     auth_service = container.get(AuthService)
 
-    user = make_superuser()
-    await user_service.upserts([user])
-    token = auth_service.make_token(user.oauth_id)
+    org = make_root_user_org()
+    await database_context.upserts(Organisation, [org.organisation])
+    await database_context.upserts(User, org.users)
+    token = auth_service.make_token(org.users[0].oauth_id)
 
     async with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as ac:
         yield ac

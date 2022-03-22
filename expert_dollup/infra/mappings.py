@@ -6,11 +6,7 @@ from expert_dollup.shared.automapping import (
     map_dict_keys,
     RevervibleUnionMapping,
 )
-from expert_dollup.core.utils.path_transform import (
-    split_uuid_path,
-    join_uuid_path,
-)
-
+from expert_dollup.core.utils import *
 from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.infra.ressource_auth_db import *
 from expert_dollup.core.domains import *
@@ -388,13 +384,55 @@ def map_project_node_meta_state_from_dao(
 
 def map_user_from_dao(src: UserDao, mapper: Mapper) -> User:
     return User(
-        oauth_id=src.oauth_id, id=src.id, email=src.email, permissions=src.permissions
+        oauth_id=src.oauth_id,
+        id=src.id,
+        email=src.email,
+        permissions=src.permissions,
+        organisation_id=src.organisation_id,
     )
 
 
 def map_user_to_dao(src: User, mapper: Mapper) -> UserDao:
     return UserDao(
-        oauth_id=src.oauth_id, id=src.id, email=src.email, permissions=src.permissions
+        oauth_id=src.oauth_id,
+        id=src.id,
+        email=src.email,
+        permissions=src.permissions,
+        organisation_id=src.organisation_id,
+    )
+
+
+def map_organisation_from_dao(src: OrganisationDao, mapper: Mapper) -> Organisation:
+    return Organisation(
+        id=src.id, name=src.name, limits=mapper.map(src.limits, OrganisationLimits)
+    )
+
+
+def map_organisation_to_dao(src: Organisation, mapper: Mapper) -> OrganisationDao:
+    return OrganisationDao(
+        id=src.id, name=src.name, limits=mapper.map(src.limits, OrganisationLimitsDao)
+    )
+
+
+def map_organisation_limits_from_dao(
+    src: OrganisationLimitsDao, mapper: Mapper
+) -> OrganisationLimits:
+    return OrganisationLimits(
+        active_project_count=src.active_project_count,
+        active_project_overall_collection_count=src.active_project_overall_collection_count,
+        active_datasheet_count=src.active_datasheet_count,
+        active_datasheet_custom_element_count=src.active_datasheet_custom_element_count,
+    )
+
+
+def map_organisation_limits_to_dao(
+    src: OrganisationLimits, mapper: Mapper
+) -> OrganisationLimitsDao:
+    return OrganisationLimitsDao(
+        active_project_count=src.active_project_count,
+        active_project_overall_collection_count=src.active_project_overall_collection_count,
+        active_datasheet_count=src.active_datasheet_count,
+        active_datasheet_custom_element_count=src.active_datasheet_custom_element_count,
     )
 
 
@@ -417,7 +455,7 @@ def map_ressource_to_dao(src: Ressource, mapper: Mapper) -> RessourceDao:
         permissions=src.permissions,
         name=src.name,
         creation_date_utc=src.creation_date_utc,
-        date_ordering=src.creation_date_utc.strftime("%Y%m%d%H%M%S") + src.id.hex,
+        date_ordering=encode_date_with_uuid(src.creation_date_utc, src.id),
     )
 
 
@@ -1403,5 +1441,6 @@ def map_ressource_filter_to_dict(src: RessourceFilter, mapper: Mapper) -> dict:
         {
             "id": ("id", None),
             "user_id": ("user_id", None),
+            "organisation_id": ("organisation_id", None),
         },
     )

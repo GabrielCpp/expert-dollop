@@ -274,6 +274,10 @@ class FirestoreCollection(CollectionService[Domain]):
     def dao(self) -> Type:
         return self._dao
 
+    @property
+    def batch_size(self) -> int:
+        return 20
+
     async def insert(self, domain: Domain):
         d = self._dao_mapper.map_to_dict(domain)
 

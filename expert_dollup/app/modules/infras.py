@@ -1,6 +1,6 @@
 from os import environ
 from inspect import isclass
-from injector import Binder, singleton, inject
+from injector import Binder, singleton, inject, Injector
 from expert_dollup.infra.storage_connectors import (
     LocalStorage,
     GoogleCloudStorage,
@@ -12,13 +12,9 @@ from expert_dollup.shared.starlette_injection import (
     get_base,
     get_arg,
     is_development,
+    Constant,
 )
-from expert_dollup.shared.database_services import (
-    create_connection,
-    Paginator,
-    CollectionService,
-    UserRessourcePaginator,
-)
+from expert_dollup.shared.database_services import *
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.infra.expert_dollup_storage import ExpertDollupStorage
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
@@ -26,8 +22,6 @@ from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
 from expert_dollup.infra.validators import SchemaValidator
 from expert_dollup.infra.providers import WordProvider
 import expert_dollup.infra.services as services
-import expert_dollup.infra.queries as queries
-import expert_dollup.core.queries as core_queries
 import expert_dollup.infra.expert_dollup_db as expert_dollup_db_daos
 import expert_dollup.infra.ressource_auth_db.daos as ressource_db_daos
 import expert_dollup.infra.ressource_auth_db.services as ressource_auth_db_services
@@ -66,6 +60,18 @@ def bind_database_ressource(binder: Binder) -> None:
     DATABASE_URL = environ["AUTH_DB_URL"]
     database = create_connection(DATABASE_URL, ressource_db_daos)
     binder.bind(RessourceAuthDatabase, to=database, scope=singleton)
+
+
+def bind_database_context(binder: Binder) -> None:
+    binder.bind(
+        DatabaseContext,
+        to=factory_of(
+            DatabaseContextMultiplexer,
+            injector=Injector,
+            databases=Constant([RessourceAuthDatabase, ExpertDollupDatabase]),
+        ),
+        scope=singleton,
+    )
 
 
 def bind_storage(binder: Binder) -> None:
@@ -118,10 +124,8 @@ def bind_queries(binder: Binder) -> None:
 
     for domain_type, service_type in service_by_domain.items():
         binder.bind(
-            core_queries.Plucker[domain_type],
-            factory_of(
-                queries.PluckQuery[domain_type], service=service_type, mapper=Mapper
-            ),
+            Plucker[domain_type],
+            factory_of(PluckQuery[domain_type], service=service_type, mapper=Mapper),
         )
 
 

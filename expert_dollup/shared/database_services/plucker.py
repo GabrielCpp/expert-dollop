@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Callable, Iterable, TypeVar, List, Generic
 from uuid import UUID
 from expert_dollup.shared.database_services import QueryFilter
-from mypy_extensions import VarArg
 
 Domain = TypeVar("Domain")
 
@@ -11,7 +10,7 @@ class Plucker(ABC, Generic[Domain]):
     @abstractmethod
     async def plucks(
         self,
-        build_pluck_filter: Callable[[VarArg(UUID)], QueryFilter],
+        build_pluck_filter: Callable[[List[UUID]], QueryFilter],
         ids_lists: Iterable[UUID],
     ) -> List[Domain]:
         pass
@@ -20,7 +19,7 @@ class Plucker(ABC, Generic[Domain]):
     async def pluck_subressources(
         self,
         ressource_filter: QueryFilter,
-        build_pluck_filter: Callable[[VarArg(UUID)], QueryFilter],
+        build_pluck_filter: Callable[[List[UUID]], QueryFilter],
         ids_lists: Iterable[UUID],
     ) -> List[Domain]:
         pass

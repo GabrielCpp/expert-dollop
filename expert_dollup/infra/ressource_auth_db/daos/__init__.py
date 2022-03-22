@@ -36,3 +36,29 @@ class UserDao(BaseModel):
     id: UUID
     email: str
     permissions: List[str]
+    organisation_id: UUID
+
+
+class OrganisationLimitsDao(BaseModel):
+    class Meta:
+        pk = "id"
+
+    class Config:
+        title = "organisation_limits"
+
+    active_project_count: int
+    active_project_overall_collection_count: int
+    active_datasheet_count: int
+    active_datasheet_custom_element_count: int
+
+
+class OrganisationDao(BaseModel):
+    class Meta:
+        pk = "id"
+
+    class Config:
+        title = "organisation"
+
+    id: UUID
+    name: str
+    limits: OrganisationLimitsDao

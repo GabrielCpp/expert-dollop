@@ -5,8 +5,11 @@ from collections import defaultdict
 from itertools import islice
 from dataclasses import dataclass
 from hashlib import sha256
-from expert_dollup.shared.database_services import JsonSerializer, CollectionService
-from expert_dollup.core.queries import Plucker
+from expert_dollup.shared.database_services import (
+    JsonSerializer,
+    CollectionService,
+    Plucker,
+)
 from expert_dollup.core.domains import *
 from expert_dollup.core.exceptions import ReportGenerationError, RessourceNotFound
 from expert_dollup.core.object_storage import ObjectStorage

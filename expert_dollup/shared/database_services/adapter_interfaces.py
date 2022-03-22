@@ -71,6 +71,11 @@ class CollectionService(ABC, Generic[Domain]):
     def dao(self) -> Type:
         pass
 
+    @property
+    @abstractmethod
+    def batch_size(self) -> int:
+        pass
+
     @abstractmethod
     async def insert(self, domain: Domain):
         pass
@@ -150,6 +155,26 @@ class Paginator(ABC, Generic[Domain]):
 
     @abstractmethod
     def make_record_token(self, domain: Domain) -> str:
+        pass
+
+
+class TokenEncoder(ABC):
+    @abstractmethod
+    def extend_query(
+        self, builder: WhereFilter, limit: int, next_page_token: Optional[str]
+    ) -> QueryBuilder:
+        pass
+
+    @abstractmethod
+    def encode(self, dao: BaseModel):
+        pass
+
+    @abstractmethod
+    def encode_field(self, dao_id: str):
+        pass
+
+    @abstractmethod
+    def decode(self, cursor: str) -> Any:
         pass
 
 

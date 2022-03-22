@@ -52,7 +52,15 @@ from .translation import (
     TranslationFilter,
     TranslationPluckFilter,
 )
-from .ressource import Ressource, User, RessourceId, RessourceFilter, UserFilter
+from .ressource import (
+    Ressource,
+    User,
+    RessourceId,
+    RessourceFilter,
+    UserFilter,
+    Organisation,
+    OrganisationLimits,
+)
 from .formula import (
     Formula,
     FormulaExpression,

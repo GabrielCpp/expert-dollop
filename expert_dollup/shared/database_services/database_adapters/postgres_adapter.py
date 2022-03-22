@@ -323,6 +323,10 @@ class PostgresTableService(CollectionService[Domain]):
     def dao(self) -> Type:
         return self._dao
 
+    @property
+    def batch_size(self) -> int:
+        return 1000
+
     async def insert(self, domain: Domain):
         value = self._dao_mapper.map_to_dict(domain)
         query = self._table.insert().values(value)

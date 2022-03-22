@@ -16,11 +16,27 @@ class Ressource:
 
 
 @dataclass
+class OrganisationLimits:
+    active_project_count: int
+    active_project_overall_collection_count: int
+    active_datasheet_count: int
+    active_datasheet_custom_element_count: int
+
+
+@dataclass
+class Organisation:
+    id: UUID
+    name: str
+    limits: OrganisationLimits
+
+
+@dataclass
 class User:
     oauth_id: str
     id: UUID
     email: str
     permissions: List[str]
+    organisation_id: UUID
 
 
 @dataclass

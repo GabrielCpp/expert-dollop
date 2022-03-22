@@ -267,6 +267,10 @@ class MongoCollection(CollectionService[Domain]):
     def dao(self) -> Type:
         return self._dao
 
+    @property
+    def batch_size(self) -> int:
+        return 1000
+
     async def insert(self, domain: Domain):
         document = self._dao_mapper.map_to_dict(domain)
         await self._collection.insert_one(document)

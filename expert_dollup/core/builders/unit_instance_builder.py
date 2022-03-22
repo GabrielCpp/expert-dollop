@@ -2,7 +2,7 @@ from typing import List, Dict
 from uuid import UUID
 from collections import defaultdict
 from decimal import Decimal
-from expert_dollup.core.queries import Plucker
+from expert_dollup.shared.database_services import Plucker
 from expert_dollup.core.domains import *
 
 

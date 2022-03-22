@@ -1220,4 +1220,5 @@ def map_user_to_dto(src: User, mapper: Mapper) -> UserDto:
         id=src.id,
         email=src.email,
         permissions=src.permissions,
+        organisation_id=src.organisation_id,
     )
