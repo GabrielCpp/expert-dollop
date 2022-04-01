@@ -511,7 +511,10 @@ def map_project_definition_node_filter_to_dict(
 def map_report_definition_filter(src: ReportDefinitionFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
-        {"project_definition_id": ("project_definition_id", None)},
+        {
+            "project_definition_id": ("project_definition_id", None),
+            "distributable": ("distributable", None),
+        },
     )
 
 

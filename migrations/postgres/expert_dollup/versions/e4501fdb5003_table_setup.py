@@ -275,6 +275,18 @@ def create_report_tables():
         Column("project_definition_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
         Column("structure", postgresql.JSON(), nullable=False),
+        Column("distributable", Boolean, nullable=False),
+    )
+
+    op.create_table(
+        "distributable",
+        Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column(
+            "report_definition_id", postgresql.UUID(), nullable=False, primary_key=True
+        ),
+        Column("name", String, nullable=False),
+        Column("groups", postgresql.JSON(), nullable=False),
+        Column("distributions", postgresql.JSON(), nullable=False),
     )
 
 

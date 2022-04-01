@@ -14,3 +14,4 @@ from .datasheet_service import DatasheetService
 from .datasheet_element_service import DatasheetElementService
 from .report_definition_service import ReportDefinitionService
 from .measure_unit_service import MeasureUnitService
+from .distributable_service import DistributableService

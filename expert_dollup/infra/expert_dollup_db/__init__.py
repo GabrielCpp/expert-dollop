@@ -429,3 +429,41 @@ class MeasureUnitDao(BaseModel):
         title = "unit"
 
     id: str = Field(max_length=16)
+
+
+class DistributableItemDao(BaseModel):
+    distribution_ids: List[UUID]
+    node_id: UUID
+    formula_id: UUID
+    element_def_id: UUID
+    columns: Dict[str, ReportColumn]
+
+    @property
+    def id(self) -> str:
+        return ".".join([self.node_id, self.formula_id, self.element_def_id])
+
+
+class DistributableGroupDao(BaseModel):
+    summary: ComputedValue
+    items: List[DistributableItem]
+
+
+class DistributionDao(BaseModel):
+    id: UUID
+    file_url: str
+    creation_date_utc: datetime
+    item_ids: List[UUID]
+    state: str
+
+
+class DistributableDao(BaseModel):
+    class Meta:
+        pk = ("project_id", "report_definition_id")
+
+    class Config:
+        title = "distributable"
+
+    project_id: UUID
+    report_definition_id: UUID
+    groups: List[DistributableGroup]
+    distributions: List[Distribution]
