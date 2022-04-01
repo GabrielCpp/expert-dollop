@@ -71,7 +71,9 @@ class ReportDefinition:
     project_definition_id: UUID
     name: str
     structure: ReportStructure
+    distributable: bool
 
 
 class ReportDefinitionFilter(QueryFilter):
-    project_definition_id: UUID
+    project_definition_id: Optional[UUID]
+    distributable: Optional[bool]

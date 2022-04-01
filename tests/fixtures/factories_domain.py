@@ -1,4 +1,5 @@
 import factory
+from factory import SubFactory
 from expert_dollup.core.domains import *
 from datetime import timezone
 
@@ -172,6 +173,53 @@ class ReportDefinitionFactory(factory.Factory):
     project_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"report_name_{n}")
     structure = factory.SubFactory(ReportStructureFactory)
+    distributable = False
+
+
+class ReportColumnFactory(factory.Factory):
+    class Meta:
+        model = ReportColumn
+
+    value = 1
+    unit = None
+
+
+class ReportRowFactory(factory.Factory):
+    class Meta:
+        model = ReportRow
+
+    node_id = factory.Faker("pyuuid4")
+    formula_id = factory.Faker("pyuuid4")
+    element_def_id = factory.Faker("pyuuid4")
+    child_reference_id = factory.Faker("pyuuid4")
+    columns = factory.List([SubFactory(ReportColumnFactory) for _ in range(3)])
+    row = factory.Dict({})
+
+
+class ComputedValueFactory(factory.Factory):
+    class Meta:
+        model = ComputedValue
+
+    label = factory.Sequence(lambda n: f"computed_value_{n}")
+    value = factory.Sequence(lambda n: n)
+    unit = "$"
+
+
+class ReportStageFactory(factory.Factory):
+    class Meta:
+        model = ReportStage
+
+    summary = SubFactory(ComputedValueFactory)
+    rows = factory.List([SubFactory(ReportRowFactory) for _ in range(3)])
+
+
+class ReportFactory(factory.Factory):
+    class Meta:
+        model = Report
+
+    stages = factory.List([SubFactory(ReportStageFactory) for _ in range(3)])
+    summaries = factory.List([SubFactory(ComputedValueFactory) for _ in range(3)])
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
 class DatasheetDefinitionElementFactory(factory.Factory):

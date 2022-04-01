@@ -98,3 +98,10 @@ from .report_definition_dto import (
 )
 from .measure_unit_dto import MeasureUnitDto
 from .user_dto import UserDto
+from .distributable_dto import (
+    DistributableItemDto,
+    DistributableGroupDto,
+    DistributionStateDto,
+    DistributionDto,
+    DistributableDto,
+)

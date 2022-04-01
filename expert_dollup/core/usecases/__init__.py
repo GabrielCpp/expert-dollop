@@ -11,3 +11,4 @@ from .datasheet_usecase import DatasheetUseCase
 from .datasheet_element_usecase import DatasheetElementUseCase
 from .report_definition_usecase import ReportDefinitionUseCase
 from .report_usecase import ReportUseCase
+from .distributable_usercase import DistributableUseCase
