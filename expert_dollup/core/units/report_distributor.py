@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, List
+from uuid import UUID, uuid4
 from expert_dollup.core.domains import *
 from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.shared.starlette_injection import Clock

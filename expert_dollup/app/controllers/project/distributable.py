@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
-from typing import Optional
+from typing import List
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *
 from expert_dollup.core.usecases import DistributableUseCase

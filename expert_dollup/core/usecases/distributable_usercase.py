@@ -1,4 +1,5 @@
 from typing import List
+from uuid import UUID
 from expert_dollup.core.domains import *
 from expert_dollup.core.units import *
 from expert_dollup.core.object_storage import ObjectStorage
@@ -22,7 +23,7 @@ class DistributableUseCase:
         self.report_linking = report_linking
         self.report_storage = report_storage
 
-    async def distributable_reports(project_id: UUID) -> List[ReportDefinition]:
+    async def distributable_reports(self, project_id: UUID) -> List[ReportDefinition]:
         project_details = await self.project_service.find_by_id(project_id)
         report_definitions = await self.report_definition_service.find_by(
             ReportDefinitionFilter(

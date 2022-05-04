@@ -431,12 +431,23 @@ class MeasureUnitDao(BaseModel):
     id: str = Field(max_length=16)
 
 
+class ReportColumnDao(BaseModel):
+    value: PrimitiveUnionDao
+    unit: Optional[str]
+
+
+class ComputedValueDao(BaseModel):
+    label: str
+    value: PrimitiveUnionDao
+    unit: str
+
+
 class DistributableItemDao(BaseModel):
     distribution_ids: List[UUID]
     node_id: UUID
     formula_id: UUID
     element_def_id: UUID
-    columns: Dict[str, ReportColumn]
+    columns: Dict[str, ReportColumnDao]
 
     @property
     def id(self) -> str:
@@ -444,8 +455,8 @@ class DistributableItemDao(BaseModel):
 
 
 class DistributableGroupDao(BaseModel):
-    summary: ComputedValue
-    items: List[DistributableItem]
+    summary: ComputedValueDao
+    items: List[DistributableItemDao]
 
 
 class DistributionDao(BaseModel):
@@ -465,5 +476,5 @@ class DistributableDao(BaseModel):
 
     project_id: UUID
     report_definition_id: UUID
-    groups: List[DistributableGroup]
-    distributions: List[Distribution]
+    groups: List[DistributableGroupDao]
+    distributions: List[DistributionDao]

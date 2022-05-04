@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from uuid import UUID
-from typing import List
+from typing import List, Dict
 from enum import Enum
 from datetime import datetime
 from .report_dto import ComputedValueDto, ReportColumnDto

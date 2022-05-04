@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from uuid import UUID
-from typing import List
+from typing import List, Dict
 from enum import Enum
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
@@ -19,7 +19,9 @@ class DistributableItem:
 
     @property
     def id(self) -> str:
-        return ".".join([self.node_id, self.formula_id, self.element_def_id])
+        return ".".join(
+            [self.node_id.hex, self.formula_id.hex, self.element_def_id.hex]
+        )
 
 
 @dataclass
