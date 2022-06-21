@@ -6,23 +6,26 @@ from datetime import datetime
 from .report_dto import ComputedValueDto, ReportColumnDto
 from expert_dollup.shared.starlette_injection import CamelModel
 
-ColumnLabelDto = str
+
+class SuppliedItemDto(CamelModel):
+    datasheet_id: UUID
+    element_def_id: UUID
+    child_reference_id: UUID
+    organisation_id: UUID
 
 
-@dataclass
 class DistributableItemDto(CamelModel):
-    id: UUID
-    distribution_ids: List[UUID]
+    project_id: UUID
+    report_definition_id: UUID
     node_id: UUID
     formula_id: UUID
-    element_def_id: UUID
-    columns: Dict[ColumnLabelDto, ReportColumnDto]
+    supplied_item: SuppliedItemDto
+    distribution_ids: List[UUID]
 
-
-@dataclass
-class DistributableGroupDto(CamelModel):
     summary: ComputedValueDto
-    items: List[DistributableItemDto]
+    columns: List[ComputedValueDto]
+    obsolete: bool
+    creation_date_utc: datetime
 
 
 class DistributionStateDto(Enum):
@@ -36,14 +39,7 @@ class DistributionStateDto(Enum):
 class DistributionDto(CamelModel):
     id: UUID
     file_url: str
-    creation_date_utc: datetime
     item_ids: List[UUID]
     state: DistributionStateDto
-
-
-@dataclass
-class DistributableDto(CamelModel):
-    project_id: UUID
-    report_definition_id: UUID
-    groups: List[DistributableGroupDto]
-    distributions: List[DistributionDto]
+    obsolete: bool
+    creation_date_utc: datetime

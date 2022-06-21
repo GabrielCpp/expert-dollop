@@ -116,13 +116,13 @@ async def test_given_row_cache_should_produce_correct_report(
         lambda x: x.find_by(
             DatasheetElementFilter(
                 datasheet_id=datasheet_fixture.datasheet.id,
-                child_element_reference=zero_uuid(),
+                ordinal=0,
             )
         ),
         returns_async=[
             datasheet_element
             for datasheet_element in datasheet_fixture.datasheet_elements
-            if datasheet_element.child_element_reference == zero_uuid()
+            if datasheet_element.ordinal == 0
         ],
     )
 

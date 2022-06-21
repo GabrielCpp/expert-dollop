@@ -27,12 +27,8 @@ services:
       - backend
 
 volumes:
-  firebase_data:
-    name: firebase_data
   postgres_data:
     name: postgres_data
-  mongodb_data:
-    name: mongodb_data
 
 networks:
   backend:

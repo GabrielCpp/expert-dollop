@@ -250,8 +250,10 @@ def create_datasheet_tables():
             nullable=False,
             primary_key=True,
         ),
+        Column("ordinal", Integer(), nullable=False),
         Column("properties", postgresql.JSON(), nullable=False),
         Column("original_datasheet_id", postgresql.UUID(), nullable=False),
+        Column("original_owner_organisation_id", postgresql.UUID(), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 
@@ -279,14 +281,21 @@ def create_report_tables():
     )
 
     op.create_table(
-        "distributable",
+        "distributable_items",
         Column("project_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column(
             "report_definition_id", postgresql.UUID(), nullable=False, primary_key=True
         ),
-        Column("name", String, nullable=False),
+        Column("node_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("formula_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("supplied_item", postgresql.JSON(), nullable=False),
         Column("groups", postgresql.JSON(), nullable=False),
         Column("distributions", postgresql.JSON(), nullable=False),
+        Column("summary", postgresql.JSON(), nullable=False),
+        Column("columns", postgresql.JSON(), nullable=False),
+        Column("name", String, nullable=False),
+        Column("obsolete", Boolean, nullable=False),
+        Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 
 

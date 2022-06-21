@@ -19,6 +19,10 @@ class ComputedValue:
     value: PrimitiveUnion
     unit: str
 
+    @property
+    def key(self) -> str:
+        return f"{self.label}:{self.value}/{self.unit}"
+
 
 @dataclass
 class ReportRow:
@@ -30,6 +34,9 @@ class ReportRow:
     row: ReportRowDict
 
     def __getitem__(self, bucket_name: str):
+        if not bucket_name in self.row:
+            raise KeyError(bucket_name, list(self.row.keys()))
+
         return self.row[bucket_name]
 
 

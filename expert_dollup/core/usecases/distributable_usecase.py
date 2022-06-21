@@ -9,7 +9,7 @@ from expert_dollup.shared.database_services import CollectionService
 class DistributableUseCase:
     def __init__(
         self,
-        distributable_service,
+        distributable_service: CollectionService[DistributableItem],
         report_distributor: ReportDistributor,
         report_definition_service: CollectionService[ReportDefinition],
         project_service: CollectionService[ProjectDetails],
@@ -39,9 +39,9 @@ class DistributableUseCase:
         project_id: UUID,
         report_definition_id: UUID,
         items: List[UUID],
-    ) -> Distributable:
-        distributable = await self.distributable_service.find_by_id(
-            DistributableId(
+    ) -> Distribution:
+        distributable = await self.distributable_service.find_by(
+            DistributableItemFilter(
                 project_id=project_id, report_definition_id=report_definition_id
             )
         )
@@ -51,7 +51,7 @@ class DistributableUseCase:
 
     async def update_distributable(
         self, project_id: UUID, report_definition_id: UUID
-    ) -> Distributable:
+    ) -> DistributableUpdate:
         project_details = await self.project_service.find_by_id(project_id)
         report_definition = await self.report_definition_service.find_by_id(
             report_definition_id
@@ -63,14 +63,16 @@ class DistributableUseCase:
             ReportKey(project_id=project_id, report_definition_id=report_definition_id),
             report,
         )
-        distributable = await self.distributable_service.find_by_id(
-            DistributableId(
+        distributable_items = await self.distributable_service.find_by(
+            DistributableItemFilter(
                 project_id=project_id, report_definition_id=report_definition_id
             )
         )
-        self.report_distributor.update_from_report(
-            distributable, report, report_definition
+        distributable_update = await self.report_distributor.update_from_report(
+            project_details, report_definition, report, distributable_items
         )
-        await self.distributable_service.upserts([distributable])
+        distributable_update = await self.distributable_service.upserts(
+            distributable_update.items
+        )
 
-        return distributable
+        return distributable_update.items

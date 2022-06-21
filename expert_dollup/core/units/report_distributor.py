@@ -1,76 +1,104 @@
-from dataclasses import dataclass
 from typing import Dict, List
 from uuid import UUID, uuid4
 from expert_dollup.core.domains import *
-from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.shared.starlette_injection import Clock
-
-
-@dataclass
-class DistributableReportItem(DistributableItem):
-    summary: ComputedValue
-    obsolete: bool
+from expert_dollup.shared.database_services import DatabaseContext, Plucker
 
 
 class ReportDistributor:
-    def __init__(self, clock: Clock):
+    def __init__(self, clock: Clock, database_context: DatabaseContext):
         self.clock = clock
+        self.database_context = database_context
 
-    def update_from_report(
+    async def update_from_report(
         self,
-        distributable: Distributable,
-        report: Report,
+        project_details: ProjectDetails,
         report_definition: ReportDefinition,
-    ):
-        newer_items: Dict[str, DistributableReportItem] = {}
-        column_names = [c.name for c in report_definition.structure.columns]
+        report: Report,
+        distributable_items: List[DistributableItem],
+    ) -> DistributableUpdate:
+        newer_items: Dict[str, DistributableItem] = {}
+        obsolete_distributions = set()
+        child_reference_ids = self._get_child_reference_ids(report)
+        organisation_by_ids = await self._get_organisation_id_by_child_reference(
+            project_details, child_reference_ids
+        )
 
         for stage in report.stages:
             for row in stage.rows:
-                item = DistributableReportItem(
-                    distribution_ids=[],
+                item = DistributableItem(
+                    project_id=project_details.id,
+                    report_definition_id=report_definition.id,
                     node_id=row.node_id,
                     formula_id=row.formula_id,
-                    element_def_id=row.element_def_id,
-                    columns=dict(zip(column_names, row.columns)),
+                    supplied_item=SuppliedItem(
+                        datasheet_id=project_details.datasheet_id,
+                        element_def_id=row.element_def_id,
+                        child_reference_id=row.child_reference_id,
+                        organisation_id=organisation_by_ids[row.child_reference_id],
+                    ),
+                    distribution_ids=[],
                     summary=stage.summary,
+                    columns=row.columns,
                     obsolete=False,
+                    creation_date_utc=self.clock.utcnow(),
                 )
 
                 newer_items[item.id] = item
 
-        for group in distributable.groups:
-            for item in group.items:
-                if item.id in newer_items:
-                    newer_items.distribution_ids = item.distribution_ids
-                    newer_items.obsolete = False
+        for item in distributable_items:
+            if item.id in newer_items:
+                newer_items.distribution_ids = item.distribution_ids
+                newer_items.obsolete = False
 
-                    if newer_items.columns != item.columns:
-                        self.flag_distribution_as_obsolete(
-                            item.distribution_ids, item.id
-                        )
-                else:
-                    item = DistributableReportItem(
-                        distribution_ids=item.distribution_ids,
-                        node_id=item.node_id,
-                        formula_id=item.formula_id,
-                        element_def_id=item.element_def_id,
-                        columns=item.columns,
-                        summary=group.summary,
-                        obsolete=True,
-                    )
+                if newer_items.columns != item.columns:
+                    obsolete_distributions.update(item.distribution_ids)
+            else:
+                item.obsolete = True
+                newer_items[item.id] = item
+                obsolete_distributions.update(item.distribution_ids)
 
-                    newer_items[item.id] = item
+        return DistributableUpdate(
+            items=list(newer_items.values()),
+            obsolete_distribution_ids=list(obsolete_distributions),
+        )
 
-    def distribute(self, distributable: Distributable, items: List[UUID]):
+    def distribute(self, distributable_items: List[DistributableItem]) -> Distribution:
         distribution_id = uuid4()
         distribution = Distribution(
             id=distribution_id,
-            creation_date_utc=self.clock.utcnow(),
-            item_ids=items,
+            file_url="",
+            item_ids=[item.id for item in distributable_items],
             state=DistributionState.PENDING,
+            obsolete=False,
+            creation_date_utc=self.clock.utcnow(),
         )
 
-        distributable.distributions.append(distribution)
+        return distribution
 
-        return distributable
+    def _get_child_reference_ids(self, report: Report) -> List[UUID]:
+        reference_ids = []
+
+        for stage in report.stages:
+            for row in stage.rows:
+                reference_ids.append(row.child_reference_id)
+
+        return reference_ids
+
+    async def _get_organisation_id_by_child_reference(
+        self, project_details: ProjectDetails, child_reference_ids: List[UUID]
+    ):
+        datasheet_element_plucker: Plucker[
+            DatasheetElement
+        ] = self.database_context.bind_query(Plucker[DatasheetElement])
+        report_datasheet_elements = await datasheet_element_plucker.pluck_subressources(
+            DatasheetElementFilter(datasheet_id=project_details.datasheet_id),
+            lambda ids: DatasheetElementPluckFilter(child_element_references=ids),
+            child_reference_ids,
+        )
+        organisation_by_ids = {
+            element.child_element_reference: element.original_owner_organisation_id
+            for element in report_datasheet_elements
+        }
+
+        return organisation_by_ids

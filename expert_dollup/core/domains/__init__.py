@@ -142,10 +142,10 @@ from .values_union import (
     PrimitiveWithReferenceUnion,
 )
 from .distributable import (
-    Distributable,
-    Distribution,
-    DistributionState,
-    DistributableGroup,
     DistributableItem,
-    DistributableId,
+    DistributableUpdate,
+    DistributionState,
+    Distribution,
+    DistributableItemFilter,
+    SuppliedItem,
 )

@@ -35,7 +35,3 @@ def make_root_user_org(oauth_id: str = "testuser", org_name="root_org") -> UserP
             )
         ],
     )
-
-
-def make_default_users() -> UserPackage:
-    return make_root_user_org()

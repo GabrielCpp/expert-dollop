@@ -1,12 +1,13 @@
 from typing import Type, TypeVar, List
 from uuid import UUID
 from .database_context import DatabaseContext, QueryFilter
+from .pluck_query import Plucker
 
 T = TypeVar("T")
 
 
 class AggregateLoader:
-    def __init__(db_context: DatabaseContext):
+    def __init__(self, db_context: DatabaseContext):
         self.db_context = db_context
         self.cache = {}
 
@@ -27,7 +28,7 @@ class AggregateLoader:
     ) -> List[T]:
         objs = [None] * len(ids)
         not_founds = {}
-        plucker = self.db_context.bind_query(Plucker)
+        plucker = self.db_context.bind_query(Plucker[domain_type])
 
         for index, id in enumerate(ids):
             obj = self.cache.get(id)

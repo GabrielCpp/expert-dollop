@@ -363,8 +363,10 @@ class DatasheetElementDao(BaseModel):
     datasheet_id: UUID
     element_def_id: UUID
     child_element_reference: UUID
+    ordinal: int
     properties: Dict[str, PrimitiveUnionDao]
     original_datasheet_id: UUID
+    original_owner_organisation_id: UUID
     creation_date_utc: datetime
 
 
@@ -419,6 +421,7 @@ class ReportDefinitionDao(BaseModel):
     project_definition_id: UUID
     name: str = Field(max_length=64)
     structure: ReportStructureDao
+    distributable: bool
 
 
 class MeasureUnitDao(BaseModel):
@@ -442,39 +445,28 @@ class ComputedValueDao(BaseModel):
     unit: str
 
 
-class DistributableItemDao(BaseModel):
-    distribution_ids: List[UUID]
-    node_id: UUID
-    formula_id: UUID
+class SuppliedItemDao(BaseModel):
+    datasheet_id: UUID
     element_def_id: UUID
-    columns: Dict[str, ReportColumnDao]
-
-    @property
-    def id(self) -> str:
-        return ".".join([self.node_id, self.formula_id, self.element_def_id])
+    child_reference_id: UUID
+    organisation_id: UUID
 
 
-class DistributableGroupDao(BaseModel):
-    summary: ComputedValueDao
-    items: List[DistributableItemDao]
-
-
-class DistributionDao(BaseModel):
-    id: UUID
-    file_url: str
-    creation_date_utc: datetime
-    item_ids: List[UUID]
-    state: str
-
-
-class DistributableDao(BaseModel):
+class DistributableItemDao(BaseModel):
     class Meta:
-        pk = ("project_id", "report_definition_id")
+        pk = ("project_id", "node_id", "formula_id")
 
     class Config:
-        title = "distributable"
+        title = "distributable_items"
 
     project_id: UUID
     report_definition_id: UUID
-    groups: List[DistributableGroupDao]
-    distributions: List[DistributionDao]
+    node_id: UUID
+    formula_id: UUID
+    supplied_item: SuppliedItemDao
+    distributions: List[UUID]
+
+    summary: ComputedValueDao
+    columns: Dict[str, ReportColumnDao]
+    obsolete: bool
+    creation_date_utc: datetime

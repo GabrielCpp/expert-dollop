@@ -72,3 +72,4 @@ class ReportDefinitionDto(CamelModel):
     project_definition_id: UUID
     name: str
     structure: ReportStructureDto
+    distributable: bool

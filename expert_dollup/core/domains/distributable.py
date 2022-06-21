@@ -10,24 +10,42 @@ ColumnLabel = str
 
 
 @dataclass
+class SuppliedItem:
+    datasheet_id: UUID
+    element_def_id: UUID
+    child_reference_id: UUID
+    organisation_id: UUID
+
+
+@dataclass
 class DistributableItem:
-    distribution_ids: List[UUID]
+    project_id: UUID
+    report_definition_id: UUID
     node_id: UUID
     formula_id: UUID
-    element_def_id: UUID
-    columns: Dict[ColumnLabel, ReportColumn]
+    supplied_item: SuppliedItem
+    distribution_ids: List[UUID]
+
+    summary: ComputedValue
+    columns: List[ComputedValue]
+    obsolete: bool
+    creation_date_utc: datetime
 
     @property
     def id(self) -> str:
         return ".".join(
-            [self.node_id.hex, self.formula_id.hex, self.element_def_id.hex]
+            [
+                self.node_id.hex,
+                self.formula_id.hex,
+                self.supplied_item.element_def_id.hex,
+            ]
         )
 
 
 @dataclass
-class DistributableGroup:
-    summary: ComputedValue
+class DistributableUpdate:
     items: List[DistributableItem]
+    obsolete_distribution_ids: List[UUID]
 
 
 class DistributionState(Enum):
@@ -41,20 +59,12 @@ class DistributionState(Enum):
 class Distribution:
     id: UUID
     file_url: str
-    creation_date_utc: datetime
     item_ids: List[UUID]
     state: DistributionState
+    obsolete: bool
+    creation_date_utc: datetime
 
 
-@dataclass
-class Distributable:
-    project_id: UUID
-    report_definition_id: UUID
-    groups: List[DistributableGroup]
-    distributions: List[Distribution]
-
-
-@dataclass
-class DistributableId(QueryFilter):
+class DistributableItemFilter(QueryFilter):
     project_id: UUID
     report_definition_id: UUID

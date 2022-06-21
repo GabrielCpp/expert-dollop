@@ -23,7 +23,7 @@ class DatabaseContextMultiplexer(DatabaseContext):
 
         return collection_service
 
-    def bind_query(query_type: Type[Query]) -> Query:
+    def bind_query(self, query_type: Type[Query]) -> Query:
         return self.injector.get(query_type)
 
     async def insert(self, domain_type: Type[Domain], domain: Domain):

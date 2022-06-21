@@ -71,6 +71,9 @@ class ElementSeed:
     def id(self):
         return make_uuid(self.name)
 
+    def make_element_id(self, index: int) -> UUID:
+        return make_uuid(self.name + "-" + index)
+
     @property
     def name(self) -> str:
         assert not self._name is None
@@ -246,6 +249,9 @@ class DatasheetInstanceFactory:
     def build(
         datasheet_seed: DatasheetSeed, project_definition: ProjectDefinition
     ) -> CustomDatasheetInstancePackage:
+        original_owner_organisation_id = make_uuid(
+            f"{project_definition.name}-default-datasheet-owner"
+        )
         project_definition.properties = {
             name: dict(DEFAULT_VALUE_MAPPING[property_type])
             for name, property_type in datasheet_seed.properties.items()
@@ -285,12 +291,14 @@ class DatasheetInstanceFactory:
             DatasheetElement(
                 datasheet_id=datasheet.id,
                 element_def_id=element_seed.id,
-                child_element_reference=zero_uuid(),
+                child_element_reference=element_seed.make_element_id(0),
+                ordinal=0,
                 properties={
                     name: element_seed.seed_value(property_type, index)
                     for name, property_type in datasheet_seed.properties.items()
                 },
                 original_datasheet_id=datasheet.id,
+                original_owner_organisation_id=original_owner_organisation_id,
                 creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
             )
             for index, element_seed in enumerate(datasheet_seed.element_seeds.values())

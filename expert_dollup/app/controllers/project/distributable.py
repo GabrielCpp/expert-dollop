@@ -27,17 +27,17 @@ async def get_project_distributables(
     )
 
 
-@router.put("/projects/{project_id}/distributable/{report_definition_id}")
-async def get_project_distributable(
+@router.get("/projects/{project_id}/distributable/{report_definition_id}")
+async def get_project_distributable_items(
     project_id: UUID,
     report_definition_id: UUID,
-    usecase=Depends(Inject(DistributableUseCase)),
-    handler=Depends(Inject(RequestHandler)),
+    usecase: DistributableUseCase = Depends(Inject(DistributableUseCase)),
+    handler: RequestHandler = Depends(Inject(RequestHandler)),
 ):
-    return await handler.forward(
+    return await handler.forward_many(
         usecase.update_distributable,
         dict(project_id=project_id, report_definition_id=report_definition_id),
-        MappingChain(domain=Distributable, out_dto=DistributableDto),
+        MappingChain(domain=DistributableItem, out_dto=DistributableItemDto),
     )
 
 

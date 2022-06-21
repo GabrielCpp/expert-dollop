@@ -485,6 +485,26 @@ type Report {
   summaries: [ComputedValue!]!
 }
 
+type SuppliedItem {
+  datasheetId: String!
+  elementDefId: String!
+  childReferenceId: String!
+  organisationId: String!
+}
+
+type DistributableItem { 
+  projectId: String!
+  reportDefinitionId: String!
+  nodeId: String!
+  formulaId: String!
+  suppliedItem: SuppliedItem!
+  distribution_ids: [String!]!
+  summary: ComputedValue!
+  columns: [ComputedValue!]!
+  obsolete: Boolean!
+  creationDateUtc: String!
+}
+
 type Translation {
   id: ID!
   ressourceId: String!
@@ -576,6 +596,11 @@ type Query {
   findReportDefinitions(projectDefinitionId: ID!): [ReportDefinition!]!
   findReportDefinition(reportDefinitionId: ID!): ReportDefinition!
   findProjectReport(projectId: ID!, reportDefinitionId: ID!): Report!
+
+  # CommandOrder
+  findDistributables(projectId: ID!): [ReportDefinition!]!
+  findDistributableItems(projectId: ID!, reportDefinitionId: ID!): [DistributableItem!]!
+
 }
 
 input TranslationInput {
@@ -641,6 +666,7 @@ type Mutation {
 
   # Datasheet
   createDatasheet(datasheet: DatasheetInput): Datasheet!
+
 }
 
 schema {

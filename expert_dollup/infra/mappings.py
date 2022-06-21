@@ -980,10 +980,12 @@ def map_datasheet_element_to_dao(
         datasheet_id=src.datasheet_id,
         element_def_id=src.element_def_id,
         child_element_reference=src.child_element_reference,
+        ordinal=src.ordinal,
         properties=mapper.map_dict_values(
             src.properties, primitive_union_dao_mappings.to_origin
         ),
         original_datasheet_id=src.original_datasheet_id,
+        original_owner_organisation_id=src.original_owner_organisation_id,
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -995,10 +997,12 @@ def map_datasheet_element_from_dao(
         datasheet_id=src.datasheet_id,
         element_def_id=src.element_def_id,
         child_element_reference=src.child_element_reference,
+        ordinal=src.ordinal,
         properties=mapper.map_dict_values(
             src.properties, primitive_union_dao_mappings.from_origin
         ),
         original_datasheet_id=src.original_datasheet_id,
+        original_owner_organisation_id=src.original_owner_organisation_id,
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -1012,6 +1016,7 @@ def map_datasheet_element_filter_to_dict(
             "datasheet_id": ("datasheet_id", None),
             "element_def_id": ("element_def_id", None),
             "child_element_reference": ("child_element_reference", None),
+            "ordinal": ("ordinal", None),
             "creation_date_utc": ("creation_date_utc", None),
         },
     )
@@ -1154,6 +1159,7 @@ def map_report_definition_from_dao(
         project_definition_id=src.project_definition_id,
         name=src.name,
         structure=mapper.map(src.structure, ReportStructure),
+        distributable=src.distributable,
     )
 
 
@@ -1165,6 +1171,7 @@ def map_report_definition_to_dao(
         project_definition_id=src.project_definition_id,
         name=src.name,
         structure=mapper.map(src.structure, ReportStructureDao),
+        distributable=src.distributable,
     )
 
 
@@ -1334,6 +1341,7 @@ def map_datasheet_element_pluck_filter(
         src.args,
         {
             "element_def_ids": ("element_def_id", None),
+            "child_element_references": ("child_element_reference", None),
         },
     )
 
@@ -1372,7 +1380,6 @@ def map_report_from_dao(src: ReportDao, mapper: Mapper) -> Report:
 
 def map_report_group_to_dao(src: ReportStage, mapper: Mapper) -> ReportStageDao:
     return ReportStageDao(
-        label=src.label,
         summary=mapper.map(src.summary, ComputedValueDao),
         rows=mapper.map_many(src.rows, ReportRowDao),
     )
@@ -1380,7 +1387,6 @@ def map_report_group_to_dao(src: ReportStage, mapper: Mapper) -> ReportStageDao:
 
 def map_report_group_from_dao(src: ReportStageDao, mapper: Mapper) -> ReportStage:
     return ReportStage(
-        label=src.label,
         summary=mapper.map(src.summary, ComputedValue),
         rows=mapper.map_many(src.rows, ReportRow),
     )
@@ -1392,7 +1398,7 @@ def map_report_row_to_dao(src: ReportRow, mapper: Mapper) -> ReportRowDao:
         formula_id=src.formula_id,
         element_def_id=src.element_def_id,
         child_reference_id=src.child_reference_id,
-        columns=mapper.map_many(src.columns, primitive_union_dao_mappings.to_origin),
+        columns=mapper.map_many(src.columns, ReportColumnDao),
         row=map_report_rows_dict_to_dao(src.row, mapper),
     )
 
@@ -1403,8 +1409,22 @@ def map_report_row_from_dao(src: ReportRowDao, mapper: Mapper) -> ReportRow:
         formula_id=src.formula_id,
         element_def_id=src.element_def_id,
         child_reference_id=src.child_reference_id,
-        columns=mapper.map_many(src.columns, primitive_union_dao_mappings.from_origin),
+        columns=mapper.map_many(src.columns, ReportColumn),
         row=map_report_rows_dict_from_dao(src.row, mapper),
+    )
+
+
+def map_report_column_to_dao(src: ReportColumn, mapper: Mapper) -> ReportColumnDao:
+    return ReportColumnDao(
+        value=mapper.map(src.value, primitive_union_dao_mappings.to_origin),
+        unit=src.unit,
+    )
+
+
+def map_report_column_from_dao(src: ReportColumnDao, mapper: Mapper) -> ReportColumn:
+    return ReportColumn(
+        value=mapper.map(src.value, primitive_union_dao_mappings.from_origin),
+        unit=src.unit,
     )
 
 
@@ -1446,4 +1466,58 @@ def map_ressource_filter_to_dict(src: RessourceFilter, mapper: Mapper) -> dict:
             "user_id": ("user_id", None),
             "organisation_id": ("organisation_id", None),
         },
+    )
+
+
+def map_distributable_id_to_dict(src: DistributableItemFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "project_id": ("project_id", None),
+            "report_definition_id": ("report_definition_id", None),
+        },
+    )
+
+
+def map_distributable_item_from_dao(
+    src: DistributableItemDao, mapper: Mapper
+) -> DistributableItem:
+    return DistributableItem(
+        project_id=src.project_id,
+        report_definition_id=src.report_definition_id,
+        node_id=src.node_id,
+        formula_id=src.formula_id,
+        supplied_item=SuppliedItem(
+            datasheet_id=src.supplied_item.datasheet_id,
+            element_def_id=src.supplied_item.element_def_id,
+            child_reference_id=src.supplied_item.child_reference_id,
+            organisation_id=src.supplied_item.organisation_id,
+        ),
+        distribution_ids=src.distribution_ids,
+        summary=mapper.map(src.summary, ComputedValue),
+        columns=mapper.map_many(src.columns, ComputedValue),
+        obsolete=src.obsolete,
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_distributable_item_to_dao(
+    src: DistributableItem, mapper: Mapper
+) -> DistributableItemDao:
+    return DistributableItemDao(
+        project_id=src.project_id,
+        report_definition_id=src.report_definition_id,
+        node_id=src.node_id,
+        formula_id=src.formula_id,
+        supplied_item=SuppliedItemDao(
+            datasheet_id=src.supplied_item.datasheet_id,
+            element_def_id=src.supplied_item.element_def_id,
+            child_reference_id=src.supplied_item.child_reference_id,
+            organisation_id=src.supplied_item.organisation_id,
+        ),
+        distribution_ids=src.distribution_ids,
+        summary=mapper.map(src.summary, ComputedValueDao),
+        columns=mapper.map_many(src.columns, ComputedValueDao),
+        obsolete=src.obsolete,
+        creation_date_utc=src.creation_date_utc,
     )

@@ -70,11 +70,11 @@ class DatasheetUseCase:
                     DatasheetElement(
                         datasheet_id=cloned_datasheet.id,
                         element_def_id=result.definition_element.id,
-                        child_element_reference=zero_uuid()
-                        if result.child_element_reference == zero_uuid()
-                        else uuid4(),
+                        child_element_reference=uuid4(),
+                        ordinal=result.ordinal,
                         properties=result.properties,
                         original_datasheet_id=result.original_datasheet_id,
+                        original_owner_organisation_id=user.organisation_id,
                         creation_date_utc=self.clock.utcnow(),
                     )
                     for result in page.results
@@ -116,12 +116,13 @@ class DatasheetUseCase:
             DatasheetElement(
                 datasheet_id=datasheet.id,
                 element_def_id=definition_element.id,
-                child_element_reference=zero_uuid(),
+                child_element_reference=uuid4(),
                 properties={
                     name: default_property.value
                     for name, default_property in definition_element.default_properties.items()
                 },
                 original_datasheet_id=datasheet.id,
+                original_owner_organisation_id=user.organisation_id,
                 creation_date_utc=self.clock.utcnow(),
             )
             for definition_element in definition_elements

@@ -32,7 +32,7 @@ class RessourceEngine(UserRessourcePaginator[Domain]):
         self._mapper = mapper
         self._domain_service = domain_service
         self._page_encoder = FieldTokenEncoder(
-            "date_ordering", str, str, ("0" * 12) + zero_uuid().hex
+            "date_ordering", str, str, ("0" * 12) + ("0" * 32)
         )
 
     async def find_page(

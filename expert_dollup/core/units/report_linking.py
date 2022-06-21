@@ -140,7 +140,6 @@ class JoinFormulaUnitInstances(JoinStep):
         report_definition = linking_data.report_definition
         self.element_attribute = report_definition.structure.datasheet_attribute
         self.formula_attribute = report_definition.structure.formula_attribute
-        self.null_uuid = zero_uuid()
         self.unit_instances_by_def_id = (
             JoinFormulaUnitInstances.get_unit_instances_by_def_id(
                 linking_data.unit_instances
@@ -331,7 +330,6 @@ class ReportBuilder:
         stage_summary = self.linking_data.report_definition.structure.stage_summary
         report_summary = self.linking_data.report_definition.structure.report_summary
         columns = self.linking_data.report_definition.structure.columns
-        null_uuid = zero_uuid()
 
         def get_unit(row, unit):
             return unit.get(row) if isinstance(unit, AttributeBucket) else unit
@@ -341,7 +339,9 @@ class ReportBuilder:
                 node_id=row[FORMULA_BUCKET_NAME]["node_id"],
                 formula_id=formula_attribute.get(row),
                 element_def_id=element_attribute.get(row),
-                child_reference_id=null_uuid,
+                child_reference_id=self.linking_data.datasheet_elements_by_id[
+                    element_attribute.get(row)
+                ].child_element_reference,
                 columns=[
                     ReportColumn(
                         value=row[COLUMNS_BUCKET_NAME][column.name],
@@ -458,7 +458,7 @@ class ReportLinking:
             self.datasheet_element_service.find_by(
                 DatasheetElementFilter(
                     datasheet_id=project_details.datasheet_id,
-                    child_element_reference=zero_uuid(),
+                    ordinal=0,
                 )
             ),
         )

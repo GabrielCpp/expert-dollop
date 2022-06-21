@@ -248,18 +248,20 @@ def make_token(c, oauth="testuser"):
 def load_default_users(c):
     from dotenv import load_dotenv
     from expert_dollup.app.modules import build_container
-    from expert_dollup.core.domains import User
-    from expert_dollup.shared.database_services import CollectionService
+    from expert_dollup.core.domains import User, Organisation
+    from expert_dollup.shared.database_services import DatabaseContext
     from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
-    from tests.fixtures.seeds import make_default_users
+    from tests.fixtures.seeds import make_root_user_org
 
     async def reload_db():
         load_dotenv()
         container = build_container()
         user_db = container.get(RessourceAuthDatabase)
-        user_service = container.get(CollectionService[User])
+        database_context = container.get(DatabaseContext)
+        org = make_root_user_org()
 
         await user_db.truncate_db()
-        await user_service.insert_many(make_default_users())
+        await database_context.upserts(Organisation, [org.organisation])
+        await database_context.upserts(User, org.users)
 
     asyncio.run(reload_db())

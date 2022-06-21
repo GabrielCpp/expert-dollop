@@ -13,7 +13,7 @@ class DatabaseContext(ABC):
         pass
 
     @abstractmethod
-    def bind_query(domain_type: Type[Domain], query_type: Type[Query]) -> Query:
+    def bind_query(self, domain_type: Type[Domain], query_type: Type[Query]) -> Query:
         pass
 
     @abstractmethod
