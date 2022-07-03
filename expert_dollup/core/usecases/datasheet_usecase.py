@@ -117,6 +117,7 @@ class DatasheetUseCase:
                 datasheet_id=datasheet.id,
                 element_def_id=definition_element.id,
                 child_element_reference=uuid4(),
+                ordinal=0,
                 properties={
                     name: default_property.value
                     for name, default_property in definition_element.default_properties.items()

@@ -1,0 +1,23 @@
+version: '3.7'
+services:
+  test:
+    build:
+      context: .
+      target: test
+    entrypoint: 
+    - bash
+    - '-c'
+    - |
+      source .env
+      poetry run wait-for-it --service $EXPERT_DOLLUP_DB_URL -- echo "mongo is up"
+      poetry run invoke db:migrate --url $EXPERT_DOLLUP_DB_URL
+      poetry run invoke db:migrate --url $AUTH_DB_URL
+      poetry run pytest
+    depends_on:
+      - mongo
+    links:
+      - mongo
+    restart: always
+
+
+

@@ -1,0 +1,24 @@
+ steps:
+ # Export variables https://medium.com/google-cloud/how-to-pass-data-between-cloud-build-steps-de5c9ebc4cdd
+ # Build the container image
+ - name: 'gcr.io/cloud-builders/docker'
+   args: ['build', '-t', 'gcr.io/$PROJECT_ID/expert-dollup:$COMMIT_SHA', '.']
+ # docker-compose -f docker-compose.mongodb.yml -f docker-compose.ci.yml up --abort-on-container-exit --build test
+ - name: 'docker/compose:1.19.0'
+   args: ['-f', 'docker-compose.mongodb.yml', '-f', 'docker-compose.ci.yml', 'up', '--build', '--abort-on-container-exit', 'test']
+ # Push the container image to Container Registry
+ - name: 'gcr.io/cloud-builders/docker'
+   args: ['push', 'gcr.io/$PROJECT_ID/expert-dollup:$COMMIT_SHA']
+ # Deploy container image to Cloud Run
+ - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+   entrypoint: gcloud
+   args:
+   - 'run'
+   - 'deploy'
+   - 'expert-dollup'
+   - '--image'
+   - 'gcr.io/$PROJECT_ID/expert-dollup:$COMMIT_SHA'
+   - '--region'
+   - 'us-west2'
+  images:
+  - 'gcr.io/$PROJECT_ID/expert-dollup:$COMMIT_SHA'

@@ -7,7 +7,6 @@ import expert_dollup.infra.services as services
 from uuid import UUID
 from injector import Injector
 from dotenv import load_dotenv
-from pathlib import Path
 from factory.random import reseed_random
 from factory import Faker
 from faker.providers import BaseProvider
@@ -36,8 +35,7 @@ class PyProvider(BaseProvider):
         return UUID(hexs)
 
 
-load_dotenv(dotenv_path=Path(".") / ".env.test")
-load_dotenv()
+load_dotenv('.env')
 reseed_random(1)
 Faker.add_provider(PyProvider)
 Faker.add_provider(DateTimeProvider)

@@ -72,7 +72,7 @@ class ElementSeed:
         return make_uuid(self.name)
 
     def make_element_id(self, index: int) -> UUID:
-        return make_uuid(self.name + "-" + index)
+        return make_uuid(f"{self.name}-{index}")
 
     @property
     def name(self) -> str:

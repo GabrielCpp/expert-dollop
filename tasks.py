@@ -122,6 +122,14 @@ def start(c):
     c.run(
         "poetry run uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000"
     )
+    
+@task
+def test(c):
+    c.run("docker build --target=test -t expert-dollup-test . && docker run --network expert-dollop_default expert-dollup-test")
+
+@task 
+def test_compose(c):
+    c.run("env $(cat .env.test) docker-compose -f docker-compose.mongodb.yml -f docker-compose.ci.yml up --abort-on-container-exit --build test")
 
 
 @task(name="env:init")

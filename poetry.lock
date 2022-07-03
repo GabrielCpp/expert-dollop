@@ -1122,6 +1122,20 @@ docs = ["Sphinx (>=4.1.2,<4.2.0)", "sphinxcontrib-asyncio (>=0.3.0,<0.4.0)", "sp
 test = ["aiohttp", "flake8 (>=3.9.2,<3.10.0)", "psutil", "pycodestyle (>=2.7.0,<2.8.0)", "pyOpenSSL (>=19.0.0,<19.1.0)", "mypy (>=0.800)"]
 
 [[package]]
+name = "wait-for-it"
+version = "2.2.1"
+description = "Wait for service(s) to be available before executing a command."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+click = "*"
+
+[package.extras]
+dev = ["black", "click", "flake8", "parameterized", "pytest", "pytest-cov", "twine"]
+
+[[package]]
 name = "watchgod"
 version = "0.8.2"
 description = "Simple, modern file watching and code reload in python."
@@ -1160,7 +1174,7 @@ postgre = ["SQLAlchemy", "asyncpg"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8.0"
-content-hash = "4b3c4e28a21917e197fed5b4e1a4b07a11c75a1046bf7aef94f13db21abed1b7"
+content-hash = "f75b4c717806995433e714b96980bef0c4783852360f09cf23feb672202046a6"
 
 [metadata.files]
 alembic = [
@@ -2315,6 +2329,10 @@ uvloop = [
     {file = "uvloop-0.16.0-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:98d117332cc9e5ea8dfdc2b28b0a23f60370d02e1395f88f40d1effd2cb86c4f"},
     {file = "uvloop-0.16.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1e5f2e2ff51aefe6c19ee98af12b4ae61f5be456cd24396953244a30880ad861"},
     {file = "uvloop-0.16.0.tar.gz", hash = "sha256:f74bc20c7b67d1c27c72601c78cf95be99d5c2cdd4514502b4f3eb0933ff1228"},
+]
+wait-for-it = [
+    {file = "wait-for-it-2.2.1.tar.gz", hash = "sha256:7d834802df52c4acc244123373a4b6eb669f2609ec8887ef7ef4ea8022053eca"},
+    {file = "wait_for_it-2.2.1-py3-none-any.whl", hash = "sha256:c835188b5aa9f63ec2e73473bd880db111f207e25998b4a3946c7b4660f48eba"},
 ]
 watchgod = [
     {file = "watchgod-0.8.2-py3-none-any.whl", hash = "sha256:2f3e8137d98f493ff58af54ea00f4d1433a6afe2ed08ab331a657df468c6bfce"},

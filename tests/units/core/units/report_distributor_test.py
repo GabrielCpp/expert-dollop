@@ -101,7 +101,8 @@ async def test_update_empty_distributable_from_report(static_clock):
 
 def test_update_populated_distributable_from_report(static_clock):
     project_id = uuid4()
-    report_distributor = ReportDistributor(static_clock)
+    database_context = StrictInterfaceSetup(DatabaseContext)
+    report_distributor = ReportDistributor(static_clock, database_context.object)
     report = ReportFactory(
         stages=[
             ReportStageFactory(
