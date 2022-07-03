@@ -1,4 +1,5 @@
 from functools import wraps
+from graphql import GraphQLError
 
 
 def inject_graphql_handler(handler_type):

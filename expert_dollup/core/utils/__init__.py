@@ -7,3 +7,4 @@ from .path_transform import (
     list_uuid_to_str,
     list_str_to_uuid,
 )
+from .ressource_permissions import make_permission, make_permissions, all_action

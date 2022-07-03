@@ -103,3 +103,4 @@ from .distributable_dto import (
     DistributionDto,
     DistributionStateDto,
 )
+from .organisation_dto import NewSingleUserOrganisationDto

@@ -529,16 +529,22 @@ type PageInfo {
   endCursor: String!
   totalCount: Int!
 }
+
 type User {
     oauthId: ID!
     id: String!
     email: String!
     permissions: [String!]!
+    organisationId: String!
+}
 
+input NewSingleUserOrganisationInput {
+    organisationName: String!
+    email: String!
 }
 
 type Query {
-  currentUser: User!
+  currentUser: User
   findDatasheet(id: ID!): Datasheet!
   findDatasheets(
     query: String!
@@ -600,7 +606,6 @@ type Query {
   # CommandOrder
   findDistributables(projectId: ID!): [ReportDefinition!]!
   findDistributableItems(projectId: ID!, reportDefinitionId: ID!): [DistributableItem!]!
-
 }
 
 input TranslationInput {
@@ -666,6 +671,9 @@ type Mutation {
 
   # Datasheet
   createDatasheet(datasheet: DatasheetInput): Datasheet!
+
+  # User
+  createSingleUserOrganisation(singleUserOrganisation: NewSingleUserOrganisationInput!): User!
 
 }
 

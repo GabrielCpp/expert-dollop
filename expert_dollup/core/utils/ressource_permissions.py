@@ -3,6 +3,14 @@ from typing import Type, Iterable, Set, List
 from dataclasses import dataclass
 from uuid import UUID
 from itertools import chain
+from enum import Enum
+
+
+class Action(Enum):
+    CAN_READ = "read"
+    CAN_UPDATE = "update"
+    CAN_CREATE = "create"
+    CAN_DELETE = "delete"
 
 
 @dataclass
@@ -47,7 +55,11 @@ def make_permissions(ressource: Type, actions: Iterable[str]) -> List[str]:
 
 
 def all_action() -> List[str]:
-    return [r.kind for r in RESSOURCE_ACTIONS]
+    return [r for r in RESSOURCE_ACTIONS]
+
+
+def actions(*acts: Action) -> List[str]:
+    return [action.value for action in acts]
 
 
 def all_permisions() -> List[str]:

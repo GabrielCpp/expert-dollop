@@ -28,6 +28,19 @@ async def get_token(oauth: str):
     return token
 
 
+async def get_random_empty_token():
+    from dotenv import load_dotenv
+    from uuid import uuid4
+    from expert_dollup.app.modules import build_container
+    from expert_dollup.shared.starlette_injection import AuthService
+
+    load_dotenv()
+    container = build_container()
+    auth_service: AuthService = container.get(AuthService)
+    token = auth_service.make_token(str(uuid4()))
+    return token
+
+
 def generate_cert(c, folder: Path, domain_name: str, ca_name: str = "myCA"):
     folder.mkdir(parents=True, exist_ok=True)
 
@@ -242,6 +255,11 @@ def testreport(c):
 @task(name="token")
 def make_token(c, oauth="testuser"):
     print(asyncio.run(get_token("testuser")))
+
+
+@task(name="random-token")
+def make_random_token(c):
+    print(asyncio.run(get_random_empty_token()))
 
 
 @task(name="load-default-users")

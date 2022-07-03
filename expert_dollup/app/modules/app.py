@@ -36,27 +36,27 @@ from expert_dollup.shared.starlette_injection import (
 
 
 exception_handlers = {
-    RessourceNotFound: lambda e, r: JSONResponse(
+    RessourceNotFound: lambda e: JSONResponse(
         problem(title="Ressource not found", type="ressource-not-found"),
         status_code=httplib.NOT_FOUND,
     ),
-    RecordNotFound: lambda e, r: JSONResponse(
+    RecordNotFound: lambda e: JSONResponse(
         problem(title="Ressource not found", type="ressource-not-found"),
         status_code=httplib.NOT_FOUND,
     ),
-    ValidationError: lambda e, r: JSONResponse(
+    ValidationError: lambda e: JSONResponse(
         problem(title=e.message, type="validation-error", errors=e.errors),
         status_code=httplib.UNPROCESSABLE_ENTITY,
     ),
-    NoBearerAuthorizationHeader: lambda e, r: JSONResponse(
+    NoBearerAuthorizationHeader: lambda e: JSONResponse(
         problem(title="Unauthorized", type="unauthorized", errors=["Unauthorized"]),
         status_code=httplib.UNAUTHORIZED,
     ),
-    InvalidBearerToken: lambda e, r: JSONResponse(
+    InvalidBearerToken: lambda e: JSONResponse(
         problem(title="Unauthorized", type="unauthorized", errors=["Unauthorized"]),
         status_code=httplib.UNAUTHORIZED,
     ),
-    PermissionMissing: lambda e, r: JSONResponse(
+    PermissionMissing: lambda e: JSONResponse(
         problem(title="Ressource not found", type="ressource-not-found"),
         status_code=httplib.NOT_FOUND,
     ),
