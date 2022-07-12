@@ -9,16 +9,4 @@
  # Push the container image to Container Registry
  - name: 'gcr.io/cloud-builders/docker'
    args: ['push', 'gcr.io/$PROJECT_ID/expert-dollup:$COMMIT_SHA']
- # Deploy container image to Cloud Run
- - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-   entrypoint: gcloud
-   args:
-   - 'run'
-   - 'deploy'
-   - 'expert-dollup'
-   - '--image'
-   - 'gcr.io/$PROJECT_ID/expert-dollup:$COMMIT_SHA'
-   - '--region'
-   - 'us-west2'
-  images:
-  - 'gcr.io/$PROJECT_ID/expert-dollup:$COMMIT_SHA'
+ # TODO: Trigger pulumi
