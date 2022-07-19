@@ -122,14 +122,32 @@ def start(c):
     c.run(
         "poetry run uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000"
     )
-    
+
+
 @task
 def test(c):
-    c.run("docker build --target=test -t expert-dollup-test . && docker run --network expert-dollop_default expert-dollup-test")
+    c.run(
+        "docker build --target=test -t expert-dollup-test . && docker run --network expert-dollop_default expert-dollup-test"
+    )
 
-@task 
+
+@task
 def test_compose(c):
-    c.run("env $(cat .env.test) docker-compose -f docker-compose.mongodb.yml -f docker-compose.ci.yml up --abort-on-container-exit --build test")
+    c.run(
+        "docker-compose -f docker-compose.mongodb.yml -f docker-compose.ci.yml up --abort-on-container-exit --build test"
+    )
+
+
+@task(name="compose:warmup")
+def compose_warmup(c):
+    result = c.run(
+        "export $(cat .env | xargs) && poetry run wait-for-it --service $EXPERT_DOLLUP_DB_URL -- echo 'mongo is up' &&poetry run invoke db:migrate --url $EXPERT_DOLLUP_DB_URL && poetry run invoke db:migrate --url $AUTH_DB_URL && poetry run pytest"
+    )
+
+    import sys
+
+    print(f"Returned {result.return_code}")
+    sys.exit(result.return_code)
 
 
 @task(name="env:init")

@@ -1,12 +1,68 @@
- steps:
- # Export variables https://medium.com/google-cloud/how-to-pass-data-between-cloud-build-steps-de5c9ebc4cdd
- # Build the container image
- - name: 'gcr.io/cloud-builders/docker'
-   args: ['build', '-t', 'gcr.io/$PROJECT_ID/expert-dollup:$COMMIT_SHA', '.']
- # docker-compose -f docker-compose.mongodb.yml -f docker-compose.ci.yml up --abort-on-container-exit --build test
- - name: 'docker/compose:1.19.0'
-   args: ['-f', 'docker-compose.mongodb.yml', '-f', 'docker-compose.ci.yml', 'up', '--build', '--abort-on-container-exit', 'test']
- # Push the container image to Container Registry
- - name: 'gcr.io/cloud-builders/docker'
-   args: ['push', 'gcr.io/$PROJECT_ID/expert-dollup:$COMMIT_SHA']
+steps:
+# Export
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: export
+  entrypoint: 'bash'
+  args: 
+  - -ceux
+  - |
+    export BUILD_IMAGE="gcr.io/$PROJECT_ID/expert-dollup"
+    export BUILD_CACHE_TAGS=$(gcloud container images list-tags $$BUILD_IMAGE --filter="'build'" --quiet --format=json | sed 's/ *$//g')
+    
+    if [ -z "$COMMIT_SHA" ]; then
+      export BUILD_TAG="$BUILD_ID"
+    else
+      export BUILD_TAG="$COMMIT_SHA"
+    fi
+
+    env | grep "^BUILD_" > /workspace/build_vars
+
+ # Test
+- name: 'docker/compose:1.25.0'
+  id: test
+  entrypoint: '/bin/sh'
+  args: 
+  - -ceux
+  - |
+    source /workspace/build_vars
+    export CACHE_FROM="$$BUILD_IMAGE:build"
+    docker-compose -f docker-compose.mongodb.yml -f docker-compose.ci.yml up --exit-code-from test --build test
+  env:
+  - 'DOCKER_BUILDKIT=1'
+  - 'COMPOSE_DOCKER_CLI_BUILD=1'
+  - 'BUILDKIT_INLINE_CACHE=1'
+
+ # Build
+- name: 'gcr.io/cloud-builders/docker'
+  id: build
+  entrypoint: 'bash'
+  args: 
+  - -ceux
+  - |
+    source /workspace/build_vars
+
+    if [ "$$BUILD_CACHE_TAGS" == "[]" ]; then
+      docker build --target=build -t $$BUILD_IMAGE:build .
+      docker image push $$BUILD_IMAGE:build
+    else 
+      docker pull -q $$BUILD_IMAGE:build
+    fi
+
+    docker build --target=release -t $$BUILD_IMAGE:$$BUILD_TAG --cache-from $$BUILD_IMAGE:build . 
+    docker push $$BUILD_IMAGE:$$BUILD_TAG
+  env:
+  - 'DOCKER_BUILDKIT=1'
+
+# Deploy
+- name: gcr.io/cloud-builders/docker
+  id: deploy
+  entrypoint: bash
+  args:
+  - -ceux
+  - |
+    source /workspace/build_vars
+    docker pull $$BUILD_IMAGE:$$BUILD_TAG
+    docker tag $$BUILD_IMAGE:$$BUILD_TAG $$BUILD_IMAGE:latest
+    docker image push $$BUILD_IMAGE:latest
+
  # TODO: Trigger pulumi
