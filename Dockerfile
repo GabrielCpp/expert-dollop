@@ -1,6 +1,5 @@
 FROM python:3.8-slim@sha256:d20122663d629b8b0848e2bb78d929c01aabab37c920990b37bb32bc47328818 as build
 ENV POETRY_VERSION=1.1.12
-WORKDIR /usr/app
 RUN apt-get update -y && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends build-essential gcc curl && \
@@ -8,6 +7,7 @@ RUN apt-get update -y && \
     apt-get clean -y && \
     curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 
+WORKDIR /usr/app
 COPY pyproject.toml .
 COPY poetry.lock .
 RUN $HOME/.poetry/bin/poetry config virtualenvs.create true && \

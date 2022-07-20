@@ -16,7 +16,21 @@ steps:
     fi
 
     env | grep "^BUILD_" > /workspace/build_vars
+ # Build cache
+- name: 'gcr.io/cloud-builders/docker'
+  id: build_cache
+  entrypoint: 'bash'
+  args: 
+  - -ceux
+  - |
+    source /workspace/build_vars
 
+    if [ "$$BUILD_CACHE_TAGS" == "[]" ]; then
+      docker build --target=build -t $$BUILD_IMAGE:build --build-arg BUILDKIT_INLINE_CACHE=1 .
+      docker image push $$BUILD_IMAGE:build
+    fi
+  env:
+  - 'DOCKER_BUILDKIT=1'
  # Test
 - name: 'docker/compose:1.25.0'
   id: test
@@ -26,11 +40,11 @@ steps:
   - |
     source /workspace/build_vars
     export CACHE_FROM="$$BUILD_IMAGE:build"
+    docker pull $$BUILD_IMAGE:build
     docker-compose -f docker-compose.mongodb.yml -f docker-compose.ci.yml up --exit-code-from test --build test
   env:
   - 'DOCKER_BUILDKIT=1'
   - 'COMPOSE_DOCKER_CLI_BUILD=1'
-  - 'BUILDKIT_INLINE_CACHE=1'
 
  # Build
 - name: 'gcr.io/cloud-builders/docker'
@@ -40,14 +54,7 @@ steps:
   - -ceux
   - |
     source /workspace/build_vars
-
-    if [ "$$BUILD_CACHE_TAGS" == "[]" ]; then
-      docker build --target=build -t $$BUILD_IMAGE:build .
-      docker image push $$BUILD_IMAGE:build
-    else 
-      docker pull -q $$BUILD_IMAGE:build
-    fi
-
+    docker pull -q $$BUILD_IMAGE:build
     docker build --target=release -t $$BUILD_IMAGE:$$BUILD_TAG --cache-from $$BUILD_IMAGE:build . 
     docker push $$BUILD_IMAGE:$$BUILD_TAG
   env:
