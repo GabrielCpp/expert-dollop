@@ -97,6 +97,8 @@ class DatasheetElementUseCase:
             element_def_id=element_def_id,
             child_element_reference=uuid4(),
             properties=properties,
+            ordinal=1,  # TODO: find max
+            # original_owner_organisation_id=,# TODO: find datasheet owner
             original_datasheet_id=datasheet_id,
             creation_date_utc=self.clock.utcnow(),
         )
