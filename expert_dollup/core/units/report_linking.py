@@ -396,7 +396,10 @@ class ReportBuilder:
         ]
 
         return Report(
-            stages=stages, summaries=summaries, creation_date_utc=self.clock.utcnow()
+            datasheet_id=self.linking_data.project_details.datasheet_id,
+            stages=stages,
+            summaries=summaries,
+            creation_date_utc=self.clock.utcnow(),
         )
 
 

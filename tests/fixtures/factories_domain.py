@@ -205,10 +205,19 @@ class ReportStageFactory(factory.Factory):
     rows = factory.List([SubFactory(ReportRowFactory) for _ in range(3)])
 
 
+class ReportKeyFactory(factory.Factory):
+    class Meta:
+        model = ReportKey
+
+    project_id = factory.Faker("pyuuid4")
+    report_definition_id = factory.Faker("pyuuid4")
+
+
 class ReportFactory(factory.Factory):
     class Meta:
         model = Report
 
+    datasheet_id = factory.Faker("pyuuid4")
     stages = factory.List([SubFactory(ReportStageFactory) for _ in range(3)])
     summaries = factory.List([SubFactory(ComputedValueFactory) for _ in range(3)])
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)

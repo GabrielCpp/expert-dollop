@@ -12,8 +12,7 @@ class ReportDistributor:
 
     async def update_from_report(
         self,
-        project_details: ProjectDetails,
-        report_definition: ReportDefinition,
+        report_key: ReportKey,
         report: Report,
         distributable_items: List[DistributableItem],
     ) -> DistributableUpdate:
@@ -21,31 +20,25 @@ class ReportDistributor:
         obsolete_distributions = set()
         child_reference_ids = self._get_child_reference_ids(report)
         organization_by_ids = await self._get_organization_id_by_child_reference(
-            project_details, child_reference_ids
+            report.datasheet_id, child_reference_ids
         )
-
-        row_labels = [column.name for column in report_definition.structure.columns]
-        units = [column.unit for column in report_definition.structure.columns]
 
         for stage in report.stages:
             for row in stage.rows:
                 item = DistributableItem(
-                    project_id=project_details.id,
-                    report_definition_id=report_definition.id,
+                    project_id=report_key.project_id,
+                    report_definition_id=report_key.report_definition_id,
                     node_id=row.node_id,
                     formula_id=row.formula_id,
                     supplied_item=SuppliedItem(
-                        datasheet_id=project_details.datasheet_id,
+                        datasheet_id=report.datasheet_id,
                         element_def_id=row.element_def_id,
                         child_reference_id=row.child_reference_id,
                         organization_id=organization_by_ids[row.child_reference_id],
                     ),
                     distribution_ids=[],
                     summary=stage.summary,
-                    columns=[
-                        ComputedValue(label=label, value=column.value, unit=column.unit)
-                        for label, column in zip(row_labels, row.columns)
-                    ],
+                    columns=row.columns,
                     obsolete=False,
                     creation_date_utc=self.clock.utcnow(),
                 )
@@ -93,13 +86,13 @@ class ReportDistributor:
         return reference_ids
 
     async def _get_organization_id_by_child_reference(
-        self, project_details: ProjectDetails, child_reference_ids: List[UUID]
+        self, datasheet_id: UUID, child_reference_ids: List[UUID]
     ):
         datasheet_element_plucker: Plucker[
             DatasheetElement
         ] = self.database_context.bind_query(Plucker[DatasheetElement])
         report_datasheet_elements = await datasheet_element_plucker.pluck_subressources(
-            DatasheetElementFilter(datasheet_id=project_details.datasheet_id),
+            DatasheetElementFilter(datasheet_id=datasheet_id),
             lambda ids: DatasheetElementPluckFilter(child_element_references=ids),
             child_reference_ids,
         )

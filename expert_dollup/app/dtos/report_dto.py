@@ -40,6 +40,7 @@ class MinimalReportStageDto(CamelModel):
 
 
 class ReportDto(CamelModel):
+    datasheet_id: UUID
     stages: List[ReportStageDto]
     summaries: List[ComputedValueDto]
     creation_date_utc: datetime

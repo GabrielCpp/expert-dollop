@@ -42,6 +42,7 @@ class ReportStage:
 
 @dataclass
 class Report:
+    datasheet_id: UUID
     stages: List[ReportStage]
     summaries: List[ComputedValue]
     creation_date_utc: datetime

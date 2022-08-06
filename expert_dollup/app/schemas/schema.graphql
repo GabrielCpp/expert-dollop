@@ -475,6 +475,7 @@ type ReportStage {
 }
 
 type Report {
+  datasheetId: String!
   stages: [ReportStage!]!
   creationDateUtc: String
   summaries: [ComputedValue!]!

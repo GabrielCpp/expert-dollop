@@ -1151,6 +1151,7 @@ def map_computed_value_from_dto(src: ComputedValueDto, mapper: Mapper) -> Comput
 
 def map_report_to_dto(src: Report, mapper: Mapper) -> ReportDto:
     return ReportDto(
+        datasheet_id=src.datasheet_id,
         stages=mapper.map_many(src.stages, ReportStageDto),
         summaries=mapper.map_many(src.summaries, ComputedValueDto),
         creation_date_utc=src.creation_date_utc,

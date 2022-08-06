@@ -1364,6 +1364,7 @@ def map_computed_value_from_dao(src: ComputedValueDao, mapper: Mapper) -> Comput
 
 def map_report_to_dao(src: Report, mapper: Mapper) -> ReportDao:
     return ReportDao(
+        datasheet_id=src.datasheet_id,
         creation_date_utc=src.creation_date_utc,
         summaries=mapper.map_many(src.summaries, ComputedValueDao),
         stages=mapper.map_many(src.stages, ReportStageDao),
@@ -1372,6 +1373,7 @@ def map_report_to_dao(src: Report, mapper: Mapper) -> ReportDao:
 
 def map_report_from_dao(src: ReportDao, mapper: Mapper) -> Report:
     return Report(
+        datasheet_id=src.datasheet_id,
         creation_date_utc=src.creation_date_utc,
         summaries=mapper.mamap_manyp(src.summaries, ComputedValue),
         stages=mapper.map_many(src.stages, ReportStage),

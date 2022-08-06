@@ -1,3 +1,4 @@
+from ast import dump
 import pytest
 from unittest.mock import MagicMock
 from uuid import uuid4, UUID
@@ -8,30 +9,31 @@ from tests.fixtures.mock_interface_utils import StrictInterfaceSetup, AsyncMock
 from ....fixtures import *
 
 
-@pytest.mark.asyncio
-async def test_update_empty_distributable_from_report(static_clock):
-    project_id = uuid4()
-    organization_id = uuid4()
-    database_context = StrictInterfaceSetup(DatabaseContext)
-    report_distributor = ReportDistributor(static_clock, database_context.object)
-    project_details = ProjectDetailsFactory()
-    report_definition = ReportDefinitionFactory(distributable=True)
-    report = ReportFactory(
+def make_report() -> Report:
+    return ReportFactory(
         stages=[
             ReportStageFactory(
                 rows=[
                     ReportRowFactory(
                         columns=[
-                            ComputedValueFactory(value=1),
-                            ComputedValueFactory(value=2),
-                            ComputedValueFactory(value=3),
+                            ComputedValueFactory(label="stage", value=1),
+                            ComputedValueFactory(
+                                label="quantity", value=2, unit="unit"
+                            ),
+                            ComputedValueFactory(
+                                label="product_name", value=3, unit=None
+                            ),
                         ]
                     ),
                     ReportRowFactory(
                         columns=[
-                            ComputedValueFactory(value=4),
-                            ComputedValueFactory(value=5),
-                            ComputedValueFactory(value=6),
+                            ComputedValueFactory(label="stage", value=4),
+                            ComputedValueFactory(
+                                label="quantity", value=5, unit="unit"
+                            ),
+                            ComputedValueFactory(
+                                label="product_name", value=6, unit=None
+                            ),
                         ]
                     ),
                 ]
@@ -39,35 +41,37 @@ async def test_update_empty_distributable_from_report(static_clock):
         ]
     )
 
+
+@pytest.mark.asyncio
+async def test_update_empty_distributable_from_report(static_clock):
+    organization_id = uuid4()
+
     def organization_id_by_child_reference(_, child_reference_ids):
         return {id: organization_id for id in child_reference_ids}
 
-    report_distributor._get_organization_id_by_child_reference = AsyncMock(
-        side_effect=organization_id_by_child_reference
-    )
+    database_context = StrictInterfaceSetup(DatabaseContext)
+    report_distributor = ReportDistributor(static_clock, database_context.object)
 
-    distributable_update = await report_distributor.update_from_report(
-        project_details, report_definition, report, []
-    )
-    print(distributable_update)
-    assert distributable_update == DistributableUpdate(
+    report_key = ReportKeyFactory()
+    report = make_report()
+    expected_update = DistributableUpdate(
         items=[
             DistributableItem(
                 distribution_ids=[],
-                project_id=project_id,
-                report_definition_id=report_definition.id,
-                node_id=UUID("4283fefc-63f0-cd0e-873a-0000c6d07ef7"),
-                formula_id=UUID("b77e90d3-593a-d699-fc1f-7cd5bb2e35cb"),
+                project_id=report_key.project_id,
+                report_definition_id=report_key.report_definition_id,
+                node_id=report.stages[0].rows[0].node_id,
+                formula_id=report.stages[0].rows[0].formula_id,
                 supplied_item=SuppliedItem(
-                    datasheet_id=project_details.datasheet_id,
-                    element_def_id=UUID("f0f19c55-7067-cbbe-80c4-6d1fb6dfbdb0"),
-                    child_reference_id=zero_uuid(),
+                    datasheet_id=report.datasheet_id,
+                    element_def_id=report.stages[0].rows[0].element_def_id,
+                    child_reference_id=report.stages[0].rows[0].child_reference_id,
                     organization_id=organization_id,
                 ),
                 summary=report.stages[0].summary,
                 columns=[
-                    ComputedValue(label="stage", value=1, unit=None),
-                    ComputedValue(label="quantity", value=2, unit=None),
+                    ComputedValue(label="stage", value=1, unit="$"),
+                    ComputedValue(label="quantity", value=2, unit="unit"),
                     ComputedValue(label="product_name", value=3, unit=None),
                 ],
                 obsolete=False,
@@ -75,22 +79,22 @@ async def test_update_empty_distributable_from_report(static_clock):
             ),
             DistributableItem(
                 distribution_ids=[],
-                project_id=project_id,
-                report_definition_id=report_definition.id,
-                node_id=UUID("309cad68-386d-070c-415e-d7e70cad1946"),
-                formula_id=UUID("1922995d-8401-6e51-c6b3-6d6f3c9f0ac9"),
+                project_id=report_key.project_id,
+                report_definition_id=report_key.report_definition_id,
+                node_id=report.stages[0].rows[1].node_id,
+                formula_id=report.stages[0].rows[1].formula_id,
                 supplied_item=SuppliedItem(
-                    datasheet_id=project_details.datasheet_id,
-                    element_def_id=UUID("056a4ad6-83cb-f721-2455-68a8baa397f4"),
-                    child_reference_id=zero_uuid(),
+                    datasheet_id=report.datasheet_id,
+                    element_def_id=report.stages[0].rows[1].element_def_id,
+                    child_reference_id=report.stages[0].rows[1].child_reference_id,
                     organization_id=organization_id,
                 ),
                 summary=report.stages[0].summary,
-                columns={
-                    ComputedValue(label="stage", value=4, unit=None),
-                    ComputedValue(label="quantity", value=5, unit=None),
+                columns=[
+                    ComputedValue(label="stage", value=4, unit="$"),
+                    ComputedValue(label="quantity", value=5, unit="unit"),
                     ComputedValue(label="product_name", value=6, unit=None),
-                },
+                ],
                 obsolete=False,
                 creation_date_utc=static_clock.utcnow(),
             ),
@@ -98,36 +102,15 @@ async def test_update_empty_distributable_from_report(static_clock):
         obsolete_distribution_ids=[],
     )
 
-
-def test_update_populated_distributable_from_report(static_clock):
-    project_id = uuid4()
-    database_context = StrictInterfaceSetup(DatabaseContext)
-    report_distributor = ReportDistributor(static_clock, database_context.object)
-    report = ReportFactory(
-        stages=[
-            ReportStageFactory(
-                rows=[
-                    ReportRowFactory(
-                        columns=[
-                            ComputedValueFactory(value=1),
-                            ComputedValueFactory(value=2),
-                            ComputedValueFactory(value=3),
-                        ]
-                    ),
-                    ReportRowFactory(
-                        columns=[
-                            ComputedValueFactory(value=4),
-                            ComputedValueFactory(value=5),
-                            ComputedValueFactory(value=6),
-                        ]
-                    ),
-                ]
-            )
-        ]
+    report_distributor._get_organization_id_by_child_reference = AsyncMock(
+        side_effect=organization_id_by_child_reference
     )
-    report_definition = ReportDefinitionFactory(distributable=True)
-    empty_distributable = []
 
-    new_distributable = report_distributor.update_from_report(
-        empty_distributable, report, report_definition
+    distributable_update = await report_distributor.update_from_report(
+        report_key, report, []
     )
+
+    dump_to_file(distributable_update)
+    dump_to_file(expected_update)
+
+    assert distributable_update == expected_update

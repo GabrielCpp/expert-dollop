@@ -95,6 +95,7 @@ async def test_given_row_cache_should_produce_correct_report(
     ]
 
     expected_report = Report(
+        datasheet_id=datasheet_element.datasheet_id,
         stages=[
             ReportStage(
                 summary=ComputedValue(

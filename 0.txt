@@ -1,0 +1,79 @@
+{
+  "items": [
+    {
+      "columns": [
+        {
+          "label": "stage",
+          "unit": "$",
+          "value": 1
+        },
+        {
+          "label": "quantity",
+          "unit": "unit",
+          "value": 2
+        },
+        {
+          "label": "product_name",
+          "unit": null,
+          "value": 3
+        }
+      ],
+      "creation_date_utc": "2000-04-03T01:01:01+00:00",
+      "distribution_ids": [],
+      "formula_id": "ae075528-1220-e087-835b-92558589eaff",
+      "node_id": "f0f19c55-7067-cbbe-80c4-6d1fb6dfbdb0",
+      "obsolete": false,
+      "project_id": "4283fefc-63f0-cd0e-873a-0000c6d07ef7",
+      "report_definition_id": "b77e90d3-593a-d699-fc1f-7cd5bb2e35cb",
+      "summary": {
+        "label": "computed_value_6",
+        "unit": "$",
+        "value": 6
+      },
+      "supplied_item": {
+        "child_reference_id": "1922995d-8401-6e51-c6b3-6d6f3c9f0ac9",
+        "datasheet_id": "2822009b-ff43-a255-44a9-394641a659d5",
+        "element_def_id": "309cad68-386d-070c-415e-d7e70cad1946",
+        "organization_id": "a03160f3-3758-4031-9ccf-5d95155dd87b"
+      }
+    },
+    {
+      "columns": [
+        {
+          "label": "stage",
+          "unit": "$",
+          "value": 4
+        },
+        {
+          "label": "quantity",
+          "unit": "unit",
+          "value": 5
+        },
+        {
+          "label": "product_name",
+          "unit": null,
+          "value": 6
+        }
+      ],
+      "creation_date_utc": "2000-04-03T01:01:01+00:00",
+      "distribution_ids": [],
+      "formula_id": "3a1d2c44-a3c2-728b-93e8-319002d3167d",
+      "node_id": "056a4ad6-83cb-f721-2455-68a8baa397f4",
+      "obsolete": false,
+      "project_id": "4283fefc-63f0-cd0e-873a-0000c6d07ef7",
+      "report_definition_id": "b77e90d3-593a-d699-fc1f-7cd5bb2e35cb",
+      "summary": {
+        "label": "computed_value_6",
+        "unit": "$",
+        "value": 6
+      },
+      "supplied_item": {
+        "child_reference_id": "fb856967-b282-e2a7-c91a-5a97a327707c",
+        "datasheet_id": "2822009b-ff43-a255-44a9-394641a659d5",
+        "element_def_id": "53e5753d-c98f-a36a-1009-aecac22ae386",
+        "organization_id": "a03160f3-3758-4031-9ccf-5d95155dd87b"
+      }
+    }
+  ],
+  "obsolete_distribution_ids": []
+}

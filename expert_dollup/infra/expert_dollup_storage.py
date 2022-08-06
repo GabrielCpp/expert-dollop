@@ -63,6 +63,7 @@ class ReportStageDao(BaseModel):
 
 
 class ReportDao(BaseModel):
+    datasheet_id: UUID
     stages: List[ReportStageDao]
     summaries: List[ComputedValueDao]
     creation_date_utc: datetime
