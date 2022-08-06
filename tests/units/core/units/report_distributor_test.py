@@ -110,7 +110,4 @@ async def test_update_empty_distributable_from_report(static_clock):
         report_key, report, []
     )
 
-    dump_to_file(distributable_update)
-    dump_to_file(expected_update)
-
     assert distributable_update == expected_update
