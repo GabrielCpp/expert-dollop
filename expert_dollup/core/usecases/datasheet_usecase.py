@@ -74,7 +74,7 @@ class DatasheetUseCase:
                         ordinal=result.ordinal,
                         properties=result.properties,
                         original_datasheet_id=result.original_datasheet_id,
-                        original_owner_organisation_id=user.organisation_id,
+                        original_owner_organization_id=user.organization_id,
                         creation_date_utc=self.clock.utcnow(),
                     )
                     for result in page.results
@@ -96,15 +96,11 @@ class DatasheetUseCase:
         return cloned_datasheet
 
     async def add(self, datasheet: Datasheet, user: User) -> Datasheet:
-        await self.ressource_service.insert(
-            make_ressource(Datasheet, datasheet, user.id)
-        )
+        await self.ressource_service.insert(make_ressource(Datasheet, datasheet, user))
         await self.datasheet_service.insert(datasheet)
 
     async def add_filled_datasheet(self, datasheet: Datasheet, user: User) -> Datasheet:
-        await self.ressource_service.insert(
-            make_ressource(Datasheet, datasheet, user.id)
-        )
+        await self.ressource_service.insert(make_ressource(Datasheet, datasheet, user))
         await self.datasheet_service.insert(datasheet)
         definition_elements = await self.datasheet_definition_element_service.find_by(
             DatasheetDefinitionElementFilter(
@@ -123,7 +119,7 @@ class DatasheetUseCase:
                     for name, default_property in definition_element.default_properties.items()
                 },
                 original_datasheet_id=datasheet.id,
-                original_owner_organisation_id=user.organisation_id,
+                original_owner_organization_id=user.organization_id,
                 creation_date_utc=self.clock.utcnow(),
             )
             for definition_element in definition_elements

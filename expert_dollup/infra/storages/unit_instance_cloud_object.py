@@ -1,4 +1,5 @@
 from uuid import UUID
+from typing import Optional
 import gzip
 import struct
 from decimal import Decimal
@@ -31,7 +32,7 @@ class UnitInstanceCloudObject(ObjectStorage[UnitInstanceCache, UnitInstanceCache
             instance_count = read_from("H", f)
 
             for _ in range(0, instance_count):
-                formula_id = UUID(bytes=f.read(16))
+                formula_id: Optional[UUID] = UUID(bytes=f.read(16))
                 if formula_id == null_uuid:
                     formula_id = None
 

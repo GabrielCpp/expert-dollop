@@ -3,7 +3,6 @@ import os
 import logging
 import expert_dollup.infra.expert_dollup_db as expert_dollup_db_daos
 import expert_dollup.infra.ressource_auth_db.daos as ressource_auth_db_daos
-import expert_dollup.infra.services as services
 from uuid import UUID
 from injector import Injector
 from dotenv import load_dotenv
@@ -35,7 +34,7 @@ class PyProvider(BaseProvider):
         return UUID(hexs)
 
 
-load_dotenv('.env')
+load_dotenv(".env")
 reseed_random(1)
 Faker.add_provider(PyProvider)
 Faker.add_provider(DateTimeProvider)
@@ -81,7 +80,7 @@ def container(dal: DbConnection, auth_dal: DbConnection, request) -> Injector:
 
 @pytest.fixture
 def db_helper(container: Injector, dal: DbConnection) -> DbFixtureHelper:
-    return DbFixtureHelper(container, dal).load_services(services)
+    return DbFixtureHelper(container, dal)
 
 
 @pytest.fixture
@@ -102,7 +101,7 @@ async def ac(app, container: Injector, caplog) -> TestClient:
     auth_service = container.get(AuthService)
 
     org = make_root_user_org()
-    await database_context.upserts(Organisation, [org.organisation])
+    await database_context.upserts(Organization, [org.organization])
     await database_context.upserts(User, org.users)
     token = auth_service.make_token(org.users[0].oauth_id)
 

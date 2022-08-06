@@ -366,7 +366,7 @@ class DatasheetElementDao(BaseModel):
     ordinal: int
     properties: Dict[str, PrimitiveUnionDao]
     original_datasheet_id: UUID
-    original_owner_organisation_id: UUID
+    original_owner_organization_id: UUID
     creation_date_utc: datetime
 
 
@@ -449,7 +449,7 @@ class SuppliedItemDao(BaseModel):
     datasheet_id: UUID
     element_def_id: UUID
     child_reference_id: UUID
-    organisation_id: UUID
+    organization_id: UUID
 
 
 class DistributableItemDao(BaseModel):

@@ -9,14 +9,14 @@ from expert_dollup.shared.database_services import QueryFilter
 class Ressource:
     id: UUID
     kind: str
-    user_id: UUID
+    organization_id: UUID
     permissions: List[str]
     name: str
     creation_date_utc: datetime
 
 
 @dataclass
-class OrganisationLimits:
+class OrganizationLimits:
     active_project_count: int
     active_project_overall_collection_count: int
     active_datasheet_count: int
@@ -24,10 +24,10 @@ class OrganisationLimits:
 
 
 @dataclass
-class Organisation:
+class Organization:
     id: UUID
     name: str
-    limits: OrganisationLimits
+    limits: OrganizationLimits
 
 
 @dataclass
@@ -36,18 +36,18 @@ class User:
     id: UUID
     email: str
     permissions: List[str]
-    organisation_id: UUID
+    organization_id: UUID
 
 
 @dataclass
 class RessourceId:
     id: UUID
-    user_id: UUID
+    organization_id: UUID
 
 
 class RessourceFilter(QueryFilter):
     id: Optional[UUID]
-    user_id: Optional[UUID]
+    organization_id: Optional[UUID]
 
 
 class UserFilter(QueryFilter):

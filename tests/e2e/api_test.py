@@ -22,7 +22,7 @@ async def test_given_project_definition_should_be_able_to_create_delete_update(a
     assert response.status_code == 200, response.text
 
     response = await ac.get(f"/api/project_definition/{expected_project_definition.id}")
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
 
     actual = unwrap(response, ProjectDefinitionDto)
     assert actual == expected_project_definition
@@ -30,10 +30,10 @@ async def test_given_project_definition_should_be_able_to_create_delete_update(a
     response = await ac.delete(
         f"/api/project_definition/{expected_project_definition.id}"
     )
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
 
     response = await ac.get(f"/api/project_definition/{expected_project_definition.id}")
-    assert response.status_code == 404
+    assert response.status_code == 404, response.text
 
 
 @pytest.mark.asyncio

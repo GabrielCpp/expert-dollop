@@ -55,7 +55,7 @@ def parse_json_schema_value(value):
 
 
 @json_schema_scalar.literal_parser
-def parse_json_schema_litteral(ast):
+def parse_json_schema_litteral(ast, _):
     value = str(ast.value)
     return parse_json_schema_value(value)
 
@@ -75,7 +75,7 @@ def parse_graphql_uuid_value(value):
 
 
 @graphql_uuid.literal_parser
-def parse_graphql_uuid_litteral(ast):
+def parse_graphql_uuid_litteral(ast, _):
     value = str(ast.value)
     return parse_graphql_uuid_value(value)
 

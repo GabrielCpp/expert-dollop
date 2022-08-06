@@ -22,7 +22,7 @@ def assert_all_definition_where_impemented(datasheet_definition_elements, result
 @pytest.mark.asyncio
 async def test_datasheet(ac, db_helper: DbFixtureHelper):
     runner = FlowRunner()
-    mini_datasheet = await db_helper.load_fixtures(MiniDatasheet)
+    mini_datasheet = await db_helper.load_fixtures(MiniDatasheet())
     project_definition_id = mini_datasheet.get_only_one(ProjectDefinition).id
 
     @runner.step
@@ -134,7 +134,7 @@ async def test_datasheet(ac, db_helper: DbFixtureHelper):
 @pytest.mark.asyncio
 async def test_datasheet_crud(ac, db_helper: DbFixtureHelper):
     runner = FlowRunner()
-    mini_datasheet = await db_helper.load_fixtures(MiniDatasheet)
+    mini_datasheet = await db_helper.load_fixtures(MiniDatasheet())
     project_definition = mini_datasheet.get_only_one(ProjectDefinition)
 
     @runner.step

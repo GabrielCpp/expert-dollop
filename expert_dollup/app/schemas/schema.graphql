@@ -489,7 +489,7 @@ type SuppliedItem {
   datasheetId: String!
   elementDefId: String!
   childReferenceId: String!
-  organisationId: String!
+  organizationId: String!
 }
 
 type DistributableItem { 
@@ -535,11 +535,11 @@ type User {
     id: String!
     email: String!
     permissions: [String!]!
-    organisationId: String!
+    organizationId: String!
 }
 
-input NewSingleUserOrganisationInput {
-    organisationName: String!
+input NewSingleUserOrganizationInput {
+    organizationName: String!
     email: String!
 }
 
@@ -673,7 +673,7 @@ type Mutation {
   createDatasheet(datasheet: DatasheetInput): Datasheet!
 
   # User
-  createSingleUserOrganisation(singleUserOrganisation: NewSingleUserOrganisationInput!): User!
+  createSingleUserOrganization(singleUserOrganization: NewSingleUserOrganizationInput!): User!
 
 }
 

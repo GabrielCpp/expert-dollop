@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import ast
 from uuid import UUID
 from ast import AST
-from typing import Dict, Union, List
+from typing import Callable, Dict, Union, List, Any, Tuple
 from expert_dollup.core.domains import AstNode, AstNodeValue, FlatAst
 from decimal import Decimal
 from dataclasses import dataclass
@@ -55,7 +55,7 @@ class AstSerializer:
         root_index = self.serialize(node)
         return FlatAst(nodes=self.nodes, root_index=root_index)
 
-    def serialize(self, node: AST) -> AstNode:
+    def serialize(self, node: AST) -> int:
         if isinstance(node, ast.Module):
             return self._add(
                 AstNode(
@@ -200,6 +200,9 @@ class ComputationScope:
 
     def get_children(self, node, name) -> list:
         return [self.nodes[c] for c in node["children"][name]]
+
+
+Result = Tuple[Any, str]
 
 
 def process_module_node(node: dict, scope: ComputationScope):
@@ -391,9 +394,9 @@ def safe_div(a: Decimal, b: Decimal) -> Decimal:
     return a / b
 
 
-def process_call_node(node: dict, scope: ComputationScope):
+def process_call_node(node: dict, scope: ComputationScope) -> Result:
     args = []
-    details = []
+    details: List[str] = []
 
     for arg in scope.get_children(node, "args"):
         result, calculation_details = dispatch(arg, scope)
@@ -405,19 +408,19 @@ def process_call_node(node: dict, scope: ComputationScope):
 
     if fn_id == "safe_div":
         result = safe_div(*args)
-        details = f"safe_div({details_str})"
-        return result, scope.calc.add(result, details)
+        details_str = f"safe_div({details_str})"
+        return result, scope.calc.add(result, details_str)
 
     if fn_id == "sqrt":
         assert len(args) == 1
         result = args[0].sqrt()
-        details = f"sqrt({details_str})"
-        return result, scope.calc.add(result, details)
+        details_str = f"sqrt({details_str})"
+        return result, scope.calc.add(result, details_str)
 
     raise Exception(f"Unknown function {fn_id}")
 
 
-AST_NODE_PROCESSOR: Dict[str, callable] = {
+AST_NODE_PROCESSOR: Dict[str, Callable[[dict, ComputationScope], Result]] = {
     "Module": process_module_node,
     "Expr": process_expr_node,
     "Name": process_name_node,
@@ -431,11 +434,11 @@ AST_NODE_PROCESSOR: Dict[str, callable] = {
 }
 
 
-def dispatch(node: dict, scope: ComputationScope):
+def dispatch(node: dict, scope: ComputationScope) -> Result:
     return AST_NODE_PROCESSOR[node["kind"]](node, scope)
 
 
-def compute(flat_tree: dict, unit: ComputationUnit):
+def compute(flat_tree: dict, unit: ComputationUnit) -> Result:
     calc = Calculation()
     nodes = flat_tree["nodes"]
     root_index = flat_tree["root_index"]

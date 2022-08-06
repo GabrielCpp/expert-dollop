@@ -14,7 +14,7 @@ class SuppliedItem:
     datasheet_id: UUID
     element_def_id: UUID
     child_reference_id: UUID
-    organisation_id: UUID
+    organization_id: UUID
 
 
 @dataclass
@@ -59,7 +59,7 @@ class DistributionState(Enum):
 class Distribution:
     id: UUID
     file_url: str
-    item_ids: List[UUID]
+    item_ids: List[str]
     state: DistributionState
     obsolete: bool
     creation_date_utc: datetime

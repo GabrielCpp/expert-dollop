@@ -1,19 +1,15 @@
 from uuid import UUID
 from typing import List
 from expert_dollup.core.domains import *
-from ..fake_db_helpers import FakeDb, DbFixtureGenerator
+from ..fake_db_helpers import FakeDb
 from ..factories import FieldConfigFactory
 from ..factories_domain import *
 
 
-class SimpleProject(DbFixtureGenerator):
+class SimpleProject:
     def __init__(self):
-        self._db = FakeDb()
+        self.db = FakeDb()
         self.field_config_factory = FieldConfigFactory()
-
-    @property
-    def db(self) -> FakeDb:
-        return self._db
 
     def generate_project_node_definition(self, project_definition_id: UUID) -> None:
         labels = ["root", "subsection", "form", "section", "field"]
@@ -153,7 +149,7 @@ class SimpleProject(DbFixtureGenerator):
                         )
                     )
 
-    def generate(self):
+    def __call__(self):
         self.generate_project_definition()
         self.generate_translations()
-        return self
+        return self.db

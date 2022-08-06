@@ -253,7 +253,7 @@ def create_datasheet_tables():
         Column("ordinal", Integer(), nullable=False),
         Column("properties", postgresql.JSON(), nullable=False),
         Column("original_datasheet_id", postgresql.UUID(), nullable=False),
-        Column("original_owner_organisation_id", postgresql.UUID(), nullable=False),
+        Column("original_owner_organization_id", postgresql.UUID(), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 

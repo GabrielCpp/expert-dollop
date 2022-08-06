@@ -1,3 +1,3 @@
 from .user_service import UserService
 from .ressource_service import RessourceService
-from .organaisation_service import OrganisationService
+from .organization_service import OrganizationService

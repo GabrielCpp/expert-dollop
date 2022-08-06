@@ -58,8 +58,8 @@ from .ressource import (
     RessourceId,
     RessourceFilter,
     UserFilter,
-    Organisation,
-    OrganisationLimits,
+    Organization,
+    OrganizationLimits,
 )
 from .formula import (
     Formula,

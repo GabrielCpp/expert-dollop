@@ -6,7 +6,7 @@ from starlette.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from ariadne import format_error
 
-ExceptionHandler = Dict[Type, Callable[[Exception, Request], Response]]
+ExceptionHandler = Dict[Type, Callable[[Exception], Response]]
 InteralErrorHandler = Callable[[], Response]
 ExceptionHandlerDict = TypeVar("ExceptionHandlerDict")
 

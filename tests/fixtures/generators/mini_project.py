@@ -1,19 +1,15 @@
-from ..fake_db_helpers import FakeDb, DbFixtureGenerator
+from ..fake_db_helpers import FakeDb
 from ..factories import FieldConfigFactory
 from expert_dollup.core.domains import *
 from ..factories_domain import *
 
 
-class MiniProject(DbFixtureGenerator):
+class MiniProject:
     def __init__(self):
-        self._db = FakeDb()
+        self.db = FakeDb()
         self.field_config_factory = FieldConfigFactory()
 
-    @property
-    def db(self) -> FakeDb:
-        return self._db
-
-    def generate(self):
+    def __call__(self):
         project_definition = self.db.add(ProjectDefinitionFactory())
         root = self.db.add(
             ProjectDefinitionNodeFactory(
@@ -77,4 +73,4 @@ class MiniProject(DbFixtureGenerator):
             )
         )
 
-        return self
+        return self.db

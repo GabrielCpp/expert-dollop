@@ -10,7 +10,7 @@ Domain = TypeVar("Domain")
 
 @dataclass
 class UserRessourceQuery:
-    user_id: UUID
+    organization_id: UUID
     names: Optional[List[str]] = None
 
 

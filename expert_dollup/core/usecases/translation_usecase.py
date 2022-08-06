@@ -91,7 +91,7 @@ class TranslationUseCase:
             query.locale = "fr-CA"
 
         ressource = await self.ressource_service.find_by_id(
-            RessourceId(id=query.ressource_id, user_id=user.id)
+            RessourceId(id=query.ressource_id, organization_id=user.organization_id)
         )
 
         if ressource.kind == "project":

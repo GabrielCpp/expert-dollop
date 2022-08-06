@@ -20,9 +20,12 @@ class ReportDistributor:
         newer_items: Dict[str, DistributableItem] = {}
         obsolete_distributions = set()
         child_reference_ids = self._get_child_reference_ids(report)
-        organisation_by_ids = await self._get_organisation_id_by_child_reference(
+        organization_by_ids = await self._get_organization_id_by_child_reference(
             project_details, child_reference_ids
         )
+
+        row_labels = [column.name for column in report_definition.structure.columns]
+        units = [column.unit for column in report_definition.structure.columns]
 
         for stage in report.stages:
             for row in stage.rows:
@@ -35,11 +38,14 @@ class ReportDistributor:
                         datasheet_id=project_details.datasheet_id,
                         element_def_id=row.element_def_id,
                         child_reference_id=row.child_reference_id,
-                        organisation_id=organisation_by_ids[row.child_reference_id],
+                        organization_id=organization_by_ids[row.child_reference_id],
                     ),
                     distribution_ids=[],
                     summary=stage.summary,
-                    columns=row.columns,
+                    columns=[
+                        ComputedValue(label=label, value=column.value, unit=column.unit)
+                        for label, column in zip(row_labels, row.columns)
+                    ],
                     obsolete=False,
                     creation_date_utc=self.clock.utcnow(),
                 )
@@ -48,8 +54,9 @@ class ReportDistributor:
 
         for item in distributable_items:
             if item.id in newer_items:
-                newer_items.distribution_ids = item.distribution_ids
-                newer_items.obsolete = False
+                newer_item = newer_items[item.id]
+                newer_item.distribution_ids = item.distribution_ids
+                newer_item.obsolete = False
 
                 if newer_items.columns != item.columns:
                     obsolete_distributions.update(item.distribution_ids)
@@ -85,7 +92,7 @@ class ReportDistributor:
 
         return reference_ids
 
-    async def _get_organisation_id_by_child_reference(
+    async def _get_organization_id_by_child_reference(
         self, project_details: ProjectDetails, child_reference_ids: List[UUID]
     ):
         datasheet_element_plucker: Plucker[
@@ -96,9 +103,9 @@ class ReportDistributor:
             lambda ids: DatasheetElementPluckFilter(child_element_references=ids),
             child_reference_ids,
         )
-        organisation_by_ids = {
-            element.child_element_reference: element.original_owner_organisation_id
+        organization_by_ids = {
+            element.child_element_reference: element.original_owner_organization_id
             for element in report_datasheet_elements
         }
 
-        return organisation_by_ids
+        return organization_by_ids

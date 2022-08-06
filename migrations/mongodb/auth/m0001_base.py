@@ -9,7 +9,7 @@ async def upgrade(db):
     u = urlsplit(environ["DB_URL"])
 
     ressource = await db.create_collection("ressource")
-    await ressource.create_index([("user_id", DESCENDING), ("kind", ASCENDING)])
+    await ressource.create_index([("organization_id", DESCENDING), ("kind", ASCENDING)])
 
     user = await db.create_collection("user")
     await user.create_index("id", unique=True)

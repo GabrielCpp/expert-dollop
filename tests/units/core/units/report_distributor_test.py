@@ -11,7 +11,7 @@ from ....fixtures import *
 @pytest.mark.asyncio
 async def test_update_empty_distributable_from_report(static_clock):
     project_id = uuid4()
-    organisation_id = uuid4()
+    organization_id = uuid4()
     database_context = StrictInterfaceSetup(DatabaseContext)
     report_distributor = ReportDistributor(static_clock, database_context.object)
     project_details = ProjectDetailsFactory()
@@ -39,11 +39,11 @@ async def test_update_empty_distributable_from_report(static_clock):
         ]
     )
 
-    def organisation_id_by_child_reference(_, child_reference_ids):
-        return {id: organisation_id for id in child_reference_ids}
+    def organization_id_by_child_reference(_, child_reference_ids):
+        return {id: organization_id for id in child_reference_ids}
 
-    report_distributor._get_organisation_id_by_child_reference = AsyncMock(
-        side_effect=organisation_id_by_child_reference
+    report_distributor._get_organization_id_by_child_reference = AsyncMock(
+        side_effect=organization_id_by_child_reference
     )
 
     distributable_update = await report_distributor.update_from_report(
@@ -62,7 +62,7 @@ async def test_update_empty_distributable_from_report(static_clock):
                     datasheet_id=project_details.datasheet_id,
                     element_def_id=UUID("f0f19c55-7067-cbbe-80c4-6d1fb6dfbdb0"),
                     child_reference_id=zero_uuid(),
-                    organisation_id=organisation_id,
+                    organization_id=organization_id,
                 ),
                 summary=report.stages[0].summary,
                 columns={
@@ -83,7 +83,7 @@ async def test_update_empty_distributable_from_report(static_clock):
                     datasheet_id=project_details.datasheet_id,
                     element_def_id=UUID("056a4ad6-83cb-f721-2455-68a8baa397f4"),
                     child_reference_id=zero_uuid(),
-                    organisation_id=organisation_id,
+                    organization_id=organization_id,
                 ),
                 summary=report.stages[0].summary,
                 columns={

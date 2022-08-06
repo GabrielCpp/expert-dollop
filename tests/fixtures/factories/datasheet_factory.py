@@ -249,7 +249,7 @@ class DatasheetInstanceFactory:
     def build(
         datasheet_seed: DatasheetSeed, project_definition: ProjectDefinition
     ) -> CustomDatasheetInstancePackage:
-        original_owner_organisation_id = make_uuid(
+        original_owner_organization_id = make_uuid(
             f"{project_definition.name}-default-datasheet-owner"
         )
         project_definition.properties = {
@@ -298,7 +298,7 @@ class DatasheetInstanceFactory:
                     for name, property_type in datasheet_seed.properties.items()
                 },
                 original_datasheet_id=datasheet.id,
-                original_owner_organisation_id=original_owner_organisation_id,
+                original_owner_organization_id=original_owner_organization_id,
                 creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
             )
             for index, element_seed in enumerate(datasheet_seed.element_seeds.values())

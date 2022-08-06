@@ -1,9 +1,8 @@
-from typing import TypeVar, Optional, List
-from uuid import UUID
+from typing import TypeVar, Optional, List, Union
 from asyncio import gather
 from expert_dollup.core.utils.ressource_permissions import get_ressource_kind
 from expert_dollup.core.utils import encode_date_with_uuid
-from expert_dollup.core.domains import Ressource, zero_uuid
+from expert_dollup.core.domains import Ressource
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import (
     FieldTokenEncoder,
@@ -44,7 +43,7 @@ class RessourceEngine(UserRessourcePaginator[Domain]):
         kind = get_ressource_kind(self._domain_service.domain)
         builder = (
             self.ressource_service.get_builder()
-            .where("user_id", "==", query.user_id)
+            .where("organization_id", "==", query.organization_id)
             .where("kind", "==", kind)
             .where("permissions", "contain_one", f"{kind}:read")
         )
@@ -76,7 +75,7 @@ class RessourceEngine(UserRessourcePaginator[Domain]):
             total_count=total_count,
         )
 
-    def make_record_token(self, domain: Domain) -> str:
+    def make_record_token(self, domain: Union[Domain, Ressource]) -> str:
         token = encode_date_with_uuid(domain.creation_date_utc, domain.id)
         new_next_page_token = self._page_encoder.encode_field(token)
         return new_next_page_token

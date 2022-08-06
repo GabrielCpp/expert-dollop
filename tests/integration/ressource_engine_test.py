@@ -1,32 +1,19 @@
 import pytest
 from injector import Injector
-from uuid import UUID
 from datetime import datetime, timezone
-from expert_dollup.shared.automapping import Mapper
-from expert_dollup.shared.database_services import CollectionService
-from expert_dollup.core.domains import ProjectDetails, Ressource, User
-from expert_dollup.core.utils import encode_date_with_uuid
+from expert_dollup.core.domains import ProjectDetails, User
 from expert_dollup.core.utils.ressource_permissions import make_ressource
-from expert_dollup.infra.ressource_engine import RessourceEngine, UserRessourceQuery
-from expert_dollup.shared.database_services import DbConnection, Page
+from expert_dollup.infra.ressource_engine import UserRessourceQuery
+from expert_dollup.shared.database_services import Page
+from expert_dollup.shared.database_services import UserRessourcePaginator
 from ..fixtures import *
 
 
-@pytest.mark.asyncio
-async def test_given_project_it_could_be_paginated_by_user(
-    container: Injector, dal: DbConnection, auth_dal: DbConnection
-):
-    project_service = container.get(CollectionService[ProjectDetails])
-    ressource_service = container.get(CollectionService[Ressource])
-    user_service = container.get(CollectionService[User])
-    mapper = container.get(Mapper)
-    projects_by_name = {}
-
+def make_projects_with_user():
+    db = FakeDb()
     user_a = UserFactory()
     user_b = UserFactory()
-
-    await dal.truncate_db()
-    await auth_dal.truncate_db()
+    db.add(user_a, user_b)
 
     for i in range(0, 20):
         name = f"project{i}"
@@ -35,57 +22,56 @@ async def test_given_project_it_could_be_paginated_by_user(
             name=name,
             creation_date_utc=datetime(2011, 11, 4, i, 5, tzinfo=timezone.utc),
         )
-        await project_service.insert(project)
-        await ressource_service.insert(
-            make_ressource(ProjectDetails, project, current_user.id)
-        )
-        projects_by_name[name] = project
+        project_ressource = make_ressource(ProjectDetails, project, current_user)
+        db.add(project)
+        db.add(project_ressource)
 
-    ressource_engine = RessourceEngine(
-        user_service, ressource_service, mapper, project_service
-    )
+    return db
 
-    result = await ressource_engine.find_page(UserRessourceQuery(user_a.id), 5, None)
-    next_page_token = ressource_engine.make_record_token(projects_by_name["project10"])
 
-    assert result == Page(
-        limit=5,
-        results=[
-            projects_by_name["project18"],
-            projects_by_name["project16"],
-            projects_by_name["project14"],
-            projects_by_name["project12"],
-            projects_by_name["project10"],
-        ],
-        next_page_token=next_page_token,
-        total_count=10,
-    )
+@pytest.mark.asyncio
+async def test_given_project_it_could_be_paginated_by_user(
+    container: Injector, db_helper: DbFixtureHelper
+):
+    db = await db_helper.load_fixtures(make_projects_with_user)
+    projects = db.all(ProjectDetails)
+    user = db.all(User)[0]
+    ressource_query = UserRessourceQuery(user.organization_id)
+    ressource_engine = container.get(UserRessourcePaginator[ProjectDetails])
+    token_page_1 = ressource_engine.make_record_token(projects[10])
+    token_page_2 = ressource_engine.make_record_token(projects[0])
+    token_page_3 = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
+    expected_user_pages = [
+        Page(
+            limit=5,
+            results=[
+                projects[18],
+                projects[16],
+                projects[14],
+                projects[12],
+                projects[10],
+            ],
+            next_page_token=token_page_1,
+            total_count=10,
+        ),
+        Page(
+            limit=5,
+            results=[projects[8], projects[6], projects[4], projects[2], projects[0]],
+            next_page_token=token_page_2,
+            total_count=10,
+        ),
+        Page(
+            limit=5,
+            results=[],
+            next_page_token=token_page_3,
+            total_count=10,
+        ),
+    ]
 
-    result = await ressource_engine.find_page(
-        UserRessourceQuery(user_a.id), 5, next_page_token
-    )
-    next_page_token = ressource_engine.make_record_token(projects_by_name["project0"])
+    actual_user_pages = [
+        await ressource_engine.find_page(ressource_query, 5, None),
+        await ressource_engine.find_page(ressource_query, 5, token_page_1),
+        await ressource_engine.find_page(ressource_query, 5, token_page_2),
+    ]
 
-    assert result == Page(
-        limit=5,
-        results=[
-            projects_by_name["project8"],
-            projects_by_name["project6"],
-            projects_by_name["project4"],
-            projects_by_name["project2"],
-            projects_by_name["project0"],
-        ],
-        next_page_token=next_page_token,
-        total_count=10,
-    )
-
-    result = await ressource_engine.find_page(
-        UserRessourceQuery(user_a.id), 5, next_page_token
-    )
-
-    assert result == Page(
-        limit=5,
-        results=[],
-        next_page_token="MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
-        total_count=10,
-    )
+    assert actual_user_pages == expected_user_pages

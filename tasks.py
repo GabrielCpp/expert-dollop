@@ -216,6 +216,11 @@ def resetEnv(c):
 
 
 @task
+def mypy(c):
+    c.run("mypy expert_dollup")
+
+
+@task
 def black(c):
     c.run("poetry run black .")
 
@@ -292,7 +297,7 @@ def make_random_token(c):
 def load_default_users(c):
     from dotenv import load_dotenv
     from expert_dollup.app.modules import build_container
-    from expert_dollup.core.domains import User, Organisation
+    from expert_dollup.core.domains import User, Organization
     from expert_dollup.shared.database_services import DatabaseContext
     from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
     from tests.fixtures.seeds import make_root_user_org
@@ -305,7 +310,7 @@ def load_default_users(c):
         org = make_root_user_org()
 
         await user_db.truncate_db()
-        await database_context.upserts(Organisation, [org.organisation])
+        await database_context.upserts(Organization, [org.organization])
         await database_context.upserts(User, org.users)
 
     asyncio.run(reload_db())

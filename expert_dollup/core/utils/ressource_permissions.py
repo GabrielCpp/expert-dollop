@@ -20,7 +20,7 @@ class RessourceAuthorisation:
 
 
 RESSOURCE_ACTIONS = set(["read", "update", "create", "delete"])
-RESSOURCE_KIN_BY_DOMAIN = {
+RESSOURCE_KIND_BY_DOMAIN = {
     ProjectDetails: RessourceAuthorisation(
         "project", set(chain(RESSOURCE_ACTIONS, ["clone"]))
     ),
@@ -33,15 +33,15 @@ RESSOURCE_KIN_BY_DOMAIN = {
 
 
 def get_ressource_domain() -> List[Type]:
-    return list(RESSOURCE_KIN_BY_DOMAIN.keys())
+    return list(RESSOURCE_KIND_BY_DOMAIN.keys())
 
 
 def get_ressource_kind(ressource: Type) -> str:
-    return RESSOURCE_KIN_BY_DOMAIN[ressource].kind
+    return RESSOURCE_KIND_BY_DOMAIN[ressource].kind
 
 
 def make_permission(ressource: Type, action: str) -> str:
-    name = RESSOURCE_KIN_BY_DOMAIN[ressource].kind
+    name = RESSOURCE_KIND_BY_DOMAIN[ressource].kind
     return f"{name}:{action}"
 
 
@@ -65,17 +65,17 @@ def actions(*acts: Action) -> List[str]:
 def all_permisions() -> List[str]:
     permissions = []
 
-    for ressource, ressource_authorisation in RESSOURCE_KIN_BY_DOMAIN.items():
+    for ressource, ressource_authorisation in RESSOURCE_KIND_BY_DOMAIN.items():
         permissions.extend(make_permissions(ressource, ressource_authorisation.actions))
 
     return permissions
 
 
-def make_ressource(kind: Type, target_ressource, user_id: UUID):
+def make_ressource(kind: Type, target_ressource, user: User):
     return Ressource(
         id=target_ressource.id,
-        kind=RESSOURCE_KIN_BY_DOMAIN[kind].kind,
-        user_id=user_id,
+        kind=RESSOURCE_KIND_BY_DOMAIN[kind].kind,
+        organization_id=user.organization_id,
         permissions=make_permissions(kind, RESSOURCE_ACTIONS),
         name=target_ressource.name.split(),
         creation_date_utc=target_ressource.creation_date_utc,

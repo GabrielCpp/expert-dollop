@@ -22,6 +22,7 @@ class UnitLike(Protocol):
     path: List[UUID]
     node_id: UUID
     value: PrimitiveUnion
+    computed: UnitInstance
 
 
 class FormulaInjector:

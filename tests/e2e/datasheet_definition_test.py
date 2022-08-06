@@ -98,7 +98,7 @@ async def test_datasheet_definition(ac):
 @pytest.mark.asyncio
 async def test_label_collection(ac, db_helper: DbFixtureHelper):
     runner = FlowRunner()
-    mini_datasheet = await db_helper.load_fixtures(MiniDatasheet)
+    mini_datasheet = await db_helper.load_fixtures(MiniDatasheet())
 
     @runner.step
     async def create_label_collection():

@@ -283,9 +283,9 @@ class ProjectDetailsFactory(factory.Factory):
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
-class OrganisationLimitsFactory(factory.Factory):
+class OrganizationLimitsFactory(factory.Factory):
     class Meta:
-        model = OrganisationLimits
+        model = OrganizationLimits
 
     active_project_count = 40
     active_project_overall_collection_count = 40
@@ -293,13 +293,13 @@ class OrganisationLimitsFactory(factory.Factory):
     active_datasheet_custom_element_count = 40
 
 
-class OrganisationFactory(factory.Factory):
+class OrganizationFactory(factory.Factory):
     class Meta:
-        model = Organisation
+        model = Organization
 
     id = factory.Faker("pyuuid4")
-    name = factory.Sequence(lambda n: f"Organisation{n}")
-    limits = factory.SubFactory(OrganisationLimitsFactory)
+    name = factory.Sequence(lambda n: f"Organization{n}")
+    limits = factory.SubFactory(OrganizationLimitsFactory)
 
 
 class UserFactory(factory.Factory):
@@ -310,4 +310,4 @@ class UserFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     email = factory.Sequence(lambda n: f"user{n}@example.com")
     permissions = factory.List([])
-    organisation_id = factory.Faker("pyuuid4")
+    organization_id = factory.Faker("pyuuid4")

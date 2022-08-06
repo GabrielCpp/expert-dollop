@@ -1,6 +1,5 @@
 import asyncio
 from pathlib import Path
-from google.auth.credentials import AnonymousCredentials
 from google.cloud import storage
 from .storage_client import StorageClient
 

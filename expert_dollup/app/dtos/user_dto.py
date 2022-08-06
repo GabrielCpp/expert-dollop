@@ -8,4 +8,4 @@ class UserDto(CamelModel):
     id: UUID
     email: str
     permissions: List[str]
-    organisation_id: UUID
+    organization_id: UUID

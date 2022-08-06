@@ -26,7 +26,7 @@ class DatasheetElement:
     ordinal: int
     properties: Dict[str, PrimitiveUnion]
     original_datasheet_id: UUID
-    original_owner_organisation_id: UUID
+    original_owner_organization_id: UUID
     creation_date_utc: datetime
 
     @property

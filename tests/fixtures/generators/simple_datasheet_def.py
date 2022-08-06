@@ -1,21 +1,17 @@
 from uuid import uuid4
 from faker import Faker
 from expert_dollup.core.domains import *
-from ..fake_db_helpers import FakeDb, DbFixtureGenerator
+from ..fake_db_helpers import FakeDb
 from ..factories_domain import *
 
 
-class SimpleDatasheetDef(DbFixtureGenerator):
+class SimpleDatasheetDef:
     def __init__(self):
-        self._db = FakeDb()
+        self.db = FakeDb()
         self.fake = Faker()
         self.fake.seed_instance(seed=1)
 
-    @property
-    def db(self) -> FakeDb:
-        return self._db
-
-    def generate(self):
+    def __call__(self):
         project_definition = ProjectDefinitionFactory(
             name="".join(self.fake.words()),
             properties={
@@ -167,4 +163,4 @@ class SimpleDatasheetDef(DbFixtureGenerator):
                 )
             )
 
-        return self
+        return self.db

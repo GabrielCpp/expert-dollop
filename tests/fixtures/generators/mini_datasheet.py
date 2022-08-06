@@ -1,18 +1,14 @@
 from decimal import Decimal
 from expert_dollup.core.domains import *
-from ..fake_db_helpers import FakeDb, DbFixtureGenerator
+from ..fake_db_helpers import FakeDb
 from ..factories_domain import *
 
 
-class MiniDatasheet(DbFixtureGenerator):
+class MiniDatasheet:
     def __init__(self):
-        self._db = FakeDb()
+        self.db = FakeDb()
 
-    @property
-    def db(self) -> FakeDb:
-        return self._db
-
-    def generate(self):
+    def __call__(self):
         project_definition = self.db.add(
             ProjectDefinitionFactory(
                 name=f"datasheet_definition_a",
@@ -86,7 +82,7 @@ class MiniDatasheet(DbFixtureGenerator):
             )
         )
 
-        return self
+        return self.db
 
     @property
     def model(self) -> FakeDb:

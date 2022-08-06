@@ -921,7 +921,7 @@ def map_datasheet_element_import_from_dto(
         ),
         ordinal=0,
         original_datasheet_id=src.original_datasheet_id,
-        original_owner_organisation_id=src.original_owner_organisation_id,
+        original_owner_organization_id=src.original_owner_organization_id,
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -937,7 +937,7 @@ def map_datasheet_element_to_dto(
             src.properties, primitive_union_dto_mappings.to_origin
         ),
         original_datasheet_id=src.original_datasheet_id,
-        original_owner_organisation_id=src.original_owner_organisation_id,
+        original_owner_organization_id=src.original_owner_organization_id,
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -949,7 +949,7 @@ def map_datasheet_element_from_dto(
         datasheet_id=src.datasheet_id,
         element_def_id=src.element_def_id,
         child_element_reference=src.child_element_reference,
-        original_owner_organisation_id=src.original_owner_organisation_id,
+        original_owner_organization_id=src.original_owner_organization_id,
         properties=mapper.map_dict_values(
             src.properties, primitive_union_dto_mappings.from_origin
         ),
@@ -1226,5 +1226,5 @@ def map_user_to_dto(src: User, mapper: Mapper) -> UserDto:
         id=src.id,
         email=src.email,
         permissions=src.permissions,
-        organisation_id=src.organisation_id,
+        organization_id=src.organization_id,
     )

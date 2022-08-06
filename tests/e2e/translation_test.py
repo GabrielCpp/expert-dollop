@@ -8,7 +8,7 @@ from ..fixtures import *
 async def test_should_be_able_to_scan_translations(
     ac, db_helper: DbFixtureHelper, mapper
 ):
-    db = await db_helper.load_fixtures(SimpleProject)
+    db = await db_helper.load_fixtures(SimpleProject())
     project_definition = db.get_only_one(ProjectDefinition)
 
     translations = await AsyncCursor.all(

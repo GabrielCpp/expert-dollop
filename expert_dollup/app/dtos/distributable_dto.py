@@ -11,7 +11,7 @@ class SuppliedItemDto(CamelModel):
     datasheet_id: UUID
     element_def_id: UUID
     child_reference_id: UUID
-    organisation_id: UUID
+    organization_id: UUID
 
 
 class DistributableItemDto(CamelModel):

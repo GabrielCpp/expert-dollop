@@ -17,6 +17,7 @@ class DatasheetElementUseCase:
         datasheet_definition_element_service: CollectionService[
             DatasheetDefinitionElement
         ],
+        ressource_service: CollectionService[Ressource],
         project_definition_service: CollectionService[ProjectDefinition],
         clock: Clock,
     ):
@@ -25,6 +26,7 @@ class DatasheetElementUseCase:
         self.datasheet_definition_element_service = datasheet_definition_element_service
         self.schema_validator = schema_validator
         self.project_definition_service = project_definition_service
+        self.ressource_service = ressource_service
         self.clock = clock
 
     async def import_element(self, element: DatasheetElement):
@@ -92,13 +94,16 @@ class DatasheetElementUseCase:
             properties, project_definition, element_definition
         )
 
+        datasheet_ressource = await self.ressource_service.find_one_by(
+            RessourceFilter(id=datasheet_id)
+        )
         new_element = DatasheetElement(
             datasheet_id=datasheet_id,
             element_def_id=element_def_id,
             child_element_reference=uuid4(),
             properties=properties,
             ordinal=1,  # TODO: find max
-            # original_owner_organisation_id=,# TODO: find datasheet owner
+            original_owner_organization_id=datasheet_ressource.organization_id,
             original_datasheet_id=datasheet_id,
             creation_date_utc=self.clock.utcnow(),
         )

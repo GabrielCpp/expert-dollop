@@ -29,7 +29,7 @@ class UnitInstanceBuilder:
 
         for formula in formulas:
             assert formula.attached_to_type_id in nodes_by_type_id
-            nodes = nodes_by_type_id.get(formula.attached_to_type_id)
+            nodes = nodes_by_type_id[formula.attached_to_type_id]
 
             for node in nodes:
                 formulas_result.append(

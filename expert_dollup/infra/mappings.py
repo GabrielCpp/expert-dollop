@@ -388,7 +388,7 @@ def map_user_from_dao(src: UserDao, mapper: Mapper) -> User:
         id=src.id,
         email=src.email,
         permissions=src.permissions,
-        organisation_id=src.organisation_id,
+        organization_id=src.organization_id,
     )
 
 
@@ -398,26 +398,26 @@ def map_user_to_dao(src: User, mapper: Mapper) -> UserDao:
         id=src.id,
         email=src.email,
         permissions=src.permissions,
-        organisation_id=src.organisation_id,
+        organization_id=src.organization_id,
     )
 
 
-def map_organisation_from_dao(src: OrganisationDao, mapper: Mapper) -> Organisation:
-    return Organisation(
-        id=src.id, name=src.name, limits=mapper.map(src.limits, OrganisationLimits)
+def map_organization_from_dao(src: OrganizationDao, mapper: Mapper) -> Organization:
+    return Organization(
+        id=src.id, name=src.name, limits=mapper.map(src.limits, OrganizationLimits)
     )
 
 
-def map_organisation_to_dao(src: Organisation, mapper: Mapper) -> OrganisationDao:
-    return OrganisationDao(
-        id=src.id, name=src.name, limits=mapper.map(src.limits, OrganisationLimitsDao)
+def map_organization_to_dao(src: Organization, mapper: Mapper) -> OrganizationDao:
+    return OrganizationDao(
+        id=src.id, name=src.name, limits=mapper.map(src.limits, OrganizationLimitsDao)
     )
 
 
-def map_organisation_limits_from_dao(
-    src: OrganisationLimitsDao, mapper: Mapper
-) -> OrganisationLimits:
-    return OrganisationLimits(
+def map_organization_limits_from_dao(
+    src: OrganizationLimitsDao, mapper: Mapper
+) -> OrganizationLimits:
+    return OrganizationLimits(
         active_project_count=src.active_project_count,
         active_project_overall_collection_count=src.active_project_overall_collection_count,
         active_datasheet_count=src.active_datasheet_count,
@@ -425,10 +425,10 @@ def map_organisation_limits_from_dao(
     )
 
 
-def map_organisation_limits_to_dao(
-    src: OrganisationLimits, mapper: Mapper
-) -> OrganisationLimitsDao:
-    return OrganisationLimitsDao(
+def map_organization_limits_to_dao(
+    src: OrganizationLimits, mapper: Mapper
+) -> OrganizationLimitsDao:
+    return OrganizationLimitsDao(
         active_project_count=src.active_project_count,
         active_project_overall_collection_count=src.active_project_overall_collection_count,
         active_datasheet_count=src.active_datasheet_count,
@@ -440,7 +440,7 @@ def map_ressource_from_dao(src: RessourceDao, mapper: Mapper) -> Ressource:
     return Ressource(
         id=src.id,
         kind=src.kind,
-        user_id=src.user_id,
+        organization_id=src.organization_id,
         permissions=src.permissions,
         name=src.name,
         creation_date_utc=src.creation_date_utc,
@@ -451,7 +451,7 @@ def map_ressource_to_dao(src: Ressource, mapper: Mapper) -> RessourceDao:
     return RessourceDao(
         id=src.id,
         kind=src.kind,
-        user_id=src.user_id,
+        organization_id=src.organization_id,
         permissions=src.permissions,
         name=src.name,
         creation_date_utc=src.creation_date_utc,
@@ -985,7 +985,7 @@ def map_datasheet_element_to_dao(
             src.properties, primitive_union_dao_mappings.to_origin
         ),
         original_datasheet_id=src.original_datasheet_id,
-        original_owner_organisation_id=src.original_owner_organisation_id,
+        original_owner_organization_id=src.original_owner_organization_id,
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -1002,7 +1002,7 @@ def map_datasheet_element_from_dao(
             src.properties, primitive_union_dao_mappings.from_origin
         ),
         original_datasheet_id=src.original_datasheet_id,
-        original_owner_organisation_id=src.original_owner_organisation_id,
+        original_owner_organization_id=src.original_owner_organization_id,
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -1104,12 +1104,12 @@ def map_ressource_filter(src: UserFilter, mapper: Mapper) -> dict:
 def map_user_filter(src: UserFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
-        {"id": ("id", None), "user_id": ("user_id", None)},
+        {"id": ("id", None), "organization_id": ("organization_id", None)},
     )
 
 
 def map_ressource_id_filter(src: RessourceId, mapper: Mapper) -> dict:
-    return {"id": src.id, "user_id": src.user_id}
+    return {"id": src.id, "organization_id": src.organization_id}
 
 
 def map_formula_filter(src: FormulaFilter, mapper: Mapper) -> dict:
@@ -1463,8 +1463,8 @@ def map_ressource_filter_to_dict(src: RessourceFilter, mapper: Mapper) -> dict:
         src.args,
         {
             "id": ("id", None),
-            "user_id": ("user_id", None),
-            "organisation_id": ("organisation_id", None),
+            "organization_id": ("organization_id", None),
+            "organization_id": ("organization_id", None),
         },
     )
 
@@ -1491,7 +1491,7 @@ def map_distributable_item_from_dao(
             datasheet_id=src.supplied_item.datasheet_id,
             element_def_id=src.supplied_item.element_def_id,
             child_reference_id=src.supplied_item.child_reference_id,
-            organisation_id=src.supplied_item.organisation_id,
+            organization_id=src.supplied_item.organization_id,
         ),
         distribution_ids=src.distribution_ids,
         summary=mapper.map(src.summary, ComputedValue),
@@ -1513,7 +1513,7 @@ def map_distributable_item_to_dao(
             datasheet_id=src.supplied_item.datasheet_id,
             element_def_id=src.supplied_item.element_def_id,
             child_reference_id=src.supplied_item.child_reference_id,
-            organisation_id=src.supplied_item.organisation_id,
+            organization_id=src.supplied_item.organization_id,
         ),
         distribution_ids=src.distribution_ids,
         summary=mapper.map(src.summary, ComputedValueDao),

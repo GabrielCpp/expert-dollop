@@ -19,7 +19,7 @@ class ProjectDefinitonUseCase:
         self.word_provider = word_provider
 
     async def add(self, domain: ProjectDefinition, user: User) -> Awaitable:
-        ressource = make_ressource(ProjectDefinition, domain, user.id)
+        ressource = make_ressource(ProjectDefinition, domain, user)
         await self.ressource_service.insert(ressource)
         await self.service.insert(domain)
         return domain

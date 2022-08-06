@@ -25,7 +25,7 @@ INTERNAL_BUCKET_NAME = "internal"
 
 def round_number(number: Decimal, digits: int, method: str) -> Decimal:
     assert method == "truncate", "method is the only method supported"
-    stepper = Decimal(10.0 ** digits)
+    stepper = Decimal(10.0**digits)
     return Decimal(int(stepper * Decimal(number))) / stepper
 
 

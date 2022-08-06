@@ -35,14 +35,14 @@ class ProjectUseCase:
     async def add(
         self, project_details: ProjectDetails, user: User
     ) -> Awaitable[ProjectDetails]:
-        project = await self.project_builder.build_new(project_details, user.id)
+        project = await self.project_builder.build_new(project_details, user)
         await self._insert_new_project(project)
 
         return project_details
 
     async def clone(self, project_id: UUID, user: User) -> Awaitable[ProjectDetails]:
         project_details = await self.project_service.find_by_id(project_id)
-        cloned_project = await self.project_builder.clone(project_details, user.id)
+        cloned_project = await self.project_builder.clone(project_details, user)
         await self._insert_new_project(cloned_project)
 
         return cloned_project.details

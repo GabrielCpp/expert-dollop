@@ -150,7 +150,7 @@ class InsertProjectWithRessourceAction:
                 make_ressource(
                     ProjectDetails,
                     project_details,
-                    user.id,
+                    user,
                 )
             )
             await project_service.insert(project_details)

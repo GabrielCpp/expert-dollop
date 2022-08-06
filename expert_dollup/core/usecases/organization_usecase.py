@@ -5,17 +5,17 @@ from expert_dollup.shared.database_services import DatabaseContext
 from expert_dollup.core.utils import make_permissions, all_action
 
 
-class OrganisationUseCase:
+class OrganizationUseCase:
     def __init__(self, db_context: DatabaseContext):
         self.db_context = db_context
 
-    async def setup_organisation(
-        self, email: str, organisation_name: str, oauth_id
+    async def setup_organization(
+        self, email: str, organization_name: str, oauth_id
     ) -> User:
-        organisation = Organisation(
+        organization = Organization(
             id=uuid4(),
-            name=organisation_name,
-            limits=OrganisationLimits(
+            name=organization_name,
+            limits=OrganizationLimits(
                 active_project_count=100,
                 active_project_overall_collection_count=1000,
                 active_datasheet_count=100,
@@ -32,9 +32,9 @@ class OrganisationUseCase:
                 *make_permissions(Datasheet, all_action()),
                 *make_permissions(ProjectDefinition, actions(Action.CAN_READ)),
             ],
-            organisation_id=organisation.id,
+            organization_id=organization.id,
         )
 
-        await self.db_context.insert(Organisation, organisation)
+        await self.db_context.insert(Organization, organization)
         await self.db_context.insert(User, user)
         return user
