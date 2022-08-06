@@ -22,16 +22,16 @@ async def test_update_empty_distributable_from_report(static_clock):
                 rows=[
                     ReportRowFactory(
                         columns=[
-                            ReportColumnFactory(value=1),
-                            ReportColumnFactory(value=2),
-                            ReportColumnFactory(value=3),
+                            ComputedValueFactory(value=1),
+                            ComputedValueFactory(value=2),
+                            ComputedValueFactory(value=3),
                         ]
                     ),
                     ReportRowFactory(
                         columns=[
-                            ReportColumnFactory(value=4),
-                            ReportColumnFactory(value=5),
-                            ReportColumnFactory(value=6),
+                            ComputedValueFactory(value=4),
+                            ComputedValueFactory(value=5),
+                            ComputedValueFactory(value=6),
                         ]
                     ),
                 ]
@@ -65,11 +65,11 @@ async def test_update_empty_distributable_from_report(static_clock):
                     organization_id=organization_id,
                 ),
                 summary=report.stages[0].summary,
-                columns={
-                    "stage": ReportColumn(value=1, unit=None),
-                    "quantity": ReportColumn(value=2, unit=None),
-                    "product_name": ReportColumn(value=3, unit=None),
-                },
+                columns=[
+                    ComputedValue(label="stage", value=1, unit=None),
+                    ComputedValue(label="quantity", value=2, unit=None),
+                    ComputedValue(label="product_name", value=3, unit=None),
+                ],
                 obsolete=False,
                 creation_date_utc=static_clock.utcnow(),
             ),
@@ -87,9 +87,9 @@ async def test_update_empty_distributable_from_report(static_clock):
                 ),
                 summary=report.stages[0].summary,
                 columns={
-                    "stage": ReportColumn(value=4, unit=None),
-                    "quantity": ReportColumn(value=5, unit=None),
-                    "product_name": ReportColumn(value=6, unit=None),
+                    ComputedValue(label="stage", value=4, unit=None),
+                    ComputedValue(label="quantity", value=5, unit=None),
+                    ComputedValue(label="product_name", value=6, unit=None),
                 },
                 obsolete=False,
                 creation_date_utc=static_clock.utcnow(),
@@ -109,16 +109,16 @@ def test_update_populated_distributable_from_report(static_clock):
                 rows=[
                     ReportRowFactory(
                         columns=[
-                            ReportColumnFactory(value=1),
-                            ReportColumnFactory(value=2),
-                            ReportColumnFactory(value=3),
+                            ComputedValueFactory(value=1),
+                            ComputedValueFactory(value=2),
+                            ComputedValueFactory(value=3),
                         ]
                     ),
                     ReportRowFactory(
                         columns=[
-                            ReportColumnFactory(value=4),
-                            ReportColumnFactory(value=5),
-                            ReportColumnFactory(value=6),
+                            ComputedValueFactory(value=4),
+                            ComputedValueFactory(value=5),
+                            ComputedValueFactory(value=6),
                         ]
                     ),
                 ]

@@ -8,16 +8,10 @@ from .values_union import PrimitiveUnion
 
 
 @dataclass
-class ReportColumn:
-    value: PrimitiveUnion
-    unit: Optional[str]
-
-
-@dataclass
 class ComputedValue:
     label: str
     value: PrimitiveUnion
-    unit: str
+    unit: Optional[str]
 
     @property
     def key(self) -> str:
@@ -30,7 +24,7 @@ class ReportRow:
     formula_id: UUID
     element_def_id: UUID
     child_reference_id: UUID
-    columns: List[ReportColumn]
+    columns: List[ComputedValue]
     row: ReportRowDict
 
     def __getitem__(self, bucket_name: str):

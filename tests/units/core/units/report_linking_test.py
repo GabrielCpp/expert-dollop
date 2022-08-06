@@ -94,6 +94,99 @@ async def test_given_row_cache_should_produce_correct_report(
         }
     ]
 
+    expected_report = Report(
+        stages=[
+            ReportStage(
+                summary=ComputedValue(
+                    label="show_concrete", value=Decimal("24.24"), unit="unit"
+                ),
+                rows=[
+                    ReportRow(
+                        node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
+                        formula_id=UUID("f1f1e0ff-2344-48bc-e757-8c9dcd3c671e"),
+                        element_def_id=UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
+                        child_reference_id=datasheet_element.child_element_reference,
+                        columns=[
+                            ComputedValue(
+                                label="stage", value="show_concrete", unit="unit"
+                            ),
+                            ComputedValue(
+                                label="quantity", value=Decimal("24"), unit="unit"
+                            ),
+                            ComputedValue(
+                                label="product_name", value="concrete", unit="unit"
+                            ),
+                            ComputedValue(
+                                label="cost_per_unit", value=Decimal("1.01"), unit="$"
+                            ),
+                            ComputedValue(
+                                label="cost", value=Decimal("24.24"), unit="$"
+                            ),
+                        ],
+                        row={
+                            "abstractproduct": {
+                                "id": UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
+                                "unit_id": "m",
+                                "is_collection": False,
+                                "order_index": 1,
+                                "name": "concrete",
+                            },
+                            "datasheet_element": {
+                                "id": UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
+                                "unit_id": "m",
+                                "is_collection": False,
+                                "order_index": 1,
+                                "name": "concrete",
+                                "price": Decimal("1.01"),
+                                "factor": Decimal("1.01"),
+                                "element_def_id": UUID(
+                                    "00ecf6d0-6f00-c4bb-2902-4057469a3f3d"
+                                ),
+                                "child_element_reference": datasheet_element.child_element_reference,
+                                "original_datasheet_id": UUID(
+                                    "0fc7fe86-ab22-a17d-6037-9fccc7d7f8f8"
+                                ),
+                            },
+                            "formula": {
+                                "formula_id": UUID(
+                                    "f1f1e0ff-2344-48bc-e757-8c9dcd3c671e"
+                                ),
+                                "node_id": UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
+                                "path": [],
+                                "name": "formulaA",
+                                "calculation_details": "<fieldB, 2> * sum(<fieldA, 12>)",
+                                "result": Decimal("24"),
+                            },
+                            "stage": {"name": "show_concrete"},
+                            "substage": {
+                                "id": UUID("6524c49c-93e7-0606-4d62-1ac982d40027"),
+                                "name": "floor_label_0",
+                                "order_index": 0,
+                                "datasheet_element": UUID(
+                                    "00ecf6d0-6f00-c4bb-2902-4057469a3f3d"
+                                ),
+                                "formula": UUID("f1f1e0ff-2344-48bc-e757-8c9dcd3c671e"),
+                            },
+                            "columns": {
+                                "stage": "show_concrete",
+                                "product_name": "concrete",
+                                "quantity": Decimal("24"),
+                                "cost_per_unit": Decimal("1.01"),
+                                "cost": Decimal("24.24"),
+                            },
+                            "internal": {
+                                "group_digest": "show_concrete/concrete",
+                                "order_index": 0,
+                            },
+                        },
+                    )
+                ],
+            )
+        ],
+        summaries=[ComputedValue(label="subtotal", value=Decimal("24.24"), unit="$")],
+        creation_date_utc=datetime(2000, 4, 3, 1, 1, 1, tzinfo=timezone.utc),
+    )
+
     datasheet_element_service = StrictInterfaceSetup(CollectionService)
     report_row_cache = StrictInterfaceSetup(ReportRowCache)
     formula_resolver = StrictInterfaceSetup(FormulaResolver)
@@ -139,87 +232,4 @@ async def test_given_row_cache_should_produce_correct_report(
         report_definition, project_fixture.project
     )
 
-    assert report == Report(
-        stages=[
-            ReportStage(
-                summary=ComputedValue(
-                    label="show_concrete", value=Decimal("24.24"), unit="unit"
-                ),
-                rows=[
-                    ReportRow(
-                        node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
-                        formula_id=UUID("f1f1e0ff-2344-48bc-e757-8c9dcd3c671e"),
-                        element_def_id=UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
-                        child_reference_id=UUID("00000000-0000-0000-0000-000000000000"),
-                        columns=[
-                            ReportColumn(value="show_concrete", unit="unit"),
-                            ReportColumn(value=Decimal("24"), unit="unit"),
-                            ReportColumn(value="concrete", unit="unit"),
-                            ReportColumn(value=Decimal("1.01"), unit="$"),
-                            ReportColumn(value=Decimal("24.24"), unit="$"),
-                        ],
-                        row={
-                            "abstractproduct": {
-                                "id": UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
-                                "unit_id": "m",
-                                "is_collection": False,
-                                "order_index": 1,
-                                "name": "concrete",
-                            },
-                            "datasheet_element": {
-                                "id": UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
-                                "unit_id": "m",
-                                "is_collection": False,
-                                "order_index": 1,
-                                "name": "concrete",
-                                "price": Decimal("1.01"),
-                                "factor": Decimal("1.01"),
-                                "element_def_id": UUID(
-                                    "00ecf6d0-6f00-c4bb-2902-4057469a3f3d"
-                                ),
-                                "child_element_reference": UUID(
-                                    "00000000-0000-0000-0000-000000000000"
-                                ),
-                                "original_datasheet_id": UUID(
-                                    "0fc7fe86-ab22-a17d-6037-9fccc7d7f8f8"
-                                ),
-                            },
-                            "formula": {
-                                "formula_id": UUID(
-                                    "f1f1e0ff-2344-48bc-e757-8c9dcd3c671e"
-                                ),
-                                "node_id": UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
-                                "path": [],
-                                "name": "formulaA",
-                                "calculation_details": "<fieldB, 2> * sum(<fieldA, 12>)",
-                                "result": Decimal("24"),
-                            },
-                            "stage": {"name": "show_concrete"},
-                            "substage": {
-                                "id": UUID("6524c49c-93e7-0606-4d62-1ac982d40027"),
-                                "name": "floor_label_0",
-                                "order_index": 0,
-                                "datasheet_element": UUID(
-                                    "00ecf6d0-6f00-c4bb-2902-4057469a3f3d"
-                                ),
-                                "formula": UUID("f1f1e0ff-2344-48bc-e757-8c9dcd3c671e"),
-                            },
-                            "columns": {
-                                "stage": "show_concrete",
-                                "product_name": "concrete",
-                                "quantity": Decimal("24"),
-                                "cost_per_unit": Decimal("1.01"),
-                                "cost": Decimal("24.24"),
-                            },
-                            "internal": {
-                                "group_digest": "show_concrete/concrete",
-                                "order_index": 0,
-                            },
-                        },
-                    )
-                ],
-            )
-        ],
-        summaries=[ComputedValue(label="subtotal", value=Decimal("24.24"), unit="$")],
-        creation_date_utc=datetime(2000, 4, 3, 1, 1, 1, tzinfo=timezone.utc),
-    )
+    assert report == expected_report

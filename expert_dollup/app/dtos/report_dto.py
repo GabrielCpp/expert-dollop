@@ -6,9 +6,10 @@ from .report_definition_dto import ReportRowDictDto
 from .dynamic_primitive import PrimitiveUnionDto
 
 
-class ReportColumnDto(CamelModel):
+class ComputedValueDto(CamelModel):
+    label: str
     value: PrimitiveUnionDto
-    unit: Optional[str]
+    unit: str
 
 
 class ReportRowDto(CamelModel):
@@ -16,7 +17,7 @@ class ReportRowDto(CamelModel):
     formula_id: UUID
     element_def_id: UUID
     child_reference_id: UUID
-    columns: List[ReportColumnDto]
+    columns: List[ComputedValueDto]
     row: ReportRowDictDto
 
 
@@ -25,13 +26,7 @@ class MinimalReportRowDto(CamelModel):
     formula_id: UUID
     element_def_id: UUID
     child_reference_id: UUID
-    columns: List[ReportColumnDto]
-
-
-class ComputedValueDto(CamelModel):
-    label: str
-    value: PrimitiveUnionDto
-    unit: str
+    columns: List[ComputedValueDto]
 
 
 class ReportStageDto(CamelModel):

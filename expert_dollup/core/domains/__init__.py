@@ -132,7 +132,6 @@ from .report import (
     ReportStage,
     Report,
     ReportKey,
-    ReportColumn,
     ComputedValue,
 )
 from .measure_unit import MeasureUnit

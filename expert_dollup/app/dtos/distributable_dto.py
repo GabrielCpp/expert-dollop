@@ -3,7 +3,7 @@ from uuid import UUID
 from typing import List, Dict
 from enum import Enum
 from datetime import datetime
-from .report_dto import ComputedValueDto, ReportColumnDto
+from .report_dto import ComputedValueDto
 from expert_dollup.shared.starlette_injection import CamelModel
 
 

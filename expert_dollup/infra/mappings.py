@@ -1398,7 +1398,7 @@ def map_report_row_to_dao(src: ReportRow, mapper: Mapper) -> ReportRowDao:
         formula_id=src.formula_id,
         element_def_id=src.element_def_id,
         child_reference_id=src.child_reference_id,
-        columns=mapper.map_many(src.columns, ReportColumnDao),
+        columns=mapper.map_many(src.columns, ComputedValueDao),
         row=map_report_rows_dict_to_dao(src.row, mapper),
     )
 
@@ -1409,22 +1409,8 @@ def map_report_row_from_dao(src: ReportRowDao, mapper: Mapper) -> ReportRow:
         formula_id=src.formula_id,
         element_def_id=src.element_def_id,
         child_reference_id=src.child_reference_id,
-        columns=mapper.map_many(src.columns, ReportColumn),
+        columns=mapper.map_many(src.columns, ComputedValue),
         row=map_report_rows_dict_from_dao(src.row, mapper),
-    )
-
-
-def map_report_column_to_dao(src: ReportColumn, mapper: Mapper) -> ReportColumnDao:
-    return ReportColumnDao(
-        value=mapper.map(src.value, primitive_union_dao_mappings.to_origin),
-        unit=src.unit,
-    )
-
-
-def map_report_column_from_dao(src: ReportColumnDao, mapper: Mapper) -> ReportColumn:
-    return ReportColumn(
-        value=mapper.map(src.value, primitive_union_dao_mappings.from_origin),
-        unit=src.unit,
     )
 
 

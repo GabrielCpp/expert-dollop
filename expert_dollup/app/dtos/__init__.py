@@ -85,7 +85,6 @@ from .report_dto import (
     MinimalReportDto,
     MinimalReportStageDto,
     MinimalReportRowDto,
-    ReportColumnDto,
     ComputedValueDto,
 )
 from .report_definition_dto import (

@@ -10,7 +10,6 @@ from .expert_dollup_db import (
     DecimalFieldValueDao,
     ReferenceIdDao,
     FormulaDependencyGraphDao,
-    ReportColumnDao,
 )
 from .storage_connectors.storage_client import StorageClient
 
@@ -54,7 +53,7 @@ class ReportRowDao(BaseModel):
     formula_id: UUID
     element_def_id: UUID
     child_reference_id: UUID
-    columns: List[ReportColumnDao]
+    columns: List[ComputedValueDao]
     row: ReportRowDictDao
 
 

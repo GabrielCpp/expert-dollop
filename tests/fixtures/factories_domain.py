@@ -176,12 +176,13 @@ class ReportDefinitionFactory(factory.Factory):
     distributable = False
 
 
-class ReportColumnFactory(factory.Factory):
+class ComputedValueFactory(factory.Factory):
     class Meta:
-        model = ReportColumn
+        model = ComputedValue
 
-    value = 1
-    unit = None
+    label = factory.Sequence(lambda n: f"computed_value_{n}")
+    value = factory.Sequence(lambda n: n)
+    unit = "$"
 
 
 class ReportRowFactory(factory.Factory):
@@ -192,17 +193,8 @@ class ReportRowFactory(factory.Factory):
     formula_id = factory.Faker("pyuuid4")
     element_def_id = factory.Faker("pyuuid4")
     child_reference_id = factory.Faker("pyuuid4")
-    columns = factory.List([SubFactory(ReportColumnFactory) for _ in range(3)])
+    columns = factory.List([SubFactory(ComputedValueFactory) for _ in range(3)])
     row = factory.Dict({})
-
-
-class ComputedValueFactory(factory.Factory):
-    class Meta:
-        model = ComputedValue
-
-    label = factory.Sequence(lambda n: f"computed_value_{n}")
-    value = factory.Sequence(lambda n: n)
-    unit = "$"
 
 
 class ReportStageFactory(factory.Factory):

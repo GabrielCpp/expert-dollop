@@ -1118,7 +1118,7 @@ def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportRowDto:
         formula_id=src.formula_id,
         element_def_id=src.element_def_id,
         child_reference_id=src.child_reference_id,
-        columns=mapper.map_many(src.columns, ReportColumnDto),
+        columns=mapper.map_many(src.columns, ComputedValueDto),
         row={
             name: {
                 att_name: mapper.map_many(value, ReferenceIdDto)
@@ -1202,21 +1202,7 @@ def map_minimal_report_row_dto(src: ReportRow, mapper: Mapper) -> MinimalReportR
         formula_id=src.formula_id,
         element_def_id=src.element_def_id,
         child_reference_id=src.child_reference_id,
-        columns=mapper.map_many(src.columns, ReportColumnDto),
-    )
-
-
-def map_report_column_to_dto(src: ReportColumn, mapper: Mapper) -> ReportColumnDto:
-    return ReportColumnDto(
-        value=mapper.map(src.value, primitive_union_dto_mappings.to_origin),
-        unit=src.unit,
-    )
-
-
-def map_report_column_from_dto(src: ReportColumnDto, mapper: Mapper) -> ReportColumn:
-    return ReportColumn(
-        value=mapper.map(src.value, primitive_union_dto_mappings.from_origin),
-        unit=src.unit,
+        columns=mapper.map_many(src.columns, ComputedValueDto),
     )
 
 

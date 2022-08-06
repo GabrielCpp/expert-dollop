@@ -455,17 +455,12 @@ type ReportDefinition {
     structure: ReportDefinitionStructure!
 }
 
-type ReportColumn {
-  value: FieldValue!
-  unit: String
-}
-
 type ReportRow {
     nodeId: String!
     formulaId: String!
     elementDefId: String!
     childReferenceId: String!
-    columns: [ReportColumn!]!
+    columns: [ComputedValue!]!
 }
 
 type ComputedValue {

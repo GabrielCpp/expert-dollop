@@ -343,7 +343,8 @@ class ReportBuilder:
                     element_attribute.get(row)
                 ].child_element_reference,
                 columns=[
-                    ReportColumn(
+                    ComputedValue(
+                        label=column.name,
                         value=row[COLUMNS_BUCKET_NAME][column.name],
                         unit=get_unit(row, column.unit),
                     )

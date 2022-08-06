@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from uuid import UUID
-from typing import List, Dict
+from typing import List
 from enum import Enum
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
-from .report import ComputedValue, ReportColumn
+from .report import ComputedValue
 
 ColumnLabel = str
 

@@ -434,11 +434,6 @@ class MeasureUnitDao(BaseModel):
     id: str = Field(max_length=16)
 
 
-class ReportColumnDao(BaseModel):
-    value: PrimitiveUnionDao
-    unit: Optional[str]
-
-
 class ComputedValueDao(BaseModel):
     label: str
     value: PrimitiveUnionDao
@@ -467,6 +462,6 @@ class DistributableItemDao(BaseModel):
     distributions: List[UUID]
 
     summary: ComputedValueDao
-    columns: Dict[str, ReportColumnDao]
+    columns: Dict[str, ComputedValueDao]
     obsolete: bool
     creation_date_utc: datetime
