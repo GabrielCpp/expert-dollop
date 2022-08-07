@@ -4,7 +4,7 @@ from decimal import Decimal
 from tests.fixtures.mock_interface_utils import StrictInterfaceSetup
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.shared.database_services import CollectionService, Plucker
-from expert_dollup.core.services import *
+from expert_dollup.core.repositories import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.units import *
 from expert_dollup.core.builders import *
@@ -13,7 +13,7 @@ from tests.fixtures import *
 
 @pytest.mark.asyncio
 async def test_given_unit_instances_should_compute_collection(logger_factory):
-    project_node_service = StrictInterfaceSetup(ProjectNodeService)
+    project_node_service = StrictInterfaceSetup(ProjectNodeRepository)
     unit_instance_builder = StrictInterfaceSetup(UnitInstanceBuilder)
     stage_formulas_storage = StrictInterfaceSetup(ObjectStorage)
 
@@ -21,35 +21,7 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
     fields = [node for node in fixture.nodes if not node.value is None]
     stages_formulas = FormulaResolver.stage_formulas(fixture.formulas)
 
-    stage_formulas_storage.setup(
-        lambda x: x.load(StagedFormulasKey(fixture.project_definition.id)),
-        returns_async=stages_formulas,
-    )
-
-    project_node_service.setup(
-        lambda x: x.get_all_fields(fixture.project.id), returns_async=fields
-    )
-
-    unit_instance_builder.setup(
-        lambda x: x.build_with_fields(stages_formulas, fields),
-        returns=fixture.unit_instances,
-    )
-
-    formula_resolver = FormulaResolver(
-        StrictInterfaceSetup(CollectionService).object,
-        project_node_service.object,
-        StrictInterfaceSetup(Plucker).object,
-        StrictInterfaceSetup(ProjectDefinitionNodeService).object,
-        unit_instance_builder.object,
-        stage_formulas_storage.object,
-        logger_factory,
-    )
-
-    injector = await formula_resolver.compute_all_project_formula(
-        fixture.project.id, fixture.project_definition.id
-    )
-
-    assert injector.unit_instances == [
+    expected_result = [
         UnitInstance(
             formula_id=None,
             node_id=UUID("941055cb-b2bc-0916-4182-4774e576c6eb"),
@@ -115,8 +87,8 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
             node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
             path=[],
             name="formulaB",
-            calculation_details="\ntemp1(6.000000) = sum(sectionA_formula)\ntemp2(12.000000) = <fieldB[4303a404-1c3e-7aca-1261-9b6544363a3e], 2> * temp1(6.000000)\n\n<final_result, 12.000000> = temp2(12.000000)",
-            result=Decimal("12.000000"),
+            calculation_details="\ntemp1(6) = sum(sectionA_formula)\ntemp2(12) = <fieldB[4303a404-1c3e-7aca-1261-9b6544363a3e], 2> * temp1(6)\n\n<final_result, 12> = temp2(12)",
+            result=Decimal("12"),
         ),
         UnitInstance(
             formula_id=UUID("cbaba831-5e3a-aa8b-a7a5-60234fe98b14"),
@@ -127,8 +99,8 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
                 UUID("8ceb58ac-94a7-0ae9-a6da-6b6fbb3e00e8"),
             ],
             name="sectionA_formula",
-            calculation_details="\ntemp1(3.000000) = <fieldA[941055cb-b2bc-0916-4182-4774e576c6eb], 5> - 2.000000\n\n<final_result, 3.000000> = temp1(3.000000)",
-            result=Decimal("3.000000"),
+            calculation_details="\ntemp1(3) = <fieldA[941055cb-b2bc-0916-4182-4774e576c6eb], 5> - 2\n\n<final_result, 3> = temp1(3)",
+            result=Decimal("3"),
         ),
         UnitInstance(
             formula_id=UUID("cbaba831-5e3a-aa8b-a7a5-60234fe98b14"),
@@ -139,8 +111,8 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
                 UUID("8ceb58ac-94a7-0ae9-a6da-6b6fbb3e00e8"),
             ],
             name="sectionA_formula",
-            calculation_details="\ntemp1(2.000000) = <fieldA[a23ee02f-9bc1-0573-ed61-60ebffc6d4c8], 4> - 2.000000\n\n<final_result, 2.000000> = temp1(2.000000)",
-            result=Decimal("2.000000"),
+            calculation_details="\ntemp1(2) = <fieldA[a23ee02f-9bc1-0573-ed61-60ebffc6d4c8], 4> - 2\n\n<final_result, 2> = temp1(2)",
+            result=Decimal("2"),
         ),
         UnitInstance(
             formula_id=UUID("cbaba831-5e3a-aa8b-a7a5-60234fe98b14"),
@@ -151,7 +123,37 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
                 UUID("8ceb58ac-94a7-0ae9-a6da-6b6fbb3e00e8"),
             ],
             name="sectionA_formula",
-            calculation_details="\ntemp1(1.000000) = <fieldA[56969dee-a7d6-7243-b154-fe4c75334aa9], 3> - 2.000000\n\n<final_result, 1.000000> = temp1(1.000000)",
-            result=Decimal("1.000000"),
+            calculation_details="\ntemp1(1) = <fieldA[56969dee-a7d6-7243-b154-fe4c75334aa9], 3> - 2\n\n<final_result, 1> = temp1(1)",
+            result=Decimal("1"),
         ),
     ]
+
+    stage_formulas_storage.setup(
+        lambda x: x.load(StagedFormulasKey(fixture.project_definition.id)),
+        returns_async=stages_formulas,
+    )
+
+    project_node_service.setup(
+        lambda x: x.get_all_fields(fixture.project.id), returns_async=fields
+    )
+
+    unit_instance_builder.setup(
+        lambda x: x.build_with_fields(stages_formulas, fields),
+        returns=fixture.unit_instances,
+    )
+
+    formula_resolver = FormulaResolver(
+        StrictInterfaceSetup(CollectionService).object,
+        project_node_service.object,
+        StrictInterfaceSetup(Plucker).object,
+        StrictInterfaceSetup(ProjectDefinitionNodeRepository).object,
+        unit_instance_builder.object,
+        stage_formulas_storage.object,
+        logger_factory,
+    )
+
+    injector = await formula_resolver.compute_all_project_formula(
+        fixture.project.id, fixture.project_definition.id
+    )
+
+    assert injector.unit_instances == expected_result

@@ -2,14 +2,14 @@ from abc import abstractmethod
 from uuid import UUID
 from typing import List, Optional
 from expert_dollup.shared.database_services import CollectionService
-from expert_dollup.core.domains import ProjectNode, ProjectDefinitionNode
+from expert_dollup.core.domains import ProjectNode
 
 
-class ProjectNodeService(CollectionService[ProjectNode]):
+class ProjectNodeRepository(CollectionService[ProjectNode]):
     @abstractmethod
     async def find_children(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None
-    ) -> ProjectNode:
+    ) -> List[ProjectNode]:
         pass
 
     @abstractmethod
@@ -17,19 +17,19 @@ class ProjectNodeService(CollectionService[ProjectNode]):
         pass
 
     @abstractmethod
-    async def find_root_sections(self, project_id: UUID) -> List[ProjectDefinitionNode]:
+    async def find_root_sections(self, project_id: UUID) -> List[ProjectNode]:
         pass
 
     @abstractmethod
     async def find_root_section_nodes(
         self, project_id: UUID, root_section_id: UUID
-    ) -> List[ProjectDefinitionNode]:
+    ) -> List[ProjectNode]:
         pass
 
     @abstractmethod
     async def find_form_content(
         self, project_id: UUID, form_id: UUID
-    ) -> List[ProjectDefinitionNode]:
+    ) -> List[ProjectNode]:
         pass
 
     @abstractmethod

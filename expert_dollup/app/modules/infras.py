@@ -32,6 +32,7 @@ from expert_dollup.core.exceptions import RessourceNotFound
 from expert_dollup.infra.ressource_engine import RessourceEngine
 from expert_dollup.core.utils.ressource_permissions import get_ressource_domain
 from expert_dollup.core.domains import *
+import expert_dollup.core.repositories as repositories
 
 storage_exception_mappings = {ObjectNotFound: lambda e: RessourceNotFound()}
 
@@ -92,21 +93,30 @@ def bind_services(binder: Binder) -> None:
         domain = get_arg(get_base(class_type))
         binder.bind(
             CollectionService[domain],
-            factory_of(class_type, database=RessourceAuthDatabase),
+            factory_of(class_type, database=RessourceAuthDatabase, mapper=Mapper),
         )
 
     for class_type in get_classes(services):
         domain = get_arg(get_base(class_type))
         binder.bind(
             CollectionService[domain],
-            factory_of(class_type, database=ExpertDollupDatabase),
+            factory_of(class_type, database=ExpertDollupDatabase, mapper=Mapper),
         )
 
-    for class_type in services.__dict__.values():
-        if isclass(class_type):
-            binder.bind(
-                class_type, factory_of(class_type, database=ExpertDollupDatabase)
-            )
+    for class_type in get_classes(services):
+        domain = get_arg(get_base(class_type))
+
+        for repo_type in get_classes(repositories):
+            repo_domain = get_arg(get_base(repo_type))
+
+            if domain is repo_domain:
+                binder.bind(
+                    repo_type,
+                    factory_of(
+                        class_type, database=ExpertDollupDatabase, mapper=Mapper
+                    ),
+                )
+                break
 
 
 def bind_validators(binder: Binder) -> None:
@@ -122,10 +132,14 @@ def bind_queries(binder: Binder) -> None:
         for service_type in get_classes(services)
     }
 
-    for domain_type, service_type in service_by_domain.items():
+    for domain_type in service_by_domain.keys():
         binder.bind(
             Plucker[domain_type],
-            factory_of(PluckQuery[domain_type], service=service_type, mapper=Mapper),
+            factory_of(
+                PluckQuery[domain_type],
+                service=CollectionService[domain_type],
+                mapper=Mapper,
+            ),
         )
 
 
@@ -141,7 +155,7 @@ def bind_paginators(binder: Binder) -> None:
 
         binder.bind(
             Paginator[domain_type],
-            factory_of(paginator_type, service=service_by_domain[domain_type]),
+            factory_of(paginator_type, service=CollectionService[domain_type]),
         )
 
 

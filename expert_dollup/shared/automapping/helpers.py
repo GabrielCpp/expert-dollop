@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, Dict, Union, Type
+from typing import Optional, Tuple, Dict, Union, Type, Any
 
 
 @dataclass
@@ -16,9 +16,9 @@ class RevervibleMapping:
 class RevervibleUnionMapping(RevervibleMapping):
     def __init__(
         self,
-        origin_union: Type,
-        target_union: Type,
-        explicit_mapping: Optional[Dict[Type, Type]] = None,
+        origin_union: Any,
+        target_union: Any,
+        explicit_mapping: Optional[Dict[Type[Any], Type[Any]]] = None,
     ):
         assert getattr(origin_union, "__origin__", None) is Union
         assert getattr(origin_union, "__origin__", None) is Union

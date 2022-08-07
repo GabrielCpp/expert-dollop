@@ -24,5 +24,5 @@ class ProjectDefinitionFilter(QueryFilter):
     id: Optional[UUID]
     name: Optional[str]
     default_datasheet_id: Optional[UUID]
-    project_definition_id: Optional[UUID]
+    properties: Optional[Dict[str, ElementPropertySchema]]
     creation_date_utc: Optional[datetime]

@@ -1,4 +1,6 @@
-from typing import TypeVar, Optional, List, Union
+from typing import TypeVar, Optional, List, Union, Protocol
+from uuid import UUID
+from datetime import datetime
 from asyncio import gather
 from expert_dollup.core.utils.ressource_permissions import get_ressource_kind
 from expert_dollup.core.utils import encode_date_with_uuid
@@ -15,7 +17,12 @@ from expert_dollup.shared.database_services import (
 )
 
 
-Domain = TypeVar("Domain")
+class SearchableObject(Protocol):
+    id: UUID
+    creation_date_utc: datetime
+
+
+Domain = TypeVar("Domain", bound=SearchableObject)
 
 
 class RessourceEngine(UserRessourcePaginator[Domain]):
@@ -63,8 +70,10 @@ class RessourceEngine(UserRessourcePaginator[Domain]):
 
             for results_batch in batch(results, self._domain_service.batch_size):
                 ids = [result.id for result in results_batch]
-                query = self._domain_service.get_builder().where("id", "in", ids)
-                domains_batch = await self._domain_service.find_by(query)
+                query_builder = self._domain_service.get_builder().where(
+                    "id", "in", ids
+                )
+                domains_batch = await self._domain_service.find_by(query_builder)
                 domains_batch.sort(key=lambda o: ids.index(o.id))
                 domains.extend(domains_batch)
 

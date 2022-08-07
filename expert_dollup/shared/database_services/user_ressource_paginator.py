@@ -3,7 +3,6 @@ from typing import TypeVar, Generic, Optional, List
 from uuid import UUID
 from dataclasses import dataclass
 from expert_dollup.shared.database_services import Page
-from .query_filter import QueryFilter
 
 Domain = TypeVar("Domain")
 

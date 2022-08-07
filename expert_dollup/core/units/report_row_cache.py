@@ -143,7 +143,7 @@ class ReportRowCache:
             )
         )
 
-        report_buckets: ReportCache = [
+        report_buckets: ReportRowsCache = [
             {selection_alias: element.report_dict} for element in elements
         ]
 
@@ -178,11 +178,14 @@ class ReportRowCache:
         join: ReportJoin,
         cache: ReportCache,
     ):
+        if len(report_buckets) == 0:
+            raise ReportGenerationError("Missing report bucket")
+
         if not join.from_object_name in report_buckets[0]:
             raise ReportGenerationError(
                 "Name not in buckets",
                 name=join.from_object_name,
-                avaiable_names=list(report_buckets.keys()),
+                avaiable_names=list(report_buckets[0].keys()),
             )
 
         if not join.from_property_name in report_buckets[0][join.from_object_name]:

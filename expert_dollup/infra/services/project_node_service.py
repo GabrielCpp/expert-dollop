@@ -1,4 +1,4 @@
-from typing import List, Optional, Awaitable
+from typing import List, Optional
 from uuid import UUID
 from expert_dollup.core.domains import (
     ProjectNode,
@@ -17,7 +17,7 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
 
     async def find_children(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None
-    ) -> ProjectNode:
+    ) -> List[ProjectNode]:
         builder = self.get_builder().where("project_id", "==", project_id)
 
         if not level is None:
@@ -39,7 +39,7 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
 
         await self.delete_by(builder)
 
-    async def find_root_sections(self, project_id: UUID) -> List[ProjectDefinitionNode]:
+    async def find_root_sections(self, project_id: UUID) -> List[ProjectNode]:
         builder = (
             self.get_builder()
             .where("project_id", "==", project_id)
@@ -51,7 +51,7 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
 
     async def find_root_section_nodes(
         self, project_id: UUID, root_section_id: UUID
-    ) -> List[ProjectDefinitionNode]:
+    ) -> List[ProjectNode]:
         builder = (
             self.get_builder()
             .where("project_id", "==", project_id)
@@ -63,7 +63,7 @@ class ProjectNodeService(CollectionServiceProxy[ProjectNode]):
 
     async def find_form_content(
         self, project_id: UUID, form_id: UUID
-    ) -> List[ProjectDefinitionNode]:
+    ) -> List[ProjectNode]:
         builder = (
             self.get_builder()
             .where("project_id", "==", project_id)

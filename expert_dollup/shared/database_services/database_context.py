@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Type, TypeVar, List, Optional
+from typing import Type, TypeVar, List, Optional, Union
 from .adapter_interfaces import CollectionService, WhereFilter, QueryFilter
 
 Domain = TypeVar("Domain")
@@ -13,7 +13,7 @@ class DatabaseContext(ABC):
         pass
 
     @abstractmethod
-    def bind_query(self, query_type: Type[Query]) -> Query:
+    def bind_query(self, query_type: Union[ABC, Type[Query]]) -> Query:
         pass
 
     @abstractmethod

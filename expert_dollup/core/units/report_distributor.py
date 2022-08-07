@@ -51,7 +51,7 @@ class ReportDistributor:
                 newer_item.distribution_ids = item.distribution_ids
                 newer_item.obsolete = False
 
-                if newer_items.columns != item.columns:
+                if newer_item.columns != item.columns:
                     obsolete_distributions.update(item.distribution_ids)
             else:
                 item.obsolete = True

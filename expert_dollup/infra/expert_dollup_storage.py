@@ -10,6 +10,7 @@ from .expert_dollup_db import (
     DecimalFieldValueDao,
     ReferenceIdDao,
     FormulaDependencyGraphDao,
+    ComputedValueDao,
 )
 from .storage_connectors.storage_client import StorageClient
 
@@ -40,12 +41,6 @@ ReportDefinitionColumnDictDao = Dict[
 ]
 ReportRowDictDao = Dict[str, ReportDefinitionColumnDictDao]
 ReportRowsCacheDao = List[ReportRowDictDao]
-
-
-class ComputedValueDao(BaseModel):
-    label: str
-    value: PrimitiveUnionDao
-    unit: str
 
 
 class ReportRowDao(BaseModel):

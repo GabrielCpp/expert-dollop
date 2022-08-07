@@ -3,7 +3,7 @@ from uuid import UUID
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional, Dict, Union
 from expert_dollup.shared.database_services import QueryFilter
-from .values_union import PrimitiveUnion
+from .values_union import PrimitiveWithNoneUnion
 
 
 @dataclass
@@ -96,7 +96,7 @@ class UnitInstance:
     path: List[UUID]
     name: str
     calculation_details: str
-    result: PrimitiveUnion
+    result: PrimitiveWithNoneUnion
 
     @property
     def report_dict(self) -> dict:

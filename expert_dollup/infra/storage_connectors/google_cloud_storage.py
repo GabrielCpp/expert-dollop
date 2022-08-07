@@ -1,13 +1,13 @@
 import asyncio
 from pathlib import Path
-from google.cloud import storage
+from google.cloud.storage import Client
 from .storage_client import StorageClient
 
 
 class GoogleCloudStorage(StorageClient):
     def __init__(self, bucket_name: str):
         self.bucket_name = bucket_name
-        self.client = storage.Client()
+        self.client = Client()
         self.bucket = self.client.bucket(self.bucket_name)
 
     async def upload_binary(self, path: str, data: bytes) -> None:

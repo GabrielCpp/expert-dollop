@@ -1,9 +1,13 @@
-from abc import ABC, abstractmethod
 import ast
 from uuid import UUID
 from ast import AST
 from typing import Callable, Dict, Union, List, Any, Tuple
-from expert_dollup.core.domains import AstNode, AstNodeValue, FlatAst
+from expert_dollup.core.domains import (
+    AstNode,
+    AstNodeValue,
+    FlatAst,
+    PrimitiveWithNoneUnion,
+)
 from decimal import Decimal
 from dataclasses import dataclass
 
@@ -24,22 +28,40 @@ class SafeguardDivision(ast.NodeTransformer):
 
 
 def make_number(value: Union[None, str, bytes, bool, int, float, complex, Decimal]):
-    return AstNodeValue(number=Decimal("{:.6f}".format(value)))
+    casted_value: Union[str, bool, int, float, Decimal] = 0
+
+    if isinstance(value, bytes):
+        casted_value = value.decode("utf8")
+    elif isinstance(value, complex):
+        casted_value = value.real
+    elif not value is None:
+        casted_value = value
+
+    return AstNodeValue(number=Decimal(casted_value))
 
 
 def make_value(
     value: Union[None, str, bytes, bool, int, float, complex, Decimal]
 ) -> AstNodeValue:
-    if isinstance(value, (float, int)):
-        return make_number(value)
+    casted_value: Union[str, bool, int, float, Decimal] = 0
 
-    if isinstance(value, str):
-        return AstNodeValue(text=value)
+    if isinstance(value, bytes):
+        casted_value = value.decode("utf8")
+    elif isinstance(value, complex):
+        casted_value = value.real
+    elif not value is None:
+        casted_value = value
 
-    if isinstance(value, Decimal):
-        return AstNodeValue(number=value)
+    if isinstance(casted_value, (float, int)):
+        return make_number(casted_value)
 
-    raise Exception(f"Unsupported type {type(value)} with value {value}")
+    if isinstance(casted_value, str):
+        return AstNodeValue(text=casted_value)
+
+    if isinstance(casted_value, Decimal):
+        return AstNodeValue(number=casted_value)
+
+    raise Exception(f"Unsupported type {type(casted_value)} with value {casted_value}")
 
 
 class AstSerializer:
@@ -154,21 +176,12 @@ def serialize_post_processed_expression(expression: str) -> dict:
     return flat_tree.dict()
 
 
-class ComputationUnit(ABC):
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        pass
-
-    @property
-    @abstractmethod
-    def node_id(self) -> UUID:
-        pass
-
-    @property
-    @abstractmethod
-    def units(self) -> Dict[str, "ComputationUnit"]:
-        pass
+@dataclass
+class ComputationUnit:
+    name: str
+    node_id: UUID
+    value: PrimitiveWithNoneUnion
+    units: Dict[str, List["ComputationUnit"]]
 
 
 @dataclass
@@ -205,6 +218,19 @@ class ComputationScope:
 Result = Tuple[Any, str]
 
 
+def coerce_decimal(value: PrimitiveWithNoneUnion) -> Decimal:
+    if value is None:
+        return Decimal(0)
+
+    if isinstance(value, bool):
+        return Decimal(int(value))
+
+    if isinstance(value, (int, str)):
+        return Decimal(value)
+
+    return value
+
+
 def process_module_node(node: dict, scope: ComputationScope):
     return dispatch(scope.get_property(node, "body"), scope)
 
@@ -223,7 +249,7 @@ def process_name_node(node: dict, scope: ComputationScope):
     if len(values) == 1:
         return values[0].value, f"<{name}[{values[0].node_id}], {values[0].value}>"
 
-    sum_result = sum(unit.value for unit in scope.unit.units[name])
+    sum_result = sum(coerce_decimal(unit.value) for unit in scope.unit.units[name])
 
     return sum_result, scope.calc.add(sum_result, f"sum({name})")
 

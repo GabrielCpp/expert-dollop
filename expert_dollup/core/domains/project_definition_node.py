@@ -54,13 +54,6 @@ class CollapsibleContainerFieldConfig:
     is_collapsible: bool
 
 
-@dataclass
-class StaticNumberFieldConfig:
-    pass_to_translation: bool
-    precision: int
-    unit: str
-
-
 class TriggerAction(Enum):
     CHANGE_NAME = "CHANGE_NAME"
     SET_VISIBILITY = "SET_VISIBILITY"

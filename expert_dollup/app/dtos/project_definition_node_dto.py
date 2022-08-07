@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Optional, List, Union, Dict
+from typing import Optional, List, Union, Dict, get_args
 from expert_dollup.shared.starlette_injection import CamelModel
 from datetime import datetime
 from expert_dollup.core.domains import (
@@ -82,7 +82,7 @@ config_type_lookup_map = {
     type(None): "null",
 }
 
-assert len(FieldDetailsUnionDto.__args__) == len(config_type_lookup_map)
+assert len(get_args(FieldDetailsUnionDto)) == len(config_type_lookup_map)
 
 field_details_to_domain_map = {
     IntFieldConfigDto: IntFieldConfig,
@@ -97,7 +97,7 @@ field_details_to_domain_map = {
 
 field_details_from_domain = {v: k for k, v in field_details_to_domain_map.items()}
 
-assert len(FieldDetailsUnionDto.__args__) == len(field_details_to_domain_map)
+assert len(get_args(FieldDetailsUnionDto)) == len(field_details_to_domain_map)
 
 
 class TranslationConfigDto(CamelModel):

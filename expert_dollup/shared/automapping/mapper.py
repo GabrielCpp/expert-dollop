@@ -1,4 +1,4 @@
-from typing import Type, TypeVar, Callable, Dict, List, Optional, Union
+from typing import Type, TypeVar, Callable, Dict, List, Optional, Union, Any
 from collections import defaultdict
 from inspect import getmembers, isfunction, signature
 from .mapping_error import MapingError
@@ -8,6 +8,8 @@ from .injector_interface import Injector
 T = TypeVar("T")
 U = TypeVar("U")
 K = TypeVar("K")
+DictOrType = TypeVar("DictOrType", Type, Dict[Type, Type], object)
+AnyType = TypeVar("AnyType", Type, None, object)
 
 
 class Mapper:
@@ -63,8 +65,8 @@ class Mapper:
     def map(
         self,
         instance: T,
-        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
-        from_type: Type[T] = None,
+        to_type: DictOrType,
+        from_type: AnyType = None,
     ) -> U:
         from_type = type(instance) if from_type is None else from_type
 

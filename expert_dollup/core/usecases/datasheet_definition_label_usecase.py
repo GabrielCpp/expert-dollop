@@ -15,7 +15,7 @@ class LabelUseCase:
         return await self.label_service.find_by_id(label.id)
 
     async def update(self, label: Label) -> Label:
-        await self.label_service.update(label)
+        await self.label_service.upserts([label])
         return await self.label_service.find_by_id(label.id)
 
     async def delete_by_id(self, id: UUID):

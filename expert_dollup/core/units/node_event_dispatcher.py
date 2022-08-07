@@ -1,4 +1,4 @@
-from typing import Awaitable, List, Optional
+from typing import List
 from uuid import UUID
 from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.core.builders import *
@@ -28,7 +28,7 @@ class NodeEventDispatcher:
 
     async def update_node_value(
         self, project_id: UUID, node_id: UUID, value: PrimitiveWithNoneUnion
-    ) -> Awaitable[ProjectNode]:
+    ) -> ProjectNode:
         bounded_node = await self._get_bounded_node(project_id, node_id)
         self.node_value_validation.validate_value(bounded_node.definition.config, value)
         await self._execute_triggers(bounded_node, value)
@@ -41,7 +41,7 @@ class NodeEventDispatcher:
 
     async def update_nodes_value(
         self, project_id: UUID, updates: List[FieldUpdate]
-    ) -> Awaitable[List[ProjectNode]]:
+    ) -> List[ProjectNode]:
         nodes: List[ProjectNode] = []
 
         for update in updates:
@@ -76,9 +76,7 @@ class NodeEventDispatcher:
         for node, value in zip(nodes, results):
             node.value = str(value)
 
-    async def _get_bounded_node(
-        self, project_id: UUID, node_id: UUID
-    ) -> Awaitable[BoundedNode]:
+    async def _get_bounded_node(self, project_id: UUID, node_id: UUID) -> BoundedNode:
         node = await self.project_node_service.find_one_by(
             ProjectNodeFilter(project_id=project_id, id=node_id)
         )
@@ -100,7 +98,7 @@ class NodeEventDispatcher:
 
     async def _execute_triggers(
         self, bounded_node: BoundedNode, value: PrimitiveWithNoneUnion
-    ) -> Awaitable:
+    ) -> None:
         project_id = bounded_node.node.project_id
 
         for trigger in bounded_node.definition.config.triggers:
@@ -126,7 +124,7 @@ class NodeEventDispatcher:
 
     async def _trigger_change_name(
         self, trigger: Trigger, bounded_node: BoundedNode, value: PrimitiveWithNoneUnion
-    ) -> Awaitable:
+    ) -> None:
         index = bounded_node.node.type_path.index(trigger.target_type_id)
         path = bounded_node.node.path[0 : index + 1]
         nodes = await self.project_node_service.find_node_on_path_by_type(

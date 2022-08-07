@@ -5,7 +5,7 @@ from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.core.domains import ProjectNodeMeta, ProjectDefinitionNode
 
 
-class ProjectNodeMetaService(CollectionService[ProjectNodeMeta]):
+class ProjectNodeMetaRepository(CollectionService[ProjectNodeMeta]):
     @abstractmethod
     async def find_project_defs(self, project_id: UUID) -> List[ProjectDefinitionNode]:
         pass

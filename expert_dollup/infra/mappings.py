@@ -49,8 +49,8 @@ primitive_with_reference_union_dao_mappings = RevervibleUnionMapping(
 )
 
 
-def get_display_query_id(global_id: UUID, path: List[UUID]) -> str:
-    display_query_internal_id = global_id
+def get_display_query_id(global_id: UUID, path: List[UUID]) -> UUID:
+    display_query_internal_id: UUID = global_id
     level = len(path)
 
     if level >= SECTION_LEVEL and level <= FORM_LEVEL:

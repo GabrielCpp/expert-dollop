@@ -1,5 +1,5 @@
 from inspect import signature, Parameter
-from typing import Dict, List
+from typing import Dict, List, Any
 from fastapi import params
 from functools import wraps
 from starlette.requests import Request
@@ -15,7 +15,7 @@ def collapse_union(node: dict, path: List[str], kind_map: Dict[str, str]):
     assert len(path) > 0
 
     last_target_node = node
-    target_node = node
+    target_node: Any = node
 
     for property_name in path:
         if not isinstance(target_node, dict):

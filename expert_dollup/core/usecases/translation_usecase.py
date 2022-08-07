@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Iterable, Optional
 from itertools import chain
 from expert_dollup.shared.database_services import Page, Paginator, CollectionService
 from expert_dollup.core.exceptions import RessourceNotFound, ValidationError
@@ -50,16 +50,9 @@ class TranslationUseCase:
                 "ressource_id", "Missing an attached ressource"
             )
 
-        await self.service.update(domain)
+        await self.service.upserts([domain])
 
-        return await self.find_by_id(
-            TranslationId(
-                ressource_id=domain.ressource_id,
-                scope=domain.scope,
-                locale=domain.locale,
-                name=domain.name,
-            )
-        )
+        return domain
 
     async def find_by_id(self, id: TranslationId) -> Translation:
         result = await self.service.find_by_id(id)
@@ -83,7 +76,7 @@ class TranslationUseCase:
 
     async def get_translation_bundle(
         self, query: TranslationRessourceLocaleQuery, user: User
-    ) -> List[Translation]:
+    ) -> Iterable[Translation]:
         if query.locale == "en":
             query.locale = "en-US"
 

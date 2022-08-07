@@ -1,5 +1,4 @@
 from uuid import UUID
-from typing import Awaitable
 from expert_dollup.core.exceptions import ValidationError
 from expert_dollup.core.domains import DatasheetDefinitionElement, ProjectDefinition
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
@@ -42,7 +41,7 @@ class DatasheetDefinitionElementUseCase:
             datasheet_definition_element.id
         )
 
-    async def delete_by_id(self, id: UUID) -> Awaitable:
+    async def delete_by_id(self, id: UUID) -> None:
         await self.datasheet_definition_element_service.delete_by_id(id)
 
     async def _validate_element(

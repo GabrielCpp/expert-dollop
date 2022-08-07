@@ -1,4 +1,3 @@
-from typing import Awaitable
 from uuid import UUID
 from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.core.builders import ProjectBuilder
@@ -34,20 +33,20 @@ class ProjectUseCase:
 
     async def add(
         self, project_details: ProjectDetails, user: User
-    ) -> Awaitable[ProjectDetails]:
+    ) -> ProjectDetails:
         project = await self.project_builder.build_new(project_details, user)
         await self._insert_new_project(project)
 
         return project_details
 
-    async def clone(self, project_id: UUID, user: User) -> Awaitable[ProjectDetails]:
+    async def clone(self, project_id: UUID, user: User) -> ProjectDetails:
         project_details = await self.project_service.find_by_id(project_id)
         cloned_project = await self.project_builder.clone(project_details, user)
         await self._insert_new_project(cloned_project)
 
         return cloned_project.details
 
-    async def delete_by_id(self, project_id: UUID) -> Awaitable:
+    async def delete_by_id(self, project_id: UUID) -> None:
         await self.project_node_service.delete_by(
             ProjectNodeFilter(project_id=project_id)
         )
@@ -57,7 +56,7 @@ class ProjectUseCase:
         await self.project_service.delete_by_id(project_id)
         await self.ressource_service.delete_by(RessourceFilter(id=project_id))
 
-    async def find_by_id(self, id: UUID) -> Awaitable[ProjectDetails]:
+    async def find_by_id(self, id: UUID) -> ProjectDetails:
         result = await self.project_service.find_by_id(id)
         return result
 

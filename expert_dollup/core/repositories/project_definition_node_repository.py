@@ -5,7 +5,7 @@ from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.core.domains import ProjectDefinitionNode
 
 
-class ProjectDefinitionNodeService(CollectionService[ProjectDefinitionNode]):
+class ProjectDefinitionNodeRepository(CollectionService[ProjectDefinitionNode]):
     @abstractmethod
     async def get_fields_id_by_name(
         self, project_definition_id: UUID, names: Optional[List[str]] = None

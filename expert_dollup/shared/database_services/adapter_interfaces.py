@@ -27,7 +27,7 @@ class DbConnection(ABC):
 
 class QueryBuilder(ABC):
     @abstractmethod
-    def select(self, *names: List[str]) -> "QueryBuilder":
+    def select(self, *names: str) -> "QueryBuilder":
         pass
 
     @abstractmethod
