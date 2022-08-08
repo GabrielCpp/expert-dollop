@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from uuid import UUID
 from typing import Optional, List, Union, Dict
+from typing_extensions import TypeAlias
 from datetime import datetime
 from enum import Enum
 from expert_dollup.shared.database_services import QueryFilter
@@ -72,7 +73,7 @@ class TranslationConfig:
     label: str
 
 
-FieldDetailsUnion = Union[
+FieldDetailsUnion: TypeAlias = Union[
     IntFieldConfig,
     StaticChoiceFieldConfig,
     DecimalFieldConfig,

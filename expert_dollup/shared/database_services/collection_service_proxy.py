@@ -1,4 +1,5 @@
 from typing import Callable, TypeVar, List, Optional, Union, Type, Dict, Any
+from typing_extensions import TypeAlias
 from inspect import isclass
 from expert_dollup.shared.automapping import Mapper
 from .query_filter import QueryFilter
@@ -9,7 +10,7 @@ from .adapter_interfaces import (
 )
 
 Domain = TypeVar("Domain")
-WhereFilter = Union[QueryFilter, QueryBuilder]
+WhereFilter: TypeAlias = Union[QueryFilter, QueryBuilder]
 Id = TypeVar("Id")
 
 

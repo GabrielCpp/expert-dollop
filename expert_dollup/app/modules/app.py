@@ -1,3 +1,5 @@
+from typing import Dict, Any
+from typing_extensions import TypeAlias
 import http.client as httplib
 from injector import Binder, singleton
 from starlette.responses import JSONResponse
@@ -80,7 +82,7 @@ def bind_auth_jwt(binder: Binder) -> None:
 
 
 def bind_graphql_handlers(binder: Binder) -> None:
-    service_by_domain = {
+    service_by_domain: Dict[TypeAlias, Any] = {
         get_arg(get_base(service_type)): service_type
         for service_type in get_classes(services)
     }

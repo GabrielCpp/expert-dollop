@@ -1,4 +1,5 @@
 from typing import List, Optional, Union, Dict
+from typing_extensions import TypeAlias
 from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
@@ -55,16 +56,16 @@ class ReferenceIdDao(BaseModel):
     uuid: UUID
 
 
-PrimitiveWithNoneUnionDao = Union[
+PrimitiveWithNoneUnionDao: TypeAlias = Union[
     BoolFieldValueDao, IntFieldValueDao, StringFieldValueDao, DecimalFieldValueDao, None
 ]
 
-PrimitiveUnionDao = Union[
+PrimitiveUnionDao: TypeAlias = Union[
     BoolFieldValueDao, IntFieldValueDao, StringFieldValueDao, DecimalFieldValueDao
 ]
 
 
-LabelAttributeDaoUnion = Union[
+LabelAttributeDaoUnion: TypeAlias = Union[
     BoolFieldValueDao,
     IntFieldValueDao,
     StringFieldValueDao,
@@ -257,7 +258,7 @@ class StaticPropertyDao(BaseModel):
     json_schema: JsonSchemaDao
 
 
-LabelAttributeSchemaDaoUnion = Union[
+LabelAttributeSchemaDaoUnion: TypeAlias = Union[
     StaticPropertyDao,
     CollectionAggregateDao,
     DatasheetAggregateDao,
@@ -459,9 +460,9 @@ class DistributableItemDao(BaseModel):
     node_id: UUID
     formula_id: UUID
     supplied_item: SuppliedItemDao
-    distributions: List[UUID]
+    distribution_ids: List[UUID]
 
     summary: ComputedValueDao
-    columns: Dict[str, ComputedValueDao]
+    columns: List[ComputedValueDao]
     obsolete: bool
     creation_date_utc: datetime

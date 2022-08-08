@@ -71,7 +71,9 @@ def all_permisions() -> List[str]:
     return permissions
 
 
-def make_ressource(kind: Type, target_ressource, user: User):
+def make_ressource(
+    kind: Type, target_ressource: RessourceProtocol, user: User
+) -> Ressource:
     return Ressource(
         id=target_ressource.id,
         kind=RESSOURCE_KIND_BY_DOMAIN[kind].kind,

@@ -1,10 +1,8 @@
-from typing import TypeVar, Optional, List, Union, Protocol
-from uuid import UUID
-from datetime import datetime
+from typing import TypeVar, Optional, List, Union
 from asyncio import gather
 from expert_dollup.core.utils.ressource_permissions import get_ressource_kind
 from expert_dollup.core.utils import encode_date_with_uuid
-from expert_dollup.core.domains import Ressource
+from expert_dollup.core.domains import Ressource, RessourceProtocol
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import (
     FieldTokenEncoder,
@@ -13,16 +11,10 @@ from expert_dollup.shared.database_services import (
     batch,
     UserRessourcePaginator,
     UserRessourceQuery,
-    TokenEncoder,
 )
 
 
-class SearchableObject(Protocol):
-    id: UUID
-    creation_date_utc: datetime
-
-
-Domain = TypeVar("Domain", bound=SearchableObject)
+Domain = TypeVar("Domain", bound=RessourceProtocol)
 
 
 class RessourceEngine(UserRessourcePaginator[Domain]):

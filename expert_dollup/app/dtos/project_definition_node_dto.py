@@ -1,5 +1,6 @@
 from uuid import UUID
 from typing import Optional, List, Union, Dict, get_args
+from typing_extensions import TypeAlias
 from expert_dollup.shared.starlette_injection import CamelModel
 from datetime import datetime
 from expert_dollup.core.domains import (
@@ -59,7 +60,7 @@ class CollapsibleContainerFieldConfigDto(CamelModel):
     is_collapsible: bool
 
 
-FieldDetailsUnionDto = Union[
+FieldDetailsUnionDto: TypeAlias = Union[
     BoolFieldConfigDto,
     CollapsibleContainerFieldConfigDto,
     StaticNumberFieldConfigDto,

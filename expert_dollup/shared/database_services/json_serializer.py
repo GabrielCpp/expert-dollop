@@ -28,7 +28,7 @@ def default(obj):
 
 class JsonSerializer:
     @staticmethod
-    def encode(x: str) -> bytes:
+    def encode(x: Any) -> bytes:
         return dumps(x, default=default)
 
     @staticmethod

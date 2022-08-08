@@ -16,7 +16,7 @@ class PluckQuery(Plucker[Domain]):
         self.mapper = mapper
 
     async def plucks(
-        self, build_pluck_filter: Callable[[list], QueryFilter], ids: List[UUID]
+        self, build_pluck_filter: Callable[[List[UUID]], QueryFilter], ids: List[UUID]
     ):
         all_results = []
 
@@ -28,7 +28,7 @@ class PluckQuery(Plucker[Domain]):
     async def pluck_subressources(
         self,
         ressource_filter: QueryFilter,
-        build_pluck_filter: Callable[[list], QueryFilter],
+        build_pluck_filter: Callable[[List[UUID]], QueryFilter],
         ids: List[UUID],
     ) -> List[Domain]:
 

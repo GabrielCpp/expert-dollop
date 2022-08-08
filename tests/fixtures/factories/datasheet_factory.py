@@ -1,5 +1,6 @@
 from decimal import Decimal
 from typing import Dict, List, Optional, Union, Type, Protocol
+from typing_extensions import TypeAlias
 from dataclasses import dataclass, field
 from datetime import datetime
 from collections import defaultdict
@@ -44,7 +45,7 @@ class CustomDatasheetInstancePackage:
     translations: List[Translation]
 
 
-PropertyTypeUnion = Union[Type[int], Type[Decimal], Type[str], Type[bool]]
+PropertyTypeUnion: TypeAlias = Union[Type[int], Type[Decimal], Type[str], Type[bool]]
 
 
 class ElementSeed:

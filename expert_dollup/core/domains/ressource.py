@@ -1,8 +1,14 @@
 from dataclasses import dataclass
 from uuid import UUID
-from typing import List, Optional
+from typing import List, Optional, Protocol
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
+
+
+class RessourceProtocol(Protocol):
+    id: UUID
+    creation_date_utc: datetime
+    name: str
 
 
 @dataclass
@@ -11,7 +17,7 @@ class Ressource:
     kind: str
     organization_id: UUID
     permissions: List[str]
-    name: str
+    name: List[str]
     creation_date_utc: datetime
 
 

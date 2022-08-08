@@ -8,8 +8,6 @@ from .injector_interface import Injector
 T = TypeVar("T")
 U = TypeVar("U")
 K = TypeVar("K")
-DictOrType = TypeVar("DictOrType", Type, Dict[Type, Type], object)
-AnyType = TypeVar("AnyType", Type, None, object)
 
 
 class Mapper:
@@ -32,7 +30,7 @@ class Mapper:
     def map_many(
         self,
         instances: List[T],
-        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
+        to_type: Union[Type[U], Dict[Type[Any], Type[Any]]],
         from_type: Type[T] = None,
         after=lambda x: x,
     ) -> List[U]:
@@ -41,7 +39,7 @@ class Mapper:
     def map_dict_values(
         self,
         instances: Dict[K, T],
-        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
+        to_type: Union[Type[U], Dict[Type[Any], Type[Any]]],
         from_type: Type[T] = None,
         after=lambda x: x,
     ) -> Dict[K, U]:
@@ -53,7 +51,7 @@ class Mapper:
     def map_dict_list_values(
         self,
         instances: Dict[K, List[T]],
-        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
+        to_type: Union[Type[U], Dict[Type[Any], Type[Any]]],
         from_type: Type[T] = None,
         after=lambda x: x,
     ) -> Dict[K, List[U]]:
@@ -65,8 +63,8 @@ class Mapper:
     def map(
         self,
         instance: T,
-        to_type: DictOrType,
-        from_type: AnyType = None,
+        to_type: Union[Type[U], Dict[Type[Any], Type[Any]]],
+        from_type: Type = None,
     ) -> U:
         from_type = type(instance) if from_type is None else from_type
 

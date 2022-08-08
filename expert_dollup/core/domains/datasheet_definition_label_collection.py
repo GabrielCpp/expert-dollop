@@ -1,7 +1,7 @@
 from uuid import UUID
 from dataclasses import dataclass, field
 from typing import Dict, Union, Optional
-
+from typing_extensions import TypeAlias
 from expert_dollup.shared.database_services import QueryFilter
 from .project_definition_node import JsonSchema
 
@@ -26,7 +26,7 @@ class StaticProperty:
     json_schema: JsonSchema
 
 
-LabelAttributeSchemaUnion = Union[
+LabelAttributeSchemaUnion: TypeAlias = Union[
     StaticProperty, CollectionAggregate, DatasheetAggregate, FormulaAggregate
 ]
 

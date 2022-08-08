@@ -1,3 +1,4 @@
+from typing import List
 from gzip import GzipFile
 from io import BytesIO
 from expert_dollup.infra.expert_dollup_storage import (
@@ -18,7 +19,9 @@ class StagedFormulaCache(ObjectStorage[StagedFormulas, StagedFormulasKey]):
     async def save(self, ctx: StagedFormulasKey, staged_formulas: StagedFormulas):
         fileobj = BytesIO()
         path = self.get_url(ctx)
-        daos = self.mapper.map_many(staged_formulas, StagedFormulaDao)
+        daos: List[StagedFormulaDao] = self.mapper.map_many(
+            staged_formulas, StagedFormulaDao
+        )
 
         with GzipFile(fileobj=fileobj, compresslevel=9, mode="wb") as f:
             for dao in daos:

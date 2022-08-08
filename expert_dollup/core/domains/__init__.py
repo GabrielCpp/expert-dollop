@@ -60,6 +60,7 @@ from .ressource import (
     UserFilter,
     Organization,
     OrganizationLimits,
+    RessourceProtocol,
 )
 from .formula import (
     Formula,

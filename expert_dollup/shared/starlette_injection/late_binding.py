@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
-from subprocess import call
 from typing import Generic, TypeVar
 
 T = TypeVar("T")
 S = TypeVar("S")
 
 
-class LateBinder(Generic[T, S]):
+class LateBinder(ABC, Generic[T, S]):
     @abstractmethod
     def create(self, seed: S) -> T:
         pass

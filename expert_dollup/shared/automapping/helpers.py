@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, Dict, Union, Type, Any
+from typing import Callable, Optional, Tuple, Dict, Union, Type, Any, List
+from uuid import UUID
 
 
 @dataclass
@@ -44,7 +45,7 @@ class RevervibleUnionMapping(RevervibleMapping):
 
 
 def map_dict_keys(
-    args: dict, mapping: Dict[str, Tuple[str, Union[None, callable]]]
+    args: dict, mapping: Dict[str, Tuple[str, Union[None, Callable[[Any], Any]]]]
 ) -> dict:
     mapped_args = {}
 

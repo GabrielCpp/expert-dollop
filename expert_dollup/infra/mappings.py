@@ -684,21 +684,23 @@ def map_formula_instance_to_dao(src: UnitInstance, mapper: Mapper) -> UnitInstan
     return UnitInstanceDao(
         formula_id=src.formula_id,
         node_id=src.node_id,
-        path=src.path,
+        node_path=src.path,
         name=src.name,
         calculation_details=src.calculation_details,
-        result=src.result,
+        result=mapper.map(src.result, primitive_with_none_union_dao_mappings.to_origin),
     )
 
 
 def map_formula_instance_from_dao(src: UnitInstanceDao, mapper: Mapper) -> UnitInstance:
-    return UnitInstanceDao(
+    return UnitInstance(
         formula_id=src.formula_id,
         node_id=src.node_id,
-        path=src.path,
+        path=src.node_path,
         name=src.name,
         calculation_details=src.calculation_details,
-        result=src.result,
+        result=mapper.map(
+            src.result, primitive_with_none_union_dao_mappings.from_origin
+        ),
     )
 
 
@@ -1025,18 +1027,16 @@ def map_datasheet_element_filter_to_dict(
 def map_datasheet_element_values_to_dict(
     src: DatasheetElementValues, mapper: Mapper
 ) -> dict:
+    def map_properties(x: dict):
+        return mapper.map_dict_values(x, primitive_union_dao_mappings.to_origin)
+
     return map_dict_keys(
         src.args,
         {
             "datasheet_id": ("datasheet_id", None),
             "element_def_id": ("element_def_id", None),
             "child_element_reference": ("child_element_reference", None),
-            "properties": (
-                "properties",
-                lambda x: mapper.map_dict_values(
-                    x, primitive_union_dao_mappings.to_origin
-                ),
-            ),
+            "properties": ("properties", map_properties),
             "creation_date_utc": ("creation_date_utc", None),
         },
     )
@@ -1375,7 +1375,7 @@ def map_report_from_dao(src: ReportDao, mapper: Mapper) -> Report:
     return Report(
         datasheet_id=src.datasheet_id,
         creation_date_utc=src.creation_date_utc,
-        summaries=mapper.mamap_manyp(src.summaries, ComputedValue),
+        summaries=mapper.map_many(src.summaries, ComputedValue),
         stages=mapper.map_many(src.stages, ReportStage),
     )
 

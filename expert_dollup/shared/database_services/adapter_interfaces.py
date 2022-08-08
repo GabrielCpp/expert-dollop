@@ -1,6 +1,6 @@
-from os import environ
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, List, Optional, Union, Type, Dict, Any, Callable
+from typing_extensions import TypeAlias
 from inspect import isclass
 from urllib.parse import urlparse
 from pydantic import BaseModel
@@ -57,7 +57,7 @@ class QueryBuilder(ABC):
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")
-WhereFilter = Union[QueryFilter, QueryBuilder]
+WhereFilter: TypeAlias = Union[QueryFilter, QueryBuilder]
 
 
 class CollectionService(ABC, Generic[Domain]):
