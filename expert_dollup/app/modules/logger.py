@@ -1,5 +1,13 @@
 from pythonjsonlogger import jsonlogger
-from logging import Logger, basicConfig, INFO, DEBUG, getLogger, StreamHandler
+from logging import (
+    Logger,
+    basicConfig,
+    INFO,
+    DEBUG,
+    getLogger,
+    StreamHandler,
+    LoggerAdapter,
+)
 from datetime import datetime, timezone
 from injector import Binder, singleton
 from expert_dollup.shared.starlette_injection import (
@@ -8,15 +16,11 @@ from expert_dollup.shared.starlette_injection import (
     is_development,
 )
 
-# TODO: Finish the loger
-def bind_logger(binder: Binder) -> None:
-    def add_timestamp(_, __, event_dict):
-        event_dict["timestamp"] = str(datetime.now(timezone.utc).isoformat())
-        return event_dict
 
+def bind_logger(binder: Binder) -> None:
     logger = getLogger()
     logHandler = StreamHandler()
-    formatter = jsonlogger.JsonFormatter()
+    formatter = jsonlogger.JsonFormatter(timestamp=True)
     logHandler.setFormatter(formatter)
     logger.addHandler(logHandler)
 
@@ -29,6 +33,6 @@ def bind_logger(binder: Binder) -> None:
     )
     binder.bind(
         LoggerFactory,
-        to=lambda: PureBinding(lambda name: logger),
+        to=lambda: PureBinding(lambda name: LoggerAdapter(logger, {"name": name})),
         scope=singleton,
     )

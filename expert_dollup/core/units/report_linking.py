@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, List, Dict, Tuple
+from typing import Iterable, List, Dict, Tuple, Callable, Any
 from uuid import UUID
 from decimal import Decimal
 from collections import defaultdict
@@ -29,8 +29,8 @@ def round_number(number: Decimal, digits: int, method: str) -> Decimal:
     return Decimal(int(stepper * Decimal(number))) / stepper
 
 
-def group_by_key(elements: Iterable, key: callable) -> dict:
-    element_by_key = defaultdict(list)
+def group_by_key(elements: Iterable, key: Callable[[Any], None]) -> dict:
+    element_by_key: Dict[Any, Any] = defaultdict(list)
 
     for element in elements:
         element_by_key[key(element)].append(element)
@@ -215,7 +215,7 @@ class GroupDigestAssignation(MutateStep):
         )
 
     def apply(self, row: ReportRowDict) -> None:
-        columns = {}
+        columns: ReportDefinitionColumnDict = {}
         row[COLUMNS_BUCKET_NAME] = columns
 
         for column in self.first_pass_columns:
@@ -372,7 +372,7 @@ class ReportBuilder:
             for label, rows in report_rows_by_stage.items()
         ]
 
-        metas = {}
+        metas: Dict[str, Any] = {}
         scope = {
             "stages": stages,
             "round_number": round_number,

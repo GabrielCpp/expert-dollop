@@ -1,4 +1,4 @@
-from typing import Callable, Optional, TypeVar, List
+from typing import Callable, Optional, TypeVar, Sequence, List
 from uuid import UUID
 from expert_dollup.shared.automapping import Mapper
 from .adapter_interfaces import QueryFilter, CollectionService
@@ -16,8 +16,10 @@ class PluckQuery(Plucker[Domain]):
         self.mapper = mapper
 
     async def plucks(
-        self, build_pluck_filter: Callable[[List[UUID]], QueryFilter], ids: List[UUID]
-    ):
+        self,
+        build_pluck_filter: Callable[[Sequence[UUID]], QueryFilter],
+        ids: Sequence[UUID],
+    ) -> List[Domain]:
         all_results = []
 
         async for batch_results in self._pluck_by_batch(ids, build_pluck_filter):
@@ -28,8 +30,8 @@ class PluckQuery(Plucker[Domain]):
     async def pluck_subressources(
         self,
         ressource_filter: QueryFilter,
-        build_pluck_filter: Callable[[List[UUID]], QueryFilter],
-        ids: List[UUID],
+        build_pluck_filter: Callable[[Sequence[UUID]], QueryFilter],
+        ids: Sequence[UUID],
     ) -> List[Domain]:
 
         all_results = []

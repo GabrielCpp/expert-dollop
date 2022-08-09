@@ -75,7 +75,10 @@ class DatasheetElementUseCase:
         return await self.datasheet_element_service.find_by_id(id)
 
     async def add_collection_item(
-        self, datasheet_id: UUID, element_def_id: UUID, properties: UUID
+        self,
+        datasheet_id: UUID,
+        element_def_id: UUID,
+        properties: Dict[str, PrimitiveUnion],
     ) -> DatasheetElement:
         datasheet: Datasheet = await self.datasheet_service.find_by_id(datasheet_id)
         project_definition: ProjectDefinition = (

@@ -63,8 +63,8 @@ class Mapper:
     def map(
         self,
         instance: T,
-        to_type: Union[Type[U], Dict[Type[Any], Type[Any]]],
-        from_type: Type = None,
+        to_type: Union[Type[U], Dict[Type[Any], Type[Any]], object],
+        from_type: Union[Type, object, None] = None,
     ) -> U:
         from_type = type(instance) if from_type is None else from_type
 

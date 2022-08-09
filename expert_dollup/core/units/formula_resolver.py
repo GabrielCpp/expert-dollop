@@ -282,8 +282,8 @@ class FormulaResolver:
                 if not other_formula.name in seen_formula_dependencies:
                     formula_dependencies.append(other_formula.name)
 
-            for node in formula.dependency_graph.nodes:
-                field_depencies.add(node.target_type_id)
+            for formula_node in formula.dependency_graph.nodes:
+                field_depencies.add(formula_node.target_type_id)
 
         nodes = await self.node_plucker.pluck_subressources(
             ProjectNodeFilter(project_id=project_id),

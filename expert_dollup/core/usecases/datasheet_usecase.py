@@ -1,3 +1,4 @@
+from typing import List
 from uuid import UUID, uuid4
 from expert_dollup.shared.database_services import Page, Paginator, CollectionService
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
@@ -55,7 +56,7 @@ class DatasheetUseCase:
         )
 
         page = Page[DatasheetElement]()
-        cloned_elements = []
+        cloned_elements: List[DatasheetElement] = []
 
         while len(page.results) == page.limit:
             page = await self.datasheet_element_paginator.find_page(
@@ -69,7 +70,7 @@ class DatasheetUseCase:
                 [
                     DatasheetElement(
                         datasheet_id=cloned_datasheet.id,
-                        element_def_id=result.definition_element.id,
+                        element_def_id=result.element_def_id,
                         child_element_reference=uuid4(),
                         ordinal=result.ordinal,
                         properties=result.properties,
@@ -91,7 +92,7 @@ class DatasheetUseCase:
         )
 
         await self.add(cloned_datasheet, user)
-        await self.datasheet_definition_element_service.insert_many(cloned_elements)
+        await self.datasheet_element_service.insert_many(cloned_elements)
 
         return cloned_datasheet
 

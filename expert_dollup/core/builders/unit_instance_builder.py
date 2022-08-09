@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Sequence
 from uuid import UUID
 from collections import defaultdict
 from decimal import Decimal
@@ -46,7 +46,7 @@ class UnitInstanceBuilder:
         return formulas_result
 
     def build_with_fields(
-        self, formulas: List[Formula], nodes: List[ProjectNode]
+        self, formulas: Sequence[Formula], nodes: List[ProjectNode]
     ) -> List[UnitInstance]:
         if len(nodes) == 0 or len(formulas) == 0:
             return []

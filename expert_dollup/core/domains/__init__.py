@@ -119,6 +119,7 @@ from .report_definition import (
     ReportRowDict,
     ReportRowsCache,
     ReportRowKey,
+    ReportDefinitionColumnDict,
     ReportDefinitionFilter,
     StageSummary,
     ReportComputation,

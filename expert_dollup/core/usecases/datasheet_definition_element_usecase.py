@@ -34,8 +34,8 @@ class DatasheetDefinitionElementUseCase:
         self, datasheet_definition_element: DatasheetDefinitionElement
     ) -> DatasheetDefinitionElement:
         await self._validate_element(datasheet_definition_element)
-        await self.datasheet_definition_element_service.update(
-            datasheet_definition_element
+        await self.datasheet_definition_element_service.upserts(
+            [datasheet_definition_element]
         )
         return await self.datasheet_definition_element_service.find_by_id(
             datasheet_definition_element.id

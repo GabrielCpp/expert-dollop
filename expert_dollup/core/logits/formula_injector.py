@@ -17,11 +17,25 @@ class UnitRef:
 
 
 class UnitLike(Protocol):
-    name: str
-    path: List[UUID]
-    node_id: UUID
-    value: PrimitiveWithNoneUnion
-    computed: UnitInstance
+    @property
+    def name(self) -> str:
+        pass
+
+    @property
+    def path(self) -> List[UUID]:
+        pass
+
+    @property
+    def node_id(self) -> UUID:
+        pass
+
+    @property
+    def value(self) -> PrimitiveWithNoneUnion:
+        pass
+
+    @property
+    def computed(self) -> UnitInstance:
+        pass
 
 
 def wrap_units(units: List[UnitLike]):

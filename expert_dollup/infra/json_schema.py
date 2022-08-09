@@ -1,3 +1,4 @@
+from typing import Any
 from jsonschema import Draft7Validator
 from expert_dollup.core.exceptions import ValidationError
 
@@ -11,7 +12,7 @@ STRING_JSON_SCHEMA = {
 }
 
 
-def validate_instance(validator: Draft7Validator, instance: dict) -> None:
+def validate_instance(validator: Draft7Validator, instance: Any) -> None:
     errors = sorted(validator.iter_errors(instance), key=lambda e: e.path)
     error_tuples = []
 
