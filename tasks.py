@@ -1,3 +1,4 @@
+from typing import Optional
 from dotenv import load_dotenv
 from invoke import task
 from pathlib import Path
@@ -16,10 +17,14 @@ async def truncate_db(db_url_name: str, tables=None):
     await connection.truncate_db(tables)
 
 
-async def get_token(oauth: str):
+async def get_token(oauth: Optional[str] = None):
     from dotenv import load_dotenv
     from expert_dollup.app.modules import build_container
     from expert_dollup.shared.starlette_injection import AuthService
+    from tests.fixtures.seeds import make_root_user_org
+
+    org = make_root_user_org()
+    oauth = org.users[0].oauth_id if oauth is None else oauth
 
     load_dotenv()
     container = build_container()
@@ -250,7 +255,7 @@ def upload_base_project(c):
     cwd = getcwd()
     db_truncate(c)
     load_default_users(c)
-    token = asyncio.run(get_token("testuser"))
+    token = asyncio.run(get_token())
     c.run(
         f"curl -X POST -H 'Authorization: Bearer {token}' -F 'file=@{cwd}/project-setup.jsonl' http://localhost:8000/api/import/5d9c68c6-c50e-d3d0-2a2f-cf54f63993b6"
     )
@@ -259,7 +264,7 @@ def upload_base_project(c):
 @task(name="upload-project")
 def upload_project(c):
     cwd = getcwd()
-    token = asyncio.run(get_token("testuser"))
+    token = asyncio.run(get_token())
     c.run(
         f"curl -X DELETE -H 'Authorization: Bearer {token}'  http://localhost:8000/api/project/11ec4bbb-ebe8-fa7c-bcc3-42010a800002"
     )
@@ -284,8 +289,8 @@ def testreport(c):
 
 
 @task(name="token")
-def make_token(c, oauth="testuser"):
-    print(asyncio.run(get_token("testuser")))
+def make_token(c, oauth=None):
+    print(asyncio.run(get_token(oauth)))
 
 
 @task(name="random-token")

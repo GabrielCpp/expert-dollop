@@ -48,7 +48,7 @@ async def resolve_find_project_defintions(
     )
 
     result = await handler.handle(
-        ProjectDefinitionDto, UserRessourceQuery(user.id), first, after
+        ProjectDefinitionDto, UserRessourceQuery(user.organization_id), first, after
     )
     return result
 

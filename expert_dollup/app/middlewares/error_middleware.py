@@ -31,7 +31,7 @@ def create_error_formatter(
         if handler is None:
             logger.exception(
                 f"Unexpected error arrive out of controller ({exception_type})",
-                extra=dict(message=str(e)),
+                extra=dict(traceback=str(e)),
             )
             return internal_error()
 
@@ -39,7 +39,7 @@ def create_error_formatter(
             return handler(e)
         except Exception as e:
             logger.exception(
-                "Unexpected error arrive out of handler", extra=dict(message=str(e))
+                "Unexpected error arrive out of handler", extra=dict(traceback=str(e))
             )
             return internal_error()
 

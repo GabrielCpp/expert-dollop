@@ -80,4 +80,6 @@ async def resolve_find_datasheets(
         ["datasheet:read"],
     )
 
-    return await handler.handle(DatasheetDto, UserRessourceQuery(user.id), first, after)
+    return await handler.handle(
+        DatasheetDto, UserRessourceQuery(user.organization_id), first, after
+    )

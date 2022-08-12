@@ -36,7 +36,7 @@ async def resolve_find_projects(
     )
 
     result = await handler.handle(
-        ProjectDetailsDto, UserRessourceQuery(user.id), first, after
+        ProjectDetailsDto, UserRessourceQuery(user.organization_id), first, after
     )
 
     return result

@@ -13,3 +13,4 @@ from .report_definition_usecase import ReportDefinitionUseCase
 from .report_usecase import ReportUseCase
 from .distributable_usecase import DistributableUseCase
 from .organization_usecase import OrganizationUseCase
+from .importation_usecase import ImportationUseCase

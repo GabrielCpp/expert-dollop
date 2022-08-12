@@ -36,7 +36,9 @@ class FormulaResolver:
         self.stage_formulas_storage = stage_formulas_storage
         self.logger = logger.create(__name__)
 
-    async def parse_many(self, formula_expressions: List[FormulaExpression]) -> Formula:
+    async def parse_many(
+        self, formula_expressions: List[FormulaExpression]
+    ) -> List[Formula]:
         project_definition_id = formula_expressions[0].project_definition_id
         for formula_expression in formula_expressions:
             if formula_expression.project_definition_id != project_definition_id:
@@ -59,7 +61,7 @@ class FormulaResolver:
 
             formulas_id_by_name[formula_expression.name] = formula_expression.id
 
-        formula_dependencies: Dict[str, Set[str]] = {
+        formula_dependencies: Dict[str, FormulaVisitor] = {
             formula_expression.name: FormulaVisitor.get_names(
                 formula_expression.expression
             )
@@ -120,7 +122,9 @@ class FormulaResolver:
         return formulas
 
     async def parse(self, formula_expression: FormulaExpression) -> Formula:
-        visitor = FormulaVisitor.get_names(formula_expression.expression)
+        visitor: FormulaVisitor = FormulaVisitor.get_names(
+            formula_expression.expression
+        )
 
         if formula_expression.name in visitor.var_names:
             raise Exception(f"Formua {formula_expression.name} is self dependant")

@@ -5,6 +5,7 @@ from injector import Binder, singleton
 from starlette.responses import JSONResponse
 from expert_dollup.shared.starlette_injection import problem
 from expert_dollup.app.middlewares import ExceptionHandlerDict
+import expert_dollup.app.handlers as handlers
 from expert_dollup.core.exceptions import *
 from expert_dollup.shared.database_services import RecordNotFound
 from expert_dollup.app.jwt_auth import (
@@ -126,3 +127,5 @@ def bind_http_handlers(binder: Binder) -> None:
 
 def bind_handlers(binder: Binder) -> None:
     binder.bind(RequestHandler, inject(RequestHandler))
+    for handler in get_classes(handlers):
+        binder.bind(handler, inject(handler))

@@ -15,13 +15,16 @@ from expert_dollup.shared.starlette_injection import (
     PureBinding,
     is_development,
 )
+from fastapi.logger import logger as fastapi_logger
 
 
 def bind_logger(binder: Binder) -> None:
-    logger = getLogger()
     logHandler = StreamHandler()
     formatter = jsonlogger.JsonFormatter(timestamp=True)
     logHandler.setFormatter(formatter)
+
+    fastapi_logger.addHandler(logHandler)
+    logger = getLogger()
     logger.addHandler(logHandler)
 
     basicConfig(level=DEBUG if is_development() else INFO)

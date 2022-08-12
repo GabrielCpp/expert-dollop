@@ -29,18 +29,6 @@ class DatasheetElementUseCase:
         self.ressource_service = ressource_service
         self.clock = clock
 
-    async def import_element(self, element: DatasheetElement):
-        elements = await self.datasheet_element_service.find_by(
-            DatasheetElementFilter(
-                datasheet_id=element.datasheet_id,
-                element_def_id=element.element_def_id,
-                child_element_reference=element.child_element_reference,
-            ),
-        )
-
-        assert len(elements) == 0, f"element id exists {element} -> {elements}"
-        await self.datasheet_element_service.insert(element)
-
     async def find_datasheet_element(self, id: DatasheetElementId) -> DatasheetElement:
         return await self.datasheet_element_service.find_by_id(id)
 

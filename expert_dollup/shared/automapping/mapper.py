@@ -1,4 +1,4 @@
-from typing import Type, TypeVar, Callable, Dict, List, Optional, Union, Any
+from typing import Type, TypeVar, Callable, Dict, List, Optional, Union, Any, Literal
 from collections import defaultdict
 from inspect import getmembers, isfunction, signature
 from .mapping_error import MapingError
@@ -63,7 +63,7 @@ class Mapper:
     def map(
         self,
         instance: T,
-        to_type: Union[Type[U], Dict[Type[Any], Type[Any]], object],
+        to_type: Union[Type[U], Literal[object], Dict[Type[Any], Type[Any]]],
         from_type: Union[Type, object, None] = None,
     ) -> U:
         from_type = type(instance) if from_type is None else from_type

@@ -94,7 +94,7 @@ class ProjectNodeUseCase:
         )
         return results
 
-    async def imports(self, nodes: List[ProjectNode]):
+    async def add_many(self, nodes: List[ProjectNode]):
         if len(nodes) == 0:
             return
 
