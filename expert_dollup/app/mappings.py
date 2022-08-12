@@ -1138,6 +1138,7 @@ def map_computed_value_to_dto(src: ComputedValue, mapper: Mapper) -> ComputedVal
         label=src.label,
         value=mapper.map(src.value, primitive_union_dto_mappings.to_origin),
         unit=src.unit,
+        is_visible=src.is_visible,
     )
 
 
@@ -1146,11 +1147,29 @@ def map_computed_value_from_dto(src: ComputedValueDto, mapper: Mapper) -> Comput
         label=src.label,
         value=mapper.map(src.value, primitive_union_dto_mappings.from_origin),
         unit=src.unit,
+        is_visible=src.is_visible,
+    )
+
+
+def map_stage_column_to_dto(src: StageColumn, mapper: Mapper) -> StageColumnDto:
+    return StageColumnDto(
+        label=src.label,
+        unit=src.unit,
+        is_visible=src.is_visible,
+    )
+
+
+def map_stage_column_from_dto(src: StageColumnDto, mapper: Mapper) -> StageColumn:
+    return StageColumn(
+        label=src.label,
+        unit=src.unit,
+        is_visible=src.is_visible,
     )
 
 
 def map_report_to_dto(src: Report, mapper: Mapper) -> ReportDto:
     return ReportDto(
+        name=src.name,
         datasheet_id=src.datasheet_id,
         stages=mapper.map_many(src.stages, ReportStageDto),
         summaries=mapper.map_many(src.summaries, ComputedValueDto),
@@ -1161,6 +1180,7 @@ def map_report_to_dto(src: Report, mapper: Mapper) -> ReportDto:
 def map_report_group_to_dto(src: ReportStage, mapper: Mapper) -> ReportStageDto:
     return ReportStageDto(
         summary=mapper.map(src.summary, ComputedValueDto),
+        columns=mapper.map_many(src.columns, StageColumn),
         rows=mapper.map_many(src.rows, ReportRowDto),
     )
 
@@ -1183,6 +1203,7 @@ def map_translations_to_json_bundle(src: List[Translation], mapper: Mapper) -> d
 
 def map_minimal_report_dto(src: Report, mapper: Mapper) -> MinimalReportDto:
     return MinimalReportDto(
+        name=src.name,
         stages=mapper.map_many(src.stages, MinimalReportStageDto),
         summaries=mapper.map_many(src.summaries, ComputedValueDto),
     )
@@ -1193,6 +1214,7 @@ def map_minimal_report_stage_dto(
 ) -> MinimalReportStageDto:
     return MinimalReportStageDto(
         summary=mapper.map(src.summary, ComputedValueDto),
+        columns=mapper.map_many(src.columns, StageColumnDto),
         rows=mapper.map_many(src.rows, MinimalReportRowDto),
     )
 

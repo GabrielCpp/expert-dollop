@@ -52,12 +52,20 @@ class ReportRowDao(BaseModel):
     row: ReportRowDictDao
 
 
+class StageColumnDao(BaseModel):
+    label: str
+    unit: Optional[str]
+    is_visible: bool
+
+
 class ReportStageDao(BaseModel):
     summary: ComputedValueDao
+    columns: List[StageColumnDao]
     rows: List[ReportRowDao]
 
 
 class ReportDao(BaseModel):
+    name: str
     datasheet_id: UUID
     stages: List[ReportStageDao]
     summaries: List[ComputedValueDao]
@@ -65,7 +73,6 @@ class ReportDao(BaseModel):
 
 
 class StagedFormulaDao(BaseModel):
-
     id: UUID
     project_definition_id: UUID
     attached_to_type_id: UUID

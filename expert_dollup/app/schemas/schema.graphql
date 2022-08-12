@@ -467,14 +467,23 @@ type ComputedValue {
     label: String!
     value: FieldValue!
     unit: String
+    isVisible: Boolean!
+}
+
+type StageColumn {
+  label: String!
+  unit: String
+  isVisible: Boolean!
 }
 
 type ReportStage {
   summary: ComputedValue!
+  columns: [StageColumn!]!
   rows: [ReportRow!]!
 }
 
 type Report {
+  name: String!
   datasheetId: String!
   stages: [ReportStage!]!
   creationDateUtc: String

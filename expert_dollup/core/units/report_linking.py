@@ -347,6 +347,7 @@ class ReportBuilder:
                         label=column.name,
                         value=row[COLUMNS_BUCKET_NAME][column.name],
                         unit=get_unit(row, column.unit),
+                        is_visible=column.is_visible,
                     )
                     for column in columns
                 ],
@@ -359,6 +360,12 @@ class ReportBuilder:
         stages = [
             ReportStage(
                 rows=rows,
+                columns=[
+                    StageColumn(
+                        column.name, get_unit(rows[0], column.unit), column.is_visible
+                    )
+                    for column in columns
+                ],
                 summary=ComputedValue(
                     value=self.evaluation_context.evaluate_row(
                         stage_summary.summary.expression,
@@ -396,6 +403,7 @@ class ReportBuilder:
         ]
 
         return Report(
+            name=self.linking_data.report_definition.name,
             datasheet_id=self.linking_data.project_details.datasheet_id,
             stages=stages,
             summaries=summaries,

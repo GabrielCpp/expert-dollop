@@ -1351,6 +1351,7 @@ def map_computed_value_to_dao(src: ComputedValue, mapper: Mapper) -> ComputedVal
         label=src.label,
         value=mapper.map(src.value, primitive_union_dao_mappings.to_origin),
         unit=src.unit,
+        is_visible=src.is_visible,
     )
 
 
@@ -1359,11 +1360,13 @@ def map_computed_value_from_dao(src: ComputedValueDao, mapper: Mapper) -> Comput
         label=src.label,
         value=mapper.map(src.value, primitive_union_dao_mappings.from_origin),
         unit=src.unit,
+        is_visible=src.is_visible,
     )
 
 
 def map_report_to_dao(src: Report, mapper: Mapper) -> ReportDao:
     return ReportDao(
+        name=src.name,
         datasheet_id=src.datasheet_id,
         creation_date_utc=src.creation_date_utc,
         summaries=mapper.map_many(src.summaries, ComputedValueDao),
@@ -1373,6 +1376,7 @@ def map_report_to_dao(src: Report, mapper: Mapper) -> ReportDao:
 
 def map_report_from_dao(src: ReportDao, mapper: Mapper) -> Report:
     return Report(
+        name=src.name,
         datasheet_id=src.datasheet_id,
         creation_date_utc=src.creation_date_utc,
         summaries=mapper.map_many(src.summaries, ComputedValue),
@@ -1383,7 +1387,24 @@ def map_report_from_dao(src: ReportDao, mapper: Mapper) -> Report:
 def map_report_group_to_dao(src: ReportStage, mapper: Mapper) -> ReportStageDao:
     return ReportStageDao(
         summary=mapper.map(src.summary, ComputedValueDao),
+        columns=mapper.map_many(src.columns, StageColumnDao),
         rows=mapper.map_many(src.rows, ReportRowDao),
+    )
+
+
+def map_stage_column_to_dao(src: StageColumn, mapper: Mapper) -> StageColumnDao:
+    return StageColumnDao(
+        label=src.label,
+        unit=src.unit,
+        is_visible=src.is_visible,
+    )
+
+
+def map_stage_column_from_dao(src: StageColumnDao, mapper: Mapper) -> StageColumn:
+    return StageColumn(
+        label=src.label,
+        unit=src.unit,
+        is_visible=src.is_visible,
     )
 
 

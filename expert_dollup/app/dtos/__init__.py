@@ -80,6 +80,7 @@ from .datasheet_element_dto import (
 )
 from .report_dto import (
     ReportRowDto,
+    StageColumnDto,
     ReportStageDto,
     ReportDto,
     MinimalReportDto,

@@ -129,6 +129,7 @@ from .report_definition_row_cache import (
     ReportDefinitionRowCacheFilter,
 )
 from .report import (
+    StageColumn,
     ReportRow,
     ReportRowFilter,
     ReportStage,

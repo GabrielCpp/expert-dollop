@@ -215,10 +215,6 @@ class FormulaResolver:
             staged_formulas = await self.stage_formulas_storage.load(
                 StagedFormulasKey(project_definition_id)
             )
-            self.logger.info(
-                "staged_formulas", extra=dict(staged_formulas=staged_formulas)
-            )
-
         except RessourceNotFound:
             self.logger.info(
                 "Refreshing formula cache",

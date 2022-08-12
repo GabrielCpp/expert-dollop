@@ -9,7 +9,8 @@ from .dynamic_primitive import PrimitiveUnionDto
 class ComputedValueDto(CamelModel):
     label: str
     value: PrimitiveUnionDto
-    unit: str
+    unit: Optional[str]
+    is_visible: bool
 
 
 class ReportRowDto(CamelModel):
@@ -29,17 +30,26 @@ class MinimalReportRowDto(CamelModel):
     columns: List[ComputedValueDto]
 
 
+class StageColumnDto(CamelModel):
+    label: str
+    unit: Optional[str]
+    is_visible: bool
+
+
 class ReportStageDto(CamelModel):
     summary: ComputedValueDto
+    columns: List[StageColumnDto]
     rows: List[ReportRowDto]
 
 
 class MinimalReportStageDto(CamelModel):
     summary: ComputedValueDto
+    columns: List[StageColumnDto]
     rows: List[MinimalReportRowDto]
 
 
 class ReportDto(CamelModel):
+    name: str
     datasheet_id: UUID
     stages: List[ReportStageDto]
     summaries: List[ComputedValueDto]
@@ -47,5 +57,6 @@ class ReportDto(CamelModel):
 
 
 class MinimalReportDto(CamelModel):
+    name: str
     stages: List[MinimalReportStageDto]
     summaries: List[ComputedValueDto]

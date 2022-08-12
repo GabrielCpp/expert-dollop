@@ -12,6 +12,7 @@ class ComputedValue:
     label: str
     value: PrimitiveUnion
     unit: Optional[str]
+    is_visible: bool = True
 
     @property
     def key(self) -> str:
@@ -35,13 +36,22 @@ class ReportRow:
 
 
 @dataclass
+class StageColumn:
+    label: str
+    unit: Optional[str]
+    is_visible: bool
+
+
+@dataclass
 class ReportStage:
     summary: ComputedValue
+    columns: List[StageColumn]
     rows: List[ReportRow]
 
 
 @dataclass
 class Report:
+    name: str
     datasheet_id: UUID
     stages: List[ReportStage]
     summaries: List[ComputedValue]

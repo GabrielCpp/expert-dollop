@@ -439,6 +439,7 @@ class ComputedValueDao(BaseModel):
     label: str
     value: PrimitiveUnionDao
     unit: str
+    is_visible: bool
 
 
 class SuppliedItemDao(BaseModel):
