@@ -26,8 +26,8 @@ class StorageProxy(StorageClient):
             result = await self._impl_client.download_binary(path)
         except Exception as e:
             self._forward_exception(e)
-        finally:
-            return result
+
+        return result
 
     @property
     def namespace_prefix(self) -> Path:

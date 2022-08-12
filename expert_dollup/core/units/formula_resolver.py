@@ -215,7 +215,15 @@ class FormulaResolver:
             staged_formulas = await self.stage_formulas_storage.load(
                 StagedFormulasKey(project_definition_id)
             )
+            self.logger.info(
+                "staged_formulas", extra=dict(staged_formulas=staged_formulas)
+            )
+
         except RessourceNotFound:
+            self.logger.info(
+                "Refreshing formula cache",
+                extra=dict(project_definition_id=project_definition_id),
+            )
             staged_formulas = await self.refresh_staged_formulas_cache(
                 project_definition_id
             )
@@ -279,6 +287,7 @@ class FormulaResolver:
 
         while len(formula_dependencies) > 0:
             name = formula_dependencies.pop()
+            self.check_existence(name, formula_by_names)
             formula = formula_by_names[name]
             seen_formula_dependencies.add(name)
 
@@ -323,3 +332,9 @@ class FormulaResolver:
             )
             for formula_reference in formula_references
         ]
+
+    def check_existence(self, name: str, formula_by_names: dict):
+        if not name in formula_by_names:
+            raise Exception(
+                f"Missing formula {name} in {list(formula_by_names.keys())}"
+            )

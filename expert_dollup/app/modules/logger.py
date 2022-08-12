@@ -1,12 +1,13 @@
-from pythonjsonlogger import jsonlogger
+from pythonjsonlogger.jsonlogger import JsonFormatter
 from logging import (
     Logger,
-    basicConfig,
     INFO,
     DEBUG,
     getLogger,
     StreamHandler,
     LoggerAdapter,
+    root,
+    getLevelName,
 )
 from datetime import datetime, timezone
 from injector import Binder, singleton
@@ -15,19 +16,31 @@ from expert_dollup.shared.starlette_injection import (
     PureBinding,
     is_development,
 )
-from fastapi.logger import logger as fastapi_logger
+
+
+class LoggerContext(LoggerAdapter):
+    def process(self, msg, kwargs):
+        kwargs["extra"].update(self.extra)
+        return msg, kwargs
 
 
 def bind_logger(binder: Binder) -> None:
+    LOG_LEVEL = DEBUG if is_development() else INFO
+    json_formatter = JsonFormatter(
+        timestamp=True, static_fields=dict(level=getLevelName(LOG_LEVEL))
+    )
     logHandler = StreamHandler()
-    formatter = jsonlogger.JsonFormatter(timestamp=True)
-    logHandler.setFormatter(formatter)
+    logHandler.setFormatter(json_formatter)
 
-    fastapi_logger.addHandler(logHandler)
-    logger = getLogger()
-    logger.addHandler(logHandler)
+    root.handlers = [logHandler]
+    root.setLevel(LOG_LEVEL)
 
-    basicConfig(level=DEBUG if is_development() else INFO)
+    for name in root.manager.loggerDict.keys():
+        getLogger(name).handlers = []
+        getLogger(name).propagate = True
+
+    logger = getLogger("expert_dollup")
+    logger.propagate = True
 
     binder.bind(
         Logger,
@@ -36,6 +49,8 @@ def bind_logger(binder: Binder) -> None:
     )
     binder.bind(
         LoggerFactory,
-        to=lambda: PureBinding(lambda name: LoggerAdapter(logger, {"name": name})),
+        to=lambda: PureBinding(
+            lambda name: LoggerContext(logger, {"class_name": name})
+        ),
         scope=singleton,
     )
