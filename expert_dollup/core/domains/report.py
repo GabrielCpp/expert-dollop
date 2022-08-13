@@ -39,7 +39,7 @@ class ReportRow:
 class StageColumn:
     label: str
     unit: Optional[str]
-    is_visible: bool
+    is_visible: bool = True
 
 
 @dataclass

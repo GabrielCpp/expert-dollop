@@ -95,12 +95,20 @@ async def test_given_row_cache_should_produce_correct_report(
     ]
 
     expected_report = Report(
+        name=report_definition.name,
         datasheet_id=datasheet_element.datasheet_id,
         stages=[
             ReportStage(
                 summary=ComputedValue(
                     label="show_concrete", value=Decimal("24.24"), unit="unit"
                 ),
+                columns=[
+                    StageColumn("stage", "unit"),
+                    StageColumn(label="quantity", unit="unit"),
+                    StageColumn(label="product_name", unit="unit"),
+                    StageColumn(label="cost_per_unit", unit="$"),
+                    StageColumn(label="cost", unit="$"),
+                ],
                 rows=[
                     ReportRow(
                         node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),

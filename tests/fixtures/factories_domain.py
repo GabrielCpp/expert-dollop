@@ -197,12 +197,22 @@ class ReportRowFactory(factory.Factory):
     row = factory.Dict({})
 
 
+class StageColumnFactory(factory.Factory):
+    class Meta:
+        model = StageColumn
+
+    label = factory.Sequence(lambda n: f"computed_value_{n}")
+    unit = "$"
+    is_visible: bool = True
+
+
 class ReportStageFactory(factory.Factory):
     class Meta:
         model = ReportStage
 
     summary = SubFactory(ComputedValueFactory)
     rows = factory.List([SubFactory(ReportRowFactory) for _ in range(3)])
+    columns = factory.List([SubFactory(StageColumnFactory) for _ in range(3)])
 
 
 class ReportKeyFactory(factory.Factory):
@@ -217,6 +227,7 @@ class ReportFactory(factory.Factory):
     class Meta:
         model = Report
 
+    name = factory.Sequence(lambda n: f"report_name_{n}")
     datasheet_id = factory.Faker("pyuuid4")
     stages = factory.List([SubFactory(ReportStageFactory) for _ in range(3)])
     summaries = factory.List([SubFactory(ComputedValueFactory) for _ in range(3)])
