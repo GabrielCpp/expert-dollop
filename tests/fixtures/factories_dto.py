@@ -9,8 +9,14 @@ class ProjectDefinitionDtoFactory(factory.Factory):
 
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"Gab{n}")
-    datasheet_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     default_datasheet_id = factory.Faker("pyuuid4")
+    properties = {
+        "conversion_factor": ElementPropertySchemaDto(
+            value_validator={"type": "number"}
+        ),
+        "lost": ElementPropertySchemaDto(value_validator={"type": "number"}),
+    }
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
@@ -19,7 +25,7 @@ class ProjectDefinitionNodeDtoFactory(factory.Factory):
         model = ProjectDefinitionNodeDto
 
     id = factory.Faker("pyuuid4")
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"Container{n}")
     is_collection = False
     instanciate_by_default = True
@@ -47,7 +53,7 @@ class TranslationDtoFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     ressource_id = factory.Faker("pyuuid4")
     scope = factory.Faker("pyuuid4")
-    locale = "fr_CA"
+    locale = "fr-CA"
     name = factory.Sequence(lambda n: f"hello{n}")
     value = factory.Sequence(lambda n: f"translation{n}")
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
@@ -60,7 +66,7 @@ class TranslationInputDtoFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     ressource_id = factory.Faker("pyuuid4")
     scope = factory.Faker("pyuuid4")
-    locale = "fr_CA"
+    locale = "fr-CA"
     name = factory.Sequence(lambda n: f"hello{n}")
     value = factory.Sequence(lambda n: f"translation{n}")
 
@@ -72,7 +78,7 @@ class ProjectDetailsDtoFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"project{n}")
     is_staged = False
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     datasheet_id = factory.Faker("pyuuid4")
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
@@ -83,7 +89,7 @@ class NewProjectDetailsDtoFactory(factory.Factory):
 
     name = factory.Sequence(lambda n: f"project{n}")
     is_staged = False
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     datasheet_id = factory.Faker("pyuuid4")
 
 
@@ -92,25 +98,10 @@ class FormulaDtoFactory(factory.Factory):
         model = FormulaExpressionDto
 
     id = factory.Faker("pyuuid4")
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     attached_to_type_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"formula{n}")
     expression = "a+b*c/2"
-
-
-class DatasheetDefinitionDtoFactory(factory.Factory):
-    class Meta:
-        model = DatasheetDefinitionDto
-
-    id = factory.Faker("pyuuid4")
-    name = factory.Sequence(lambda n: f"datasheet_definition{n}")
-    properties = {
-        "conversion_factor": ElementPropertySchemaDto(
-            value_validator={"type": "number"}
-        ),
-        "lost": ElementPropertySchemaDto(value_validator={"type": "number"}),
-    }
-    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
 class DatasheetDefinitionElementDtoFactory(factory.Factory):
@@ -120,7 +111,7 @@ class DatasheetDefinitionElementDtoFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     unit_id = "inch"
     is_collection = False
-    datasheet_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     order_index = factory.Sequence(lambda n: n)
     tags = factory.LazyFunction(lambda: [])
     name = factory.Sequence(lambda n: f"field_name{n}")
@@ -142,7 +133,7 @@ class LabelCollectionDtoFactory(factory.Factory):
         model = LabelCollectionDto
 
     id = factory.Faker("pyuuid4")
-    datasheet_definition_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"label_collection_{n}")
     attributes_schema = factory.Dict({})
 
@@ -164,5 +155,5 @@ class DatasheetDtoFactory(factory.Factory):
 
     name = factory.Sequence(lambda n: f"datasheet{n}")
     is_staged = False
-    datasheet_definition_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     from_datasheet_id = None

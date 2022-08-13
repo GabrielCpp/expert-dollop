@@ -14,7 +14,6 @@ from expert_dollup.shared.starlette_injection import GraphqlContext
 
 mutation = MutationType()
 query = QueryType()
-datasheet_definition = ObjectType("DatasheetDefinition")
 datasheet_definition_property_schema_dict = ObjectType(
     "DatasheetDefinitionPropertySchemaDict"
 )
@@ -28,11 +27,11 @@ datasheet = ObjectType("Datasheet")
 datasheet_element = ObjectType("DatasheetElement")
 json_schema_scalar = ScalarType("JsonSchema")
 graphql_uuid = ScalarType("UUID")
+supplied_item = ObjectType("SuppliedItem")
 
 types = [
     mutation,
     query,
-    datasheet_definition,
     datasheet_definition_element,
     project_definition,
     datasheet,
@@ -42,6 +41,7 @@ types = [
     field_value,
     field_details_union_type,
     json_schema_scalar,
+    supplied_item,
 ]
 
 
@@ -57,7 +57,7 @@ def parse_json_schema_value(value):
 
 
 @json_schema_scalar.literal_parser
-def parse_json_schema_litteral(ast):
+def parse_json_schema_litteral(ast, _):
     value = str(ast.value)
     return parse_json_schema_value(value)
 
@@ -77,7 +77,7 @@ def parse_graphql_uuid_value(value):
 
 
 @graphql_uuid.literal_parser
-def parse_graphql_uuid_litteral(ast):
+def parse_graphql_uuid_litteral(ast, _):
     value = str(ast.value)
     return parse_graphql_uuid_value(value)
 

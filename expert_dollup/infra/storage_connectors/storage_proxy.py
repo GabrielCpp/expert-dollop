@@ -20,10 +20,14 @@ class StorageProxy(StorageClient):
             self._forward_exception(e)
 
     async def download_binary(self, path: str) -> bytes:
+        result: bytes = b""
+
         try:
-            return await self._impl_client.download_binary(path)
+            result = await self._impl_client.download_binary(path)
         except Exception as e:
             self._forward_exception(e)
+
+        return result
 
     @property
     def namespace_prefix(self) -> Path:

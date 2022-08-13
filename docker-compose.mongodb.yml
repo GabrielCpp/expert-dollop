@@ -1,0 +1,15 @@
+version: '3.7'
+services:
+  mongo:
+    image: mongo:4.4 
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${DB_USERNAME:-predyktuser}"
+      MONGO_INITDB_ROOT_PASSWORD: "${DB_PASSWORD:-predyktpassword}"
+    volumes:
+    - mongodb_data:/data/db
+volumes:
+  mongodb_data:
+    name: mongodb_data

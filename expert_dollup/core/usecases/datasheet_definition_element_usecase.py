@@ -1,22 +1,20 @@
 from uuid import UUID
-from typing import Awaitable
 from expert_dollup.core.exceptions import ValidationError
-from expert_dollup.core.domains import DatasheetDefinitionElement
-from expert_dollup.infra.services import (
-    DatasheetDefinitionService,
-    DatasheetDefinitionElementService,
-)
+from expert_dollup.core.domains import DatasheetDefinitionElement, ProjectDefinition
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
+from expert_dollup.shared.database_services import CollectionService
 
 
 class DatasheetDefinitionElementUseCase:
     def __init__(
         self,
-        datasheet_definition_service: DatasheetDefinitionService,
-        datasheet_definition_element_service: DatasheetDefinitionElementService,
+        project_definition_service: CollectionService[ProjectDefinition],
+        datasheet_definition_element_service: CollectionService[
+            DatasheetDefinitionElement
+        ],
         schema_validator: SchemaValidator,
     ):
-        self.datasheet_definition_service = datasheet_definition_service
+        self.project_definition_service = project_definition_service
         self.datasheet_definition_element_service = datasheet_definition_element_service
         self.schema_validator = schema_validator
 
@@ -25,7 +23,7 @@ class DatasheetDefinitionElementUseCase:
 
     async def add(
         self, datasheet_definition_element: DatasheetDefinitionElement
-    ) -> Awaitable[DatasheetDefinitionElement]:
+    ) -> DatasheetDefinitionElement:
         await self._validate_element(datasheet_definition_element)
         await self.datasheet_definition_element_service.insert(
             datasheet_definition_element
@@ -34,27 +32,27 @@ class DatasheetDefinitionElementUseCase:
 
     async def update(
         self, datasheet_definition_element: DatasheetDefinitionElement
-    ) -> Awaitable[DatasheetDefinitionElement]:
+    ) -> DatasheetDefinitionElement:
         await self._validate_element(datasheet_definition_element)
-        await self.datasheet_definition_element_service.update(
-            datasheet_definition_element
+        await self.datasheet_definition_element_service.upserts(
+            [datasheet_definition_element]
         )
         return await self.datasheet_definition_element_service.find_by_id(
             datasheet_definition_element.id
         )
 
-    async def delete_by_id(self, id: UUID) -> Awaitable:
+    async def delete_by_id(self, id: UUID) -> None:
         await self.datasheet_definition_element_service.delete_by_id(id)
 
     async def _validate_element(
         self,
         datasheet_definition_element: DatasheetDefinitionElement,
-    ) -> Awaitable:
-        datasheet_definition = await self.datasheet_definition_service.find_by_id(
-            datasheet_definition_element.datasheet_def_id
+    ):
+        project_definition = await self.project_definition_service.find_by_id(
+            datasheet_definition_element.project_definition_id
         )
 
-        properties_schema = datasheet_definition.properties
+        properties_schema = project_definition.properties
 
         for name, schema in properties_schema.items():
             property_instance = datasheet_definition_element.default_properties.get(

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from uuid import UUID, uuid4
 from collections import defaultdict, OrderedDict
 from expert_dollup.core.utils.ressource_permissions import make_ressource
@@ -8,7 +8,7 @@ from expert_dollup.core.domains import *
 
 
 class TriggerHandler:
-    def __init__(self, nodes_by_id: OrderedDict):
+    def __init__(self, nodes_by_id: Dict[UUID, BoundedNode]):
         self.nodes_by_id = nodes_by_id
 
     def run(self, bounded_node: BoundedNode):
@@ -36,17 +36,17 @@ class ProjectBuilder:
         self.project_node_service = project_node_service
         self.clock = clock
 
-    async def build_new(
-        self, project_details: ProjectDetails, user_id: UUID
-    ) -> Project:
+    async def build_new(self, project_details: ProjectDetails, user: User) -> Project:
         node_definitions = await self.project_definition_node_service.find_by(
-            ProjectDefinitionNodeFilter(project_def_id=project_details.project_def_id)
+            ProjectDefinitionNodeFilter(
+                project_definition_id=project_details.project_definition_id
+            )
         )
 
         children_to_skip = set()
-        nodes_by_id = OrderedDict()
+        nodes_by_id: Dict[UUID, BoundedNode] = OrderedDict()
         node_metas = []
-        type_to_instance_id = defaultdict(uuid4)
+        type_to_instance_id: Dict[UUID, UUID] = defaultdict(uuid4)
 
         for node_definition in sorted(node_definitions, key=lambda d: d.path):
             node_meta = ProjectNodeMeta(
@@ -83,8 +83,8 @@ class ProjectBuilder:
 
         trigger_handler = TriggerHandler(nodes_by_id)
 
-        for node in nodes_by_id.values():
-            trigger_handler.run(node)
+        for bounded_node in nodes_by_id.values():
+            trigger_handler.run(bounded_node)
 
         nodes = [bounded_node.node for bounded_node in nodes_by_id.values()]
 
@@ -92,20 +92,20 @@ class ProjectBuilder:
             details=project_details,
             nodes=nodes,
             metas=node_metas,
-            ressource=make_ressource(ProjectDetails, project_details, user_id),
+            ressource=make_ressource(ProjectDetails, project_details, user),
         )
 
-    async def clone(self, project_details: ProjectDetails, user_id: UUID) -> Project:
+    async def clone(self, project_details: ProjectDetails, user: User) -> Project:
         cloned_project = ProjectDetails(
             id=uuid4(),
             name=project_details.name,
             is_staged=False,
-            project_def_id=project_details.project_def_id,
+            project_definition_id=project_details.project_definition_id,
             datasheet_id=project_details.datasheet_id,
             creation_date_utc=self.clock.utcnow(),
         )
 
-        ressource = make_ressource(ProjectDetails, cloned_project, user_id)
+        ressource = make_ressource(ProjectDetails, cloned_project, user)
         cloned_nodes = await self._clone_project_nodes(
             project_details.id, cloned_project
         )
@@ -126,7 +126,7 @@ class ProjectBuilder:
             ProjectNodeFilter(project_id=project_id)
         )
 
-        id_mapping = defaultdict(uuid4)
+        id_mapping: Dict[UUID, UUID] = defaultdict(uuid4)
         cloned_nodes = [
             ProjectNode(
                 id=id_mapping[node.id],

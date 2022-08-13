@@ -1,4 +1,4 @@
-from typing import Iterable, Dict, Optional
+from typing import List, Dict, Optional
 from uuid import UUID
 from expert_dollup.core.domains import Formula
 from expert_dollup.infra.expert_dollup_db import ProjectDefinitionFormulaDao
@@ -11,12 +11,12 @@ class FormulaService(CollectionServiceProxy[Formula]):
         domain = Formula
 
     async def get_formulas_id_by_name(
-        self, project_def_id: UUID, names: Optional[Iterable[str]] = None
+        self, project_definition_id: UUID, names: Optional[List[str]] = None
     ) -> Dict[str, UUID]:
         query = (
             self.get_builder()
             .select("id", "name")
-            .where("project_def_id", "==", project_def_id)
+            .where("project_definition_id", "==", project_definition_id)
         )
 
         if not names is None:

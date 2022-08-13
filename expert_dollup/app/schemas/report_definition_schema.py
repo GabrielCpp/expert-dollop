@@ -9,7 +9,6 @@ from expert_dollup.shared.starlette_injection import (
 )
 from expert_dollup.app.controllers.report.report_definition import *
 from expert_dollup.app.dtos import *
-from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
 from .types import query, mutation
 
@@ -20,10 +19,12 @@ from .types import query, mutation
 async def resolve_find_project_definition_reports(
     _: Any,
     info: GraphQLResolveInfo,
-    project_def_id: str,
+    project_definition_id: str,
     get_project_def_reports_definitions: callable,
 ):
-    result = await get_project_def_reports_definitions(info, UUID(project_def_id))
+    result = await get_project_def_reports_definitions(
+        info, UUID(project_definition_id)
+    )
     return result
 
 

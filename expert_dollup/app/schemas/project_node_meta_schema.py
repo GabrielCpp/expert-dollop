@@ -9,14 +9,13 @@ from expert_dollup.shared.starlette_injection import (
 )
 from expert_dollup.app.controllers.project.project_node_meta import *
 from expert_dollup.app.dtos import *
-from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
 from .types import query, mutation
 from pydantic import parse_obj_as
 
 
 @query.field("findProjectNodeMetaDefinition")
-@inject_graphql_route(get_project_node_meta_definition)
+@inject_graphql_route(get_project_node_meta_definition, ["project_id", "node_id"])
 @convert_kwargs_to_snake_case
 async def find_project_node_meta_definition(
     parent: Any,

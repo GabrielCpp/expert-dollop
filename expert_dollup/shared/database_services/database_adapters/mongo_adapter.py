@@ -118,20 +118,13 @@ class MongoConnection(DbConnection):
 
     async def truncate_db(self, names: Optional[List[str]] = None):
         if names is None:
-            db = self._client.get_database(self.db_name)
-            for name in await db.list_collection_names():
-                await db.get_collection(name).delete_many({})
+            names = [c.name for c in self.collections.values()]
 
-        else:
-            db = self._client.get_database(self.db_name)
+        db = self._client.get_database(self.db_name)
 
-            for name in names:
-                collection = db.get_collection(name)
-                await collection.delete_many()
-
-    async def drop_db(self):
-        self._client.drop_database(self.db_name)
-        self._client.get_database(self.db_name)
+        for name in names:
+            collection = db.get_collection(name)
+            await collection.delete_many({})
 
     async def connect(self) -> None:
         pass
@@ -274,6 +267,10 @@ class MongoCollection(CollectionService[Domain]):
     def dao(self) -> Type:
         return self._dao
 
+    @property
+    def batch_size(self) -> int:
+        return 1000
+
     async def insert(self, domain: Domain):
         document = self._dao_mapper.map_to_dict(domain)
         await self._collection.insert_one(document)
@@ -314,12 +311,8 @@ class MongoCollection(CollectionService[Domain]):
         return domains
 
     async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
-        results = []
         query = self._query_compiler.find(query_filter)
-
-        async for doc in query:
-            results.append(doc)
-
+        results = await query.to_list(length=None)
         domains = self._dao_mapper.map_many_to_domain(results)
         return domains
 

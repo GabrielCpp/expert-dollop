@@ -1,6 +1,5 @@
 from jwt import encode, decode, DecodeError
-from typing import Union, List
-from fastapi import Depends
+from typing import Union, List, Dict, Any
 from starlette.requests import Request
 from uuid import UUID
 from .settings import AppSettings
@@ -25,7 +24,7 @@ class PermissionMissing(DetailedError):
     pass
 
 
-class AuthJWT(AuthService):
+class AuthJWT(AuthService[User]):
     def __init__(
         self,
         settings: AppSettings,
@@ -36,7 +35,7 @@ class AuthJWT(AuthService):
         self.user_service = user_service
         self.ressource_service = ressource_service
 
-    def authentification_required(self, request: Request):
+    def authentification_required(self, request: Request) -> Dict[str, Any]:
         authorization_header = request.headers.get("Authorization", "")
 
         if not authorization_header.startswith(BEARER_AUTH):
@@ -62,12 +61,12 @@ class AuthJWT(AuthService):
         ressource_id: UUID,
         permissions: Union[str, List[str]],
         user_permissions: Union[str, List[str]] = [],
-    ):
+    ) -> User:
         user = await self.can_perform_required(request, user_permissions)
 
         try:
             ressource = await self.ressource_service.find_by_id(
-                RessourceId(ressource_id, user.id)
+                RessourceId(ressource_id, user.organization_id)
             )
         except RecordNotFound:
             raise PermissionMissing(
@@ -85,7 +84,7 @@ class AuthJWT(AuthService):
 
     async def can_perform_required(
         self, request: Request, permissions: Union[str, List[str]]
-    ):
+    ) -> User:
         oauth_id = self.authentification_required(request).get("sub")
 
         try:
@@ -100,8 +99,11 @@ class AuthJWT(AuthService):
         return user
 
     def make_token(self, oauth_id: str) -> str:
+        if self.settings.authjwt_private_key is None:
+            raise Exception("Missing private key to generate the token")
+
         return encode(
             {"aud": self.settings.authjwt_decode_audience, "sub": oauth_id},
-            self.settings.authjwt_private_key.encode("ascii"),
+            self.settings.authjwt_private_key,
             algorithm=self.settings.authjwt_algorithm,
         )

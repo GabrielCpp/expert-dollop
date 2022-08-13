@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from uuid import UUID
 from typing import Optional, List, Union, Dict
+from typing_extensions import TypeAlias
 from datetime import datetime
 from enum import Enum
 from expert_dollup.shared.database_services import QueryFilter
@@ -54,13 +55,6 @@ class CollapsibleContainerFieldConfig:
     is_collapsible: bool
 
 
-@dataclass
-class StaticNumberFieldConfig:
-    pass_to_translation: bool
-    precision: int
-    unit: str
-
-
 class TriggerAction(Enum):
     CHANGE_NAME = "CHANGE_NAME"
     SET_VISIBILITY = "SET_VISIBILITY"
@@ -79,12 +73,12 @@ class TranslationConfig:
     label: str
 
 
-FieldDetailsUnion = Union[
+FieldDetailsUnion: TypeAlias = Union[
     IntFieldConfig,
+    StaticChoiceFieldConfig,
     DecimalFieldConfig,
     StringFieldConfig,
     BoolFieldConfig,
-    StaticChoiceFieldConfig,
     CollapsibleContainerFieldConfig,
     StaticNumberFieldConfig,
     None,
@@ -108,7 +102,7 @@ class NodeConfig:
 @dataclass
 class ProjectDefinitionNode:
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     name: str
     is_collection: bool
     instanciate_by_default: bool
@@ -125,7 +119,7 @@ class ProjectDefinitionNode:
 
 class ProjectDefinitionNodeFilter(QueryFilter):
     id: Optional[UUID]
-    project_def_id: Optional[UUID]
+    project_definition_id: Optional[UUID]
     name: Optional[str]
     is_collection: Optional[bool]
     instanciate_by_default: Optional[bool]

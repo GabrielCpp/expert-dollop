@@ -1,4 +1,5 @@
-from typing import TypeVar, Type
+from abc import ABC
+from typing import TypeVar, Type, Union
 from starlette.requests import Request
 from logging import Logger
 
@@ -7,7 +8,7 @@ T = TypeVar("T")
 
 
 class Inject:
-    def __init__(self, object_class: Type[T]):
+    def __init__(self, object_class: Union[ABC, Type[T]]):
         self.object_class = object_class
 
     def __call__(self, request: Request) -> T:

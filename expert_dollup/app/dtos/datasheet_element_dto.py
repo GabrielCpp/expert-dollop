@@ -20,6 +20,7 @@ class DatasheetElementImportDto(CamelModel):
     child_element_reference: UUID
     properties: Dict[str, PrimitiveUnionDto]
     original_datasheet_id: UUID
+    original_owner_organization_id: UUID
     creation_date_utc: datetime
 
 

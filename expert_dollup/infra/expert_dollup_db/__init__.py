@@ -1,4 +1,5 @@
 from typing import List, Optional, Union, Dict
+from typing_extensions import TypeAlias
 from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
@@ -55,16 +56,16 @@ class ReferenceIdDao(BaseModel):
     uuid: UUID
 
 
-PrimitiveWithNoneUnionDao = Union[
+PrimitiveWithNoneUnionDao: TypeAlias = Union[
     BoolFieldValueDao, IntFieldValueDao, StringFieldValueDao, DecimalFieldValueDao, None
 ]
 
-PrimitiveUnionDao = Union[
+PrimitiveUnionDao: TypeAlias = Union[
     BoolFieldValueDao, IntFieldValueDao, StringFieldValueDao, DecimalFieldValueDao
 ]
 
 
-LabelAttributeDaoUnion = Union[
+LabelAttributeDaoUnion: TypeAlias = Union[
     BoolFieldValueDao,
     IntFieldValueDao,
     StringFieldValueDao,
@@ -73,6 +74,10 @@ LabelAttributeDaoUnion = Union[
 ]
 
 JsonSchemaDao = dict
+
+
+class ElementPropertySchemaDao(BaseModel):
+    value_validator: JsonSchemaDao
 
 
 class ProjectDefinitionDao(BaseModel):
@@ -85,7 +90,7 @@ class ProjectDefinitionDao(BaseModel):
     id: UUID
     name: str = Field(max_length=64)
     default_datasheet_id: UUID
-    datasheet_def_id: UUID
+    properties: Dict[str, ElementPropertySchemaDao]
     creation_date_utc: datetime
 
 
@@ -97,7 +102,7 @@ class ProjectDefinitionNodeDao(BaseModel):
         options = {
             "firestore": {
                 "collection_count": False,
-                "key_counts": set([frozenset(["project_def_id"])]),
+                "key_counts": set([frozenset(["project_definition_id"])]),
             }
         }
 
@@ -105,7 +110,7 @@ class ProjectDefinitionNodeDao(BaseModel):
         title = "project_definition_node"
 
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     name: str = Field(max_length=64)
     is_collection: bool
     instanciate_by_default: bool
@@ -128,7 +133,7 @@ class ProjectDao(BaseModel):
     id: UUID
     name: str = Field(max_length=64)
     is_staged: bool
-    project_def_id: UUID
+    project_definition_id: UUID
     datasheet_id: UUID
     creation_date_utc: datetime
 
@@ -222,7 +227,7 @@ class ProjectDefinitionFormulaDao(BaseModel):
         options = {
             "firestore": {
                 "collection_count": False,
-                "key_counts": set([frozenset(["project_def_id"])]),
+                "key_counts": set([frozenset(["project_definition_id"])]),
             }
         }
 
@@ -230,28 +235,11 @@ class ProjectDefinitionFormulaDao(BaseModel):
         title = "project_definition_formula"
 
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     attached_to_type_id: UUID
     name: str = Field(max_length=64)
     expression: str
     dependency_graph: FormulaDependencyGraphDao
-
-
-class ElementPropertySchemaDao(BaseModel):
-    value_validator: JsonSchemaDao
-
-
-class DatasheetDefinitionDao(BaseModel):
-    class Meta:
-        pk = "id"
-
-    class Config:
-        title = "datasheet_definition"
-
-    id: UUID
-    name: str = Field(max_length=64)
-    properties: Dict[str, ElementPropertySchemaDao]
-    creation_date_utc: datetime
 
 
 class CollectionAggregateDao(BaseModel):
@@ -270,7 +258,7 @@ class StaticPropertyDao(BaseModel):
     json_schema: JsonSchemaDao
 
 
-LabelAttributeSchemaDaoUnion = Union[
+LabelAttributeSchemaDaoUnion: TypeAlias = Union[
     StaticPropertyDao,
     CollectionAggregateDao,
     DatasheetAggregateDao,
@@ -286,7 +274,7 @@ class LabelCollectionDao(BaseModel):
         title = "datasheet_definition_label_collection"
 
     id: UUID
-    datasheet_definition_id: UUID
+    project_definition_id: UUID
     name: str = Field(max_length=64)
     attributes_schema: Dict[str, LabelAttributeSchemaDaoUnion]
 
@@ -322,7 +310,7 @@ class DatasheetDefinitionElementDao(BaseModel):
         options = {
             "firestore": {
                 "collection_count": False,
-                "key_counts": set([frozenset(["datasheet_def_id"])]),
+                "key_counts": set([frozenset(["project_definition_id"])]),
             }
         }
 
@@ -333,7 +321,7 @@ class DatasheetDefinitionElementDao(BaseModel):
     unit_id: str
     is_collection: bool
     name: str = Field(max_length=64)
-    datasheet_def_id: UUID
+    project_definition_id: UUID
     order_index: int
     default_properties: Dict[str, DatasheetDefinitionElementPropertyDao]
     tags: List[UUID]
@@ -350,7 +338,7 @@ class DatasheetDao(BaseModel):
     id: UUID
     name: str = Field(max_length=64)
     is_staged: bool
-    datasheet_def_id: UUID
+    project_definition_id: UUID
     from_datasheet_id: Optional[UUID]
     creation_date_utc: datetime
 
@@ -376,8 +364,10 @@ class DatasheetElementDao(BaseModel):
     datasheet_id: UUID
     element_def_id: UUID
     child_element_reference: UUID
+    ordinal: int
     properties: Dict[str, PrimitiveUnionDao]
     original_datasheet_id: UUID
+    original_owner_organization_id: UUID
     creation_date_utc: datetime
 
 
@@ -429,9 +419,10 @@ class ReportDefinitionDao(BaseModel):
         title = "report_definition"
 
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     name: str = Field(max_length=64)
     structure: ReportStructureDao
+    distributable: bool
 
 
 class MeasureUnitDao(BaseModel):
@@ -442,3 +433,37 @@ class MeasureUnitDao(BaseModel):
         title = "unit"
 
     id: str = Field(max_length=16)
+
+
+class ComputedValueDao(BaseModel):
+    label: str
+    value: PrimitiveUnionDao
+    unit: Optional[str]
+    is_visible: bool
+
+
+class SuppliedItemDao(BaseModel):
+    datasheet_id: UUID
+    element_def_id: UUID
+    child_reference_id: UUID
+    organization_id: UUID
+
+
+class DistributableItemDao(BaseModel):
+    class Meta:
+        pk = ("project_id", "node_id", "formula_id")
+
+    class Config:
+        title = "distributable_items"
+
+    project_id: UUID
+    report_definition_id: UUID
+    node_id: UUID
+    formula_id: UUID
+    supplied_item: SuppliedItemDao
+    distribution_ids: List[UUID]
+
+    summary: ComputedValueDao
+    columns: List[ComputedValueDao]
+    obsolete: bool
+    creation_date_utc: datetime

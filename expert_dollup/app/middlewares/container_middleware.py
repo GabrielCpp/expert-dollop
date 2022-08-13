@@ -7,7 +7,8 @@ from injector import Injector
 
 
 def create_node_middleware(
-    global_node: Injector, build_request_node: Callable[[Injector], Injector]
+    global_injector: Injector,
+    build_request_node: Callable[[Injector, Request], Injector],
 ):
     class ContainerMiddleware(BaseHTTPMiddleware):
         async def dispatch(
@@ -16,8 +17,8 @@ def create_node_middleware(
             call_next: RequestResponseEndpoint,
         ) -> Response:
 
-            request.state.global_node = global_node
-            request.state.container = build_request_node(global_node, request)
+            request.state.global_injector = global_injector
+            request.state.container = build_request_node(global_injector, request)
             return await call_next(request)
 
     return ContainerMiddleware

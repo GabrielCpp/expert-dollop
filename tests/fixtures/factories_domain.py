@@ -1,4 +1,5 @@
 import factory
+from factory import SubFactory
 from expert_dollup.core.domains import *
 from datetime import timezone
 
@@ -10,7 +11,7 @@ class ProjectDefinitionFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"project_definition_{n}")
     default_datasheet_id = factory.Faker("pyuuid4")
-    datasheet_def_id = factory.Faker("pyuuid4")
+    properties = factory.Dict({})
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
@@ -19,7 +20,7 @@ class ProjectDefinitionNodeFactory(factory.Factory):
         model = ProjectDefinitionNode
 
     id = factory.Faker("pyuuid4")
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"node{n}")
     is_collection = False
     instanciate_by_default = True
@@ -169,18 +170,56 @@ class ReportDefinitionFactory(factory.Factory):
         model = ReportDefinition
 
     id = factory.Faker("pyuuid4")
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"report_name_{n}")
     structure = factory.SubFactory(ReportStructureFactory)
+    distributable = False
 
 
-class DatasheetDefinitionFactory(factory.Factory):
+class ComputedValueFactory(factory.Factory):
     class Meta:
-        model = DatasheetDefinition
+        model = ComputedValue
 
-    id = factory.Faker("pyuuid4")
-    name = factory.Sequence(lambda n: f"datasheet_definition_{n}")
-    properties = factory.Dict({})
+    label = factory.Sequence(lambda n: f"computed_value_{n}")
+    value = factory.Sequence(lambda n: n)
+    unit = "$"
+
+
+class ReportRowFactory(factory.Factory):
+    class Meta:
+        model = ReportRow
+
+    node_id = factory.Faker("pyuuid4")
+    formula_id = factory.Faker("pyuuid4")
+    element_def_id = factory.Faker("pyuuid4")
+    child_reference_id = factory.Faker("pyuuid4")
+    columns = factory.List([SubFactory(ComputedValueFactory) for _ in range(3)])
+    row = factory.Dict({})
+
+
+class ReportStageFactory(factory.Factory):
+    class Meta:
+        model = ReportStage
+
+    summary = SubFactory(ComputedValueFactory)
+    rows = factory.List([SubFactory(ReportRowFactory) for _ in range(3)])
+
+
+class ReportKeyFactory(factory.Factory):
+    class Meta:
+        model = ReportKey
+
+    project_id = factory.Faker("pyuuid4")
+    report_definition_id = factory.Faker("pyuuid4")
+
+
+class ReportFactory(factory.Factory):
+    class Meta:
+        model = Report
+
+    datasheet_id = factory.Faker("pyuuid4")
+    stages = factory.List([SubFactory(ReportStageFactory) for _ in range(3)])
+    summaries = factory.List([SubFactory(ComputedValueFactory) for _ in range(3)])
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
@@ -191,7 +230,7 @@ class DatasheetDefinitionElementFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     unit_id: str
     is_collection: bool
-    datasheet_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     order_index: int
     name: str
     default_properties = factory.Dict({})
@@ -215,7 +254,7 @@ class LabelCollectionFactory(factory.Factory):
         model = LabelCollection
 
     id = factory.Faker("pyuuid4")
-    datasheet_definition_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"label_collection_{n}")
     attributes_schema = factory.Dict({})
 
@@ -226,7 +265,7 @@ class TranslationFactory(factory.Factory):
 
     id = factory.Faker("pyuuid4")
     ressource_id = factory.Faker("pyuuid4")
-    locale = "fr_CA"
+    locale = "fr-CA"
     scope = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"translation_{n}")
     value = factory.Sequence(lambda n: f"translation_value_{n}")
@@ -240,6 +279,36 @@ class ProjectDetailsFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"project{n}")
     is_staged = False
-    project_def_id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
     datasheet_id = factory.Faker("pyuuid4")
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
+
+
+class OrganizationLimitsFactory(factory.Factory):
+    class Meta:
+        model = OrganizationLimits
+
+    active_project_count = 40
+    active_project_overall_collection_count = 40
+    active_datasheet_count = 40
+    active_datasheet_custom_element_count = 40
+
+
+class OrganizationFactory(factory.Factory):
+    class Meta:
+        model = Organization
+
+    id = factory.Faker("pyuuid4")
+    name = factory.Sequence(lambda n: f"Organization{n}")
+    limits = factory.SubFactory(OrganizationLimitsFactory)
+
+
+class UserFactory(factory.Factory):
+    class Meta:
+        model = User
+
+    oauth_id = factory.Sequence(lambda n: f"user{n}")
+    id = factory.Faker("pyuuid4")
+    email = factory.Sequence(lambda n: f"user{n}@example.com")
+    permissions = factory.List([])
+    organization_id = factory.Faker("pyuuid4")

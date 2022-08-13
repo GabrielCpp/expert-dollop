@@ -1,3 +1,4 @@
+from os import getenv
 from injector import Injector, Binder
 from logging import Logger
 from fastapi import FastAPI, APIRouter, Request
@@ -11,8 +12,13 @@ from .middlewares import (
     create_node_middleware,
     LoggerMiddleware,
     create_error_middleware,
+    create_graphql_error_formatter,
     ExceptionHandlerDict,
 )
+
+
+def is_debug_enabled():
+    return getenv("DEBUG") == "true"
 
 
 def bind_request_modules(request: Request):
@@ -27,8 +33,9 @@ def creat_app(container: Injector = None):
     container = container or build_container()
     exception_handler = container.get(ExceptionHandlerDict)
     logger = container.get(Logger)
+    debug = is_debug_enabled()
 
-    app = FastAPI(debug=False)
+    app = FastAPI(debug=debug)
     app.add_middleware(
         create_node_middleware(
             container,
@@ -48,8 +55,9 @@ def creat_app(container: Injector = None):
         "/graphql",
         GraphQL(
             schema,
-            debug=False,
-            introspection=True,
+            debug=debug,
+            introspection=debug,
+            error_formatter=create_graphql_error_formatter(exception_handler, logger),
             context_value=lambda request: GraphqlContext(
                 container=request.state.container, request=request
             ),

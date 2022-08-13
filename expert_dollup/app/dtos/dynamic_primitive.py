@@ -1,5 +1,6 @@
 from expert_dollup.shared.starlette_injection import CamelModel
 from typing import Union
+from typing_extensions import TypeAlias
 from uuid import UUID
 from decimal import Decimal
 
@@ -24,15 +25,15 @@ class ReferenceIdDto(CamelModel):
     uuid: UUID
 
 
-PrimitiveWithNoneUnionDto = Union[
+PrimitiveWithNoneUnionDto: TypeAlias = Union[
     BoolFieldValueDto, IntFieldValueDto, StringFieldValueDto, DecimalFieldValueDto, None
 ]
 
-PrimitiveUnionDto = Union[
+PrimitiveUnionDto: TypeAlias = Union[
     BoolFieldValueDto, IntFieldValueDto, StringFieldValueDto, DecimalFieldValueDto
 ]
 
-PrimitiveWithReferenceUnionDto = Union[
+PrimitiveWithReferenceUnionDto: TypeAlias = Union[
     BoolFieldValueDto,
     IntFieldValueDto,
     StringFieldValueDto,

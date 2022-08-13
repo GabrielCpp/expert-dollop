@@ -1,4 +1,5 @@
 from typing import List, Dict, Union, Optional
+from typing_extensions import TypeAlias
 from uuid import UUID
 from pydantic import BaseModel
 
@@ -43,14 +44,14 @@ class CollapsibleContainerFieldConfigDao(BaseModel):
     is_collapsible: bool
 
 
-FieldDetailsUnionDao = Union[
+FieldDetailsUnionDao: TypeAlias = Union[
+    StaticNumberFieldConfigDao,
     DecimalFieldConfigDao,
     IntFieldConfigDao,
     StringFieldConfigDao,
     BoolFieldConfigDao,
     StaticChoiceFieldConfigDao,
     CollapsibleContainerFieldConfigDao,
-    StaticNumberFieldConfigDao,
     None,
 ]
 

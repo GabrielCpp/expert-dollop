@@ -9,7 +9,8 @@ from .storage_client import ObjectNotFound
 
 class LocalStorage(StorageClient):
     def __init__(self, prefix: str):
-        self.prefix = prefix
+        self._namespace_prefix = Path(gettempdir()) / prefix
+        self._namespace_prefix.mkdir(exist_ok=True)
 
     async def upload_binary(self, path: str, data: bytes) -> None:
         def run(path, data):
@@ -40,4 +41,4 @@ class LocalStorage(StorageClient):
 
     @property
     def namespace_prefix(self) -> Path:
-        return Path(gettempdir()) / self.prefix
+        return self._namespace_prefix

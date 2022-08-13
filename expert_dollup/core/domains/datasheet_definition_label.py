@@ -1,10 +1,11 @@
 from uuid import UUID
 from dataclasses import dataclass, field
 from typing import Dict, Optional, List, Union
+from typing_extensions import TypeAlias
 from decimal import Decimal
 from expert_dollup.shared.database_services import QueryFilter
 
-LabelAttributeUnion = Union[bool, int, str, Decimal, UUID]
+LabelAttributeUnion: TypeAlias = Union[bool, int, str, Decimal, UUID]
 
 
 @dataclass

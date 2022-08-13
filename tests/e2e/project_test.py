@@ -6,7 +6,7 @@ from ..fixtures import *
 
 async def create_project(ac, fake_db: FakeDb):
     new_project = NewProjectDetailsDtoFactory(
-        project_def_id=fake_db.get_only_one(ProjectDefinition).id
+        project_definition_id=fake_db.get_only_one(ProjectDefinition).id
     )
     response = await ac.post("/api/project", data=new_project.json())
     assert response.status_code == 200
@@ -57,7 +57,7 @@ async def test_project_loading(ac, db_helper: DbFixtureHelper):
             self.disqualifying_parent.add(definition.id)
             return False
 
-    fake_db = await db_helper.load_fixtures(SimpleProject)
+    fake_db = await db_helper.load_fixtures(SimpleProject())
     project = await create_project(ac, fake_db)
 
     response = await ac.get(f"/api/project/{project.id}/children")
@@ -72,7 +72,7 @@ async def test_project_loading(ac, db_helper: DbFixtureHelper):
 @pytest.mark.asyncio
 async def test_mutate_project_field(ac, db_helper: DbFixtureHelper):
     runner = FlowRunner()
-    fake_db = await db_helper.load_fixtures(SimpleProject)
+    fake_db = await db_helper.load_fixtures(SimpleProject())
     project = await create_project(ac, fake_db)
 
     @runner.step
@@ -128,7 +128,7 @@ async def test_mutate_project_field(ac, db_helper: DbFixtureHelper):
 
 @pytest.mark.asyncio
 async def test_instanciate_collection(ac, db_helper: DbFixtureHelper):
-    fake_db = await db_helper.load_fixtures(SimpleProject)
+    fake_db = await db_helper.load_fixtures(SimpleProject())
     project = await create_project(ac, fake_db)
     root_collection_node_definition = next(
         container_definition
@@ -168,7 +168,7 @@ async def test_clone_collection(ac, db_helper: DbFixtureHelper):
             assert lhs_node.type_path == rhs_node.type_path
             assert lhs_node.value == rhs_node.value
 
-    fake_db = await db_helper.load_fixtures(SimpleProject)
+    fake_db = await db_helper.load_fixtures(SimpleProject())
     project = await create_project(ac, fake_db)
     runner = FlowRunner()
     collection_node_definition = next(
@@ -223,7 +223,7 @@ async def test_clone_collection(ac, db_helper: DbFixtureHelper):
 
 @pytest.mark.asyncio
 async def test_remove_collection(ac, db_helper: DbFixtureHelper):
-    fake_db = await db_helper.load_fixtures(SimpleProject)
+    fake_db = await db_helper.load_fixtures(SimpleProject())
     project = await create_project(ac, fake_db)
     runner = FlowRunner()
     collection_node_definition = next(
@@ -280,19 +280,19 @@ async def test_remove_collection(ac, db_helper: DbFixtureHelper):
 
 @pytest.mark.asyncio
 async def test_remove_project(ac, db_helper: DbFixtureHelper):
-    fake_db = await db_helper.load_fixtures(SimpleProject)
+    fake_db = await db_helper.load_fixtures(SimpleProject())
     project = await create_project(ac, fake_db)
 
     response = await ac.delete(f"/api/project/{project.id}")
     assert response.status_code == 200, response.text
 
     response = await ac.get(f"/api/project/{project.id}")
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
 
 
 @pytest.mark.asyncio
 async def test_clone_project(ac, db_helper: DbFixtureHelper):
-    fake_db = await db_helper.load_fixtures(SimpleProject)
+    fake_db = await db_helper.load_fixtures(SimpleProject())
     project = await create_project(ac, fake_db)
 
     response = await ac.post(f"/api/project/{project.id}/clone")

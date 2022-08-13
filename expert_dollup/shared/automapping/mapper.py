@@ -1,4 +1,4 @@
-from typing import Type, TypeVar, Callable, Dict, List, Optional, Union
+from typing import Type, TypeVar, Callable, Dict, List, Optional, Union, Any, Literal
 from collections import defaultdict
 from inspect import getmembers, isfunction, signature
 from .mapping_error import MapingError
@@ -30,7 +30,7 @@ class Mapper:
     def map_many(
         self,
         instances: List[T],
-        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
+        to_type: Union[Type[U], Dict[Type[Any], Type[Any]]],
         from_type: Type[T] = None,
         after=lambda x: x,
     ) -> List[U]:
@@ -39,7 +39,7 @@ class Mapper:
     def map_dict_values(
         self,
         instances: Dict[K, T],
-        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
+        to_type: Union[Type[U], Dict[Type[Any], Type[Any]]],
         from_type: Type[T] = None,
         after=lambda x: x,
     ) -> Dict[K, U]:
@@ -51,7 +51,7 @@ class Mapper:
     def map_dict_list_values(
         self,
         instances: Dict[K, List[T]],
-        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
+        to_type: Union[Type[U], Dict[Type[Any], Type[Any]]],
         from_type: Type[T] = None,
         after=lambda x: x,
     ) -> Dict[K, List[U]]:
@@ -63,8 +63,8 @@ class Mapper:
     def map(
         self,
         instance: T,
-        to_type: Union[Type[U], Dict[Type[U], Type[U]]],
-        from_type: Type[T] = None,
+        to_type: Union[Type[U], Literal[object], Dict[Type[Any], Type[Any]]],
+        from_type: Union[Type, object, None] = None,
     ) -> U:
         from_type = type(instance) if from_type is None else from_type
 

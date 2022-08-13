@@ -1,6 +1,14 @@
-import structlog
-from structlog.contextvars import merge_contextvars
-from logging import Logger, basicConfig, INFO, DEBUG
+from pythonjsonlogger.jsonlogger import JsonFormatter
+from logging import (
+    Logger,
+    INFO,
+    DEBUG,
+    getLogger,
+    StreamHandler,
+    LoggerAdapter,
+    root,
+    getLevelName,
+)
 from datetime import datetime, timezone
 from injector import Binder, singleton
 from expert_dollup.shared.starlette_injection import (
@@ -10,39 +18,39 @@ from expert_dollup.shared.starlette_injection import (
 )
 
 
+class LoggerContext(LoggerAdapter):
+    def process(self, msg, kwargs):
+        kwargs["extra"].update(self.extra)
+        return msg, kwargs
+
+
 def bind_logger(binder: Binder) -> None:
-    def add_timestamp(_, __, event_dict):
-        event_dict["timestamp"] = str(datetime.now(timezone.utc).isoformat())
-        return event_dict
-
-    structlog.configure(
-        processors=[
-            merge_contextvars,
-            structlog.stdlib.filter_by_level,
-            structlog.stdlib.add_log_level,
-            structlog.stdlib.add_logger_name,
-            add_timestamp,
-            structlog.processors.StackInfoRenderer(),
-            structlog.processors.format_exc_info,
-            structlog.processors.UnicodeDecoder(),
-            structlog.dev.ConsoleRenderer(),
-            structlog.processors.JSONRenderer(indent=1, sort_keys=True),
-        ],
-        context_class=dict,
-        logger_factory=structlog.stdlib.LoggerFactory(),
-        wrapper_class=structlog.stdlib.BoundLogger,
-        cache_logger_on_first_use=True,
+    LOG_LEVEL = DEBUG if is_development() else INFO
+    json_formatter = JsonFormatter(
+        timestamp=True, static_fields=dict(level=getLevelName(LOG_LEVEL))
     )
+    logHandler = StreamHandler()
+    logHandler.setFormatter(json_formatter)
 
-    basicConfig(level=DEBUG if is_development() else INFO)
+    root.handlers = [logHandler]
+    root.setLevel(LOG_LEVEL)
+
+    for name in root.manager.loggerDict.keys():
+        getLogger(name).handlers = []
+        getLogger(name).propagate = True
+
+    logger = getLogger("expert_dollup")
+    logger.propagate = True
 
     binder.bind(
         Logger,
-        to=lambda: structlog.get_logger(),
+        to=lambda: logger,
         scope=singleton,
     )
     binder.bind(
         LoggerFactory,
-        to=lambda: PureBinding(lambda name: structlog.get_logger(name)),
+        to=lambda: PureBinding(
+            lambda name: LoggerContext(logger, {"class_name": name})
+        ),
         scope=singleton,
     )

@@ -10,6 +10,7 @@ from .expert_dollup_db import (
     DecimalFieldValueDao,
     ReferenceIdDao,
     FormulaDependencyGraphDao,
+    ComputedValueDao,
 )
 from .storage_connectors.storage_client import StorageClient
 
@@ -42,36 +43,38 @@ ReportRowDictDao = Dict[str, ReportDefinitionColumnDictDao]
 ReportRowsCacheDao = List[ReportRowDictDao]
 
 
-class ComputedValueDao(BaseModel):
-    label: str
-    value: PrimitiveUnionDao
-    unit: str
-
-
 class ReportRowDao(BaseModel):
     node_id: UUID
     formula_id: UUID
-    element_id: UUID
+    element_def_id: UUID
     child_reference_id: UUID
-    columns: List[PrimitiveUnionDao]
+    columns: List[ComputedValueDao]
     row: ReportRowDictDao
+
+
+class StageColumnDao(BaseModel):
+    label: str
+    unit: Optional[str]
+    is_visible: bool
 
 
 class ReportStageDao(BaseModel):
     summary: ComputedValueDao
+    columns: List[StageColumnDao]
     rows: List[ReportRowDao]
 
 
 class ReportDao(BaseModel):
+    name: str
+    datasheet_id: UUID
     stages: List[ReportStageDao]
     summaries: List[ComputedValueDao]
     creation_date_utc: datetime
 
 
 class StagedFormulaDao(BaseModel):
-
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     attached_to_type_id: UUID
     name: str = Field(max_length=64)
     expression: str

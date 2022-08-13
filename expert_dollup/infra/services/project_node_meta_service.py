@@ -1,4 +1,4 @@
-from typing import Awaitable, List
+from typing import List
 from uuid import UUID
 from expert_dollup.infra.expert_dollup_db import (
     ProjectNodeMetaDao,
@@ -42,9 +42,7 @@ class ProjectNodeMetaService(CollectionServiceProxy[ProjectNodeMeta]):
 
         return [record.get("definition") for record in records]
 
-    async def find_root_sections(
-        self, project_id: UUID
-    ) -> Awaitable[List[ProjectNodeMeta]]:
+    async def find_root_sections(self, project_id: UUID) -> List[ProjectNodeMeta]:
         results = await self.find_by(
             ProjectNodeMetaFilter(
                 project_id=project_id, display_query_internal_id=project_id
@@ -55,7 +53,7 @@ class ProjectNodeMetaService(CollectionServiceProxy[ProjectNodeMeta]):
 
     async def find_root_section_nodes(
         self, project_id: UUID, root_section_def_id: UUID
-    ) -> Awaitable[List[ProjectNodeMeta]]:
+    ) -> List[ProjectNodeMeta]:
         results = await self.find_by(
             ProjectNodeMetaFilter(
                 project_id=project_id, display_query_internal_id=root_section_def_id
@@ -65,7 +63,7 @@ class ProjectNodeMetaService(CollectionServiceProxy[ProjectNodeMeta]):
 
     async def find_form_content(
         self, project_id: UUID, form_def_id: UUID
-    ) -> Awaitable[List[ProjectNodeMeta]]:
+    ) -> List[ProjectNodeMeta]:
         results = await self.find_by(
             ProjectNodeMetaFilter(
                 project_id=project_id, display_query_internal_id=form_def_id

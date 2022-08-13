@@ -12,7 +12,7 @@ class ReportCloudObject(ObjectStorage[Report, ReportKey]):
 
     async def save(self, ctx: ReportKey, report: Report):
         path = self.get_url(ctx)
-        dao = self.mapper.map(report, ReportDao)
+        dao: ReportDao = self.mapper.map(report, ReportDao)
         await self.storage.upload_binary(
             path,
             JsonSerializer.encode(dao.dict()),

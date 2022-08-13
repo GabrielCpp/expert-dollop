@@ -3,7 +3,7 @@ from uuid import UUID
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional, Dict, Union
 from expert_dollup.shared.database_services import QueryFilter
-from .values_union import PrimitiveUnion
+from .values_union import PrimitiveWithNoneUnion
 
 
 @dataclass
@@ -57,7 +57,7 @@ class FlatAst:
 @dataclass
 class FormulaExpression:
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     attached_to_type_id: UUID
     name: str
     expression: str
@@ -96,7 +96,7 @@ class UnitInstance:
     path: List[UUID]
     name: str
     calculation_details: str
-    result: PrimitiveUnion
+    result: PrimitiveWithNoneUnion
 
     @property
     def report_dict(self) -> dict:
@@ -122,7 +122,7 @@ class UnitInstanceCacheKey:
 
 class FormulaFilter(QueryFilter):
     id: Optional[UUID]
-    project_def_id: Optional[UUID]
+    project_definition_id: Optional[UUID]
     attached_to_type_id: Optional[UUID]
     name: Optional[str]
     expression: Optional[str]

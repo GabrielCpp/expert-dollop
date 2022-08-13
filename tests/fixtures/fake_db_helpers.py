@@ -1,20 +1,20 @@
-from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Callable, List, Dict, Any, Type
+from typing import Callable, List, Dict, Type, TypeVar, Union
 from injector import Injector
 from inspect import isclass
 from shutil import rmtree
 from pydantic.main import BaseModel
-from expert_dollup.infra import services
-from expert_dollup.infra.storage_connectors.storage_client import StorageClient
 from expert_dollup.shared.database_services import DbConnection
+from expert_dollup.shared.database_services.adapter_interfaces import CollectionService
+
+Domain = TypeVar("Domain")
 
 
 class FakeDb:
     def __init__(self):
         self.collections: Dict[Type, List[object]] = defaultdict(list)
 
-    def all(self, object_type: Type) -> List[object]:
+    def all(self, object_type: Type[Domain]) -> List[Domain]:
         return self.collections[object_type]
 
     def get_only_one(self, object_type: Type) -> object:
@@ -25,8 +25,8 @@ class FakeDb:
         return objects[0]
 
     def get_only_one_matching(
-        self, object_type: Type, predicate: Callable[[object], bool]
-    ) -> object:
+        self, object_type: Type[Domain], predicate: Callable[[object], bool]
+    ) -> Domain:
         objects = self.collections[object_type]
         results = [
             matching_object
@@ -36,7 +36,7 @@ class FakeDb:
         assert len(results) == 1
         return results[0]
 
-    def add(self, *args) -> object:
+    def add(self, *args: Domain) -> Union[Domain, List[Domain]]:
         first_object = args[0]
         self.collections[type(first_object)].extend(args)
         return first_object if len(args) == 1 else args
@@ -46,29 +46,10 @@ class FakeDb:
             self.collections[object_type].extend(objects)
 
 
-class DbFixtureGenerator(ABC):
-    @property
-    @abstractmethod
-    def db() -> FakeDb:
-        pass
-
-    @abstractmethod
-    def generate(self) -> None:
-        pass
-
-
 class DbFixtureHelper:
     def __init__(self, injector: Injector, dal: DbConnection):
         self.injector: Injector = injector
         self.dal = dal
-        self.services_by_domain: Dict[Type, Type] = {}
-
-    def load_services(self, services) -> "DbFixtureHelper":
-        for class_type in services.__dict__.values():
-            if isclass(class_type):
-                self.services_by_domain[class_type.Meta.domain] = class_type
-
-        return self
 
     async def insert_daos(self, service_type: Type, daos: List[BaseModel]):
         service = self.injector.get(service_type)
@@ -79,22 +60,15 @@ class DbFixtureHelper:
         rmtree("/tmp/expertdollup", ignore_errors=True)
 
         for domain_type, objects in fake_db.collections.items():
-            assert (
-                domain_type in self.services_by_domain
-            ), f"No service for domain {domain_type.__name__}"
-            service_type = self.services_by_domain[domain_type]
+            service_type = CollectionService[domain_type]
             service = self.injector.get(service_type)
             await service.insert_many(objects)
 
-    async def load_fixtures(
-        self, *generator_types: List[Type[DbFixtureGenerator]]
-    ) -> FakeDb:
+    async def load_fixtures(self, *build_db_slices: Callable[[], FakeDb]) -> FakeDb:
         db = FakeDb()
 
-        for generator_type in generator_types:
-            generator = generator_type()
-            generator.generate()
-            db.merge(generator.db)
+        for build_db_slice in build_db_slices:
+            db.merge(build_db_slice())
 
         await self.init_db(db)
         return db

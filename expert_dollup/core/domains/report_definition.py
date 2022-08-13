@@ -13,7 +13,7 @@ ReportRowsCache = List[ReportRowDict]
 
 @dataclass
 class ReportRowKey:
-    project_def_id: UUID
+    project_definition_id: UUID
     report_definition_id: UUID
 
 
@@ -68,10 +68,12 @@ class ReportStructure:
 @dataclass
 class ReportDefinition:
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     name: str
     structure: ReportStructure
+    distributable: bool
 
 
 class ReportDefinitionFilter(QueryFilter):
-    project_def_id: UUID
+    project_definition_id: Optional[UUID]
+    distributable: Optional[bool]

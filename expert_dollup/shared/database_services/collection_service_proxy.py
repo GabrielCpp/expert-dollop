@@ -1,4 +1,5 @@
 from typing import Callable, TypeVar, List, Optional, Union, Type, Dict, Any
+from typing_extensions import TypeAlias
 from inspect import isclass
 from expert_dollup.shared.automapping import Mapper
 from .query_filter import QueryFilter
@@ -9,7 +10,7 @@ from .adapter_interfaces import (
 )
 
 Domain = TypeVar("Domain")
-WhereFilter = Union[QueryFilter, QueryBuilder]
+WhereFilter: TypeAlias = Union[QueryFilter, QueryBuilder]
 Id = TypeVar("Id")
 
 
@@ -31,6 +32,10 @@ class CollectionServiceProxy(CollectionService[Domain]):
     @property
     def dao(self) -> Type:
         return self._impl.dao
+
+    @property
+    def batch_size(self) -> int:
+        return self._impl.batch_size
 
     async def insert(self, domain: Domain):
         return await self._impl.insert(domain)

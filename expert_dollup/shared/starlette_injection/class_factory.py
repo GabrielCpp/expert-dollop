@@ -16,7 +16,6 @@ class ArgProvider(Provider):
             key: injector.get(arg_type) for key, arg_type in self.kwargs.items()
         }
         mapped_kwargs.update(self.constants)
-
         return self.type_class(**mapped_kwargs)
 
     def __repr__(self) -> str:

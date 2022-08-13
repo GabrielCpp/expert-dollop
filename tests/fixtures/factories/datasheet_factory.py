@@ -1,5 +1,6 @@
 from decimal import Decimal
 from typing import Dict, List, Optional, Union, Type, Protocol
+from typing_extensions import TypeAlias
 from dataclasses import dataclass, field
 from datetime import datetime
 from collections import defaultdict
@@ -35,7 +36,7 @@ class FormulaLike(Protocol):
 
 @dataclass
 class CustomDatasheetInstancePackage:
-    datasheet_definition: DatasheetDefinition
+    project_definition: ProjectDefinition
     datasheet_definition_elements: List[DatasheetDefinitionElement]
     datasheet: Datasheet
     datasheet_elements: List[DatasheetElement]
@@ -44,7 +45,7 @@ class CustomDatasheetInstancePackage:
     translations: List[Translation]
 
 
-PropertyTypeUnion = Union[Type[int], Type[Decimal], Type[str], Type[bool]]
+PropertyTypeUnion: TypeAlias = Union[Type[int], Type[Decimal], Type[str], Type[bool]]
 
 
 class ElementSeed:
@@ -70,6 +71,9 @@ class ElementSeed:
     @property
     def id(self):
         return make_uuid(self.name)
+
+    def make_element_id(self, index: int) -> UUID:
+        return make_uuid(f"{self.name}-{index}")
 
     @property
     def name(self) -> str:
@@ -222,7 +226,7 @@ class DatasheetSeed:
     properties: Dict[str, PropertyTypeUnion]
     element_seeds: Dict[str, ElementSeed]
     collection_seeds: Dict[str, CollectionSeed]
-    locales: List[str] = field(default_factory=lambda: ["fr_CA", "en_US"])
+    locales: List[str] = field(default_factory=lambda: ["fr-CA", "en-US"])
     name: str = "test"
     formulas: Optional[List[FormulaLike]] = None
 
@@ -243,21 +247,21 @@ class DatasheetSeed:
 
 class DatasheetInstanceFactory:
     @staticmethod
-    def build(datasheet_seed: DatasheetSeed) -> CustomDatasheetInstancePackage:
-        datasheet_definition = DatasheetDefinition(
-            id=make_uuid(f"{datasheet_seed.name}-definition"),
-            name=f"{datasheet_seed.name}-definition",
-            properties={
-                name: dict(DEFAULT_VALUE_MAPPING[property_type])
-                for name, property_type in datasheet_seed.properties.items()
-            },
-            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
+    def build(
+        datasheet_seed: DatasheetSeed, project_definition: ProjectDefinition
+    ) -> CustomDatasheetInstancePackage:
+        original_owner_organization_id = make_uuid(
+            f"{project_definition.name}-default-datasheet-owner"
         )
+        project_definition.properties = {
+            name: dict(DEFAULT_VALUE_MAPPING[property_type])
+            for name, property_type in datasheet_seed.properties.items()
+        }
 
         datasheet = Datasheet(
-            id=make_uuid(datasheet_seed.name),
+            id=make_uuid(f"{project_definition.name}-default-datasheet"),
             is_staged=False,
-            datasheet_def_id=datasheet_definition.id,
+            project_definition_id=project_definition.id,
             name=datasheet_seed.name,
             from_datasheet_id=make_uuid(datasheet_seed.name),
             creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
@@ -268,7 +272,7 @@ class DatasheetInstanceFactory:
                 id=element_seed.id,
                 unit_id=element_seed.unit_id,
                 is_collection=element_seed.is_collection,
-                datasheet_def_id=datasheet_definition.id,
+                project_definition_id=project_definition.id,
                 order_index=index,
                 name=element_seed.name,
                 default_properties={
@@ -288,12 +292,14 @@ class DatasheetInstanceFactory:
             DatasheetElement(
                 datasheet_id=datasheet.id,
                 element_def_id=element_seed.id,
-                child_element_reference=zero_uuid(),
+                child_element_reference=element_seed.make_element_id(0),
+                ordinal=0,
                 properties={
                     name: element_seed.seed_value(property_type, index)
                     for name, property_type in datasheet_seed.properties.items()
                 },
                 original_datasheet_id=datasheet.id,
+                original_owner_organization_id=original_owner_organization_id,
                 creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
             )
             for index, element_seed in enumerate(datasheet_seed.element_seeds.values())
@@ -302,7 +308,7 @@ class DatasheetInstanceFactory:
         label_collections = [
             LabelCollection(
                 id=collection_seed.id,
-                datasheet_definition_id=datasheet_definition.id,
+                project_definition_id=project_definition.id,
                 name=collection_seed.name,
                 attributes_schema=collection_seed.attributes_schema,
             )
@@ -332,7 +338,7 @@ class DatasheetInstanceFactory:
             translations.extend(collection_seed.translations)
 
         return CustomDatasheetInstancePackage(
-            datasheet_definition=datasheet_definition,
+            project_definition=project_definition,
             datasheet=datasheet,
             datasheet_definition_elements=datasheet_definition_elements,
             datasheet_elements=datasheet_elements,

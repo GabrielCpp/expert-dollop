@@ -8,7 +8,6 @@ from expert_dollup.shared.starlette_injection import (
 )
 from expert_dollup.app.controllers.datasheet.datasheet_controller import *
 from expert_dollup.app.dtos import *
-from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.controllers.datasheet.datasheet_element_controller import *
 from .types import datasheet_element

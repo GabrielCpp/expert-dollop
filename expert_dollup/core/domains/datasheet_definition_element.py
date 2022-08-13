@@ -17,7 +17,7 @@ class DatasheetDefinitionElement:
     id: UUID
     unit_id: str
     is_collection: bool
-    datasheet_def_id: UUID
+    project_definition_id: UUID
     order_index: int
     name: str
     default_properties: Dict[str, DatasheetDefinitionElementProperty]
@@ -39,7 +39,7 @@ class DatasheetDefinitionElementFilter(QueryFilter):
     id: Optional[UUID]
     unit_id: Optional[str]
     is_collection: Optional[bool]
-    datasheet_def_id: Optional[UUID]
+    project_definition_id: Optional[UUID]
     order_index: Optional[int]
     default_properties: Optional[DatasheetDefinitionElementProperty]
     tags: Optional[List[UUID]]

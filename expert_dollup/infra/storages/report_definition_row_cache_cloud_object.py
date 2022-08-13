@@ -36,5 +36,5 @@ class ReportDefinitionRowCacheCloudObject(ObjectStorage[ReportRowsCache, ReportR
 
         return domains
 
-    def get_url(self, ctx: ReportRowsCache) -> str:
-        return f"project_definitions/{ctx.project_def_id}/report_definitions/{ctx.report_definition_id}/rows_cache.json.gzip"
+    def get_url(self, ctx: ReportRowKey) -> str:
+        return f"project_definitions/{ctx.project_definition_id}/report_definitions/{ctx.report_definition_id}/rows_cache.json.gzip"

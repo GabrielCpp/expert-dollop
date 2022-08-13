@@ -10,7 +10,7 @@ class Datasheet:
     id: UUID
     name: str
     is_staged: bool
-    datasheet_def_id: UUID
+    project_definition_id: UUID
     from_datasheet_id: UUID
     creation_date_utc: datetime
 
@@ -25,6 +25,6 @@ class DatasheetFilter(QueryFilter):
     id: Optional[UUID]
     name: Optional[str]
     is_staged: Optional[bool]
-    datasheet_def_id: Optional[UUID]
+    project_definition_id: Optional[UUID]
     from_datasheet_id: Optional[UUID]
     creation_date_utc: Optional[datetime]

@@ -1,25 +1,17 @@
 from typing import List
 from uuid import UUID
-from expert_dollup.core.domains import (
-    Formula,
-    FormulaExpression,
-    UnitInstanceCache,
-    UnitInstanceCacheKey,
-)
+from expert_dollup.core.domains import *
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.units import FormulaResolver
-from expert_dollup.infra.services import (
-    FormulaService,
-    ProjectService,
-)
+from expert_dollup.shared.database_services import CollectionService
 
 
 class FormulaUseCase:
     def __init__(
         self,
-        formula_service: FormulaService,
+        formula_service: CollectionService[Formula],
         formula_resolver: FormulaResolver,
-        project_service: ProjectService,
+        project_service: CollectionService[ProjectDetails],
         formula_instance_service: ObjectStorage[
             UnitInstanceCache, UnitInstanceCacheKey
         ],
@@ -51,7 +43,7 @@ class FormulaUseCase:
     async def compute_project_formulas(self, project_id) -> UnitInstanceCache:
         project_details = await self.project_service.find_by_id(project_id)
         injector = await self.formula_resolver.compute_all_project_formula(
-            project_id, project_details.project_def_id
+            project_id, project_details.project_definition_id
         )
         instances = injector.unit_instances
         await self.formula_instance_service.save(

@@ -11,14 +11,14 @@ class RessourceAuthDatabase(DbConnection):
 
 class RessourceDao(BaseModel):
     class Meta:
-        pk = ("id", "user_id")
+        pk = ("id", "organization_id")
 
     class Config:
         title = "ressource"
 
     id: UUID
     kind: str = Field(max_length=64)
-    user_id: UUID
+    organization_id: UUID
     permissions: List[str]
     name: List[str]
     creation_date_utc: datetime
@@ -36,3 +36,30 @@ class UserDao(BaseModel):
     id: UUID
     email: str
     permissions: List[str]
+    organization_id: UUID
+
+
+class OrganizationLimitsDao(BaseModel):
+    class Meta:
+        pk = "id"
+
+    class Config:
+        title = "organization_limits"
+
+    active_project_count: int
+    active_project_overall_collection_count: int
+    active_datasheet_count: int
+    active_datasheet_custom_element_count: int
+
+
+class OrganizationDao(BaseModel):
+    class Meta:
+        pk = "id"
+
+    class Config:
+        title = "organization"
+
+    id: UUID
+    name: str
+    email: str
+    limits: OrganizationLimitsDao

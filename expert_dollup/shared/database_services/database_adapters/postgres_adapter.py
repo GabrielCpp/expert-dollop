@@ -203,11 +203,6 @@ class PostgresConnection(DbConnection):
                 await con.execute(text(f"DELETE FROM {table};"))
                 await con.execute(text(f'ALTER TABLE "{table}" ENABLE TRIGGER ALL;'))
 
-    async def drop_db(self):
-        async with self._engine.begin() as conn:
-            await conn.execute(text(f"DROP SCHEMA public CASCADE;"))
-            await conn.execute(text(f"CREATE SCHEMA public;"))
-
     async def connect(self) -> None:
         pass
 
@@ -327,6 +322,10 @@ class PostgresTableService(CollectionService[Domain]):
     @property
     def dao(self) -> Type:
         return self._dao
+
+    @property
+    def batch_size(self) -> int:
+        return 1000
 
     async def insert(self, domain: Domain):
         value = self._dao_mapper.map_to_dict(domain)

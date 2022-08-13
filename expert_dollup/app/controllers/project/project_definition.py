@@ -19,7 +19,7 @@ router = APIRouter()
 @router.get("/project_definition/{project_definition_id}")
 async def find_project_definition(
     project_definition_id: UUID,
-    usecase=Depends(Inject(ProjectDefinitonUseCase)),
+    usecase: ProjectDefinitonUseCase = Depends(Inject(ProjectDefinitonUseCase)),
     handler=Depends(Inject(RequestHandler)),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:read"])
@@ -35,7 +35,7 @@ async def find_project_definition(
 @router.post("/project_definition")
 async def create_project_definition(
     project_definition: ProjectDefinitionDto,
-    usecase=Depends(Inject(ProjectDefinitonUseCase)),
+    usecase: ProjectDefinitonUseCase = Depends(Inject(ProjectDefinitonUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
     user=Depends(CanPerformRequired("project_definition:create")),
 ):

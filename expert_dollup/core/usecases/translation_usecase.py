@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Iterable, Optional
 from itertools import chain
 from expert_dollup.shared.database_services import Page, Paginator, CollectionService
 from expert_dollup.core.exceptions import RessourceNotFound, ValidationError
@@ -50,16 +50,9 @@ class TranslationUseCase:
                 "ressource_id", "Missing an attached ressource"
             )
 
-        await self.service.update(domain)
+        await self.service.upserts([domain])
 
-        return await self.find_by_id(
-            TranslationId(
-                ressource_id=domain.ressource_id,
-                scope=domain.scope,
-                locale=domain.locale,
-                name=domain.name,
-            )
-        )
+        return domain
 
     async def find_by_id(self, id: TranslationId) -> Translation:
         result = await self.service.find_by_id(id)
@@ -83,15 +76,15 @@ class TranslationUseCase:
 
     async def get_translation_bundle(
         self, query: TranslationRessourceLocaleQuery, user: User
-    ) -> List[Translation]:
+    ) -> Iterable[Translation]:
         if query.locale == "en":
-            query.locale = "en_US"
+            query.locale = "en-US"
 
         if query.locale == "fr":
-            query.locale = "fr_CA"
+            query.locale = "fr-CA"
 
         ressource = await self.ressource_service.find_by_id(
-            RessourceId(id=query.ressource_id, user_id=user.id)
+            RessourceId(id=query.ressource_id, organization_id=user.organization_id)
         )
 
         if ressource.kind == "project":
@@ -104,14 +97,14 @@ class TranslationUseCase:
 
             project_def_translations = await self.service.find_by(
                 TranslationRessourceLocaleQuery(
-                    ressource_id=project_details.project_def_id,
+                    ressource_id=project_details.project_definition_id,
                     locale=query.locale,
                 )
             )
 
             datasheet_translations = await self.service.find_by(
                 TranslationRessourceLocaleQuery(
-                    ressource_id=datasheet.datasheet_def_id,
+                    ressource_id=datasheet.project_definition_id,
                     locale=query.locale,
                 )
             )

@@ -7,7 +7,7 @@ from .inject_controller import Inject
 
 
 class AuthenticationRequired:
-    def __call__(
+    async def __call__(
         self, request: Request, auth: AuthService = Depends(Inject(AuthService))
     ):
         user = auth.authentification_required(request)

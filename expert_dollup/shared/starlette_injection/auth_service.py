@@ -1,26 +1,28 @@
-from abc import ABC, abstractclassmethod
-from typing import Union, List
+from abc import ABC, abstractmethod
+from typing import Union, List, Dict, Any, TypeVar, Generic
 from uuid import UUID
 from starlette.requests import Request
 
+User = TypeVar("User")
 
-class AuthService(ABC):
-    @abstractclassmethod
-    def authentification_required(self, request: Request):
+
+class AuthService(ABC, Generic[User]):
+    @abstractmethod
+    def authentification_required(self, request: Request) -> Dict[str, Any]:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     async def can_perform_on_required(
         self,
         request: Request,
         ressource_id: UUID,
         permissions: Union[str, List[str]],
         user_permissions: Union[str, List[str]] = [],
-    ):
+    ) -> User:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     async def can_perform_required(
         self, request: Request, permissions: Union[str, List[str]]
-    ):
+    ) -> User:
         pass

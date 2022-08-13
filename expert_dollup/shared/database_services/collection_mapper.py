@@ -4,7 +4,6 @@ from pydantic import BaseModel
 
 Domain = TypeVar("Domain")
 Record = TypeVar("Record")
-import asyncpg
 
 
 class CollectionMapper:

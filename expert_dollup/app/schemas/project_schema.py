@@ -15,7 +15,6 @@ from expert_dollup.shared.starlette_injection import (
 )
 from expert_dollup.app.controllers.project.project import *
 from expert_dollup.app.dtos import *
-from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
 from .types import query, mutation
 
@@ -37,7 +36,7 @@ async def resolve_find_projects(
     )
 
     result = await handler.handle(
-        ProjectDetailsDto, UserRessourceQuery(user.id), first, after
+        ProjectDetailsDto, UserRessourceQuery(user.organization_id), first, after
     )
 
     return result
@@ -59,7 +58,7 @@ async def resolve_create_project(
 
 
 @query.field("findProjectDetails")
-@inject_graphql_route(find_project_details)
+@inject_graphql_route(find_project_details, ["project_id"])
 @convert_kwargs_to_snake_case
 async def resolve_create_project(
     _: Any,

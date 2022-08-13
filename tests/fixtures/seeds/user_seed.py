@@ -1,17 +1,39 @@
 from typing import List
-from expert_dollup.core.domains import User
+from dataclasses import dataclass
+from expert_dollup.core.domains import User, Organization, OrganizationLimits
 from expert_dollup.core.utils.ressource_permissions import all_permisions
 from ..factories.helpers import make_uuid
 
 
-def make_superuser(oauth_id: str = "testuser") -> User:
-    return User(
-        oauth_id=oauth_id,
-        id=make_uuid(oauth_id),
-        email="testuser@example.com",
-        permissions=all_permisions(),
+@dataclass
+class UserPackage:
+    organization: Organization
+    users: List[User]
+
+
+def make_root_user_org(oauth_id: str = "testuser", org_name="root_org") -> UserPackage:
+    email = f"{oauth_id}@example.com"
+    organization = Organization(
+        id=make_uuid(org_name),
+        name=org_name,
+        email=email,
+        limits=OrganizationLimits(
+            active_project_count=100,
+            active_project_overall_collection_count=1000,
+            active_datasheet_count=100,
+            active_datasheet_custom_element_count=5000,
+        ),
     )
 
-
-def make_default_users() -> List[User]:
-    return [make_superuser()]
+    return UserPackage(
+        organization=organization,
+        users=[
+            User(
+                oauth_id=oauth_id,
+                id=make_uuid(oauth_id),
+                email=email,
+                permissions=all_permisions(),
+                organization_id=organization.id,
+            )
+        ],
+    )

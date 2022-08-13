@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, List, Dict, Tuple
+from typing import Iterable, List, Dict, Tuple, Callable, Any
 from uuid import UUID
 from decimal import Decimal
 from collections import defaultdict
 from dataclasses import dataclass
 from asyncio import gather
-from expert_dollup.infra.services import DatasheetElementService
+from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.core.logits import FormulaInjector
 from .formula_resolver import FormulaResolver
 from .report_row_cache import ReportRowCache
@@ -25,12 +25,12 @@ INTERNAL_BUCKET_NAME = "internal"
 
 def round_number(number: Decimal, digits: int, method: str) -> Decimal:
     assert method == "truncate", "method is the only method supported"
-    stepper = Decimal(10.0 ** digits)
+    stepper = Decimal(10.0**digits)
     return Decimal(int(stepper * Decimal(number))) / stepper
 
 
-def group_by_key(elements: Iterable, key: callable) -> dict:
-    element_by_key = defaultdict(list)
+def group_by_key(elements: Iterable, key: Callable[[Any], None]) -> dict:
+    element_by_key: Dict[Any, Any] = defaultdict(list)
 
     for element in elements:
         element_by_key[key(element)].append(element)
@@ -140,7 +140,6 @@ class JoinFormulaUnitInstances(JoinStep):
         report_definition = linking_data.report_definition
         self.element_attribute = report_definition.structure.datasheet_attribute
         self.formula_attribute = report_definition.structure.formula_attribute
-        self.null_uuid = zero_uuid()
         self.unit_instances_by_def_id = (
             JoinFormulaUnitInstances.get_unit_instances_by_def_id(
                 linking_data.unit_instances
@@ -216,7 +215,7 @@ class GroupDigestAssignation(MutateStep):
         )
 
     def apply(self, row: ReportRowDict) -> None:
-        columns = {}
+        columns: ReportDefinitionColumnDict = {}
         row[COLUMNS_BUCKET_NAME] = columns
 
         for column in self.first_pass_columns:
@@ -331,7 +330,6 @@ class ReportBuilder:
         stage_summary = self.linking_data.report_definition.structure.stage_summary
         report_summary = self.linking_data.report_definition.structure.report_summary
         columns = self.linking_data.report_definition.structure.columns
-        null_uuid = zero_uuid()
 
         def get_unit(row, unit):
             return unit.get(row) if isinstance(unit, AttributeBucket) else unit
@@ -341,11 +339,15 @@ class ReportBuilder:
                 node_id=row[FORMULA_BUCKET_NAME]["node_id"],
                 formula_id=formula_attribute.get(row),
                 element_def_id=element_attribute.get(row),
-                child_reference_id=null_uuid,
+                child_reference_id=self.linking_data.datasheet_elements_by_id[
+                    element_attribute.get(row)
+                ].child_element_reference,
                 columns=[
-                    ReportColumn(
+                    ComputedValue(
+                        label=column.name,
                         value=row[COLUMNS_BUCKET_NAME][column.name],
                         unit=get_unit(row, column.unit),
+                        is_visible=column.is_visible,
                     )
                     for column in columns
                 ],
@@ -358,6 +360,12 @@ class ReportBuilder:
         stages = [
             ReportStage(
                 rows=rows,
+                columns=[
+                    StageColumn(
+                        column.name, get_unit(rows[0], column.unit), column.is_visible
+                    )
+                    for column in columns
+                ],
                 summary=ComputedValue(
                     value=self.evaluation_context.evaluate_row(
                         stage_summary.summary.expression,
@@ -371,7 +379,7 @@ class ReportBuilder:
             for label, rows in report_rows_by_stage.items()
         ]
 
-        metas = {}
+        metas: Dict[str, Any] = {}
         scope = {
             "stages": stages,
             "round_number": round_number,
@@ -395,14 +403,18 @@ class ReportBuilder:
         ]
 
         return Report(
-            stages=stages, summaries=summaries, creation_date_utc=self.clock.utcnow()
+            name=self.linking_data.report_definition.name,
+            datasheet_id=self.linking_data.project_details.datasheet_id,
+            stages=stages,
+            summaries=summaries,
+            creation_date_utc=self.clock.utcnow(),
         )
 
 
 class ReportLinking:
     def __init__(
         self,
-        datasheet_element_service: DatasheetElementService,
+        datasheet_element_service: CollectionService[DatasheetElement],
         expression_evaluator: ExpressionEvaluator,
         report_row_cache_builder: ReportRowCache,
         formula_resolver: FormulaResolver,
@@ -453,12 +465,12 @@ class ReportLinking:
         rows, injector, datasheet_elements = await gather(
             self.report_row_cache_builder.refresh_cache(report_definition),
             self.formula_resolver.compute_all_project_formula(
-                project_details.id, project_details.project_def_id
+                project_details.id, project_details.project_definition_id
             ),
             self.datasheet_element_service.find_by(
                 DatasheetElementFilter(
                     datasheet_id=project_details.datasheet_id,
-                    child_element_reference=zero_uuid(),
+                    ordinal=0,
                 )
             ),
         )

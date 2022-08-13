@@ -1,6 +1,6 @@
-from os import environ
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, List, Optional, Union, Type, Dict, Any, Callable
+from typing_extensions import TypeAlias
 from inspect import isclass
 from urllib.parse import urlparse
 from pydantic import BaseModel
@@ -24,14 +24,10 @@ class DbConnection(ABC):
     async def truncate_db(self, tables: Optional[List[str]] = None):
         pass
 
-    @abstractmethod
-    async def drop_db(self):
-        pass
-
 
 class QueryBuilder(ABC):
     @abstractmethod
-    def select(self, *names: List[str]) -> "QueryBuilder":
+    def select(self, *names: str) -> "QueryBuilder":
         pass
 
     @abstractmethod
@@ -61,7 +57,7 @@ class QueryBuilder(ABC):
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")
-WhereFilter = Union[QueryFilter, QueryBuilder]
+WhereFilter: TypeAlias = Union[QueryFilter, QueryBuilder]
 
 
 class CollectionService(ABC, Generic[Domain]):
@@ -73,6 +69,11 @@ class CollectionService(ABC, Generic[Domain]):
     @property
     @abstractmethod
     def dao(self) -> Type:
+        pass
+
+    @property
+    @abstractmethod
+    def batch_size(self) -> int:
         pass
 
     @abstractmethod
@@ -154,6 +155,26 @@ class Paginator(ABC, Generic[Domain]):
 
     @abstractmethod
     def make_record_token(self, domain: Domain) -> str:
+        pass
+
+
+class TokenEncoder(ABC):
+    @abstractmethod
+    def extend_query(
+        self, builder: WhereFilter, limit: int, next_page_token: Optional[str]
+    ) -> QueryBuilder:
+        pass
+
+    @abstractmethod
+    def encode(self, dao: BaseModel):
+        pass
+
+    @abstractmethod
+    def encode_field(self, dao_id: str):
+        pass
+
+    @abstractmethod
+    def decode(self, cursor: str) -> Any:
         pass
 
 

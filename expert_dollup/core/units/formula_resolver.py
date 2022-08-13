@@ -10,59 +10,48 @@ from expert_dollup.shared.database_services import log_execution_time_async, Sto
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.exceptions import RessourceNotFound
 from expert_dollup.shared.starlette_injection import LoggerFactory
-from expert_dollup.core.domains import (
-    Formula,
-    FormulaExpression,
-    FormulaDependencyGraph,
-    FormulaDependency,
-    FormulaFilter,
-)
-from expert_dollup.infra.services import (
-    FormulaService,
-    ProjectNodeService,
-    ProjectDefinitionNodeService,
-)
-from expert_dollup.core.builders import UnitInstanceBuilder
-from expert_dollup.core.logits import (
-    FormulaVisitor,
-    FormulaInjector,
-    FormulaUnit,
-    FieldUnit,
-)
+from expert_dollup.shared.database_services import CollectionService, Plucker
+from expert_dollup.core.domains import *
+from expert_dollup.core.builders import *
+from expert_dollup.core.logits import *
 import expert_dollup.core.logits.formula_processor as formula_processor
 
 
 class FormulaResolver:
     def __init__(
         self,
-        formula_service: FormulaService,
-        project_node_service: ProjectNodeService,
-        project_definition_node_service: ProjectDefinitionNodeService,
+        formula_service: CollectionService[Formula],
+        project_node_service: CollectionService[ProjectNode],
+        node_plucker: Plucker[ProjectNode],
+        project_definition_node_service: CollectionService[ProjectDefinitionNode],
         unit_instance_builder: UnitInstanceBuilder,
         stage_formulas_storage: ObjectStorage[StagedFormulas, StagedFormulasKey],
         logger: LoggerFactory,
     ):
         self.formula_service = formula_service
         self.project_node_service = project_node_service
+        self.node_plucker = node_plucker
         self.project_definition_node_service = project_definition_node_service
         self.unit_instance_builder = unit_instance_builder
         self.stage_formulas_storage = stage_formulas_storage
         self.logger = logger.create(__name__)
 
-    async def parse_many(self, formula_expressions: List[FormulaExpression]) -> Formula:
-        project_def_id = formula_expressions[0].project_def_id
+    async def parse_many(
+        self, formula_expressions: List[FormulaExpression]
+    ) -> List[Formula]:
+        project_definition_id = formula_expressions[0].project_definition_id
         for formula_expression in formula_expressions:
-            if formula_expression.project_def_id != project_def_id:
+            if formula_expression.project_definition_id != project_definition_id:
                 raise Exception(
-                    "When importing a batch of formula they must all have same project_def_id"
+                    "When importing a batch of formula they must all have same project_definition_id"
                 )
 
         formulas_id_by_name = await self.formula_service.get_formulas_id_by_name(
-            project_def_id
+            project_definition_id
         )
         fields_id_by_name = (
             await self.project_definition_node_service.get_fields_id_by_name(
-                project_def_id
+                project_definition_id
             )
         )
 
@@ -72,7 +61,7 @@ class FormulaResolver:
 
             formulas_id_by_name[formula_expression.name] = formula_expression.id
 
-        formula_dependencies: Dict[str, Set[str]] = {
+        formula_dependencies: Dict[str, FormulaVisitor] = {
             formula_expression.name: FormulaVisitor.get_names(
                 formula_expression.expression
             )
@@ -102,7 +91,7 @@ class FormulaResolver:
         formulas = [
             Formula(
                 id=formula_expression.id,
-                project_def_id=formula_expression.project_def_id,
+                project_definition_id=formula_expression.project_definition_id,
                 attached_to_type_id=formula_expression.attached_to_type_id,
                 name=formula_expression.name,
                 expression=formula_expression.expression,
@@ -133,7 +122,9 @@ class FormulaResolver:
         return formulas
 
     async def parse(self, formula_expression: FormulaExpression) -> Formula:
-        visitor = FormulaVisitor.get_names(formula_expression.expression)
+        visitor: FormulaVisitor = FormulaVisitor.get_names(
+            formula_expression.expression
+        )
 
         if formula_expression.name in visitor.var_names:
             raise Exception(f"Formua {formula_expression.name} is self dependant")
@@ -144,11 +135,11 @@ class FormulaResolver:
                 raise Exception(f"Function {name} not found in [{fn_names}]")
 
         formulas_id_by_name = await self.formula_service.get_formulas_id_by_name(
-            formula_expression.project_def_id, visitor.var_names
+            formula_expression.project_definition_id, visitor.var_names
         )
         fields_id_by_name = (
             await self.project_definition_node_service.get_fields_id_by_name(
-                formula_expression.project_def_id, visitor.var_names
+                formula_expression.project_definition_id, visitor.var_names
             )
         )
         unkowns_names = (
@@ -165,7 +156,7 @@ class FormulaResolver:
 
         formula = Formula(
             id=formula_expression.id,
-            project_def_id=formula_expression.project_def_id,
+            project_definition_id=formula_expression.project_definition_id,
             attached_to_type_id=formula_expression.attached_to_type_id,
             name=formula_expression.name,
             expression=formula_expression.expression,
@@ -188,7 +179,7 @@ class FormulaResolver:
         return [
             StagedFormula(
                 id=formula.id,
-                project_def_id=formula.project_def_id,
+                project_definition_id=formula.project_definition_id,
                 attached_to_type_id=formula.attached_to_type_id,
                 name=formula.name,
                 expression=formula.expression,
@@ -200,43 +191,51 @@ class FormulaResolver:
             for formula in formulas
         ]
 
-    async def build_staged_formulas(self, project_def_id: UUID) -> StagedFormulas:
+    async def build_staged_formulas(
+        self, project_definition_id: UUID
+    ) -> StagedFormulas:
         formulas = await self.formula_service.find_by(
-            FormulaFilter(project_def_id=project_def_id)
+            FormulaFilter(project_definition_id=project_definition_id)
         )
 
         return FormulaResolver.stage_formulas(formulas)
 
     async def refresh_staged_formulas_cache(
-        self, project_def_id: UUID
+        self, project_definition_id: UUID
     ) -> StagedFormulas:
-        staged_formulas = await self.build_staged_formulas(project_def_id)
+        staged_formulas = await self.build_staged_formulas(project_definition_id)
         await self.stage_formulas_storage.save(
-            StagedFormulasKey(project_def_id), staged_formulas
+            StagedFormulasKey(project_definition_id), staged_formulas
         )
         return staged_formulas
 
     @log_execution_time_async
-    async def get_staged_formulas(self, project_def_id: UUID) -> StagedFormulas:
+    async def get_staged_formulas(self, project_definition_id: UUID) -> StagedFormulas:
         try:
             staged_formulas = await self.stage_formulas_storage.load(
-                StagedFormulasKey(project_def_id)
+                StagedFormulasKey(project_definition_id)
             )
         except RessourceNotFound:
-            staged_formulas = await self.refresh_staged_formulas_cache(project_def_id)
+            self.logger.info(
+                "Refreshing formula cache",
+                extra=dict(project_definition_id=project_definition_id),
+            )
+            staged_formulas = await self.refresh_staged_formulas_cache(
+                project_definition_id
+            )
 
         return staged_formulas
 
     @log_execution_time_async
     async def compute_all_project_formula(
-        self, project_id: UUID, project_def_id: UUID
+        self, project_id: UUID, project_definition_id: UUID
     ) -> FormulaInjector:
         injector = FormulaInjector()
 
         with StopWatch(self.logger, "Fetching formula data"):
             nodes, staged_formulas = await gather(
                 self.project_node_service.get_all_fields(project_id),
-                self.get_staged_formulas(project_def_id),
+                self.get_staged_formulas(project_definition_id),
             )
 
         formula_by_id = {formula.id: formula for formula in staged_formulas}
@@ -262,3 +261,76 @@ class FormulaResolver:
             injector.precompute()
 
         return injector
+
+    @log_execution_time_async
+    async def compute_formula(
+        self,
+        project_id: UUID,
+        project_definition_id: UUID,
+        formula_references: List[UnitRef],
+    ) -> List[PrimitiveUnion]:
+        staged_formulas: StagedFormulas = await self.get_staged_formulas(
+            project_definition_id
+        )
+        formula_by_names = {formula.name: formula for formula in staged_formulas}
+        formula_by_ids = {formula.id: formula for formula in staged_formulas}
+
+        formula_dependencies = [
+            formula_reference.name for formula_reference in formula_references
+        ]
+        seen_formula_dependencies = set()
+        field_depencies = set()
+
+        while len(formula_dependencies) > 0:
+            name = formula_dependencies.pop()
+            self.check_existence(name, formula_by_names)
+            formula = formula_by_names[name]
+            seen_formula_dependencies.add(name)
+
+            for other_formula in formula.dependency_graph.formulas:
+                if not other_formula.name in seen_formula_dependencies:
+                    formula_dependencies.append(other_formula.name)
+
+            for formula_node in formula.dependency_graph.nodes:
+                field_depencies.add(formula_node.target_type_id)
+
+        nodes = await self.node_plucker.pluck_subressources(
+            ProjectNodeFilter(project_id=project_id),
+            lambda ids: NodePluckFilter(type_ids=ids),
+            list(field_depencies),
+        )
+        unit_instances = self.unit_instance_builder.build_with_fields(
+            staged_formulas, nodes
+        )
+
+        injector = FormulaInjector()
+
+        for node in nodes:
+            injector.add_unit(FieldUnit(node))
+
+        for formula_instance in unit_instances:
+            formula = formula_by_ids[formula_instance.formula_id]
+            injector.add_unit(
+                FormulaUnit(
+                    formula_instance,
+                    formula.dependency_graph.dependencies,
+                    formula.final_ast,
+                    injector,
+                )
+            )
+
+        return [
+            injector.get_one_value(
+                formula_reference.node_id,
+                formula_reference.path,
+                formula_reference.name,
+                0,
+            )
+            for formula_reference in formula_references
+        ]
+
+    def check_existence(self, name: str, formula_by_names: dict):
+        if not name in formula_by_names:
+            raise Exception(
+                f"Missing formula {name} in {list(formula_by_names.keys())}"
+            )

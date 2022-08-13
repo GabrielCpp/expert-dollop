@@ -22,9 +22,9 @@ class ProjectTreeBuilder:
             return ProjectNodeTree(roots=[])
 
         tree_depth = None
-        tree_node_map = defaultdict(list)
-        meta_map = {meta.type_id: meta for meta in metas}
-        def_map = defaultdict(list)
+        tree_node_map: Dict[str, List[ProjectNodeTreeNode]] = defaultdict(list)
+        meta_map: Dict[UUID, ProjectNodeMeta] = {meta.type_id: meta for meta in metas}
+        def_map: Dict[str, List[ProjectNodeMeta]] = defaultdict(list)
 
         for meta in metas:
             def_map[join_uuid_path(meta.definition.path)].append(meta)
@@ -46,10 +46,10 @@ class ProjectTreeBuilder:
                     )
                     del tree_node_map[children_path]
 
-        roots = []
+        roots: List[ProjectNodeTreeNode] = []
 
-        for nodes in tree_node_map.values():
-            roots.extend(nodes)
+        for tree_nodes in tree_node_map.values():
+            roots.extend(tree_nodes)
 
         return ProjectNodeTree(
             roots=self._build_tree_node_list_by_type(roots, meta_map, def_map)
@@ -59,9 +59,9 @@ class ProjectTreeBuilder:
         self,
         tree_nodes: List[ProjectNodeTreeNode],
         meta_map: Dict[UUID, ProjectNodeMeta],
-        def_map: Dict[str, ProjectNodeMeta],
+        def_map: Dict[str, List[ProjectNodeMeta]],
     ) -> List[ProjectNodeTreeTypeNode]:
-        tree_node_by_type = {}
+        tree_node_by_type: Dict[UUID, ProjectNodeTreeTypeNode] = {}
 
         for tree_node in tree_nodes:
             type_id = tree_node.node.type_id

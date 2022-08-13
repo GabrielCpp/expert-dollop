@@ -1,8 +1,8 @@
-from typing import List, Dict
+from typing import List, Dict, Sequence
 from uuid import UUID
 from collections import defaultdict
 from decimal import Decimal
-from expert_dollup.core.queries import Plucker
+from expert_dollup.shared.database_services import Plucker
 from expert_dollup.core.domains import *
 
 
@@ -12,7 +12,7 @@ class UnitInstanceBuilder:
 
     async def build(
         self,
-        project_def_id: UUID,
+        project_definition_id: UUID,
         nodes: List[ProjectNode],
     ) -> List[UnitInstance]:
         formulas_result: List[UnitInstance] = []
@@ -22,14 +22,14 @@ class UnitInstanceBuilder:
             nodes_by_type_id[node.type_id].append(node)
 
         formulas = await self.formula_plucker.pluck_subressources(
-            FormulaFilter(project_def_id=project_def_id),
+            FormulaFilter(project_definition_id=project_definition_id),
             lambda ids: FormulaPluckFilter(attached_to_type_ids=ids),
             list(nodes_by_type_id.keys()),
         )
 
         for formula in formulas:
             assert formula.attached_to_type_id in nodes_by_type_id
-            nodes = nodes_by_type_id.get(formula.attached_to_type_id)
+            nodes = nodes_by_type_id[formula.attached_to_type_id]
 
             for node in nodes:
                 formulas_result.append(
@@ -46,7 +46,7 @@ class UnitInstanceBuilder:
         return formulas_result
 
     def build_with_fields(
-        self, formulas: List[Formula], nodes: List[ProjectNode]
+        self, formulas: Sequence[Formula], nodes: List[ProjectNode]
     ) -> List[UnitInstance]:
         if len(nodes) == 0 or len(formulas) == 0:
             return []
@@ -91,6 +91,6 @@ class UnitInstanceBuilder:
                     )
                 )
 
-        assert len(skipped_formulas) == 0, f"Missing formulas: {skipped_formulas}"
+        # assert len(skipped_formulas) == 0, f"Missing formulas: {skipped_formulas}"
 
         return formulas_result

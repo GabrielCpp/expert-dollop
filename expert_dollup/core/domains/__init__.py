@@ -1,4 +1,8 @@
-from .project_definition import ProjectDefinition, ProjectDefinitionFilter
+from .project_definition import (
+    ProjectDefinition,
+    ProjectDefinitionFilter,
+    ElementPropertySchema,
+)
 from .project_definition_node import (
     ProjectDefinitionNode,
     ProjectDefinitionNodeFilter,
@@ -48,7 +52,16 @@ from .translation import (
     TranslationFilter,
     TranslationPluckFilter,
 )
-from .ressource import Ressource, User, RessourceId, RessourceFilter, UserFilter
+from .ressource import (
+    Ressource,
+    User,
+    RessourceId,
+    RessourceFilter,
+    UserFilter,
+    Organization,
+    OrganizationLimits,
+    RessourceProtocol,
+)
 from .formula import (
     Formula,
     FormulaExpression,
@@ -68,7 +81,6 @@ from .formula import (
     StagedFormulasKey,
 )
 
-from .datasheet_definition import DatasheetDefinition, ElementPropertySchema
 from .datasheet_definition_label_collection import (
     LabelCollection,
     LabelAttributeSchemaUnion,
@@ -107,6 +119,7 @@ from .report_definition import (
     ReportRowDict,
     ReportRowsCache,
     ReportRowKey,
+    ReportDefinitionColumnDict,
     ReportDefinitionFilter,
     StageSummary,
     ReportComputation,
@@ -116,12 +129,12 @@ from .report_definition_row_cache import (
     ReportDefinitionRowCacheFilter,
 )
 from .report import (
+    StageColumn,
     ReportRow,
     ReportRowFilter,
     ReportStage,
     Report,
     ReportKey,
-    ReportColumn,
     ComputedValue,
 )
 from .measure_unit import MeasureUnit
@@ -129,4 +142,12 @@ from .values_union import (
     PrimitiveUnion,
     PrimitiveWithNoneUnion,
     PrimitiveWithReferenceUnion,
+)
+from .distributable import (
+    DistributableItem,
+    DistributableUpdate,
+    DistributionState,
+    Distribution,
+    DistributableItemFilter,
+    SuppliedItem,
 )

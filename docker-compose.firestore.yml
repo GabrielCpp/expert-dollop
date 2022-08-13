@@ -1,0 +1,18 @@
+version: '3.7'
+services: 
+  firestore:
+    build:
+      context: .
+      dockerfile: firestore.dockerfile
+    ports:
+    - 8806:8806
+    command: gcloud beta emulators firestore start --host-port=0.0.0.0:8806
+    volumes:
+        - firestore_data:/opt/data
+    networks:
+        - firestore_backend
+volumes:
+  firestore_data:
+    name: firestore_data
+networks:
+  firestore_backend:

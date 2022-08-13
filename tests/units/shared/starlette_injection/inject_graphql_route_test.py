@@ -4,7 +4,7 @@ from expert_dollup.shared.starlette_injection.inject_graphql_route import collap
 def test_collapse_union():
     node = {
         "id": "24ef7c23-48d0-4d09-95b7-3962ad65e406",
-        "projectDefId": "0217b036-20da-428b-9cfc-828b2b5cb93d",
+        "projectDefinitionId": "0217b036-20da-428b-9cfc-828b2b5cb93d",
         "name": "g",
         "isCollection": True,
         "instanciateByDefault": True,
@@ -36,7 +36,7 @@ def test_collapse_union():
 
     assert node == {
         "id": "24ef7c23-48d0-4d09-95b7-3962ad65e406",
-        "projectDefId": "0217b036-20da-428b-9cfc-828b2b5cb93d",
+        "projectDefinitionId": "0217b036-20da-428b-9cfc-828b2b5cb93d",
         "name": "g",
         "isCollection": True,
         "instanciateByDefault": True,

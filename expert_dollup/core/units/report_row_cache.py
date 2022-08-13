@@ -5,10 +5,12 @@ from collections import defaultdict
 from itertools import islice
 from dataclasses import dataclass
 from hashlib import sha256
-from expert_dollup.shared.database_services import JsonSerializer
-from expert_dollup.core.queries import Plucker
+from expert_dollup.shared.database_services import (
+    JsonSerializer,
+    CollectionService,
+    Plucker,
+)
 from expert_dollup.core.domains import *
-from expert_dollup.infra.services import *
 from expert_dollup.core.exceptions import ReportGenerationError, RessourceNotFound
 from expert_dollup.core.object_storage import ObjectStorage
 
@@ -18,7 +20,6 @@ class ReportCache:
     warnings: List[str]
     report_definition: ReportDefinition
     project_definition: ProjectDefinition
-    datasheet_definition: DatasheetDefinition
     label_collections: List[LabelCollection]
     labels_by_collection_id: Dict[UUID, List[Label]]
     labels_by_id: Dict[UUID, Label]
@@ -28,15 +29,15 @@ class ReportCache:
 class ReportRowCache:
     def __init__(
         self,
-        datasheet_definition_service: DatasheetDefinitionService,
-        project_definition_service: ProjectDefinitionService,
-        datasheet_definition_element_service: DatasheetDefinitionElementService,
-        label_collection_service: LabelCollectionService,
-        label_service: LabelService,
+        project_definition_service: CollectionService[ProjectDefinition],
+        datasheet_definition_element_service: CollectionService[
+            DatasheetDefinitionElement
+        ],
+        label_collection_service: CollectionService[LabelCollection],
+        label_service: CollectionService[Label],
         formula_plucker: Plucker[Formula],
         report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
     ):
-        self.datasheet_definition_service = datasheet_definition_service
         self.project_definition_service = project_definition_service
         self.datasheet_definition_element_service = datasheet_definition_element_service
         self.label_collection_service = label_collection_service
@@ -48,7 +49,7 @@ class ReportRowCache:
         self, report_definition: ReportDefinition
     ) -> ReportRowsCache:
         key = ReportRowKey(
-            project_def_id=report_definition.project_def_id,
+            project_definition_id=report_definition.project_definition_id,
             report_definition_id=report_definition.id,
         )
 
@@ -77,15 +78,15 @@ class ReportRowCache:
         self, report_definition: ReportDefinition
     ) -> ReportCache:
         project_definition = await self.project_definition_service.find_by_id(
-            report_definition.project_def_id
+            report_definition.project_definition_id
         )
 
-        datasheet_definition = await self.datasheet_definition_service.find_by_id(
-            project_definition.datasheet_def_id
+        project_definition = await self.project_definition_service.find_by_id(
+            project_definition.id
         )
 
         label_collections = await self.label_collection_service.find_by(
-            LabelCollectionFilter(datasheet_definition_id=datasheet_definition.id)
+            LabelCollectionFilter(project_definition_id=project_definition.id)
         )
 
         collections_labels = await gather(
@@ -111,7 +112,6 @@ class ReportRowCache:
             warnings=[],
             report_definition=report_definition,
             project_definition=project_definition,
-            datasheet_definition=datasheet_definition,
             label_collections=label_collections,
             labels_by_collection_id=labels_by_collection_id,
             labels_by_id=labels_by_id,
@@ -139,11 +139,11 @@ class ReportRowCache:
         selection_alias = cache.report_definition.structure.datasheet_selection_alias
         elements = await self.datasheet_definition_element_service.find_by(
             DatasheetDefinitionElementFilter(
-                datasheet_def_id=cache.datasheet_definition.id
+                project_definition_id=cache.project_definition.id
             )
         )
 
-        report_buckets: ReportCache = [
+        report_buckets: ReportRowsCache = [
             {selection_alias: element.report_dict} for element in elements
         ]
 
@@ -178,11 +178,14 @@ class ReportRowCache:
         join: ReportJoin,
         cache: ReportCache,
     ):
+        if len(report_buckets) == 0:
+            raise ReportGenerationError("Missing report bucket")
+
         if not join.from_object_name in report_buckets[0]:
             raise ReportGenerationError(
                 "Name not in buckets",
                 name=join.from_object_name,
-                avaiable_names=list(report_buckets.keys()),
+                avaiable_names=list(report_buckets[0].keys()),
             )
 
         if not join.from_property_name in report_buckets[0][join.from_object_name]:

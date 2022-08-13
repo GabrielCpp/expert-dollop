@@ -9,14 +9,13 @@ from expert_dollup.shared.starlette_injection import (
 )
 from expert_dollup.app.controllers.project.project_node import *
 from expert_dollup.app.dtos import *
-from expert_dollup.infra.services import *
 from expert_dollup.core.domains import *
 from .types import query, mutation
 from pydantic import parse_obj_as
 
 
 @query.field("findProjectRootSections")
-@inject_graphql_route(find_root_sections)
+@inject_graphql_route(find_root_sections, ["project_id"])
 @convert_kwargs_to_snake_case
 async def resolve_find_root_sections(
     _: Any, info: GraphQLResolveInfo, project_id: str, find_root_sections: callable
@@ -25,7 +24,7 @@ async def resolve_find_root_sections(
 
 
 @query.field("findProjectRootSectionContainers")
-@inject_graphql_route(find_root_section_nodes)
+@inject_graphql_route(find_root_section_nodes, ["project_id", "root_section_id"])
 @convert_kwargs_to_snake_case
 async def resolve_find_root_section_nodes(
     _: Any,
@@ -38,7 +37,7 @@ async def resolve_find_root_section_nodes(
 
 
 @query.field("findProjectFormContent")
-@inject_graphql_route(find_form_content)
+@inject_graphql_route(find_form_content, ["project_id", "form_id"])
 @convert_kwargs_to_snake_case
 async def resolve_find_root_section_nodes(
     _: Any,
@@ -51,7 +50,7 @@ async def resolve_find_root_section_nodes(
 
 
 @mutation.field("updateProjectField")
-@inject_graphql_route(mutate_project_field)
+@inject_graphql_route(mutate_project_field, ["project_id", "node_id"])
 @convert_kwargs_to_snake_case
 async def resolve_update_project_field(
     _: Any,
@@ -76,7 +75,7 @@ async def resolve_update_project_field(
 
 
 @mutation.field("updateProjectFields")
-@inject_graphql_route(mutate_project_fields)
+@inject_graphql_route(mutate_project_fields, ["project_id"])
 @convert_kwargs_to_snake_case
 async def resolve_update_project_fields(
     _: Any,
@@ -105,7 +104,7 @@ async def resolve_update_project_fields(
 
 
 @mutation.field("addProjectCollectionItem")
-@inject_graphql_route(add_project_collection)
+@inject_graphql_route(add_project_collection, ["project_id"])
 @convert_kwargs_to_snake_case
 async def resolve_add_project_collection_item(
     _: Any,
@@ -122,7 +121,7 @@ async def resolve_add_project_collection_item(
 
 
 @mutation.field("cloneProjectCollection")
-@inject_graphql_route(clone_project_collection)
+@inject_graphql_route(clone_project_collection, ["project_id", "collection_node_id"])
 @convert_kwargs_to_snake_case
 async def resolve_clone_project_collection(
     _: Any,
@@ -139,7 +138,9 @@ async def resolve_clone_project_collection(
 
 
 @mutation.field("deleteProjectCollection")
-@inject_graphql_route(delete_project_node_collection)
+@inject_graphql_route(
+    delete_project_node_collection, ["project_id", "collection_node_id"]
+)
 @convert_kwargs_to_snake_case
 async def resolve_delete_project_collection(
     _: Any,

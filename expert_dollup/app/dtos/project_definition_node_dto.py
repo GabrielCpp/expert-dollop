@@ -1,5 +1,6 @@
 from uuid import UUID
-from typing import Optional, List, Union, Dict
+from typing import Optional, List, Union, Dict, get_args
+from typing_extensions import TypeAlias
 from expert_dollup.shared.starlette_injection import CamelModel
 from datetime import datetime
 from expert_dollup.core.domains import (
@@ -59,14 +60,14 @@ class CollapsibleContainerFieldConfigDto(CamelModel):
     is_collapsible: bool
 
 
-FieldDetailsUnionDto = Union[
+FieldDetailsUnionDto: TypeAlias = Union[
     BoolFieldConfigDto,
     CollapsibleContainerFieldConfigDto,
+    StaticNumberFieldConfigDto,
     DecimalFieldConfigDto,
     StaticChoiceFieldConfigDto,
     StringFieldConfigDto,
     IntFieldConfigDto,
-    StaticNumberFieldConfigDto,
     None,
 ]
 
@@ -82,7 +83,7 @@ config_type_lookup_map = {
     type(None): "null",
 }
 
-assert len(FieldDetailsUnionDto.__args__) == len(config_type_lookup_map)
+assert len(get_args(FieldDetailsUnionDto)) == len(config_type_lookup_map)
 
 field_details_to_domain_map = {
     IntFieldConfigDto: IntFieldConfig,
@@ -97,7 +98,7 @@ field_details_to_domain_map = {
 
 field_details_from_domain = {v: k for k, v in field_details_to_domain_map.items()}
 
-assert len(FieldDetailsUnionDto.__args__) == len(field_details_to_domain_map)
+assert len(get_args(FieldDetailsUnionDto)) == len(field_details_to_domain_map)
 
 
 class TranslationConfigDto(CamelModel):
@@ -135,7 +136,7 @@ value_type_lookup_map = {
 
 class ProjectDefinitionNodeDto(CamelModel):
     id: UUID
-    project_def_id: UUID
+    project_definition_id: UUID
     name: str
     is_collection: bool
     instanciate_by_default: bool

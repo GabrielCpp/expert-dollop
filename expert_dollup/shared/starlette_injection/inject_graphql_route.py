@@ -1,5 +1,5 @@
 from inspect import signature, Parameter
-from typing import Dict, List
+from typing import Dict, List, Any
 from fastapi import params
 from functools import wraps
 from starlette.requests import Request
@@ -15,7 +15,7 @@ def collapse_union(node: dict, path: List[str], kind_map: Dict[str, str]):
     assert len(path) > 0
 
     last_target_node = node
-    target_node = node
+    target_node: Any = node
 
     for property_name in path:
         if not isinstance(target_node, dict):
@@ -36,7 +36,7 @@ def collapse_union(node: dict, path: List[str], kind_map: Dict[str, str]):
     return node
 
 
-def inject_route(request, sig):
+async def inject_route(request, sig):
     injectables = {}
 
     for parameter in sig.parameters.values():
@@ -47,8 +47,8 @@ def inject_route(request, sig):
                 injectables[parameter.name] = parameter.default.dependency(request)
             else:
                 dependency = parameter.default.dependency
-                fn_params = inject_route(request, signature(dependency.__call__))
-                injectables[parameter.name] = dependency(**fn_params)
+                fn_params = await inject_route(request, signature(dependency.__call__))
+                injectables[parameter.name] = await dependency(**fn_params)
 
         if parameter.annotation is Request:
             injectables[parameter.name] = request
@@ -56,13 +56,21 @@ def inject_route(request, sig):
     return injectables
 
 
-def inject_graphql_route(fn):
+def inject_graphql_route(fn, names=None):
     sig = signature(fn)
 
-    def invoke(info, *args, **kwargs):
-        injectables = inject_route(info.context.request, sig)
+    async def invoke(info, *args, **kwargs):
+        if not names is None:
+            info.context.request.path_params.update(
+                {
+                    **info.context.request.path_params,
+                    **dict(zip(names, args)),
+                }
+            )
+
+        injectables = await inject_route(info.context.request, sig)
         kwargs.update(injectables)
-        return fn(*args, **kwargs)
+        return await fn(*args, **kwargs)
 
     def decorator(decorated_fn):
         @wraps(decorated_fn)

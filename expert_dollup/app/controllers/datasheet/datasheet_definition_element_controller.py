@@ -31,16 +31,16 @@ async def find_datasheet_definition_element_by_id(
     )
 
 
-@router.get("/datasheet_definition/{datasheet_definition_id}/elements")
+@router.get("/project_definition/{project_definition_id}/elements")
 async def find_datasheet_definition_elements(
-    datasheet_definition_id: UUID,
+    project_definition_id: UUID,
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = Query(alias="limit", default=100),
     handler=Depends(Inject(HttpPageHandler[Paginator[DatasheetDefinitionElement]])),
 ):
     return await handler.handle(
         DatasheetDefinitionElementDto,
-        DatasheetDefinitionElementFilter(datasheet_def_id=datasheet_definition_id),
+        DatasheetDefinitionElementFilter(project_definition_id=project_definition_id),
         limit,
         next_page_token,
     )
@@ -48,13 +48,13 @@ async def find_datasheet_definition_elements(
 
 @router.post("/datasheet_definition_element")
 async def add_datasheet_definition_element(
-    datasheet_definition: DatasheetDefinitionElementDto,
+    project_definition: DatasheetDefinitionElementDto,
     usecase=Depends(Inject(DatasheetDefinitionElementUseCase)),
     handler=Depends(Inject(RequestHandler)),
 ):
     return await handler.handle(
         usecase.add,
-        datasheet_definition,
+        project_definition,
         MappingChain(
             dto=DatasheetDefinitionElementDto,
             domain=DatasheetDefinitionElement,
@@ -65,13 +65,13 @@ async def add_datasheet_definition_element(
 
 @router.put("/datasheet_definition_element")
 async def update_datasheet_definition_element(
-    datasheet_definition: DatasheetDefinitionElementDto,
+    project_definition: DatasheetDefinitionElementDto,
     usecase=Depends(Inject(DatasheetDefinitionElementUseCase)),
     handler=Depends(Inject(RequestHandler)),
 ):
     return await handler.handle(
         usecase.update,
-        datasheet_definition,
+        project_definition,
         MappingChain(
             dto=DatasheetDefinitionElementDto,
             domain=DatasheetDefinitionElement,

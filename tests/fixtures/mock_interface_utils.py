@@ -329,3 +329,8 @@ class StrictInterfaceSetup:
                 self._properties.add(method_name)
 
         return methods
+
+
+class AsyncMock(MagicMock):
+    async def __call__(self, *args, **kwargs):
+        return MagicMock.__call__(self, *args, **kwargs)

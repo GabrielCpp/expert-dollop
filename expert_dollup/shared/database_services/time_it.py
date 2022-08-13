@@ -11,8 +11,7 @@ def log_execution_time_async(fn):
         duration_in_seconds = after - before
         self.logger.debug(
             "Stopwatch scope measure",
-            topic=fn.__name__,
-            duration_in_seconds=duration_in_seconds,
+            extra=dict(topic=fn.__name__, duration_in_seconds=duration_in_seconds),
         )
         return result
 
@@ -28,8 +27,7 @@ def log_execution_time(fn):
         duration_in_seconds = after - before
         self.logger.debug(
             "Stopwatch scope measure",
-            topic=fn.__name__,
-            duration_in_seconds=duration_in_seconds,
+            extra=dict(topic=fn.__name__, duration_in_seconds=duration_in_seconds),
         )
         return result
 
@@ -50,5 +48,6 @@ class StopWatch:
         after = perf_counter()
         duration_in_seconds = after - self.before
         self.logger.debug(
-            self.message, topic=self.topic, duration_in_seconds=duration_in_seconds
+            self.message,
+            extra=dict(topic=self.topic, duration_in_seconds=duration_in_seconds),
         )

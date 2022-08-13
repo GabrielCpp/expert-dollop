@@ -1,4 +1,5 @@
 import ast
+from typing import Set
 
 
 class FormulaVisitor(ast.NodeVisitor):
@@ -29,8 +30,8 @@ class FormulaVisitor(ast.NodeVisitor):
         return visitor
 
     def __init__(self):
-        self.var_names = set()
-        self.fn_names = set()
+        self.var_names: Set[str] = set()
+        self.fn_names: Set[str] = set()
 
     def generic_visit(self, node):
         ast.NodeVisitor.generic_visit(self, node)

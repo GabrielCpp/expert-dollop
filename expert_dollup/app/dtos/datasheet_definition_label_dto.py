@@ -1,6 +1,7 @@
 from uuid import UUID
 from expert_dollup.shared.starlette_injection import CamelModel
 from typing import Dict, Union
+from typing_extensions import TypeAlias
 from .dynamic_primitive import (
     IntFieldValueDto,
     DecimalFieldValueDto,
@@ -10,7 +11,7 @@ from .dynamic_primitive import (
 )
 
 
-LabelAttributeValueDto = Union[
+LabelAttributeValueDto: TypeAlias = Union[
     BoolFieldValueDto,
     IntFieldValueDto,
     StringFieldValueDto,

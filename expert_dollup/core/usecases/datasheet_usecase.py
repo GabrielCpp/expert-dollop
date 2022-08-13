@@ -1,3 +1,4 @@
+from typing import List
 from uuid import UUID, uuid4
 from expert_dollup.shared.database_services import Page, Paginator, CollectionService
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
@@ -49,13 +50,13 @@ class DatasheetUseCase:
             id=uuid4(),
             name=datasheet.name,
             is_staged=datasheet.is_staged,
-            datasheet_def_id=datasheet.datasheet_def_id,
+            project_definition_id=datasheet.project_definition_id,
             from_datasheet_id=datasheet_clone_target.target_datasheet_id,
             creation_date_utc=self.clock.utcnow(),
         )
 
         page = Page[DatasheetElement]()
-        cloned_elements = []
+        cloned_elements: List[DatasheetElement] = []
 
         while len(page.results) == page.limit:
             page = await self.datasheet_element_paginator.find_page(
@@ -69,12 +70,12 @@ class DatasheetUseCase:
                 [
                     DatasheetElement(
                         datasheet_id=cloned_datasheet.id,
-                        element_def_id=result.definition_element.id,
-                        child_element_reference=zero_uuid()
-                        if result.child_element_reference == zero_uuid()
-                        else uuid4(),
+                        element_def_id=result.element_def_id,
+                        child_element_reference=uuid4(),
+                        ordinal=result.ordinal,
                         properties=result.properties,
                         original_datasheet_id=result.original_datasheet_id,
+                        original_owner_organization_id=user.organization_id,
                         creation_date_utc=self.clock.utcnow(),
                     )
                     for result in page.results
@@ -85,30 +86,26 @@ class DatasheetUseCase:
             id=uuid4(),
             name=datasheet_clone_target.new_name,
             is_staged=datasheet.is_staged,
-            datasheet_def_id=datasheet.datasheet_def_id,
+            project_definition_id=datasheet.project_definition_id,
             from_datasheet_id=datasheet.from_datasheet_id,
             creation_date_utc=self.clock.utcnow(),
         )
 
         await self.add(cloned_datasheet, user)
-        await self.datasheet_definition_element_service.insert_many(cloned_elements)
+        await self.datasheet_element_service.insert_many(cloned_elements)
 
         return cloned_datasheet
 
     async def add(self, datasheet: Datasheet, user: User) -> Datasheet:
-        await self.ressource_service.insert(
-            make_ressource(Datasheet, datasheet, user.id)
-        )
+        await self.ressource_service.insert(make_ressource(Datasheet, datasheet, user))
         await self.datasheet_service.insert(datasheet)
 
     async def add_filled_datasheet(self, datasheet: Datasheet, user: User) -> Datasheet:
-        await self.ressource_service.insert(
-            make_ressource(Datasheet, datasheet, user.id)
-        )
+        await self.ressource_service.insert(make_ressource(Datasheet, datasheet, user))
         await self.datasheet_service.insert(datasheet)
         definition_elements = await self.datasheet_definition_element_service.find_by(
             DatasheetDefinitionElementFilter(
-                datasheet_def_id=datasheet.datasheet_def_id
+                project_definition_id=datasheet.project_definition_id
             )
         )
 
@@ -116,12 +113,14 @@ class DatasheetUseCase:
             DatasheetElement(
                 datasheet_id=datasheet.id,
                 element_def_id=definition_element.id,
-                child_element_reference=zero_uuid(),
+                child_element_reference=uuid4(),
+                ordinal=0,
                 properties={
                     name: default_property.value
                     for name, default_property in definition_element.default_properties.items()
                 },
                 original_datasheet_id=datasheet.id,
+                original_owner_organization_id=user.organization_id,
                 creation_date_utc=self.clock.utcnow(),
             )
             for definition_element in definition_elements

@@ -7,10 +7,10 @@ from ..fixtures import *
 
 @pytest.mark.asyncio
 async def test_create_get_delete_formula(ac, db_helper: DbFixtureHelper):
-    fake_db = await db_helper.load_fixtures(MiniProject)
+    fake_db = await db_helper.load_fixtures(MiniProject())
     project_definition = fake_db.get_only_one(ProjectDefinition)
     formula = FormulaDtoFactory(
-        project_def_id=project_definition.id,
+        project_definition_id=project_definition.id,
         attached_to_type_id=fake_db.get_only_one_matching(
             ProjectDefinitionNode, lambda n: n.name == "price"
         ).id,
@@ -21,7 +21,7 @@ async def test_create_get_delete_formula(ac, db_helper: DbFixtureHelper):
     assert response.status_code == 200, response.text
 
     formula = FormulaDtoFactory(
-        project_def_id=project_definition.id,
+        project_definition_id=project_definition.id,
         attached_to_type_id=fake_db.get_only_one_matching(
             ProjectDefinitionNode, lambda n: n.name == "root"
         ).id,
@@ -32,7 +32,7 @@ async def test_create_get_delete_formula(ac, db_helper: DbFixtureHelper):
     response = await ac.post("/api/formula", data=formula.json())
     assert response.status_code == 200, response.text
 
-    project = ProjectDetailsDtoFactory(project_def_id=project_definition.id)
+    project = ProjectDetailsDtoFactory(project_definition_id=project_definition.id)
     response = await ac.post("/api/project", data=project.json())
     assert response.status_code == 200
 

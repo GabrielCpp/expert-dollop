@@ -5,6 +5,7 @@ from decimal import Decimal
 from uuid import UUID
 from expert_dollup.core.logits import FormulaInjector, FrozenUnit
 from expert_dollup.shared.starlette_injection.clock_provider import StaticClock
+from expert_dollup.shared.database_services import CollectionService, Plucker
 from tests.fixtures.factories.datasheet_factory import CustomDatasheetInstancePackage
 from tests.fixtures.factories.project_instance_factory import (
     CustomProjectInstancePackage,
@@ -14,9 +15,7 @@ from expert_dollup.app.dtos import *
 from expert_dollup.core.units import *
 from expert_dollup.core.builders import *
 from expert_dollup.core.domains import *
-from expert_dollup.core.queries import *
 from expert_dollup.core.exceptions import *
-from expert_dollup.infra.services import *
 from tests.fixtures import *
 
 
@@ -34,16 +33,13 @@ class ReportSeed:
 @pytest.fixture
 def report_seed() -> ReportSeed:
     project_seed = make_base_project_seed()
+    project_fixture = ProjectInstanceFactory.build(project_seed)
     datasheet_fixture = DatasheetInstanceFactory.build(
-        make_base_datasheet(project_seed)
+        make_base_datasheet(project_seed), project_fixture.project_definition
     )
-    project_fixture = ProjectInstanceFactory.build(
-        project_seed,
-        default_datasheet_id=datasheet_fixture.datasheet.id,
-        datasheet_def_id=datasheet_fixture.datasheet_definition.id,
-    )
+
     report_definition = ReportDefinitionFactory(
-        project_def_id=project_fixture.project_definition.id
+        project_definition_id=project_fixture.project_definition.id
     )
 
     element_def = next(
@@ -98,52 +94,8 @@ async def test_given_row_cache_should_produce_correct_report(
         }
     ]
 
-    datasheet_element_service = StrictInterfaceSetup(DatasheetElementService)
-    report_row_cache = StrictInterfaceSetup(ReportRowCache)
-    formula_resolver = StrictInterfaceSetup(FormulaResolver)
-    clock = StaticClock(datetime(2000, 4, 3, 1, 1, 1, 0, timezone.utc))
-
-    report_row_cache.setup(
-        lambda x: x.refresh_cache(report_definition), returns_async=report_rows_cache
-    )
-
-    formula_resolver.setup(
-        lambda x: x.compute_all_project_formula(
-            project_fixture.project.id, report_definition.project_def_id
-        ),
-        returns_async=FormulaInjector().add_units(
-            FrozenUnit(i) for i in project_fixture.unit_instances
-        ),
-    )
-
-    datasheet_element_service.setup(
-        lambda x: x.find_by(
-            DatasheetElementFilter(
-                datasheet_id=datasheet_fixture.datasheet.id,
-                child_element_reference=zero_uuid(),
-            )
-        ),
-        returns_async=[
-            datasheet_element
-            for datasheet_element in datasheet_fixture.datasheet_elements
-            if datasheet_element.child_element_reference == zero_uuid()
-        ],
-    )
-
-    report_linking = ReportLinking(
-        datasheet_element_service.object,
-        ExpressionEvaluator(),
-        report_row_cache.object,
-        formula_resolver.object,
-        clock,
-        logger_factory,
-    )
-
-    report = await report_linking.link_report(
-        report_definition, project_fixture.project
-    )
-
-    assert report == Report(
+    expected_report = Report(
+        datasheet_id=datasheet_element.datasheet_id,
         stages=[
             ReportStage(
                 summary=ComputedValue(
@@ -154,13 +106,23 @@ async def test_given_row_cache_should_produce_correct_report(
                         node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
                         formula_id=UUID("f1f1e0ff-2344-48bc-e757-8c9dcd3c671e"),
                         element_def_id=UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
-                        child_reference_id=UUID("00000000-0000-0000-0000-000000000000"),
+                        child_reference_id=datasheet_element.child_element_reference,
                         columns=[
-                            ReportColumn(value="show_concrete", unit="unit"),
-                            ReportColumn(value=Decimal("24"), unit="unit"),
-                            ReportColumn(value="concrete", unit="unit"),
-                            ReportColumn(value=Decimal("1.01"), unit="$"),
-                            ReportColumn(value=Decimal("24.24"), unit="$"),
+                            ComputedValue(
+                                label="stage", value="show_concrete", unit="unit"
+                            ),
+                            ComputedValue(
+                                label="quantity", value=Decimal("24"), unit="unit"
+                            ),
+                            ComputedValue(
+                                label="product_name", value="concrete", unit="unit"
+                            ),
+                            ComputedValue(
+                                label="cost_per_unit", value=Decimal("1.01"), unit="$"
+                            ),
+                            ComputedValue(
+                                label="cost", value=Decimal("24.24"), unit="$"
+                            ),
                         ],
                         row={
                             "abstractproduct": {
@@ -181,11 +143,9 @@ async def test_given_row_cache_should_produce_correct_report(
                                 "element_def_id": UUID(
                                     "00ecf6d0-6f00-c4bb-2902-4057469a3f3d"
                                 ),
-                                "child_element_reference": UUID(
-                                    "00000000-0000-0000-0000-000000000000"
-                                ),
+                                "child_element_reference": datasheet_element.child_element_reference,
                                 "original_datasheet_id": UUID(
-                                    "098f6bcd-4621-d373-cade-4e832627b4f6"
+                                    "0fc7fe86-ab22-a17d-6037-9fccc7d7f8f8"
                                 ),
                             },
                             "formula": {
@@ -225,5 +185,52 @@ async def test_given_row_cache_should_produce_correct_report(
             )
         ],
         summaries=[ComputedValue(label="subtotal", value=Decimal("24.24"), unit="$")],
-        creation_date_utc=datetime(2000, 4, 3, 1, 1, 1, 0, tzinfo=timezone.utc),
+        creation_date_utc=datetime(2000, 4, 3, 1, 1, 1, tzinfo=timezone.utc),
     )
+
+    datasheet_element_service = StrictInterfaceSetup(CollectionService)
+    report_row_cache = StrictInterfaceSetup(ReportRowCache)
+    formula_resolver = StrictInterfaceSetup(FormulaResolver)
+    clock = StaticClock(datetime(2000, 4, 3, 1, 1, 1, 0, timezone.utc))
+
+    report_row_cache.setup(
+        lambda x: x.refresh_cache(report_definition), returns_async=report_rows_cache
+    )
+
+    formula_resolver.setup(
+        lambda x: x.compute_all_project_formula(
+            project_fixture.project.id, report_definition.project_definition_id
+        ),
+        returns_async=FormulaInjector().add_units(
+            FrozenUnit(i) for i in project_fixture.unit_instances
+        ),
+    )
+
+    datasheet_element_service.setup(
+        lambda x: x.find_by(
+            DatasheetElementFilter(
+                datasheet_id=datasheet_fixture.datasheet.id,
+                ordinal=0,
+            )
+        ),
+        returns_async=[
+            datasheet_element
+            for datasheet_element in datasheet_fixture.datasheet_elements
+            if datasheet_element.ordinal == 0
+        ],
+    )
+
+    report_linking = ReportLinking(
+        datasheet_element_service.object,
+        ExpressionEvaluator(),
+        report_row_cache.object,
+        formula_resolver.object,
+        clock,
+        logger_factory,
+    )
+
+    report = await report_linking.link_report(
+        report_definition, project_fixture.project
+    )
+
+    assert report == expected_report

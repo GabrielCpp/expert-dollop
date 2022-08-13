@@ -8,16 +8,15 @@ from .values_union import PrimitiveUnion
 
 
 @dataclass
-class ReportColumn:
-    value: PrimitiveUnion
-    unit: Optional[str]
-
-
-@dataclass
 class ComputedValue:
     label: str
     value: PrimitiveUnion
-    unit: str
+    unit: Optional[str]
+    is_visible: bool = True
+
+    @property
+    def key(self) -> str:
+        return f"{self.label}:{self.value}/{self.unit}"
 
 
 @dataclass
@@ -26,21 +25,34 @@ class ReportRow:
     formula_id: UUID
     element_def_id: UUID
     child_reference_id: UUID
-    columns: List[ReportColumn]
+    columns: List[ComputedValue]
     row: ReportRowDict
 
     def __getitem__(self, bucket_name: str):
+        if not bucket_name in self.row:
+            raise KeyError(bucket_name, list(self.row.keys()))
+
         return self.row[bucket_name]
+
+
+@dataclass
+class StageColumn:
+    label: str
+    unit: Optional[str]
+    is_visible: bool
 
 
 @dataclass
 class ReportStage:
     summary: ComputedValue
+    columns: List[StageColumn]
     rows: List[ReportRow]
 
 
 @dataclass
 class Report:
+    name: str
+    datasheet_id: UUID
     stages: List[ReportStage]
     summaries: List[ComputedValue]
     creation_date_utc: datetime

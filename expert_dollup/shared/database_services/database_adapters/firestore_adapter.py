@@ -95,21 +95,9 @@ class FirestoreConnection(DbConnection):
             )
 
     async def truncate_db(self, names: Optional[List[str]] = None):
-
-        if names is None:
-            import os
-
-            emulator_host = environ["FIRESTORE_EMULATOR_HOST"]
-            os.system(
-                f"curl -X DELETE 'http://{emulator_host}/emulator/v1/projects/my-project/databases/(default)/documents' > /dev/null"
-            )
-        else:
-            for name in names:
-                async for doc in self._client.collection(name).stream():
-                    await doc.reference.delete()
-
-    async def drop_db(self):
-        await self.truncate_db()
+        for name in names:
+            async for doc in self._client.collection(name).stream():
+                await doc.reference.delete()
 
     async def connect(self) -> None:
         pass
@@ -285,6 +273,10 @@ class FirestoreCollection(CollectionService[Domain]):
     @property
     def dao(self) -> Type:
         return self._dao
+
+    @property
+    def batch_size(self) -> int:
+        return 20
 
     async def insert(self, domain: Domain):
         d = self._dao_mapper.map_to_dict(domain)

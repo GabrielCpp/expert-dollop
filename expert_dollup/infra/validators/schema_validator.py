@@ -1,3 +1,4 @@
+from typing import Any
 from jsonschema import Draft7Validator
 from expert_dollup.infra.json_schema import validate_instance
 
@@ -14,6 +15,6 @@ class SchemaValidator:
 
         return True
 
-    def validate_instance_of(self, schema: dict, instance: dict) -> None:
+    def validate_instance_of(self, schema: dict, instance: Any) -> None:
         validator = Draft7Validator(schema)
         validate_instance(validator, instance)
