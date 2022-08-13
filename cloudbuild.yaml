@@ -39,7 +39,7 @@ steps:
   env:
   - 'DOCKER_BUILDKIT=1'
  # Test
-- name: 'docker/compose:1.25.0'
+- name: 'gcr.io/predykt-v2/docker-compose:1.28.2'
   id: test
   entrypoint: '/bin/sh'
   args: 
