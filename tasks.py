@@ -149,10 +149,8 @@ def compose_warmup(c):
         "export $(cat .env | xargs) && poetry run wait-for-it --service $EXPERT_DOLLUP_DB_URL -- echo 'mongo is up' &&poetry run invoke db:migrate --url $EXPERT_DOLLUP_DB_URL && poetry run invoke db:migrate --url $AUTH_DB_URL && poetry run pytest"
     )
 
-    import sys
-
     print(f"Returned {result.return_code}")
-    sys.exit(result.return_code)
+    exit(result.return_code)
 
 
 @task(name="env:init")
