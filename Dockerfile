@@ -19,13 +19,22 @@ WORKDIR /usr/app
 ENV PATH="/root/.poetry/bin:$PATH"
 RUN $HOME/.poetry/bin/poetry install --no-interaction --no-ansi --extras mongo
 
+RUN apt install -y wget gnupg && \
+    wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | apt-key add - && \
+    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/6.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
+    apt-get update -y && \ 
+    apt-get install -y mongodb-org && \
+    apt-get autoremove -y && \
+    apt-get clean -y
+
+RUN mkdir -p /data/db
 COPY tasks.py tasks.py
 COPY assets ./assets
 COPY migrations ./migrations
-RUN poetry run invoke env:init --hostname mongo
+RUN poetry run invoke env:init --hostname 127.0.0.1 --username '' --password ''
 COPY expert_dollup ./expert_dollup
 COPY tests ./tests
-CMD [ "poetry", "run", "pytest" ]
+CMD [ "bash", "-c", "(mongod > /dev/null &) && poetry run pytest" ]
 
 FROM python:3.8-slim@sha256:d20122663d629b8b0848e2bb78d929c01aabab37c920990b37bb32bc47328818 as release
 RUN groupadd -g 999 python && \

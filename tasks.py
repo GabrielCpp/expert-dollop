@@ -129,14 +129,14 @@ def start(c):
     )
 
 
-@task
-def test(c):
+@task(name="test:docker")
+def test_docker(c):
     c.run(
-        "docker build --target=test -t expert-dollup-test . && docker run --network expert-dollop_default expert-dollup-test"
+        "docker build --target=test -t expert-dollup-test . && docker run expert-dollup-test"
     )
 
 
-@task
+@task(name="test:compose")
 def test_compose(c):
     c.run(
         "docker-compose -f docker-compose.mongodb.yml -f docker-compose.ci.yml up --abort-on-container-exit --build test"
@@ -160,6 +160,8 @@ def generate_env(
     auth_db="mongodb",
     expert_dollup_db="mongodb",
     local_files=".local",
+    username="predyktuser",
+    password="predyktpassword",
 ):
     if path.exists(".env"):
         print("Environement file already exists")
@@ -174,15 +176,19 @@ def generate_env(
         private_key = key_file.read()
         private_key_base64 = base64.b64encode(private_key).decode("ascii")
 
+    crendetial_part = (
+        "" if username == "" or password == "" else f"{username}:{password}@"
+    )
+
     configs_lines = [
-        f"EXPERT_DOLLUP_DB_URL={expert_dollup_db}://predyktuser:predyktpassword@{hostname}:27017/expert_dollup",
-        f"AUTH_DB_URL={auth_db}://predyktuser:predyktpassword@{hostname}:27017/auth",
+        f"EXPERT_DOLLUP_DB_URL={expert_dollup_db}://{crendetial_part}{hostname}:27017/expert_dollup",
+        f"AUTH_DB_URL={auth_db}://{crendetial_part}{hostname}:27017/auth",
         f"JWT_PUBLIC_KEY={key_base64}",
         f"JWT_PRIVATE_KEY={private_key_base64}",
         f"HOSTNAME={hostname}",
         "FASTAPI_ENV=development",
-        "DB_USERNAME=predyktuser",
-        "DB_PASSWORD=predyktpassword",
+        f"DB_USERNAME={username}",
+        f"DB_PASSWORD={password}",
     ]
 
     with open(".env", "w") as f:
