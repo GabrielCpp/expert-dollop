@@ -61,4 +61,5 @@ class OrganizationDao(BaseModel):
 
     id: UUID
     name: str
+    email: str
     limits: OrganizationLimitsDao

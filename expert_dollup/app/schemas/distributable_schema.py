@@ -12,8 +12,9 @@ from expert_dollup.shared.starlette_injection import (
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.controllers.datasheet.datasheet_controller import *
+from expert_dollup.app.controllers.organization.organization_controller import *
 from expert_dollup.app.controllers.project.distributable import *
-from .types import query
+from .types import query, supplied_item
 
 
 @query.field("findDistributables")
@@ -43,3 +44,11 @@ async def resolve_default_properties(
     return await get_project_distributable_items(
         info, UUID(project_id), UUID(report_definition_id)
     )
+
+
+@supplied_item.field("organization")
+@inject_graphql_route(get_organization_by_id, ["project_id", "report_definition_id"])
+async def supplied_item_organization(
+    parent: SuppliedItemDto, info: GraphQLResolveInfo, get_organization_by_id: callable
+):
+    return await get_organization_by_id(info, parent.organization_id)

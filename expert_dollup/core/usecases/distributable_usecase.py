@@ -56,23 +56,21 @@ class DistributableUseCase:
         report_definition = await self.report_definition_service.find_by_id(
             report_definition_id
         )
+        report_key = ReportKey(
+            project_id=project_id, report_definition_id=report_definition_id
+        )
         report = await self.report_linking.link_report(
             report_definition, project_details
         )
-        await self.report_storage.save(
-            ReportKey(project_id=project_id, report_definition_id=report_definition_id),
-            report,
-        )
+        await self.report_storage.save(report_key, report)
         distributable_items = await self.distributable_service.find_by(
             DistributableItemFilter(
                 project_id=project_id, report_definition_id=report_definition_id
             )
         )
         distributable_update = await self.report_distributor.update_from_report(
-            project_details, report_definition, report, distributable_items
+            report_key, report, distributable_items
         )
-        distributable_update = await self.distributable_service.upserts(
-            distributable_update.items
-        )
+        await self.distributable_service.upserts(distributable_update.items)
 
         return distributable_update.items

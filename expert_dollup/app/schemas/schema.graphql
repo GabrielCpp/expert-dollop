@@ -495,9 +495,11 @@ type SuppliedItem {
   elementDefId: String!
   childReferenceId: String!
   organizationId: String!
+  organization: Organization!
 }
 
 type DistributableItem { 
+  id: String!
   projectId: String!
   reportDefinitionId: String!
   nodeId: String!
@@ -533,6 +535,12 @@ type PageInfo {
   hasNextPage: Boolean!
   endCursor: String!
   totalCount: Int!
+}
+
+type Organization {
+    id: String!
+    name: String!
+    email: String!
 }
 
 type User {

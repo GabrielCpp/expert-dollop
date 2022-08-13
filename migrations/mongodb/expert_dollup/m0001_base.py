@@ -60,7 +60,8 @@ async def create_datasheet_tables(db):
 
 async def create_report_tables(db):
     await db.create_collection("report_definition")
-    await db.create_collection("distributable")
+    await db.create_collection("distributable_items")
+    await db.create_collection("distribution")
 
 
 async def upgrade(db):

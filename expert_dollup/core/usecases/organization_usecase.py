@@ -15,6 +15,7 @@ class OrganizationUseCase:
         organization = Organization(
             id=uuid4(),
             name=organization_name,
+            email=email,
             limits=OrganizationLimits(
                 active_project_count=100,
                 active_project_overall_collection_count=1000,

@@ -15,6 +15,7 @@ class SuppliedItemDto(CamelModel):
 
 
 class DistributableItemDto(CamelModel):
+    id: str
     project_id: UUID
     report_definition_id: UUID
     node_id: UUID

@@ -12,9 +12,11 @@ class UserPackage:
 
 
 def make_root_user_org(oauth_id: str = "testuser", org_name="root_org") -> UserPackage:
+    email = f"{oauth_id}@example.com"
     organization = Organization(
         id=make_uuid(org_name),
         name=org_name,
+        email=email,
         limits=OrganizationLimits(
             active_project_count=100,
             active_project_overall_collection_count=1000,
@@ -29,7 +31,7 @@ def make_root_user_org(oauth_id: str = "testuser", org_name="root_org") -> UserP
             User(
                 oauth_id=oauth_id,
                 id=make_uuid(oauth_id),
-                email="testuser@example.com",
+                email=email,
                 permissions=all_permisions(),
                 organization_id=organization.id,
             )

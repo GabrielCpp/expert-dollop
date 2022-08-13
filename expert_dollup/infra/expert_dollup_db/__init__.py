@@ -438,7 +438,7 @@ class MeasureUnitDao(BaseModel):
 class ComputedValueDao(BaseModel):
     label: str
     value: PrimitiveUnionDao
-    unit: str
+    unit: Optional[str]
     is_visible: bool
 
 

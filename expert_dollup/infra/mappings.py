@@ -404,13 +404,19 @@ def map_user_to_dao(src: User, mapper: Mapper) -> UserDao:
 
 def map_organization_from_dao(src: OrganizationDao, mapper: Mapper) -> Organization:
     return Organization(
-        id=src.id, name=src.name, limits=mapper.map(src.limits, OrganizationLimits)
+        id=src.id,
+        name=src.name,
+        email=src.email,
+        limits=mapper.map(src.limits, OrganizationLimits),
     )
 
 
 def map_organization_to_dao(src: Organization, mapper: Mapper) -> OrganizationDao:
     return OrganizationDao(
-        id=src.id, name=src.name, limits=mapper.map(src.limits, OrganizationLimitsDao)
+        id=src.id,
+        name=src.name,
+        email=src.email,
+        limits=mapper.map(src.limits, OrganizationLimitsDao),
     )
 
 

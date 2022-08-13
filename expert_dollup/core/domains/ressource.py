@@ -33,6 +33,7 @@ class OrganizationLimits:
 class Organization:
     id: UUID
     name: str
+    email: str
     limits: OrganizationLimits
 
 

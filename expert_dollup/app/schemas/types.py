@@ -27,6 +27,7 @@ datasheet = ObjectType("Datasheet")
 datasheet_element = ObjectType("DatasheetElement")
 json_schema_scalar = ScalarType("JsonSchema")
 graphql_uuid = ScalarType("UUID")
+supplied_item = ObjectType("SuppliedItem")
 
 types = [
     mutation,
@@ -40,6 +41,7 @@ types = [
     field_value,
     field_details_union_type,
     json_schema_scalar,
+    supplied_item,
 ]
 
 

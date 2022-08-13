@@ -17,6 +17,22 @@ from expert_dollup.app.dtos import *
 router = APIRouter()
 
 
+@router.get("/organizations/{organization_id}")
+async def get_organization_by_id(
+    organization_id: UUID,
+    service: CollectionService[Organization] = Depends(
+        Inject(CollectionService[Organization])
+    ),
+    handler=Depends(Inject(RequestHandler)),
+    jwt_dict: dict = Depends(AuthenticationRequired()),
+):
+    return await handler.handle(
+        service.find_by_id,
+        organization_id,
+        MappingChain(out_dto=OrganizationDto),
+    )
+
+
 @router.post("/organizations")
 async def create_single_user_organization(
     single_user_organization: NewSingleUserOrganizationDto,

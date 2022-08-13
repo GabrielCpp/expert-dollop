@@ -1237,3 +1237,50 @@ def map_user_to_dto(src: User, mapper: Mapper) -> UserDto:
         permissions=src.permissions,
         organization_id=src.organization_id,
     )
+
+
+def map_organization_to_dto(src: Organization, mapper: Mapper) -> OrganizationDto:
+    return OrganizationDto(
+        id=src.id,
+        name=src.name,
+        email=src.email,
+        limits=mapper.map(src.limits, OrganizationLimitsDto),
+    )
+
+
+def map_organization_limits_dto(
+    src: OrganizationLimits, mapper: Mapper
+) -> OrganizationLimitsDto:
+    return OrganizationLimitsDto(
+        active_project_count=src.active_project_count,
+        active_project_overall_collection_count=src.active_project_overall_collection_count,
+        active_datasheet_count=src.active_datasheet_count,
+        active_datasheet_custom_element_count=src.active_datasheet_custom_element_count,
+    )
+
+
+def map_distributable_item_to_dto(
+    src: DistributableItem, mapper: Mapper
+) -> DistributableItemDto:
+    return DistributableItemDto(
+        id=src.id,
+        project_id=src.project_id,
+        report_definition_id=src.report_definition_id,
+        node_id=src.node_id,
+        formula_id=src.formula_id,
+        supplied_item=mapper.map(src.supplied_item, SuppliedItemDto),
+        distribution_ids=src.distribution_ids,
+        summary=mapper.map(src.summary, ComputedValueDto),
+        columns=mapper.map_many(src.columns, ComputedValueDto),
+        obsolete=src.obsolete,
+        creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_supplied_item_to_dto(src: SuppliedItem, mapper: Mapper) -> SuppliedItemDto:
+    return SuppliedItemDto(
+        datasheet_id=src.datasheet_id,
+        element_def_id=src.element_def_id,
+        child_reference_id=src.child_reference_id,
+        organization_id=src.organization_id,
+    )

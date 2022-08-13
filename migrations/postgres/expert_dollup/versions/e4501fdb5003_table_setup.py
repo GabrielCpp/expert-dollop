@@ -298,6 +298,16 @@ def create_report_tables():
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 
+    op.create_table(
+        "distribution",
+        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("file_url", String, nullable=False),
+        Column("item_ids", ARRAY(postgresql.UUID(), dimensions=1), nullable=False),
+        Column("state", String(32), nullable=False),
+        Column("obsolete", Boolean, nullable=False),
+        Column("creation_date_utc", DateTime(timezone=True), nullable=False),
+    )
+
 
 def upgrade():
     create_global_table()
