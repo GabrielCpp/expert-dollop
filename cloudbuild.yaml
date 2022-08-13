@@ -45,7 +45,7 @@ steps:
   args: 
   - -ceux
   - |
-    source /workspace/build_vars
+    . /workspace/build_vars
     export CACHE_FROM="$$BUILD_IMAGE:build"
     docker pull $$BUILD_IMAGE:build
     docker-compose -f docker-compose.mongodb.yml -f docker-compose.ci.yml up --exit-code-from test --build test
