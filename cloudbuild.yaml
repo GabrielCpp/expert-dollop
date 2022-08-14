@@ -47,6 +47,7 @@ steps:
     docker image push $$BUILD_CI_IMAGE
   env:
   - 'DOCKER_BUILDKIT=1'
+
  # Test
 - name: 'gcr.io/cloud-builders/docker'
   id: test
@@ -64,6 +65,7 @@ steps:
  # Build
 - name: 'gcr.io/cloud-builders/docker'
   id: build
+  waitFor: [ 'test' ]
   entrypoint: 'bash'
   args: 
   - -ceux
@@ -78,7 +80,7 @@ steps:
 # Deploy
 - name: gcr.io/cloud-builders/docker
   id: deploy
-  waitFor: [ 'test' ]
+  waitFor: [ 'build' ]
   entrypoint: bash
   args:
   - -ceux
