@@ -36,6 +36,7 @@ ENV PATH="/root/.poetry/bin:$PATH"
 CMD [ "bash", "-c", "(mongod > /dev/null &) && poetry run pytest" ]
 
 FROM python:3.8-slim@sha256:d20122663d629b8b0848e2bb78d929c01aabab37c920990b37bb32bc47328818 as release
+WORKDIR /app
 RUN groupadd -g 999 python && \
     useradd -r -u 999 -g python python && \
     mkdir -p /app && chown python:python /app
