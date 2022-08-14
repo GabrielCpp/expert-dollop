@@ -7,7 +7,7 @@ steps:
   args: 
   - -ceux
   - |
-    export BUILD_IMAGE="gcr.io/$PROJECT_ID/expert-dollup"
+    export BUILD_IMAGE="us-central1-docker.pkg.dev/$PROJECT_ID/expert-dollup"
     export BUILD_CI_TAG=ci-build
     export BUILD_CI_IMAGE=$$BUILD_IMAGE:$$BUILD_CI_TAG
     export BUILD_CI_TEST_TAG=ci-test
