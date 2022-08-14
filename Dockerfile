@@ -26,7 +26,7 @@ RUN $HOME/.poetry/bin/poetry install --no-interaction --no-ansi --extras mongo
 
 COPY tasks.py tasks.py
 RUN mkdir -p /data/db && \
-    poetry run invoke env:init --hostname 127.0.0.1 --username '' --password ''
+    $HOME/.poetry/bin/poetry run invoke env:init --hostname 127.0.0.1 --username '' --password ''
 
 COPY assets ./assets
 COPY migrations ./migrations
