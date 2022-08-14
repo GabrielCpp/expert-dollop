@@ -2,7 +2,13 @@ FROM python:3.8-slim@sha256:d20122663d629b8b0848e2bb78d929c01aabab37c920990b37bb
 ENV POETRY_VERSION=1.1.12
 RUN apt-get update -y && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends build-essential gcc curl && \
+    apt-get install -y --no-install-recommends build-essential gcc curl wget gnupg && \
+    # Mongo
+    wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | apt-key add - && \
+    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/6.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
+    apt-get update -y && \ 
+    apt-get install -y mongodb-org && \
+    # Cleanup
     apt-get autoremove -y && \
     apt-get clean -y && \
     curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
@@ -15,13 +21,6 @@ RUN $HOME/.poetry/bin/poetry config virtualenvs.create true && \
     $HOME/.poetry/bin/poetry install --no-dev --no-interaction --no-ansi --extras mongo
 
 FROM build as test
-RUN apt install -y wget gnupg && \
-    wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | apt-key add - && \
-    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/6.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
-    apt-get update -y && \ 
-    apt-get install -y mongodb-org && \
-    apt-get autoremove -y && \
-    apt-get clean -y
 RUN $HOME/.poetry/bin/poetry install --no-interaction --no-ansi --extras mongo
 
 COPY tasks.py tasks.py
