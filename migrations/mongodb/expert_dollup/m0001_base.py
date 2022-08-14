@@ -1,6 +1,5 @@
 from pymongo import DESCENDING, ASCENDING
 from os import environ
-from urllib.parse import urlsplit
 
 version = "1"
 
@@ -65,17 +64,8 @@ async def create_report_tables(db):
 
 
 async def upgrade(db):
-    u = urlsplit(environ["DB_URL"])
-
     await create_global_table(db)
     await create_project_definition_tables(db)
     await create_project_tables(db)
     await create_datasheet_tables(db)
     await create_report_tables(db)
-
-    await db.command(
-        "createUser",
-        u.username,
-        pwd=u.password,
-        roles=["readWrite", "dbAdmin", "dbOwner"],
-    )

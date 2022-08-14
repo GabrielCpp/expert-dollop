@@ -2,7 +2,7 @@ from typing import Optional
 from dotenv import load_dotenv
 from invoke import task
 from pathlib import Path
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse, urlsplit
 from os import environ, path, getcwd
 import base64
 import asyncio
@@ -100,6 +100,29 @@ def generate_jwt_key_pair(c, folder: Path, name: str):
     return public_path, private_path
 
 
+async def create_loal_db_users(url):
+    db_kind = resolve_scheme(urlparse(url).scheme)
+
+    if db_kind != "mongodb":
+        return
+
+    from motor.motor_asyncio import AsyncIOMotorClient
+
+    u = urlsplit(url)
+    db_name = u.path.strip(" /")
+    client = AsyncIOMotorClient(
+        str(urlunsplit((u.scheme, u.netloc, "admin", u.query, u.fragment)))
+    )
+    db = client.get_database(db_name)
+
+    await db.command(
+        "createUser",
+        u.username,
+        pwd=u.password,
+        roles=["readWrite", "dbAdmin", "dbOwner"],
+    )
+
+
 def apply_db_migrations(c, url):
     db_kind = resolve_scheme(url.scheme)
     migration_folder = Path("migrations") / db_kind / url.path[1:]
@@ -112,6 +135,9 @@ def apply_db_migrations(c, url):
 
 
 def resolve_scheme(scheme):
+    if scheme.startswith("mongodb"):
+        return "mongodb"
+
     return scheme
 
 
@@ -134,6 +160,16 @@ def start_docker(c):
     c.run(
         "docker build --target=release -t expert-dollup-release . && docker run -it --entrypoint /bin/bash expert-dollup-release "
     )
+
+
+@task(name="test:ci")
+def test_ci(c):
+    from dotenv import load_dotenv
+
+    load_dotenv()
+    apply_db_migrations(c, urlparse(environ["EXPERT_DOLLUP_DB_URL"]))
+    apply_db_migrations(c, urlparse(environ["AUTH_DB_URL"]))
+    c.run("pytest")
 
 
 @task(name="test:docker")
@@ -211,23 +247,32 @@ def resetEnv(c):
     print(commands)
     c.run(" && ".join(commands))
 
+    print("Creating local db users")
+    asyncio.run(create_loal_db_users(environ["EXPERT_DOLLUP_DB_URL"]))
+    asyncio.run(create_loal_db_users(environ["AUTH_DB_URL"]))
+
+    print("applying local db migrations")
     apply_db_migrations(c, expert_dollup_db_url)
     apply_db_migrations(c, auth_db_url)
 
 
-@task
-def mypy(c):
-    c.run("mypy expert_dollup")
-
-
-@task
-def black(c):
-    c.run("poetry run black .")
+@task(name="migration:apply")
+def migration_apply(c):
+    c.run(
+        "docker build --target=migration -t expert-dollup-migration . && docker run --env-file .env --env EXPERT_DOLLUP_DB_URL=$EXPERT_DOLLUP_DB_URL --env AUTH_DB_URL=$AUTH_DB_URL expert-dollup-migration"
+    )
 
 
 @task(name="db:migrate")
-def migrate_db(c, url):
-    apply_db_migrations(c, urlparse(url))
+def migrate_db(c, url=None):
+    if url is None:
+        expert_dollup_db_url = urlparse(environ["EXPERT_DOLLUP_DB_URL"])
+        auth_db_url = urlparse(environ["AUTH_DB_URL"])
+
+        apply_db_migrations(c, expert_dollup_db_url)
+        apply_db_migrations(c, auth_db_url)
+    else:
+        apply_db_migrations(c, urlparse(url))
 
 
 @task(name="db:migration:new")
