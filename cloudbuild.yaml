@@ -9,9 +9,9 @@ steps:
   - |
     export BUILD_IMAGE="gcr.io/$PROJECT_ID/expert-dollup"
     export BUILD_CI_TAG=ci-build
-    export BUILD_CI_IMAGE=$BUILD_IMAGE:$BUILD_CI_TAG
+    export BUILD_CI_IMAGE=$$BUILD_IMAGE:$BUILD_CI_TAG
     export BUILD_CI_TEST_TAG=ci-test
-    export BUILD_CI_TEST_IMAGE=$BUILD_IMAGE:$BUILD_CI_TEST_TAG
+    export BUILD_CI_TEST_IMAGE=$$BUILD_IMAGE:$BUILD_CI_TEST_TAG
     export BUILD_CACHE_TAGS=$(gcloud container images list-tags $$BUILD_IMAGE --filter="ci-build" --quiet --format=json | sed 's/ *$//g')
     export BUILD_TEST_CACHE_TAGS=$(gcloud container images list-tags $$BUILD_IMAGE --filter="ci-test-" --quiet --format=json | sed 's/ *$//g')
     
