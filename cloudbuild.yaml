@@ -52,7 +52,6 @@ steps:
     docker run test
   env:
   - 'DOCKER_BUILDKIT=1'
-  - 'COMPOSE_DOCKER_CLI_BUILD=1'
 
  # Build
 - name: 'gcr.io/cloud-builders/docker'

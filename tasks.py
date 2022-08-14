@@ -136,23 +136,6 @@ def test_docker(c):
     )
 
 
-@task(name="test:compose")
-def test_compose(c):
-    c.run(
-        "docker-compose -f docker-compose.mongodb.yml -f docker-compose.ci.yml up --abort-on-container-exit --build test"
-    )
-
-
-@task(name="compose:warmup")
-def compose_warmup(c):
-    result = c.run(
-        "export $(cat .env | xargs) && poetry run wait-for-it --service $EXPERT_DOLLUP_DB_URL -- echo 'mongo is up' &&poetry run invoke db:migrate --url $EXPERT_DOLLUP_DB_URL && poetry run invoke db:migrate --url $AUTH_DB_URL && poetry run pytest"
-    )
-
-    print(f"Returned {result.return_code}")
-    exit(result.return_code)
-
-
 @task(name="env:init")
 def generate_env(
     c,
@@ -211,7 +194,7 @@ def resetEnv(c):
 
     for file_suffix in images_to_load:
         commands.append(
-            f"docker-compose -f docker-compose.{file_suffix}.yml down --remove-orphans --volumes"
+            f"docker-compose -f images/docker-compose.{file_suffix}.yml down --remove-orphans --volumes"
         )
         commands.append(
             f"docker-compose -f docker-compose.{file_suffix}.yml  up --detach --force-recreate"
