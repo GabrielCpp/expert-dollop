@@ -13,7 +13,6 @@ steps:
     export BUILD_CI_TEST_TAG=ci-test
     export BUILD_CI_TEST_IMAGE=$$BUILD_IMAGE:$$BUILD_CI_TEST_TAG
     export BUILD_CACHE_TAGS=$(gcloud container images list-tags $$BUILD_IMAGE --filter="ci-build" --quiet --format=json | sed 's/ *$//g')
-    export BUILD_TEST_CACHE_TAGS=$(gcloud container images list-tags $$BUILD_IMAGE --filter="ci-test" --quiet --format=json | sed 's/ *$//g')
     
     if [ -z "$BRANCH_NAME" ]; then
       export BUILD_BRANCH_NAME="main"
@@ -55,16 +54,8 @@ steps:
   - -ceux
   - |
     source /workspace/build_vars
-
-    if [ "$$BUILD_TEST_CACHE_TAGS" == "[]" ]; then
-      docker pull $$BUILD_CI_IMAGE
-      docker build --target=test -t $$BUILD_CI_TEST_IMAGE --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $$BUILD_CI_IMAGE .
-    else 
-      docker pull $$BUILD_CI_TEST_IMAGE
-      docker build --target=test -t $$BUILD_CI_TEST_IMAGE --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $$BUILD_CI_TEST_IMAGE . 
-    fi
-    
-    docker image push $$BUILD_CI_TEST_IMAGE
+    docker pull $$BUILD_CI_IMAGE
+    docker build --target=test -t $$BUILD_CI_TEST_IMAGE --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $$BUILD_CI_IMAGE .
     docker run $$BUILD_CI_TEST_IMAGE
   env:
   - 'DOCKER_BUILDKIT=1'
@@ -115,7 +106,7 @@ options:
   logging: GCS_ONLY
 availableSecrets:
   secretManager:
-  - versionName: projects/PROJECT_ID/secrets/migration-user-auth-db/versions/latest
+  - versionName: projects/$PROJECT_ID/secrets/migration-user-auth-db/versions/latest
     env: 'MIGRATION_USER_AUTH_DB'
-  - versionName: projects/PROJECT_ID/secrets/migration-user-expert-dollup-db/versions/latest
+  - versionName: projects/$PROJECT_ID/secrets/migration-user-expert-dollup-db/versions/latest
     env: 'MIGRATION_USER_EXPERT_DOLLUP_DB'
