@@ -78,14 +78,30 @@ class CollectionDetails:
         return build_count_key_id(d, keys_set)
 
 
+from pymongo.errors import InvalidURI
+from logging import getLogger
+
+logger = getLogger("mongo")
+
+
 class MongoConnection(DbConnection):
     def __init__(self, connection_string: str, **kwargs):
-        self._client = AsyncIOMotorClient(
-            connection_string,
-            tz_aware=True,
-            connect=False,
-            uuidRepresentation="standard",
-        )
+        try:
+            self._client = AsyncIOMotorClient(
+                connection_string,
+                tz_aware=True,
+                connect=False,
+                uuidRepresentation="standard",
+            )
+        except InvalidURI as e:
+            logger.exception(
+                "Invalid URI",
+                extra=dict(
+                    connection_string=connection_string, original_message=str(e)
+                ),
+            )
+            raise
+
         self.db_name = urlparse(connection_string).path.strip("/ ")
         self.collections: Dict[Type, CollectionDetails] = {}
 
