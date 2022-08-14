@@ -62,6 +62,6 @@ ENV FASTAPI_ENV=production
 ENV DEBUG=false
 ENV PORT=8000
 ENV PATH="/app/venv/bin:$PATH"
-CMD [ "python", "-m", "uvicorn", "--host", "0.0.0.0:${PORT}", "expert_dollup.main:app" ]
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD curl -f https://localhost:80/health
+CMD [ "python", "-m", "uvicorn", "--host", "0.0.0.0:8000", "expert_dollup.main:app" ]
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD curl -f https://128.0.0.1:8000/health
 
