@@ -8,8 +8,12 @@ steps:
   - -ceux
   - |
     export BUILD_IMAGE="gcr.io/$PROJECT_ID/expert-dollup"
-    export BUILD_CACHE_TAGS=$(gcloud container images list-tags $$BUILD_IMAGE --filter="^build$" --quiet --format=json | sed 's/ *$//g')
-    export BUILD_TEST_CACHE_TAGS=$(gcloud container images list-tags $$BUILD_IMAGE --filter="^test$" --quiet --format=json | sed 's/ *$//g')
+    export BUILD_CI_TAG=ci-build
+    export BUILD_CI_IMAGE=$BUILD_IMAGE:$BUILD_CI_TAG
+    export BUILD_CI_TEST_TAG=ci-test
+    export BUILD_CI_TEST_IMAGE=$BUILD_IMAGE:$BUILD_CI_TEST_TAG
+    export BUILD_CACHE_TAGS=$(gcloud container images list-tags $$BUILD_IMAGE --filter="ci-build" --quiet --format=json | sed 's/ *$//g')
+    export BUILD_TEST_CACHE_TAGS=$(gcloud container images list-tags $$BUILD_IMAGE --filter="ci-test-" --quiet --format=json | sed 's/ *$//g')
     
     if [ -z "$BRANCH_NAME" ]; then
       export BUILD_BRANCH_NAME="main"
@@ -34,11 +38,11 @@ steps:
     source /workspace/build_vars
 
     if [ "$$BUILD_CACHE_TAGS" == "[]" ]; then
-      docker build --target=build -t $$BUILD_IMAGE:build --build-arg BUILDKIT_INLINE_CACHE=1 .
-      docker image push $$BUILD_IMAGE:build
+      docker build --target=build -t $$BUILD_CI_IMAGE --build-arg BUILDKIT_INLINE_CACHE=1 .
+      docker image push $$BUILD_CI_IMAGE
     else 
-      docker pull $$BUILD_IMAGE:build
-      docker build --target=build -t $$BUILD_IMAGE:build --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $$BUILD_IMAGE:build . 
+      docker pull $$BUILD_CI_IMAGE
+      docker build --target=build -t $$BUILD_CI_IMAGE --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $$BUILD_CI_IMAGE . 
     fi
   env:
   - 'DOCKER_BUILDKIT=1'
@@ -52,14 +56,14 @@ steps:
     source /workspace/build_vars
 
     if [ "$$BUILD_TEST_CACHE_TAGS" == "[]" ]; then
-      docker build --target=build -t $$BUILD_IMAGE:test --build-arg BUILDKIT_INLINE_CACHE=1 -cache-from $$BUILD_IMAGE:build .
+      docker build --target=build -t $$BUILD_CI_TEST_IMAGE --build-arg BUILDKIT_INLINE_CACHE=1 -cache-from $$BUILD_CI_IMAGE .
     else 
-      docker pull $$BUILD_IMAGE:test
-      docker build --target=test -t $$BUILD_IMAGE:test --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $$BUILD_IMAGE:test . 
+      docker pull $$BUILD_CI_TEST_IMAGE
+      docker build --target=test -t $$BUILD_CI_TEST_IMAGE --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $$BUILD_CI_TEST_IMAGE . 
     fi
     
-    docker image push $$BUILD_IMAGE:test
-    docker run $$BUILD_IMAGE:test
+    docker image push $$BUILD_CI_TEST_IMAGE
+    docker run $$BUILD_CI_TEST_IMAGE
   env:
   - 'DOCKER_BUILDKIT=1'
 
@@ -71,8 +75,8 @@ steps:
   - -ceux
   - |
     source /workspace/build_vars
-    docker pull -q $$BUILD_IMAGE:build
-    docker build --target=release -t $$BUILD_IMAGE:$$BUILD_TAG --cache-from $$BUILD_IMAGE:build . 
+    docker pull -q $$BUILD_CI_IMAGE
+    docker build --target=release -t $$BUILD_IMAGE:$$BUILD_TAG --cache-from $$BUILD_CI_IMAGE . 
     docker push $$BUILD_IMAGE:$$BUILD_TAG
   env:
   - 'DOCKER_BUILDKIT=1'
