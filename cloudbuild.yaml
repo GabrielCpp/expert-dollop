@@ -101,7 +101,7 @@ steps:
     docker run --env EXPERT_DOLLUP_DB_URL=$$MIGRATION_USER_EXPERT_DOLLUP_DB --env AUTH_DB_URL=$$MIGRATION_USER_AUTH_DB expert-dollup-migration
 
  # TODO: Trigger pulumi
-logsBucket: $$LOGS_BUCKET_NAME
+logsBucket: $$_LOGS_BUCKET_NAME
 options:
   logging: GCS_ONLY
 availableSecrets:
