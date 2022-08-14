@@ -101,7 +101,7 @@ steps:
   id: migrate
   entrypoint: 'bash'
   waitFor: [ 'test' ]
-  secretEnv: ['MIGRATION_USER_AUTH_DB', 'PASSWORD']
+  secretEnv: ['MIGRATION_USER_AUTH_DB', 'MIGRATION_USER_EXPERT_DOLLUP_DB']
   args: 
   - -ceux
   - |
