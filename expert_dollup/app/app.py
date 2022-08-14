@@ -35,6 +35,8 @@ def creat_app(container: Injector = None):
     logger = container.get(Logger)
     debug = is_debug_enabled()
 
+    logger.info("Injection container creation is done")
+
     app = FastAPI(debug=debug)
     app.add_middleware(
         create_node_middleware(

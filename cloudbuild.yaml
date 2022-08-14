@@ -92,7 +92,7 @@ steps:
     docker tag $$BUILD_IMAGE:$$BUILD_TAG $$BUILD_IMAGE:latest
     docker image push $$BUILD_IMAGE:latest
 
-  # Migrate
+# Migrate
 - name: 'gcr.io/cloud-builders/docker'
   id: migrate
   waitFor: [ 'test' ]
@@ -115,7 +115,7 @@ options:
   logging: GCS_ONLY
 availableSecrets:
   secretManager:
-  - versionName: projects/$PROJECT_ID/secrets/migration-user-auth-db/versions/1
+  - versionName: projects/$PROJECT_ID/secrets/migration-user-auth-db/versions/latest
     env: 'MIGRATION_USER_AUTH_DB'
   - versionName: projects/$PROJECT_ID/secrets/migration-user-expert-dollup-db/versions/latest
     env: 'MIGRATION_USER_EXPERT_DOLLUP_DB'
