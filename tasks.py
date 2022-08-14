@@ -129,9 +129,9 @@ def apply_db_migrations(c, url):
 
     if db_kind == "mongodb":
         environ["DB_URL"] = urlunparse(url)
-        c.run(f"poetry run python {migration_folder}")
+        c.run(f"python {migration_folder}")
     elif db_kind == "postgres":
-        c.run("poetry run alembic upgrade head")
+        c.run("alembic upgrade head")
 
 
 def resolve_scheme(scheme):
@@ -144,15 +144,13 @@ def resolve_scheme(scheme):
 @task(name="start-https")
 def start_https(c):
     c.run(
-        "poetry run uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000 --ssl-keyfile .local/predykt.dev.key --ssl-certfile .local/predykt.dev.crt"
+        "uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000 --ssl-keyfile .local/predykt.dev.key --ssl-certfile .local/predykt.dev.crt"
     )
 
 
 @task
 def start(c):
-    c.run(
-        "poetry run uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000"
-    )
+    c.run("uvicorn expert_dollup.main:app --reload --host 0.0.0.0 --port 8000")
 
 
 @task(name="start:docker")
@@ -281,7 +279,7 @@ def newMigration(c, message=None):
         print("Message required")
         return
 
-    c.run('poetry run alembic revision -m "{}"'.format(message))
+    c.run(f'alembic revision -m "{message}"')
 
 
 @task(name="db:truncate")
