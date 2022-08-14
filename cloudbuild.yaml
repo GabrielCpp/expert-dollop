@@ -9,6 +9,7 @@ steps:
   - |
     export BUILD_IMAGE="gcr.io/$PROJECT_ID/expert-dollup"
     export BUILD_CACHE_TAGS=$(gcloud container images list-tags $$BUILD_IMAGE --filter="'build'" --quiet --format=json | sed 's/ *$//g')
+    export TEST_CACHE_TAGS=$(gcloud container images list-tags $$BUILD_IMAGE --filter="'test'" --quiet --format=json | sed 's/ *$//g')
     
     if [ -z "$BRANCH_NAME" ]; then
       export BUILD_BRANCH_NAME="main"
@@ -35,6 +36,9 @@ steps:
     if [ "$$BUILD_CACHE_TAGS" == "[]" ]; then
       docker build --target=build -t $$BUILD_IMAGE:build --build-arg BUILDKIT_INLINE_CACHE=1 .
       docker image push $$BUILD_IMAGE:build
+    else 
+      docker pull $$BUILD_IMAGE:build
+      docker build --target=build -t $$BUILD_IMAGE:build --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $$BUILD_IMAGE:build . 
     fi
   env:
   - 'DOCKER_BUILDKIT=1'
@@ -46,10 +50,16 @@ steps:
   - -ceux
   - |
     source /workspace/build_vars
-    export CACHE_FROM="$$BUILD_IMAGE:build"
-    docker pull $$BUILD_IMAGE:build
-    docker build --target=test -t test --cache-from $$BUILD_IMAGE:build . 
-    docker run test
+
+    if [ "$$TEST_CACHE_TAGS" == "[]" ]; then
+      docker build --target=build -t $$BUILD_IMAGE:test --build-arg BUILDKIT_INLINE_CACHE=1 .
+    else 
+      docker pull $$BUILD_IMAGE:test
+      docker build --target=test -t $$BUILD_IMAGE:test --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $$BUILD_IMAGE:test . 
+    fi
+    
+    docker image push $$BUILD_IMAGE:test
+    docker run $$BUILD_IMAGE:test
   env:
   - 'DOCKER_BUILDKIT=1'
 
