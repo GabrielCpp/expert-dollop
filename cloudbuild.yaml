@@ -78,6 +78,7 @@ steps:
 # Deploy
 - name: gcr.io/cloud-builders/docker
   id: deploy
+  waitFor: [ 'test' ]
   entrypoint: bash
   args:
   - -ceux
@@ -92,12 +93,15 @@ steps:
   # Migrate
 - name: 'gcr.io/cloud-builders/docker'
   id: migrate
-  entrypoint: 'bash'
   waitFor: [ 'test' ]
+  entrypoint: 'bash'
   secretEnv: ['MIGRATION_USER_AUTH_DB', 'MIGRATION_USER_EXPERT_DOLLUP_DB']
   args: 
   - -ceux
   - |
+    source /workspace/build_vars
+    if [ "$$BUILD_BRANCH_NAME" != "main" ]; then exit 0; fi
+
     docker build --target=migration -t expert-dollup-migration --cache-from $$BUILD_CI_IMAGE . 
     docker run --env EXPERT_DOLLUP_DB_URL=$$MIGRATION_USER_EXPERT_DOLLUP_DB --env AUTH_DB_URL=$$MIGRATION_USER_AUTH_DB expert-dollup-migration
 
