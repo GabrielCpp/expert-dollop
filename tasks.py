@@ -172,6 +172,7 @@ def generate_env(
         "FASTAPI_ENV=development",
         f"DB_USERNAME={username}",
         f"DB_PASSWORD={password}",
+        "PORT=8000",
     ]
 
     with open(".env", "w") as f:

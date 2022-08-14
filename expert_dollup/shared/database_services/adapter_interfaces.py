@@ -202,6 +202,7 @@ def create_connection(
             from .database_adapters.mongo_adapter import MongoConnection
 
             DbConnection._REGISTRY["mongodb"] = MongoConnection
+            DbConnection._REGISTRY["mongodb+srv"] = MongoConnection
         except:
             pass
 
