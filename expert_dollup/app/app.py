@@ -69,6 +69,10 @@ def creat_app(container: Injector = None):
 
     database = container.get(ExpertDollupDatabase)
 
+    @app.get("/health")
+    def check_health():
+        return "ok"
+
     @app.on_event("startup")
     async def startup():
         if not database.is_connected:

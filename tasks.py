@@ -156,7 +156,7 @@ def start(c):
 @task(name="start:docker")
 def start_docker(c):
     c.run(
-        "docker build --target=release -t expert-dollup-release . && docker run -it --entrypoint /bin/bash expert-dollup-release "
+        "docker build --target=release -t expert-dollup-release . && docker run --env-file .env -it --entrypoint /bin/bash   "
     )
 
 
