@@ -1,5 +1,5 @@
 from jwt import encode, decode, DecodeError
-from typing import Union, List, Dict, Any
+from typing import Union, List, Dict, Any, Optional
 from starlette.requests import Request
 from uuid import UUID
 from .settings import AppSettings
@@ -34,6 +34,12 @@ class AuthJWT(AuthService[User]):
         self.settings = settings
         self.user_service = user_service
         self.ressource_service = ressource_service
+
+    def authentification_optional(self, request: Request) -> Optional[Dict[str, Any]]:
+        try:
+            return self.authentification_required(request)
+        except NoBearerAuthorizationHeader:
+            return None
 
     def authentification_required(self, request: Request) -> Dict[str, Any]:
         authorization_header = request.headers.get("Authorization", "")

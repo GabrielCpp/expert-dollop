@@ -1,23 +1,20 @@
 {
-    "python.pythonPath": ".venv/bin/python",
-    "python.testing.pytestArgs": [
-        "tests"
-    ],
-    "editor.defaultFormatter": null,
-    "editor.formatOnSave": false,
-    "[python]": {
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "ms-python.python",
-        "editor.formatOnPaste": false
-    },
-    "[json]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
-    },
-    "python.formatting.provider": "black",
-    "python.formatting.blackPath": "./.venv/bin/black",
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
-    "[html]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
-    }
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "python.testing.pytestArgs": ["tests"],
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "ms-python.python",
+    "editor.formatOnPaste": false
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "python.formatting.provider": "black",
+  "python.formatting.blackPath": "./.venv/bin/black",
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

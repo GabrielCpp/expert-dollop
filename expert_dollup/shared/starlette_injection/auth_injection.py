@@ -6,6 +6,14 @@ from .auth_service import AuthService
 from .inject_controller import Inject
 
 
+class AuthenticationOptional:
+    async def __call__(
+        self, request: Request, auth: AuthService = Depends(Inject(AuthService))
+    ):
+        user = auth.authentification_optional(request)
+        return user
+
+
 class AuthenticationRequired:
     async def __call__(
         self, request: Request, auth: AuthService = Depends(Inject(AuthService))

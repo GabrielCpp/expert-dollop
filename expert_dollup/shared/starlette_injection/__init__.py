@@ -15,6 +15,7 @@ from .helpers import is_development
 from .unique_id import IdProvider, UniqueIdGenerator
 from .auth_service import AuthService
 from .auth_injection import (
+    AuthenticationOptional,
     AuthenticationRequired,
     CanPerformRequired,
     CanPerformOnRequired,

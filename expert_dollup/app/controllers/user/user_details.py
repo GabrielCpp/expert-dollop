@@ -9,7 +9,7 @@ from expert_dollup.shared.starlette_injection import (
     Inject,
     RequestHandler,
     MappingChain,
-    AuthenticationRequired,
+    AuthenticationOptional,
 )
 
 router = APIRouter()
@@ -19,7 +19,11 @@ router = APIRouter()
 async def get_current_user(
     service=Depends(Inject(CollectionService[User])),
     mapper=Depends(Inject(Mapper)),
-    user_dict=Depends(AuthenticationRequired()),
+    user_dict=Depends(AuthenticationOptional()),
 ) -> UserDto:
+    if user_dict is None:
+        return None
+
     user = await service.find_by_id(user_dict.get("sub"))
+
     return mapper.map(user, UserDto)
