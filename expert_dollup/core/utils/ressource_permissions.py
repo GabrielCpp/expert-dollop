@@ -20,6 +20,9 @@ class RessourceAuthorisation:
 
 
 def set_of(*actions: str) -> frozenset:
+    assert (
+        all(isinstance(a, str) for a in actions) == True
+    ), "All actions must be string"
     return frozenset(actions)
 
 
@@ -31,7 +34,7 @@ RESSOURCE_KIND_BY_DOMAIN = {
     ),
     ProjectDefinition: RessourceAuthorisation("project_definition", RESSOURCE_ACTIONS),
     Translation: RessourceAuthorisation("translation", RESSOURCE_ACTIONS),
-    Datasheet: RessourceAuthorisation("datasheet", set_of(RESSOURCE_ACTIONS, "clone")),
+    Datasheet: RessourceAuthorisation("datasheet", set_of(*RESSOURCE_ACTIONS, "clone")),
 }
 
 

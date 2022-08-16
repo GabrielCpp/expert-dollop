@@ -112,7 +112,11 @@ class AuthJWT(AuthService[User]):
             raise Exception("Missing private key to generate the token")
 
         return encode(
-            {"aud": self.settings.authjwt.audiences, "sub": oauth_id},
+            {
+                "aud": self.settings.authjwt.audiences,
+                "sub": oauth_id,
+                "iss": self.settings.authjwt.issuer,
+            },
             self.settings.authjwt.private_key,
             algorithm=ALGORITHM,
         )
