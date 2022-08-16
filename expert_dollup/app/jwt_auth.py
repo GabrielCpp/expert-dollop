@@ -1,4 +1,5 @@
 from jwt import encode, decode, DecodeError
+from jwt.algorithms import get_default_algorithms
 from typing import Union, List, Dict, Any, Optional
 from starlette.requests import Request
 from uuid import UUID
@@ -9,6 +10,7 @@ from expert_dollup.shared.starlette_injection import DetailedError, AuthService,
 from expert_dollup.shared.database_services import RecordNotFound
 
 BEARER_AUTH = "Bearer"
+ALGORITHM = "RS256"
 
 
 class NoBearerAuthorizationHeader(Exception):
@@ -52,9 +54,10 @@ class AuthJWT(AuthService[User]):
         try:
             decoded = decode(
                 token,
-                self.settings.authjwt_public_key,
-                audience=self.settings.authjwt_decode_audience,
-                algorithms=[self.settings.authjwt_algorithm],
+                self.settings.authjwt.public_key,
+                issuer=self.settings.authjwt.issuer,
+                audience=self.settings.authjwt.audiences,
+                algorithms=[ALGORITHM],
             )
         except DecodeError as e:
             raise InvalidBearerToken("Invalid bearer token", reason=str(e))
@@ -96,7 +99,7 @@ class AuthJWT(AuthService[User]):
         try:
             user = await self.user_service.find_by_id(oauth_id)
         except RecordNotFound:
-            raise PermissionMissing("Permission missing", reason="user missing")
+            raise PermissionMissing("Permission missing", reason="user not found")
 
         for permission in permissions:
             if not permission in user.permissions:
@@ -105,11 +108,11 @@ class AuthJWT(AuthService[User]):
         return user
 
     def make_token(self, oauth_id: str) -> str:
-        if self.settings.authjwt_private_key is None:
+        if self.settings.authjwt.private_key is None:
             raise Exception("Missing private key to generate the token")
 
         return encode(
-            {"aud": self.settings.authjwt_decode_audience, "sub": oauth_id},
-            self.settings.authjwt_private_key,
-            algorithm=self.settings.authjwt_algorithm,
+            {"aud": self.settings.authjwt.audiences, "sub": oauth_id},
+            self.settings.authjwt.private_key,
+            algorithm=ALGORITHM,
         )

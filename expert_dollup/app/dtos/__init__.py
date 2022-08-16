@@ -109,3 +109,4 @@ from .organization_dto import (
     OrganizationDto,
     OrganizationLimitsDto,
 )
+from .ressource_dto import RessourceBatchImportDto

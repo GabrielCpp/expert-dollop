@@ -19,16 +19,19 @@ class RessourceAuthorisation:
     actions: Set[str]
 
 
-RESSOURCE_ACTIONS = set(["read", "update", "create", "delete"])
+def set_of(*actions: str) -> frozenset:
+    return frozenset(actions)
+
+
+RESSOURCE_ACTIONS = frozenset(["read", "update", "create", "delete"])
 RESSOURCE_KIND_BY_DOMAIN = {
+    Ressource: RessourceAuthorisation("ressource", set_of("imports")),
     ProjectDetails: RessourceAuthorisation(
-        "project", set(chain(RESSOURCE_ACTIONS, ["clone"]))
+        "project", set_of(*RESSOURCE_ACTIONS, "clone")
     ),
     ProjectDefinition: RessourceAuthorisation("project_definition", RESSOURCE_ACTIONS),
     Translation: RessourceAuthorisation("translation", RESSOURCE_ACTIONS),
-    Datasheet: RessourceAuthorisation(
-        "datasheet", set(chain(RESSOURCE_ACTIONS, ["clone"]))
-    ),
+    Datasheet: RessourceAuthorisation("datasheet", set_of(RESSOURCE_ACTIONS, "clone")),
 }
 
 

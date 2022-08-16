@@ -214,6 +214,8 @@ def generate_env(
         f"DB_USERNAME={username}",
         f"DB_PASSWORD={password}",
         "PORT=8000",
+        'JWT_AUDIENCES=["https://dev-id3ta63u.us.auth0.com/api/v2/","https://dev-id3ta63u.us.auth0.com/userinfo"]',
+        "JWT_ISSUER=https://dev-id3ta63u.us.auth0.com/",
     ]
 
     with open(".env", "w") as f:
