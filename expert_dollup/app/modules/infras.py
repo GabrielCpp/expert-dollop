@@ -33,6 +33,7 @@ from expert_dollup.infra.ressource_engine import RessourceEngine
 from expert_dollup.core.utils.ressource_permissions import get_ressource_domain
 from expert_dollup.core.domains import *
 import expert_dollup.core.repositories as repositories
+from expert_dollup.app.settings import load_app_settings
 
 storage_exception_mappings = {ObjectNotFound: lambda e: RessourceNotFound()}
 
@@ -76,10 +77,11 @@ def bind_database_context(binder: Binder) -> None:
 
 
 def bind_storage(binder: Binder) -> None:
+    settings = load_app_settings()
     storage = (
-        StorageProxy(LocalStorage("expertdollup"), storage_exception_mappings)
+        StorageProxy(LocalStorage(settings.app_bucket_name), storage_exception_mappings)
         if is_development()
-        else GoogleCloudStorage("expertdollup")
+        else GoogleCloudStorage(settings.app_bucket_name)
     )
     binder.bind(ExpertDollupStorage, to=storage, scope=singleton)
 

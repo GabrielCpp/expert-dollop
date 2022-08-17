@@ -216,6 +216,7 @@ def generate_env(
         "PORT=8000",
         'JWT_AUDIENCES=["https://dev-id3ta63u.us.auth0.com/api/v2/","https://dev-id3ta63u.us.auth0.com/userinfo"]',
         "JWT_ISSUER=https://dev-id3ta63u.us.auth0.com/",
+        "APP_BUCKET_NAME=expertdollup",
     ]
 
     with open(".env", "w") as f:
