@@ -60,8 +60,8 @@ exception_handlers = {
         status_code=httplib.UNAUTHORIZED,
     ),
     PermissionMissing: lambda e: JSONResponse(
-        problem(title="Unauthorized", type="unauthorized", errors=["Unauthorized"]),
-        status_code=httplib.UNAUTHORIZED,
+        problem(title="Ressource not found", type="ressource-not-found"),
+        status_code=httplib.NOT_FOUND,
     ),
 }
 
