@@ -129,7 +129,7 @@ union FieldDetailsUnion =
 
 type TranslationConfig {
   helpTextName: String!
-  label: String
+  label: String!
 }
 
 type TriggerParam {
@@ -176,12 +176,12 @@ type ReferenceId {
   uuid: String!
 }
 
-
 type BoolFieldValue {
   enabled: Boolean!
 }
 
-union FieldValue = IntFieldValue
+union FieldValue =
+    IntFieldValue
   | DecimalFieldValue
   | StringFieldValue
   | BoolFieldValue
@@ -449,25 +449,25 @@ type ReportDefinitionStructure {
 }
 
 type ReportDefinition {
-    id: String!
-    projectDefinitionId: String!
-    name: String!
-    structure: ReportDefinitionStructure!
+  id: String!
+  projectDefinitionId: String!
+  name: String!
+  structure: ReportDefinitionStructure!
 }
 
 type ReportRow {
-    nodeId: String!
-    formulaId: String!
-    elementDefId: String!
-    childReferenceId: String!
-    columns: [ComputedValue!]!
+  nodeId: String!
+  formulaId: String!
+  elementDefId: String!
+  childReferenceId: String!
+  columns: [ComputedValue!]!
 }
 
 type ComputedValue {
-    label: String!
-    value: FieldValue!
-    unit: String
-    isVisible: Boolean!
+  label: String!
+  value: FieldValue!
+  unit: String
+  isVisible: Boolean!
 }
 
 type StageColumn {
@@ -498,7 +498,7 @@ type SuppliedItem {
   organization: Organization!
 }
 
-type DistributableItem { 
+type DistributableItem {
   id: String!
   projectId: String!
   reportDefinitionId: String!
@@ -538,22 +538,22 @@ type PageInfo {
 }
 
 type Organization {
-    id: String!
-    name: String!
-    email: String!
+  id: String!
+  name: String!
+  email: String!
 }
 
 type User {
-    oauthId: ID!
-    id: String!
-    email: String!
-    permissions: [String!]!
-    organizationId: String!
+  oauthId: ID!
+  id: String!
+  email: String!
+  permissions: [String!]!
+  organizationId: String!
 }
 
 input NewSingleUserOrganizationInput {
-    organizationName: String!
-    email: String!
+  organizationName: String!
+  email: String!
 }
 
 type Query {
@@ -587,7 +587,10 @@ type Query {
     projectDefinitionId: ID!
     formId: ID!
   ): ProjectDefinitionNodeTree!
-  findProjectDefinitionNode(projectDefinitionId: ID!, id: ID!): ProjectDefinitionNode!
+  findProjectDefinitionNode(
+    projectDefinitionId: ID!
+    id: ID!
+  ): ProjectDefinitionNode!
   findRessourceTranslation(
     ressourceId: ID!
     language: String!
@@ -618,7 +621,10 @@ type Query {
 
   # CommandOrder
   findDistributables(projectId: ID!): [ReportDefinition!]!
-  findDistributableItems(projectId: ID!, reportDefinitionId: ID!): [DistributableItem!]!
+  findDistributableItems(
+    projectId: ID!
+    reportDefinitionId: ID!
+  ): [DistributableItem!]!
 }
 
 input TranslationInput {
@@ -639,17 +645,17 @@ input TranslationUpdateInput {
 }
 
 input FieldUpdateInput {
-    nodeId: ID!
-    value: FieldValueInput!
+  nodeId: ID!
+  value: FieldValueInput!
 }
 
 input ProjectNodeCollectionTargetInput {
-    parentNodeId: String
-    collectionTypeId: String!
+  parentNodeId: String
+  collectionTypeId: String!
 }
 
 input DatasheetInput {
-  name: String! 
+  name: String!
   projectDefinitionId: String!
   fromDatasheetId: String
 }
@@ -677,7 +683,10 @@ type Mutation {
 
   deleteProjectCollection(projectId: ID!, collectionNodeId: ID!): ProjectNode!
   cloneProjectCollection(projectId: ID!, collectionNodeId: ID!): [ProjectNode!]!
-  addProjectCollectionItem(projectId: ID!, collectionTarget: ProjectNodeCollectionTargetInput!): [ProjectNode!]!
+  addProjectCollectionItem(
+    projectId: ID!
+    collectionTarget: ProjectNodeCollectionTargetInput!
+  ): [ProjectNode!]!
 
   # Project
   createProject(projectDetails: ProjectDetailsInput): ProjectDetails!
@@ -686,8 +695,9 @@ type Mutation {
   createDatasheet(datasheet: DatasheetInput): Datasheet!
 
   # User
-  createSingleUserOrganization(singleUserOrganization: NewSingleUserOrganizationInput!): User!
-
+  createSingleUserOrganization(
+    singleUserOrganization: NewSingleUserOrganizationInput!
+  ): User!
 }
 
 schema {
