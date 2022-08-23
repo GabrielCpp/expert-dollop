@@ -20,6 +20,14 @@ class ProjectDefinitionDtoFactory(factory.Factory):
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
+class IntFieldConfigDtoFactory(factory.Factory):
+    class Meta:
+        model = IntFieldConfigDto
+
+    unit = "kg"
+    default_value = factory.Faker("pyint", min_value=0, max_value=1000)
+
+
 class ProjectDefinitionNodeDtoFactory(factory.Factory):
     class Meta:
         model = ProjectDefinitionNodeDto
@@ -30,19 +38,19 @@ class ProjectDefinitionNodeDtoFactory(factory.Factory):
     is_collection = False
     instanciate_by_default = True
     order_index = factory.Sequence(lambda n: n)
-    config = factory.LazyAttribute(
-        lambda o: NodeConfigDto(
-            field_details=IntFieldConfigDto(unit="Kg"),
-            value_validator={"type": "integer", "minimum": 0, "maximum": 100000},
-            triggers=[],
-            translations=TranslationConfigDto(
-                help_text_name=f"{o.name}_help_text", label=o.name
-            ),
-            meta=NodeMetaConfigDto(is_visible=True),
+    triggers = factory.List([])
+    field_details = IntFieldConfigDtoFactory()
+    meta = NodeMetaConfigDto(is_visible=True)
+    translations = factory.LazyAttribute(
+        lambda o: TranslationConfigDto(
+            help_text_name=f"{o.name}_help_text", label=o.name
         )
     )
+    validator = factory.LazyAttribute(
+        lambda o: {"type": "integer", "minimum": 0, "maximum": 100000}
+    )
     default_value = IntFieldValueDto(integer=0)
-    path = []
+    path = factory.List([])
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 

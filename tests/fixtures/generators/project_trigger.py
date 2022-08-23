@@ -22,13 +22,10 @@ class ProjectWithTrigger:
             is_collection=False,
             instanciate_by_default=True,
             order_index=0,
-            config=NodeConfig(
-                translations=TranslationConfig(
-                    help_text_name="root_a_text", label="root_a"
-                ),
-                meta=NodeMetaConfig(is_visible=True),
+            translations=TranslationConfig(
+                help_text_name="root_a_text", label="root_a"
             ),
-            default_value=None,
+            meta=NodeMetaConfig(is_visible=True),
         )
         subsection_a = self._create_container_node(root_a)
         form_a = self._create_container_node(subsection_a)
@@ -46,13 +43,10 @@ class ProjectWithTrigger:
             is_collection=True,
             instanciate_by_default=False,
             order_index=1,
-            config=NodeConfig(
-                translations=TranslationConfig(
-                    help_text_name="root_b_text", label="root_b"
-                ),
-                meta=NodeMetaConfig(is_visible=False),
+            translations=TranslationConfig(
+                help_text_name="root_b_text", label="root_b"
             ),
-            default_value=None,
+            meta=NodeMetaConfig(is_visible=False),
         )
 
         field_a = self._create_checkbox_field(section_a, root_b.id)
@@ -77,8 +71,7 @@ class ProjectWithTrigger:
         level = len(parent.path)
         label = self.labels[level]
         name = f"{parent.name}_{label}_0"
-        config = self.field_config_factory.build_config(name, 0)
-
+        field_details = self.field_config_factory.build(name, 0)
         node = ProjectDefinitionNodeFactory(
             name=name,
             project_definition_id=parent.project_definition_id,
@@ -86,8 +79,7 @@ class ProjectWithTrigger:
             is_collection=is_collection,
             instanciate_by_default=True,
             order_index=0,
-            config=config,
-            default_value=None,
+            field_details=field_details,
         )
 
         return node
@@ -98,11 +90,9 @@ class ProjectWithTrigger:
         level = len(parent.path)
         label = self.labels[level]
         name = f"{parent.name}_{label}_0"
-        config = self.field_config_factory.build_config(
+        field_details = self.field_config_factory.build(
             name, 0, CollapsibleContainerFieldConfig
         )
-        value = self.field_config_factory.build_value(CollapsibleContainerFieldConfig)
-
         node = ProjectDefinitionNodeFactory(
             name=name,
             project_definition_id=parent.project_definition_id,
@@ -110,8 +100,7 @@ class ProjectWithTrigger:
             is_collection=is_collection,
             instanciate_by_default=True,
             order_index=0,
-            config=config,
-            default_value=value,
+            field_details=field_details,
         )
 
         return node
@@ -122,18 +111,6 @@ class ProjectWithTrigger:
         level = len(parent.path)
         label = self.labels[level]
         name = f"{parent.name}_{label}_0"
-        config = self.field_config_factory.build_config(name, 0, BoolFieldConfig)
-        value = self.field_config_factory.build_value(BoolFieldConfig)
-        value = False
-
-        config.triggers.append(
-            Trigger(
-                action=TriggerAction.SET_VISIBILITY,
-                target_type_id=target_type_id,
-                params={},
-            )
-        )
-
         node = ProjectDefinitionNodeFactory(
             name=name,
             project_definition_id=parent.project_definition_id,
@@ -141,8 +118,14 @@ class ProjectWithTrigger:
             is_collection=False,
             instanciate_by_default=True,
             order_index=0,
-            config=config,
-            default_value=value,
+            field_details=BoolFieldConfig(default_value=False),
+            triggers=[
+                Trigger(
+                    action=TriggerAction.SET_VISIBILITY,
+                    target_type_id=target_type_id,
+                    params={},
+                )
+            ],
         )
 
         return node
@@ -151,17 +134,7 @@ class ProjectWithTrigger:
         level = len(parent.path)
         label = self.labels[level]
         name = f"{parent.name}_{label}_0"
-        config = self.field_config_factory.build_config(name, 0, StringFieldConfig)
-        value = self.field_config_factory.build_value(StringFieldConfig)
-
-        config.triggers.append(
-            Trigger(
-                action=TriggerAction.CHANGE_NAME,
-                target_type_id=target_type_id,
-                params={},
-            )
-        )
-
+        field_details = self.field_config_factory.build(name, 0, StringFieldConfig)
         node = ProjectDefinitionNodeFactory(
             name=name,
             project_definition_id=parent.project_definition_id,
@@ -169,8 +142,14 @@ class ProjectWithTrigger:
             is_collection=False,
             instanciate_by_default=True,
             order_index=0,
-            config=config,
-            default_value=value,
+            field_details=field_details,
+            triggers=[
+                Trigger(
+                    action=TriggerAction.CHANGE_NAME,
+                    target_type_id=target_type_id,
+                    params={},
+                )
+            ],
         )
 
         return node

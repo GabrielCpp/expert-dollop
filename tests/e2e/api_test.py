@@ -8,13 +8,10 @@ from expert_dollup.shared.database_services import CollectionService
 from ..fixtures import *
 
 
-@pytest.fixture(autouse=True)
-async def wip_db(dal):
-    await dal.truncate_db()
-
-
 @pytest.mark.asyncio
 async def test_given_project_definition_should_be_able_to_create_delete_update(ac):
+    await ac.login_super_user()
+
     expected_project_definition = ProjectDefinitionDtoFactory()
     response = await ac.post(
         "/api/project_definition", data=expected_project_definition.json()
@@ -40,6 +37,7 @@ async def test_given_project_definition_should_be_able_to_create_delete_update(a
 async def test_given_project_definition_node_should_be_able_to_create_update_delete(
     ac,
 ):
+    await ac.login_super_user()
     project_definition = ProjectDefinitionDtoFactory()
     expected_project_definition_node = ProjectDefinitionNodeDtoFactory(
         project_definition_id=project_definition.id
@@ -77,6 +75,7 @@ async def test_given_project_definition_node_should_be_able_to_create_update_del
 async def test_given_translation_should_be_able_to_create_update_delete(
     ac, static_clock
 ):
+    await ac.login_super_user()
     project_definition = ProjectDefinitionDtoFactory()
     translation_input = TranslationInputDtoFactory(ressource_id=project_definition.id)
 
@@ -112,6 +111,7 @@ async def test_given_translation_should_be_able_to_create_update_delete(
 async def test_given_translation_should_be_able_to_retrieve_it(
     ac, db_helper, map_dao_to_dto, static_clock
 ):
+    await ac.login_super_user()
     ressource_id = uuid4()
     translations = dict(
         a_fr=TranslationDao(

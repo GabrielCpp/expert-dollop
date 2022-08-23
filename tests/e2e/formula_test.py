@@ -7,7 +7,8 @@ from ..fixtures import *
 
 @pytest.mark.asyncio
 async def test_create_get_delete_formula(ac, db_helper: DbFixtureHelper):
-    fake_db = await db_helper.load_fixtures(MiniProject())
+    fake_db = await db_helper.load_fixtures(SuperUser(), MiniProject())
+    await ac.login_super_user()
     project_definition = fake_db.get_only_one(ProjectDefinition)
     formula = FormulaDtoFactory(
         project_definition_id=project_definition.id,

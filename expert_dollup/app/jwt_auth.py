@@ -3,6 +3,7 @@ from jwt.algorithms import get_default_algorithms
 from typing import Union, List, Dict, Any, Optional
 from starlette.requests import Request
 from uuid import UUID
+from logging import Logger
 from .settings import AppSettings
 from expert_dollup.core.domains import RessourceId, Ressource, User
 from expert_dollup.shared.database_services import CollectionService
@@ -32,10 +33,12 @@ class AuthJWT(AuthService[User]):
         settings: AppSettings,
         user_service: CollectionService[User],
         ressource_service: CollectionService[Ressource],
+        logger: Logger,
     ):
         self.settings = settings
         self.user_service = user_service
         self.ressource_service = ressource_service
+        self.logger = logger
 
     def authentification_optional(self, request: Request) -> Optional[Dict[str, Any]]:
         try:
@@ -60,7 +63,9 @@ class AuthJWT(AuthService[User]):
                 algorithms=[ALGORITHM],
             )
         except DecodeError as e:
-            raise InvalidBearerToken("Invalid bearer token", reason=str(e))
+            details = dict(reason=str(e))
+            self.logger.debug("Invalid bearer token", extra=details)
+            raise InvalidBearerToken("Invalid bearer token", **details)
 
         return decoded
 
@@ -78,8 +83,8 @@ class AuthJWT(AuthService[User]):
                 RessourceId(ressource_id, user.organization_id)
             )
         except RecordNotFound:
-            raise PermissionMissing(
-                "Permission missing", reason="user has not access to ressource."
+            self._deny_access(
+                "user has not access to ressource.", user.oauth_id, user.organization_id
             )
 
         for permission in permissions:
@@ -87,7 +92,7 @@ class AuthJWT(AuthService[User]):
                 permission = ressource.kind + permission[1:]
 
             if not permission in ressource.permissions:
-                raise PermissionMissing("Permission missing", reason=permission)
+                self._raise_permission_missing(permission)
 
         return user
 
@@ -99,11 +104,11 @@ class AuthJWT(AuthService[User]):
         try:
             user = await self.user_service.find_by_id(oauth_id)
         except RecordNotFound:
-            raise PermissionMissing("Permission missing", reason="user not found")
+            self._deny_access("user not found", oauth_id)
 
         for permission in permissions:
             if not permission in user.permissions:
-                raise PermissionMissing("Permission missing", reason=permission)
+                self._raise_permission_missing(permission)
 
         return user
 
@@ -120,3 +125,17 @@ class AuthJWT(AuthService[User]):
             self.settings.authjwt.private_key,
             algorithm=ALGORITHM,
         )
+
+    def _raise_permission_missing(self, permission: str):
+        details = dict(reason=permission)
+        self.logger.debug("Permission missing", extra=details)
+        raise PermissionMissing("Permission missing", **details)
+
+    def _deny_access(
+        self, reason: str, oauth_id: str, organization_id: Optional[UUID] = None
+    ):
+        details = dict(
+            reason=reason, oauth_id=oauth_id, organization_id=organization_id
+        )
+        self.logger.debug("Permission missing", extra=details)
+        raise PermissionMissing("Permission missing", **details)

@@ -37,19 +37,20 @@ async def get_node_meta(ac, project_id: UUID, type_id: UUID) -> ProjectNodeMetaD
 @pytest.mark.asyncio
 async def test_project_with_trigger(ac, db_helper: DbFixtureHelper):
     runner = FlowRunner()
-    fake_db = await db_helper.load_fixtures(ProjectWithTrigger())
+    fake_db = await db_helper.load_fixtures(SuperUser(), ProjectWithTrigger())
+    await ac.login_super_user()
     project = await create_project(ac, fake_db)
 
     checkbox_node = next(
         node_def
         for node_def in fake_db.all(ProjectDefinitionNode)
-        if isinstance(node_def.config.field_details, BoolFieldConfig)
+        if isinstance(node_def.field_details, BoolFieldConfig)
     )
 
     textbox_node = next(
         node_def
         for node_def in fake_db.all(ProjectDefinitionNode)
-        if isinstance(node_def.config.field_details, StringFieldConfig)
+        if isinstance(node_def.field_details, StringFieldConfig)
     )
 
     root_b_node = next(

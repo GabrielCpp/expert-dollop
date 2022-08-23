@@ -13,6 +13,7 @@ async def wip_db(dal):
 
 @pytest.mark.asyncio
 async def test_project_creation(ac, mapper):
+    await ac.login_super_user()
     db = SimpleProject()()
     project_definition = db.get_only_one(ProjectDefinition)
 
@@ -49,7 +50,8 @@ async def test_project_creation(ac, mapper):
 
 @pytest.mark.asyncio
 async def test_query_project_definition_parts(ac, db_helper: DbFixtureHelper):
-    db = await db_helper.load_fixtures(SimpleProject())
+    db = await db_helper.load_fixtures(SuperUser(), SimpleProject())
+    await ac.login_super_user()
     project_definition = db.get_only_one(ProjectDefinition)
     runner = FlowRunner()
 

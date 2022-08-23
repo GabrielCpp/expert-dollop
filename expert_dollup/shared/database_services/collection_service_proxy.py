@@ -37,6 +37,10 @@ class CollectionServiceProxy(CollectionService[Domain]):
     def batch_size(self) -> int:
         return self._impl.batch_size
 
+    @property
+    def db(self) -> DbConnection:
+        return self._impl.db
+
     async def insert(self, domain: Domain):
         return await self._impl.insert(domain)
 

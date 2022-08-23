@@ -1,7 +1,7 @@
-version: '3.7'
+version: "3.7"
 services:
   mongo:
-    image: mongo:4.4 
+    image: mongo:5.0.11@sha256:15342c724bd7c4be9b329078040bdd1f6629eca737d64fb0e249a08a914b31d8
     restart: always
     ports:
       - 27017:27017
@@ -9,7 +9,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: "${DB_USERNAME}"
       MONGO_INITDB_ROOT_PASSWORD: "${DB_PASSWORD}"
     volumes:
-    - mongodb_data:/data/db
+      - mongodb_data:/data/db
 volumes:
   mongodb_data:
     name: mongodb_data

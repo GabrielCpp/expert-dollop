@@ -19,12 +19,9 @@ class MiniProject:
                 is_collection=False,
                 instanciate_by_default=True,
                 order_index=0,
-                config=NodeConfig(
-                    translations=TranslationConfig(
-                        help_text_name="root_help_text", label="root"
-                    ),
+                translations=TranslationConfig(
+                    help_text_name="root_help_text", label="root"
                 ),
-                default_value=None,
             )
         )
 
@@ -41,8 +38,7 @@ class MiniProject:
             self.field_config_factory.field_config_types
         ):
             name = name_map[config_type]
-            value = self.field_config_factory.build_value(config_type)
-            config = self.field_config_factory.build_config(name, index, config_type)
+            field_details = self.field_config_factory.build(name, index, config_type)
             self.db.add(
                 ProjectDefinitionNodeFactory(
                     name=name,
@@ -51,15 +47,13 @@ class MiniProject:
                     is_collection=False,
                     instanciate_by_default=True,
                     order_index=index,
-                    config=config,
-                    default_value=value,
+                    field_details=field_details,
                 )
             )
 
-        value = self.field_config_factory.build_value(DecimalFieldConfig)
         index = len(name_map)
         name = "taxes"
-        config = self.field_config_factory.build_config(name, index, config_type)
+        field_details = self.field_config_factory.build(name, index, config_type)
         self.db.add(
             ProjectDefinitionNodeFactory(
                 name=name,
@@ -68,8 +62,7 @@ class MiniProject:
                 is_collection=True,
                 instanciate_by_default=True,
                 order_index=index,
-                config=config,
-                default_value=value,
+                field_details=field_details,
             )
         )
 

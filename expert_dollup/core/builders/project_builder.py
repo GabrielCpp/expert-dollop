@@ -12,7 +12,7 @@ class TriggerHandler:
         self.nodes_by_id = nodes_by_id
 
     def run(self, bounded_node: BoundedNode):
-        for trigger in bounded_node.definition.config.triggers:
+        for trigger in bounded_node.definition.triggers:
             if trigger.action == TriggerAction.CHANGE_NAME:
                 self._trigger_change_name(trigger, bounded_node)
 
@@ -53,7 +53,7 @@ class ProjectBuilder:
                 project_id=project_details.id,
                 type_id=node_definition.id,
                 state=ProjectNodeMetaState(
-                    is_visible=node_definition.config.meta.is_visible,
+                    is_visible=node_definition.meta.is_visible,
                     selected_child=None,
                 ),
                 definition=node_definition,

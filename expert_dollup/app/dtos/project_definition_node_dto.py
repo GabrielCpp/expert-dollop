@@ -2,6 +2,7 @@ from uuid import UUID
 from typing import Optional, List, Union, Dict, get_args
 from typing_extensions import TypeAlias
 from expert_dollup.shared.starlette_injection import CamelModel
+from decimal import Decimal
 from datetime import datetime
 from expert_dollup.core.domains import (
     IntFieldConfig,
@@ -25,19 +26,22 @@ from .dynamic_primitive import (
 
 class IntFieldConfigDto(CamelModel):
     unit: str
+    default_value: int
 
 
 class DecimalFieldConfigDto(CamelModel):
     unit: str
     precision: int
+    default_value: Decimal
 
 
 class StringFieldConfigDto(CamelModel):
+    default_value: str
     transforms: List[str]
 
 
 class BoolFieldConfigDto(CamelModel):
-    is_checkbox: bool
+    default_value: bool
 
 
 class StaticChoiceOptionDto(CamelModel):
@@ -48,6 +52,7 @@ class StaticChoiceOptionDto(CamelModel):
 
 class StaticChoiceFieldConfigDto(CamelModel):
     options: List[StaticChoiceOptionDto]
+    default_value: str
 
 
 class StaticNumberFieldConfigDto(CamelModel):
@@ -61,13 +66,13 @@ class CollapsibleContainerFieldConfigDto(CamelModel):
 
 
 FieldDetailsUnionDto: TypeAlias = Union[
-    BoolFieldConfigDto,
     CollapsibleContainerFieldConfigDto,
     StaticNumberFieldConfigDto,
     DecimalFieldConfigDto,
     StaticChoiceFieldConfigDto,
     StringFieldConfigDto,
     IntFieldConfigDto,
+    BoolFieldConfigDto,
     None,
 ]
 
@@ -116,14 +121,6 @@ class NodeMetaConfigDto(CamelModel):
     is_visible: bool
 
 
-class NodeConfigDto(CamelModel):
-    translations: TranslationConfigDto
-    meta: NodeMetaConfigDto
-    triggers: List[TriggerDto]
-    field_details: Optional[FieldDetailsUnionDto]
-    value_validator: Optional[JsonSchemaDto]
-
-
 value_type_lookup_map = {
     IntFieldValueDto: "IntFieldValue",
     DecimalFieldValueDto: "DecimalFieldValue",
@@ -141,8 +138,11 @@ class ProjectDefinitionNodeDto(CamelModel):
     is_collection: bool
     instanciate_by_default: bool
     order_index: int
-    config: NodeConfigDto
-    default_value: PrimitiveWithNoneUnionDto
+    translations: TranslationConfigDto
+    meta: NodeMetaConfigDto
+    triggers: List[TriggerDto]
+    field_details: Optional[FieldDetailsUnionDto]
+    validator: Optional[JsonSchemaDto]
     path: List[UUID]
     creation_date_utc: datetime
 

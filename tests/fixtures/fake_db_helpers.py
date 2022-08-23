@@ -47,25 +47,42 @@ class FakeDb:
 
 
 class DbFixtureHelper:
-    def __init__(self, injector: Injector, dal: DbConnection):
+    @staticmethod
+    def _insert_many(service, objects):
+        async def do_inserts():
+            await service.insert_many(objects)
+
+        return do_inserts
+
+    def __init__(self, injector: Injector, dal: DbConnection, auth_db: DbConnection):
         self.injector: Injector = injector
         self.dal = dal
+        self.auth_db = auth_db
+        self.db = None
 
     async def insert_daos(self, service_type: Type, daos: List[BaseModel]):
         service = self.injector.get(service_type)
         await service._impl.bulk_insert(daos)
 
-    async def init_db(self, fake_db: FakeDb):
+    async def reset(self):
         await self.dal.truncate_db()
+        await self.auth_db.truncate_db()
         rmtree("/tmp/expertdollup", ignore_errors=True)
 
-        for domain_type, objects in fake_db.collections.items():
-            service_type = CollectionService[domain_type]
-            service = self.injector.get(service_type)
-            await service.insert_many(objects)
+    async def init_db(self, fake_db: FakeDb):
+        async def do_init():
+            await self.reset()
+
+            for domain_type, objects in fake_db.collections.items():
+                service_type = CollectionService[domain_type]
+                service = self.injector.get(service_type)
+                await service.insert_many(objects)
+
+        await self.auth_db.transaction(do_init)
+        self.db = fake_db
 
     async def load_fixtures(self, *build_db_slices: Callable[[], FakeDb]) -> FakeDb:
-        db = FakeDb()
+        db = self.db or FakeDb()
 
         for build_db_slice in build_db_slices:
             db.merge(build_db_slice())

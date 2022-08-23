@@ -159,9 +159,9 @@ class DefNodeSeed:
         self.instances = instances
         self.parent = parent
         self.is_collection = False
-        self.default_value: PrimitiveWithNoneUnion = None
+        self.field_details: Optional[FieldDetailsUnion] = None
         self._path_names: Optional[List[str]] = None
-        self._config: Optional[NodeConfig] = None
+        self._translations: Optional[TranslationConfig] = None
         self._name: Optional[str] = None
 
     @property
@@ -178,9 +178,9 @@ class DefNodeSeed:
         return [make_uuid(item) for item in self.path_names]
 
     @property
-    def config(self) -> NodeConfig:
-        assert not self._config is None
-        return self._config
+    def translations(self) -> TranslationConfig:
+        assert not self._translations is None
+        return self._translations
 
     @property
     def name(self) -> str:
@@ -204,11 +204,9 @@ class DefNodeSeed:
         if len(self.instances) > 1:
             self.is_collection = True
 
-        if self._config is None:
-            self._config = NodeConfig(
-                translations=TranslationConfig(
-                    help_text_name=f"{name}_help_text", label=name
-                )
+        if self._translations is None:
+            self._translations = TranslationConfig(
+                help_text_name=f"{name}_help_text", label=name
             )
 
         self._path_names = (
@@ -217,8 +215,8 @@ class DefNodeSeed:
             else self._build_paths(project_seed.definitions, [self.parent])
         )
 
-        if len(self.path_names) == 4 and self.default_value is None:
-            self.default_value = 0
+        if len(self.path_names) == 4 and self.field_details is None:
+            self.field_details = IntFieldConfig("inch", 0)
 
     def _build_paths(
         self, definitions: Dict[str, "DefNodeSeed"], parents: List[str], depth: int = 0
@@ -325,8 +323,8 @@ class ProjectInstanceFactory:
                 is_collection=node_def_seed.is_collection,
                 instanciate_by_default=True,
                 order_index=index,
-                config=node_def_seed.config,
-                default_value=node_def_seed.default_value,
+                translations=node_def_seed.translations,
+                field_details=node_def_seed.field_details,
                 path=node_def_seed.path,
                 creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
             )

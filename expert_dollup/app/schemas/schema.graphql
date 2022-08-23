@@ -83,19 +83,22 @@ type DatasheetConnection {
 
 type IntFieldConfig {
   unit: String!
+  defaultValue: Int!
 }
 
 type DecimalFieldConfig {
   unit: String!
   precision: Int!
+  defaultValue: Float!
 }
 
 type StringFieldConfig {
   transforms: [String!]!
+  defaultValue: String!
 }
 
 type BoolFieldConfig {
-  isCheckbox: Boolean!
+  defaultValue: Boolean!
 }
 
 type StaticChoiceOption {
@@ -106,6 +109,7 @@ type StaticChoiceOption {
 
 type StaticChoiceFieldConfig {
   options: [StaticChoiceOption!]!
+  defaultValue: String!
 }
 
 type CollapsibleContainerFieldConfig {
@@ -132,6 +136,11 @@ type TranslationConfig {
   label: String!
 }
 
+input TranslationConfigInput {
+  helpTextName: String!
+  label: String!
+}
+
 type TriggerParam {
   name: String!
   value: String!
@@ -148,16 +157,23 @@ type Trigger {
   params: [TriggerParam!]!
 }
 
-type NodeMetaConfig {
-  isVisible: Boolean
+input TriggerParamInput {
+  name: String!
+  value: String!
 }
 
-type NodeConfig {
-  fieldDetails: FieldDetailsUnion
-  valueValidator: JsonSchema
-  triggers: [Trigger]!
-  translations: TranslationConfig!
-  meta: NodeMetaConfig
+input TriggerInput {
+  action: TriggerAction!
+  targetTypeId: String!
+  params: [TriggerParamInput!]!
+}
+
+type NodeMetaConfig {
+  isVisible: Boolean!
+}
+
+input NodeMetaConfigInput {
+  isVisible: Boolean!
 }
 
 type IntFieldValue {
@@ -188,27 +204,28 @@ union FieldValue =
   | ReferenceId
 
 input IntFieldConfigInput {
-  validator: JsonSchema!
+  defaultValue: Int!
 }
 
 input DecimalFieldConfigInput {
-  validator: JsonSchema!
   precision: Int!
+  defaultValue: Float!
 }
 
 input StringFieldConfigInput {
-  validator: JsonSchema!
   transforms: [String!]!
+  defaultValue: String!
 }
 
 input BoolFieldConfigInput {
-  validator: JsonSchema!
+  defaultValue: Boolean!
 }
 
 input StaticChoiceOptionInput {
   id: String!
   label: String!
   helpText: String!
+  defaultValue: String!
 }
 
 input StaticChoiceFieldConfigInput {
@@ -247,11 +264,6 @@ input FieldDetailsUnionInput {
   staticNumberFieldConfig: StaticNumberFieldConfigInput
 }
 
-input NodeConfigInput {
-  fieldDetails: FieldDetailsUnionInput
-  valueValidator: JsonSchema
-}
-
 input IntFieldValueInput {
   integer: Int!
 }
@@ -283,15 +295,29 @@ input FieldValueInput {
   bool: BoolFieldValueInput
 }
 
-input ProjectDefinitionNodeInput {
+input ProjectDefinitionNodeUpdateInput {
   id: ID!
   name: String!
   isCollection: Boolean!
   instanciateByDefault: Boolean!
   orderIndex: Int!
-  config: NodeConfigInput!
-  defaultValue: FieldValueInput
   path: [String!]!
+  translations: TranslationConfigInput!
+  fieldDetails: FieldDetailsUnionInput
+  triggers: [TriggerInput]!
+  meta: NodeMetaConfigInput!
+}
+
+input ProjectDefinitionNodeCreationInput {
+  name: String!
+  isCollection: Boolean!
+  instanciateByDefault: Boolean!
+  orderIndex: Int!
+  path: [String!]!
+  translations: TranslationConfigInput!
+  fieldDetails: FieldDetailsUnionInput
+  triggers: [TriggerInput]!
+  meta: NodeMetaConfigInput!
 }
 
 type ProjectDefinitionNode {
@@ -301,11 +327,15 @@ type ProjectDefinitionNode {
   isCollection: Boolean!
   instanciateByDefault: Boolean!
   orderIndex: Int!
-  config: NodeConfig!
-  defaultValue: FieldValue
+  fieldDetails: FieldDetailsUnion
+  triggers: [Trigger]!
+  translations: TranslationConfig!
+  meta: NodeMetaConfig!
   path: [String!]!
+
   children: [ProjectDefinitionNode!]!
-  translations: [Translation!]!
+  translated: [Translation!]!
+  validator: JsonSchema
 }
 
 type ProjectDefinitionTreeNode {
@@ -408,6 +438,7 @@ type ProjectNodeMeta {
   definition: ProjectDefinitionNode!
   state: ProjectNodeMetaState!
   typeId: ID!
+  translations: [Translation!]!
 }
 
 type ProjectNodeMetaState {
@@ -667,7 +698,11 @@ type Mutation {
 
   # ProjectDefinitionNode
   addProjectDefinitionNode(
-    node: ProjectDefinitionNodeInput!
+    node: ProjectDefinitionNodeCreationInput!
+  ): ProjectDefinitionNode!
+
+  updateProjectDefinitionNode(
+    node: ProjectDefinitionNodeUpdateInput!
   ): ProjectDefinitionNode!
 
   # ProjectNode

@@ -7,6 +7,7 @@ from expert_dollup.infra.expert_dollup_db import *
 
 @pytest.mark.asyncio
 async def test_datasheet_definition(ac):
+    await ac.login_super_user()
     runner = FlowRunner()
 
     @runner.step
@@ -97,6 +98,7 @@ async def test_datasheet_definition(ac):
 
 @pytest.mark.asyncio
 async def test_label_collection(ac, db_helper: DbFixtureHelper):
+    await ac.login_super_user()
     runner = FlowRunner()
     mini_datasheet = await db_helper.load_fixtures(MiniDatasheet())
 

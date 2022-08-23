@@ -25,14 +25,10 @@ class ProjectDefinitionNodeFactory(factory.Factory):
     is_collection = False
     instanciate_by_default = True
     order_index = factory.Sequence(lambda n: n)
-    config = factory.LazyAttribute(
-        lambda o: NodeConfig(
-            translations=TranslationConfig(
-                help_text_name=f"{o.name}_help_text", label=o.name
-            )
-        )
+    translations = factory.LazyAttribute(
+        lambda o: TranslationConfig(help_text_name=f"{o.name}_help_text", label=o.name)
     )
-    default_value = None
+    field_details = None
     path = factory.List([])
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 

@@ -26,12 +26,10 @@ class SimpleProject:
 
             for index in range(0, level + 1):
                 config_type = self.field_config_factory.pick_config_type(label)
-                value = self.field_config_factory.build_value(config_type)
                 name = f"{direct_parent.name}_{label}_{index}"
-                config = self.field_config_factory.build_config(
+                field_details = self.field_config_factory.build(
                     name, index, config_type
                 )
-
                 sub_node = ProjectDefinitionNodeFactory(
                     name=name,
                     project_definition_id=project_definition_id,
@@ -39,8 +37,7 @@ class SimpleProject:
                     is_collection=index == 0,
                     instanciate_by_default=True,
                     order_index=index,
-                    config=config,
-                    default_value=value,
+                    field_details=field_details,
                 )
 
                 self.db.add(sub_node)
@@ -53,12 +50,9 @@ class SimpleProject:
             is_collection=False,
             instanciate_by_default=True,
             order_index=0,
-            config=NodeConfig(
-                translations=TranslationConfig(
-                    help_text_name="root_a_text", label="root_a"
-                ),
+            translations=TranslationConfig(
+                help_text_name="root_a_text", label="root_a"
             ),
-            default_value=None,
         )
 
         self.db.add(root_a)
@@ -71,12 +65,9 @@ class SimpleProject:
             is_collection=True,
             instanciate_by_default=False,
             order_index=1,
-            config=NodeConfig(
-                translations=TranslationConfig(
-                    help_text_name="root_b_text", label="root_b"
-                ),
+            translations=TranslationConfig(
+                help_text_name="root_b_text", label="root_b"
             ),
-            default_value=None,
         )
 
         self.db.add(root_b)
@@ -96,7 +87,7 @@ class SimpleProject:
                     ressource_id=project_definition.id,
                     scope=project_node_definition.id,
                     locale="fr-CA",
-                    name=project_node_definition.config.translations.label,
+                    name=project_node_definition.translations.label,
                 )
             )
 
@@ -105,7 +96,7 @@ class SimpleProject:
                     ressource_id=project_definition.id,
                     scope=project_node_definition.id,
                     locale="fr-CA",
-                    name=project_node_definition.config.translations.help_text_name,
+                    name=project_node_definition.translations.help_text_name,
                 )
             )
 
@@ -114,7 +105,7 @@ class SimpleProject:
                     ressource_id=project_definition.id,
                     scope=project_node_definition.id,
                     locale="en-US",
-                    name=project_node_definition.config.translations.label,
+                    name=project_node_definition.translations.label,
                 )
             )
 
@@ -123,14 +114,14 @@ class SimpleProject:
                     ressource_id=project_definition.id,
                     scope=project_node_definition.id,
                     locale="en-US",
-                    name=project_node_definition.config.translations.help_text_name,
+                    name=project_node_definition.translations.help_text_name,
                 )
             )
 
             if isinstance(
-                project_node_definition.config.field_details, StaticChoiceFieldConfig
+                project_node_definition.field_details, StaticChoiceFieldConfig
             ):
-                for option in project_node_definition.config.field_details.options:
+                for option in project_node_definition.field_details.options:
                     self.db.add(
                         TranslationFactory(
                             ressource_id=project_definition.id,

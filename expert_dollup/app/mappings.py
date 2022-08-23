@@ -6,7 +6,7 @@ from expert_dollup.shared.automapping import Mapper, RevervibleUnionMapping
 from expert_dollup.shared.database_services import Page
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
-
+from expert_dollup.core.units.node_value_validation import make_schema
 
 primitive_with_none_union_dto_mappings = RevervibleUnionMapping(
     PrimitiveWithNoneUnionDto,
@@ -113,13 +113,13 @@ def map_string_field_config_to_dto(
 def map_bool_field_config_from_dto(
     src: BoolFieldConfigDto, mapper: Mapper
 ) -> BoolFieldConfig:
-    return BoolFieldConfig(is_checkbox=src.is_checkbox)
+    return BoolFieldConfig(default_value=src.default_value)
 
 
 def map_bool_field_config_to_dto(
     src: BoolFieldConfig, mapper: Mapper
 ) -> BoolFieldConfigDto:
-    return BoolFieldConfigDto(is_checkbox=src.is_checkbox)
+    return BoolFieldConfigDto(default_value=src.default_value)
 
 
 def map_static_choice_field_config_from_dto(
@@ -216,13 +216,13 @@ field_details_union_dto_mappings = RevervibleUnionMapping(
 def map_bool_field_config_from_dto(
     src: BoolFieldConfigDto, mapper: Mapper
 ) -> BoolFieldConfig:
-    return BoolFieldConfig(is_checkbox=src.is_checkbox)
+    return BoolFieldConfig(default_value=src.default_value)
 
 
 def map_bool_field_config_to_dto(
     src: BoolFieldConfig, mapper: Mapper
 ) -> BoolFieldConfigDto:
-    return BoolFieldConfigDto(is_checkbox=src.is_checkbox)
+    return BoolFieldConfigDto(default_value=src.default_value)
 
 
 def map_collapsible_container_field_config_from_dto(
@@ -260,13 +260,17 @@ def map_static_number_field_config_to_dto(
 def map_decimal_field_config_from_dto(
     src: DecimalFieldConfigDto, mapper: Mapper
 ) -> DecimalFieldConfig:
-    return DecimalFieldConfig(precision=src.precision, unit=src.unit)
+    return DecimalFieldConfig(
+        precision=src.precision, unit=src.unit, default_value=src.default_value
+    )
 
 
 def map_decimal_field_config_to_dto(
     src: DecimalFieldConfig, mapper: Mapper
 ) -> DecimalFieldConfigDto:
-    return DecimalFieldConfigDto(precision=src.precision, unit=src.unit)
+    return DecimalFieldConfigDto(
+        precision=src.precision, unit=src.unit, default_value=src.default_value
+    )
 
 
 def map_static_choice_field_config_from_dto(
@@ -278,7 +282,8 @@ def map_static_choice_field_config_from_dto(
                 id=option.id, label=option.label, help_text=option.help_text
             )
             for option in src.options
-        ]
+        ],
+        default_value=src.default_value,
     )
 
 
@@ -291,59 +296,35 @@ def map_static_choice_field_config_to_dto(
                 id=option.id, label=option.label, help_text=option.help_text
             )
             for option in src.options
-        ]
+        ],
+        default_value=src.default_value,
     )
 
 
 def map_string_field_config_from_dto(
     src: StringFieldConfigDto, mapper: Mapper
 ) -> StringFieldConfig:
-    return StringFieldConfig(transforms=src.transforms)
+    return StringFieldConfig(transforms=src.transforms, default_value=src.default_value)
 
 
 def map_string_field_config_to_dto(
     src: StringFieldConfig, mapper: Mapper
 ) -> StringFieldConfigDto:
-    return StringFieldConfigDto(transforms=src.transforms)
+    return StringFieldConfigDto(
+        transforms=src.transforms, default_value=src.default_value
+    )
 
 
 def map_int_field_config_from_dto(
     src: IntFieldConfigDto, mapper: Mapper
 ) -> IntFieldConfig:
-    return IntFieldConfig(unit=src.unit)
+    return IntFieldConfig(unit=src.unit, default_value=src.default_value)
 
 
 def map_int_field_config_to_dto(
     src: IntFieldConfig, mapper: Mapper
 ) -> IntFieldConfigDto:
-    return IntFieldConfigDto(unit=src.unit)
-
-
-def map_node_config_from_dto(src: NodeConfigDto, mapper: Mapper) -> NodeConfig:
-    return NodeConfig(
-        field_details=mapper.map(
-            src.field_details, field_details_union_dto_mappings.from_origin
-        ),
-        translations=mapper.map(src.translations, TranslationConfig),
-        triggers=mapper.map_many(src.triggers, Trigger),
-        value_validator=src.value_validator,
-        meta=mapper.map(src.meta, NodeMetaConfig, NodeMetaConfigDto),
-    )
-
-
-def map_node_config_to_dto(src: NodeConfig, mapper: Mapper) -> NodeConfigDto:
-
-    mapped_config = NodeConfigDto(
-        field_details=mapper.map(
-            src.field_details, field_details_union_dto_mappings.to_origin
-        ),
-        value_validator=src.value_validator,
-        translations=mapper.map(src.translations, TranslationConfigDto),
-        triggers=mapper.map_many(src.triggers, TriggerDto),
-        meta=mapper.map(src.meta, NodeMetaConfigDto, NodeMetaConfig),
-    )
-
-    return mapped_config
+    return IntFieldConfigDto(unit=src.unit, default_value=src.default_value)
 
 
 def map_node_meta_config_from_dto(
@@ -368,10 +349,12 @@ def map_project_definition_node_from_dto(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        config=mapper.map(src.config, NodeConfig),
-        default_value=mapper.map(
-            src.default_value, primitive_with_none_union_dto_mappings.from_origin
+        field_details=mapper.map(
+            src.field_details, field_details_union_dto_mappings.from_origin
         ),
+        translations=mapper.map(src.translations, TranslationConfig),
+        triggers=mapper.map_many(src.triggers, Trigger),
+        meta=mapper.map(src.meta, NodeMetaConfig, NodeMetaConfigDto),
         path=src.path,
         creation_date_utc=src.creation_date_utc,
     )
@@ -387,11 +370,14 @@ def map_project_definition_node_to_dto(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        config=mapper.map(src.config, NodeConfigDto),
-        path=src.path,
-        default_value=mapper.map(
-            src.default_value, primitive_with_none_union_dto_mappings.to_origin
+        field_details=mapper.map(
+            src.field_details, field_details_union_dto_mappings.to_origin
         ),
+        translations=mapper.map(src.translations, TranslationConfigDto),
+        triggers=mapper.map_many(src.triggers, TriggerDto),
+        meta=mapper.map(src.meta, NodeMetaConfigDto, NodeMetaConfig),
+        validator=make_schema(src),
+        path=src.path,
         creation_date_utc=src.creation_date_utc,
     )
 

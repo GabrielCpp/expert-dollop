@@ -2,26 +2,29 @@ from typing import List, Dict, Union, Optional
 from typing_extensions import TypeAlias
 from uuid import UUID
 from pydantic import BaseModel
-
+from decimal import Decimal
 
 JsonSchemaDao = dict
 
 
 class IntFieldConfigDao(BaseModel):
     unit: str
+    integer: int
 
 
 class DecimalFieldConfigDao(BaseModel):
     unit: str
     precision: int
+    number: Decimal
 
 
 class StringFieldConfigDao(BaseModel):
     transforms: List[str]
+    text: str
 
 
 class BoolFieldConfigDao(BaseModel):
-    is_checkbox: bool
+    enabled: bool
 
 
 class StaticNumberFieldConfigDao(BaseModel):
@@ -38,6 +41,7 @@ class StaticChoiceOptionDao(BaseModel):
 
 class StaticChoiceFieldConfigDao(BaseModel):
     options: List[StaticChoiceOptionDao]
+    selected: str
 
 
 class CollapsibleContainerFieldConfigDao(BaseModel):
@@ -49,9 +53,9 @@ FieldDetailsUnionDao: TypeAlias = Union[
     DecimalFieldConfigDao,
     IntFieldConfigDao,
     StringFieldConfigDao,
-    BoolFieldConfigDao,
     StaticChoiceFieldConfigDao,
     CollapsibleContainerFieldConfigDao,
+    BoolFieldConfigDao,
     None,
 ]
 
@@ -69,11 +73,3 @@ class TriggerDao(BaseModel):
 class TranslationConfigDao(BaseModel):
     help_text_name: str
     label: str
-
-
-class NodeConfigDao(BaseModel):
-    translations: TranslationConfigDao
-    triggers: List[TriggerDao]
-    meta: NodeMetaConfigDao
-    field_details: Optional[FieldDetailsUnionDao]
-    value_validator: Optional[JsonSchemaDao]

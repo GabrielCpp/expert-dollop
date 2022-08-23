@@ -1,5 +1,16 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, List, Optional, Union, Type, Dict, Any, Callable
+from typing import (
+    Generic,
+    TypeVar,
+    List,
+    Optional,
+    Union,
+    Type,
+    Dict,
+    Any,
+    Callable,
+    Awaitable,
+)
 from typing_extensions import TypeAlias
 from inspect import isclass
 from urllib.parse import urlparse
@@ -22,6 +33,10 @@ class DbConnection(ABC):
 
     @abstractmethod
     async def truncate_db(self, tables: Optional[List[str]] = None):
+        pass
+
+    @abstractmethod
+    async def transaction(self, callback: Callable[[], Awaitable]):
         pass
 
 

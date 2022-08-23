@@ -30,7 +30,7 @@ class NodeEventDispatcher:
         self, project_id: UUID, node_id: UUID, value: PrimitiveWithNoneUnion
     ) -> ProjectNode:
         bounded_node = await self._get_bounded_node(project_id, node_id)
-        self.node_value_validation.validate_value(bounded_node.definition.config, value)
+        self.node_value_validation.validate_value(bounded_node.definition, value)
         await self._execute_triggers(bounded_node, value)
         await self.project_node_service.update(
             ProjectNodeValues(value=value),
@@ -59,7 +59,7 @@ class NodeEventDispatcher:
         formula_references = []
         for node in nodes:
             meta = meta_by_names[node.type_name]
-            field_details = meta.definition.config.field_details
+            field_details = meta.definition.field_details
 
             if isinstance(field_details, StaticNumberFieldConfig):
                 formula_references.append(
@@ -90,7 +90,7 @@ class NodeEventDispatcher:
         return BoundedNode(node=node, definition=node_definition)
 
     async def execute_node_trigger(self, bounded_node: BoundedNode):
-        if bounded_node.definition.config:
+        if bounded_node.definition.field_details:
             await self._execute_triggers(
                 bounded_node,
                 bounded_node.node.value,
@@ -101,7 +101,7 @@ class NodeEventDispatcher:
     ) -> None:
         project_id = bounded_node.node.project_id
 
-        for trigger in bounded_node.definition.config.triggers:
+        for trigger in bounded_node.definition.triggers:
             if trigger.action == TriggerAction.SET_VISIBILITY:
                 await self._trigger_toogle_visibility(trigger, project_id, value)
             elif trigger.action == TriggerAction.CHANGE_NAME:

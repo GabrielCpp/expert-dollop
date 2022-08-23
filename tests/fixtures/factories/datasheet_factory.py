@@ -8,18 +8,18 @@ from itertools import islice
 from uuid import UUID
 from .helpers import make_uuid
 from expert_dollup.core.domains import *
-from expert_dollup.infra.json_schema import (
+from expert_dollup.core.units.node_value_validation import (
     INT_JSON_SCHEMA,
     STRING_JSON_SCHEMA,
     BOOL_JSON_SCHEMA,
-    NUMBER_JSON_SCHEMA,
+    DECIMAL_JSON_SCHEMA,
 )
 
 DEFAULT_VALUE_MAPPING = {
     int: INT_JSON_SCHEMA,
     str: STRING_JSON_SCHEMA,
     bool: BOOL_JSON_SCHEMA,
-    Decimal: NUMBER_JSON_SCHEMA,
+    Decimal: DECIMAL_JSON_SCHEMA,
 }
 
 DEFAULT_VALUE_GENERATOR = {

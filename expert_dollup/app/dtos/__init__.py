@@ -11,7 +11,6 @@ from .project_definition_node_dto import (
     StaticChoiceOptionDto,
     StaticChoiceFieldConfigDto,
     CollapsibleContainerFieldConfigDto,
-    NodeConfigDto,
     NodeMetaConfigDto,
     config_type_lookup_map,
     value_type_lookup_map,

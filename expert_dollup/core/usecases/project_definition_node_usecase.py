@@ -26,9 +26,7 @@ class ProjectDefinitionNodeUseCase:
         self.node_value_validation = node_value_validation
         self.logger = logger.create(__name__)
 
-    async def add(
-        self, domain: ProjectDefinitionNode
-    ) -> ProjectDefinitionNode:
+    async def add(self, domain: ProjectDefinitionNode) -> ProjectDefinitionNode:
         await self._ensure_node_is_valid(domain)
         await self.project_definition_node_repository.insert(domain)
         return await self.find_by_id(domain.id)
@@ -104,4 +102,9 @@ class ProjectDefinitionNodeUseCase:
         if not await self.project_definition_node_repository.has_path(domain.path):
             raise InvalidObject("bad_tree_path", "Tree path is invalid.")
 
-        self.node_value_validation.validate_value(domain.config, domain.default_value)
+        # TODO: replace with propoer validation
+        """
+        self.node_value_validation.validate_value(
+            domain, domain.field_details.default_value
+        )
+        """

@@ -15,7 +15,6 @@ from .project_definition_node import (
     StaticChoiceFieldConfig,
     CollapsibleContainerFieldConfig,
     NodeMetaConfig,
-    NodeConfig,
     FieldDetailsUnion,
     JsonSchema,
     TranslationConfig,

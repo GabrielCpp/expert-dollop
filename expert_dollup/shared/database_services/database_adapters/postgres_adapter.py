@@ -203,6 +203,9 @@ class PostgresConnection(DbConnection):
                 await con.execute(text(f"DELETE FROM {table};"))
                 await con.execute(text(f'ALTER TABLE "{table}" ENABLE TRIGGER ALL;'))
 
+    async def transaction(self, callback: Callable[[], Awaitable]):
+        pass
+
     async def connect(self) -> None:
         pass
 
@@ -326,6 +329,10 @@ class PostgresTableService(CollectionService[Domain]):
     @property
     def batch_size(self) -> int:
         return 1000
+
+    @property
+    def db(self) -> DbConnection:
+        return self._database
 
     async def insert(self, domain: Domain):
         value = self._dao_mapper.map_to_dict(domain)

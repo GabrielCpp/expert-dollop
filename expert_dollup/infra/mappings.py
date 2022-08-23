@@ -101,17 +101,6 @@ def map_project_definition_node_from_dao(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        config=mapper.map(src.config, NodeConfig, NodeConfigDao),
-        default_value=mapper.map(
-            src.default_value, primitive_with_none_union_dao_mappings.from_origin
-        ),
-        path=split_uuid_path(src.path),
-        creation_date_utc=src.creation_date_utc,
-    )
-
-
-def map_node_config_from_dao(src: NodeConfigDao, mapper: Mapper) -> NodeConfig:
-    return NodeConfig(
         translations=TranslationConfig(
             help_text_name=src.translations.help_text_name, label=src.translations.label
         ),
@@ -127,28 +116,8 @@ def map_node_config_from_dao(src: NodeConfigDao, mapper: Mapper) -> NodeConfig:
         field_details=mapper.map(
             src.field_details, FieldDetailsUnion, FieldDetailsUnionDao
         ),
-        value_validator=src.value_validator,
-    )
-
-
-def map_node_config_to_dao(src: NodeConfig, mapper: Mapper) -> NodeConfigDao:
-    return NodeConfigDao(
-        translations=TranslationConfigDao(
-            help_text_name=src.translations.help_text_name, label=src.translations.label
-        ),
-        triggers=[
-            TriggerDao(
-                action=trigger.action.value,
-                target_type_id=trigger.target_type_id,
-                params=trigger.params,
-            )
-            for trigger in src.triggers
-        ],
-        meta=NodeMetaConfigDao(is_visible=src.meta.is_visible),
-        field_details=mapper.map(
-            src.field_details, FieldDetailsUnionDao, FieldDetailsUnion
-        ),
-        value_validator=src.value_validator,
+        path=split_uuid_path(src.path),
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -172,18 +141,18 @@ def map_field_details_union_from_dao(
     )
 
     if isinstance(src, IntFieldConfigDao):
-        return IntFieldConfig(unit=src.unit)
+        return IntFieldConfig(unit=src.unit, default_value=src.integer)
 
     if isinstance(src, DecimalFieldConfigDao):
-        return DecimalFieldConfig(unit=src.unit, precision=src.precision)
-
-    if isinstance(src, StringFieldConfigDao):
-        return StringFieldConfig(
-            transforms=src.transforms,
+        return DecimalFieldConfig(
+            unit=src.unit, precision=src.precision, default_value=src.number
         )
 
+    if isinstance(src, StringFieldConfigDao):
+        return StringFieldConfig(transforms=src.transforms, default_value=src.text)
+
     if isinstance(src, BoolFieldConfigDao):
-        return BoolFieldConfig(is_checkbox=src.is_checkbox)
+        return BoolFieldConfig(default_value=src.enabled)
 
     if isinstance(src, StaticChoiceFieldConfigDao):
         return StaticChoiceFieldConfig(
@@ -194,7 +163,8 @@ def map_field_details_union_from_dao(
                     help_text=option.help_text,
                 )
                 for option in src.options
-            ]
+            ],
+            default_value=src.selected,
         )
 
     if isinstance(src, CollapsibleContainerFieldConfigDao):
@@ -228,18 +198,18 @@ def map_field_details_union_to_dao(
     )
 
     if isinstance(src, IntFieldConfig):
-        return IntFieldConfigDao(unit=src.unit)
+        return IntFieldConfigDao(unit=src.unit, integer=src.default_value)
 
     if isinstance(src, DecimalFieldConfig):
-        return DecimalFieldConfigDao(unit=src.unit, precision=src.precision)
-
-    if isinstance(src, StringFieldConfig):
-        return StringFieldConfigDao(
-            transforms=src.transforms,
+        return DecimalFieldConfigDao(
+            unit=src.unit, precision=src.precision, number=src.default_value
         )
 
+    if isinstance(src, StringFieldConfig):
+        return StringFieldConfigDao(transforms=src.transforms, text=src.default_value)
+
     if isinstance(src, BoolFieldConfig):
-        return BoolFieldConfigDao(is_checkbox=src.is_checkbox)
+        return BoolFieldConfigDao(enabled=src.default_value)
 
     if isinstance(src, StaticChoiceFieldConfig):
         return StaticChoiceFieldConfigDao(
@@ -250,7 +220,8 @@ def map_field_details_union_to_dao(
                     help_text=option.help_text,
                 )
                 for option in src.options
-            ]
+            ],
+            selected=src.default_value,
         )
 
     if isinstance(src, CollapsibleContainerFieldConfig):
@@ -278,14 +249,25 @@ def map_project_definition_node_to_dao(
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
         order_index=src.order_index,
-        config=mapper.map(src.config, NodeConfigDao),
+        translations=TranslationConfigDao(
+            help_text_name=src.translations.help_text_name, label=src.translations.label
+        ),
+        triggers=[
+            TriggerDao(
+                action=trigger.action.value,
+                target_type_id=trigger.target_type_id,
+                params=trigger.params,
+            )
+            for trigger in src.triggers
+        ],
+        meta=NodeMetaConfigDao(is_visible=src.meta.is_visible),
+        field_details=mapper.map(
+            src.field_details, FieldDetailsUnionDao, FieldDetailsUnion
+        ),
         path=join_uuid_path(src.path),
         display_query_internal_id=display_query_internal_id,
         level=len(src.path),
         creation_date_utc=src.creation_date_utc,
-        default_value=mapper.map(
-            src.default_value, primitive_with_none_union_dao_mappings.to_origin
-        ),
     )
 
 

@@ -6,7 +6,6 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, StrictStr, StrictFloat, StrictBool, StrictInt
 from expert_dollup.shared.database_services import DbConnection
 from .node_config_dao import (
-    NodeConfigDao,
     TranslationConfigDao,
     TriggerDao,
     NodeMetaConfigDao,
@@ -115,7 +114,10 @@ class ProjectDefinitionNodeDao(BaseModel):
     is_collection: bool
     instanciate_by_default: bool
     order_index: int
-    config: NodeConfigDao
+    translations: TranslationConfigDao
+    triggers: List[TriggerDao]
+    meta: NodeMetaConfigDao
+    field_details: Optional[FieldDetailsUnionDao]
     default_value: PrimitiveWithNoneUnionDao
     path: str
     level: int

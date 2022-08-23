@@ -141,7 +141,7 @@ async def resolve_add_project_definition_node(
     return result
 
 
-@project_definition_node.field("translations")
+@project_definition_node.field("translated")
 @inject_graphql_route(find_translation_in_scope)
 async def resolve_project_definition_node_translations(
     parent: ProjectDefinitionNodeDto,

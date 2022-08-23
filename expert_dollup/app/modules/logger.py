@@ -54,6 +54,7 @@ def bind_logger(binder: Binder) -> None:
 
     logger = getLogger("expert_dollup")
     logger.propagate = True
+    logger.setLevel(LOG_LEVEL)
 
     binder.bind(
         Logger,

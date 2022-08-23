@@ -46,7 +46,6 @@ async def auth_dal() -> DbConnection:
     connection = create_connection(DATABASE_URL, ressource_auth_db_daos)
 
     await connection.connect()
-    await connection.truncate_db()
     yield connection
 
     if connection.is_connected:
@@ -79,8 +78,10 @@ def container(dal: DbConnection, auth_dal: DbConnection, request) -> Injector:
 
 
 @pytest.fixture
-def db_helper(container: Injector, dal: DbConnection) -> DbFixtureHelper:
-    return DbFixtureHelper(container, dal)
+def db_helper(
+    container: Injector, dal: DbConnection, auth_dal: DbConnection
+) -> DbFixtureHelper:
+    return DbFixtureHelper(container, dal, auth_dal)
 
 
 @pytest.fixture
@@ -94,18 +95,47 @@ def app(container: Injector):
     return creat_app(container)
 
 
+class IntegratedTestClient(TestClient):
+    def __init__(
+        self,
+        app,
+        auth_service: AuthService,
+        user_service: CollectionService[User],
+        db_helper: DbFixtureHelper,
+    ):
+        TestClient.__init__(self, app)
+        self.auth_service = auth_service
+        self.db_helper = db_helper
+        self.user_service = user_service
+
+    def login(self, user: User):
+        token = self.auth_service.make_token(user.oauth_id)
+        self.headers.update({"Authorization": f"Bearer {token}"})
+
+    async def login_super_user(self):
+        super_user = SuperUser()
+        if self.db_helper.db is None:
+            await self.db_helper.load_fixtures(super_user)
+
+        user = self.db_helper.db.get_only_one_matching(
+            User, lambda u: u.oauth_id == super_user.oauth_id
+        )
+
+        if user is None:
+            raise Exception("You must load SuperUser fixture")
+
+        self.login(user)
+
+
 @pytest.fixture
-async def ac(app, container: Injector, caplog) -> TestClient:
+async def ac(
+    app, container: Injector, db_helper: DbFixtureHelper, caplog
+) -> TestClient:
     caplog.set_level(logging.ERROR)
-    database_context = container.get(DatabaseContext)
     auth_service = container.get(AuthService)
+    user_service = container.get(CollectionService[User])
 
-    org = make_root_user_org()
-    await database_context.upserts(Organization, [org.organization])
-    await database_context.upserts(User, org.users)
-    token = auth_service.make_token(org.users[0].oauth_id)
-
-    async with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as ac:
+    async with IntegratedTestClient(app, auth_service, user_service, db_helper) as ac:
         yield ac
 
 

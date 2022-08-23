@@ -7,10 +7,11 @@ from motor.motor_asyncio import (
     AsyncIOMotorCollection,
 )
 from pydantic import BaseModel
-from typing import Callable, List, TypeVar, Optional, Dict, Type, Set, Any
+from typing import Callable, List, TypeVar, Optional, Dict, Type, Set, Any, Awaitable
 from dataclasses import dataclass
 from urllib.parse import urlparse
 from expert_dollup.shared.automapping import Mapper
+from tenacity import *
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 from ..batch_helper import batch
@@ -23,6 +24,7 @@ from ..adapter_interfaces import (
     DbConnection,
 )
 from ..simplifier import Simplifier
+from pymongo.errors import BulkWriteError
 
 
 def build_count_key_id(d, keys: Set[str]):
@@ -107,7 +109,7 @@ class MongoConnection(DbConnection):
 
     def get_collection_service(self, meta: Type, mapper: Mapper):
         return MongoCollection(
-            meta, self.collections, self._client.get_database(self.db_name), mapper
+            meta, self, self._client.get_database(self.db_name), mapper
         )
 
     def load_metadatas(self, dao_types):
@@ -141,6 +143,11 @@ class MongoConnection(DbConnection):
         for name in names:
             collection = db.get_collection(name)
             await collection.delete_many({})
+
+    async def transaction(self, callback: Callable[[], Awaitable]):
+        async with await self._client.start_session() as s:
+            async with s.start_transaction():
+                await callback()
 
     async def connect(self) -> None:
         pass
@@ -255,15 +262,16 @@ class MongoCollection(CollectionService[Domain]):
     def __init__(
         self,
         meta: Type,
-        tables_details: Dict[Type, CollectionDetails],
+        parent: MongoConnection,
         client: AsyncIOMotorDatabase,
         mapper: Mapper,
     ):
+        self._parent = parent
         self._dao = meta.dao
         self._domain = meta.domain
         self._mapper = mapper
         self._client = client
-        self._table_details = tables_details[meta.dao]
+        self._table_details = parent.collections[meta.dao]
         self._collection = client.get_collection(self._table_details.name)
         self._query_compiler = QueryCompiler(mapper, self._collection)
         self._dao_mapper = CollectionMapper(
@@ -287,10 +295,19 @@ class MongoCollection(CollectionService[Domain]):
     def batch_size(self) -> int:
         return 1000
 
+    @property
+    def db(self) -> DbConnection:
+        return self._parent
+
     async def insert(self, domain: Domain):
         document = self._dao_mapper.map_to_dict(domain)
         await self._collection.insert_one(document)
 
+    @retry(
+        retry=retry_if_exception_type(BulkWriteError),
+        wait=wait_random_exponential(multiplier=1, max=30),
+        stop=stop_after_attempt(3),
+    )
     async def insert_many(self, domains: List[Domain]):
         dicts = self._dao_mapper.map_many_to_dict(domains)
         for dicts_batch in batch(dicts, BATCH_SIZE):

@@ -2,7 +2,7 @@ from typing import Optional
 from dotenv import load_dotenv
 from invoke import task
 from pathlib import Path
-from urllib.parse import urlparse, urlunparse, urlsplit
+from urllib.parse import urlparse, urlunparse, urlsplit, urlunsplit
 from os import environ, path, getcwd
 import base64
 import asyncio
@@ -177,6 +177,18 @@ def test_docker(c):
     )
 
 
+@task
+def test(c, k=None, p=None, x=False, s=None):
+    x = "-x" if x else ""
+    s = "--random-order-seed={s}" if s else ""
+    if k:
+        c.run(f"pytest {x} -k {k} --random-order {s}")
+    elif p:
+        c.run(f"pytest {p} {x} --random-order {s}")
+    else:
+        c.run(f"pytest {x} --random-order {s}")
+
+
 @task(name="env:init")
 def generate_env(
     c,
@@ -225,8 +237,15 @@ def generate_env(
 
 
 @task(name="env:reset")
-def resetEnv(c):
+def resetEnv(c, force=False):
     load_dotenv()
+
+    if force:
+        c.run("docker system prune -a -f")
+        c.run("docker stop $(docker ps -a -q)")
+        c.run("docker rm $(docker ps -a -q)")
+        c.run("docker rmi $(docker images -a -q)")
+        c.run("docker volume prune -f")
 
     expert_dollup_db_url = urlparse(environ["EXPERT_DOLLUP_DB_URL"])
     auth_db_url = urlparse(environ["AUTH_DB_URL"])
@@ -242,7 +261,7 @@ def resetEnv(c):
             f"docker-compose -f images/docker-compose.{file_suffix}.yml down --remove-orphans --volumes"
         )
         commands.append(
-            f"docker-compose -f docker-compose.{file_suffix}.yml  up --detach --force-recreate"
+            f"docker-compose -f images/docker-compose.{file_suffix}.yml  up --detach --force-recreate"
         )
 
     print(commands)

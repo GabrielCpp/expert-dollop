@@ -28,6 +28,7 @@ datasheet_element = ObjectType("DatasheetElement")
 json_schema_scalar = ScalarType("JsonSchema")
 graphql_uuid = ScalarType("UUID")
 supplied_item = ObjectType("SuppliedItem")
+project_node_meta = ObjectType("ProjectNodeMeta")
 
 types = [
     mutation,
