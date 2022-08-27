@@ -32,7 +32,7 @@ async def resolve_find_projects(
 ):
     user = await info.context.container.get(AuthService).can_perform_required(
         info.context.request,
-        ["project:read"],
+        ["project:get"],
     )
 
     result = await handler.handle(

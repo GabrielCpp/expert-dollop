@@ -41,7 +41,7 @@ async def resolve_elements(
 ):
     user = await info.context.container.get(AuthService).can_perform_required(
         info.context.request,
-        ["datasheet:read"],
+        ["datasheet:get"],
     )
 
     return await handler.handle(
@@ -77,7 +77,7 @@ async def resolve_find_datasheets(
 ):
     user = await info.context.container.get(AuthService).can_perform_required(
         info.context.request,
-        ["datasheet:read"],
+        ["datasheet:get"],
     )
 
     return await handler.handle(

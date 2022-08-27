@@ -15,85 +15,93 @@ from .types import query, mutation, project_definition, project_definition_node
 
 
 @project_definition.field("rootSections")
-@inject_graphql_route(find_root_sections)
+@inject_graphql_route(find_definition_root_sections, ["project_definition_id"])
 @convert_kwargs_to_snake_case
 async def resolve_project_definition_root_sections(
     parent: ProjectDefinitionDto,
     info: GraphQLResolveInfo,
-    find_root_sections: callable,
+    find_definition_root_sections: callable,
 ):
-    result = await find_root_sections(info, parent.id)
+    result = await find_definition_root_sections(info, parent.id)
     return result
 
 
 @project_definition.field("rootSectionContainers")
-@inject_graphql_route(find_root_section_nodes)
+@inject_graphql_route(find_definition_root_section_nodes, ["project_definition_id"])
 @convert_kwargs_to_snake_case
 async def resolve_project_definition_root_section_nodes(
     parent: ProjectDefinitionDto,
     info: GraphQLResolveInfo,
     root_section_id: str,
-    find_root_section_nodes: callable,
+    find_definition_root_section_nodes: callable,
 ):
-    result = await find_root_section_nodes(info, parent.id, UUID(root_section_id))
-    return result
+    return await find_definition_root_section_nodes(
+        info, parent.id, UUID(root_section_id)
+    )
 
 
 @project_definition.field("formContent")
-@inject_graphql_route(find_form_content)
+@inject_graphql_route(
+    find_definition_form_content, ["project_definition_id", "form_id"]
+)
 @convert_kwargs_to_snake_case
 async def resolve_project_definition_form_content(
     parent: ProjectDefinitionDto,
     info: GraphQLResolveInfo,
     project_definition_id: str,
     form_id: str,
-    find_form_content: callable,
+    find_definition_form_content: callable,
 ):
-    result = await find_form_content(info, parent.id, UUID(form_id))
+    result = await find_definition_form_content(info, parent.id, UUID(form_id))
     return result
 
 
 @query.field("findProjectDefinitionRootSections")
-@inject_graphql_route(find_root_sections)
+@inject_graphql_route(find_definition_root_sections, ["project_definition_id"])
 @convert_kwargs_to_snake_case
 async def resolve_root_sections(
     _: Any,
     info: GraphQLResolveInfo,
     project_definition_id: str,
-    find_root_sections: callable,
+    find_definition_root_sections: callable,
 ):
-    result = await find_root_sections(info, UUID(project_definition_id))
+    result = await find_definition_root_sections(info, UUID(project_definition_id))
     return result
 
 
 @query.field("findProjectDefinitionRootSectionContainers")
-@inject_graphql_route(find_root_section_nodes)
+@inject_graphql_route(
+    find_definition_root_section_nodes, ["project_definition_id", "root_section_id"]
+)
 @convert_kwargs_to_snake_case
 async def resolve_root_section_nodes(
     _: Any,
     info: GraphQLResolveInfo,
     project_definition_id: str,
     root_section_id: str,
-    find_root_section_nodes: callable,
+    find_definition_root_section_nodes: callable,
 ):
-    result = await find_root_section_nodes(
+    result = await find_definition_root_section_nodes(
         info, UUID(project_definition_id), UUID(root_section_id)
     )
     return result
 
 
 @query.field("findProjectDefinitionFormContent")
-@inject_graphql_route(find_form_content)
+@inject_graphql_route(
+    find_definition_form_content, ["project_definition_id", "form_id"]
+)
 @convert_kwargs_to_snake_case
 async def resolve_form_content(
     _: Any,
     info: GraphQLResolveInfo,
     project_definition_id: str,
     form_id: str,
-    find_form_content: callable,
+    find_definition_form_content: callable,
 ):
-    result = await find_form_content(info, UUID(project_definition_id), UUID(form_id))
-    return result
+    return await find_definition_form_content(
+        info, UUID(project_definition_id), UUID(form_id)
+    )
 
 
 @query.field("findProjectDefinitionNode")
@@ -115,7 +123,7 @@ async def resolve_find_project_definition_node(
 
 
 @mutation.field("addProjectDefinitionNode")
-@inject_graphql_route(create_project_definition_node)
+@inject_graphql_route(create_project_definition_node, ["project_definition_id"])
 async def resolve_add_project_definition_node(
     _: Any,
     info: GraphQLResolveInfo,
@@ -147,7 +155,9 @@ async def resolve_add_project_definition_node(
 
 
 @mutation.field("updateProjectDefinitionNode")
-@inject_graphql_route(update_project_definition_node)
+@inject_graphql_route(
+    update_project_definition_node, ["project_definition_id", "node_id"]
+)
 async def resolve_update_project_definition_node(
     _: Any,
     info: GraphQLResolveInfo,
@@ -181,7 +191,7 @@ async def resolve_update_project_definition_node(
 
 
 @project_definition_node.field("translated")
-@inject_graphql_route(find_translation_in_scope)
+@inject_graphql_route(find_translation_in_scope, ["ressource_id", "scope"])
 async def resolve_project_definition_node_translations(
     parent: ProjectDefinitionNodeDto,
     info: GraphQLResolveInfo,

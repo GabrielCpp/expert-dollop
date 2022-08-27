@@ -15,38 +15,42 @@ from pydantic import parse_obj_as
 
 
 @query.field("findProjectRootSections")
-@inject_graphql_route(find_root_sections, ["project_id"])
+@inject_graphql_route(find_project_root_sections, ["project_id"])
 @convert_kwargs_to_snake_case
 async def resolve_find_root_sections(
     _: Any, info: GraphQLResolveInfo, project_id: str, find_root_sections: callable
 ):
-    return await find_root_sections(info, UUID(project_id))
+    return await find_project_root_sections(info, UUID(project_id))
 
 
 @query.field("findProjectRootSectionContainers")
-@inject_graphql_route(find_root_section_nodes, ["project_id", "root_section_id"])
+@inject_graphql_route(
+    find_project_root_section_nodes, ["project_id", "root_section_id"]
+)
 @convert_kwargs_to_snake_case
 async def resolve_find_root_section_nodes(
     _: Any,
     info: GraphQLResolveInfo,
     project_id: str,
     root_section_id: str,
-    find_root_section_nodes: callable,
+    find_project_root_section_nodes: callable,
 ):
-    return await find_root_section_nodes(info, UUID(project_id), UUID(root_section_id))
+    return await find_project_root_section_nodes(
+        info, UUID(project_id), UUID(root_section_id)
+    )
 
 
 @query.field("findProjectFormContent")
-@inject_graphql_route(find_form_content, ["project_id", "form_id"])
+@inject_graphql_route(find_project_form_content, ["project_id", "form_id"])
 @convert_kwargs_to_snake_case
 async def resolve_find_root_section_nodes(
     _: Any,
     info: GraphQLResolveInfo,
     project_id: str,
     form_id: str,
-    find_form_content: callable,
+    find_project_form_content: callable,
 ):
-    return await find_form_content(info, UUID(project_id), UUID(form_id))
+    return await find_project_form_content(info, UUID(project_id), UUID(form_id))
 
 
 @mutation.field("updateProjectField")

@@ -28,11 +28,8 @@ class AsyncCursor:
             if not self.next_page_token is None:
                 parameters["nextPageToken"] = self.next_page_token
 
-            response = await self.ac.get(f"{self.url}?{urlencode(parameters)}")
+            response = await self.ac.get_json(f"{self.url}?{urlencode(parameters)}")
             body = response.json()
-
-            if response.status_code != 200:
-                raise Exception(body)
 
             self.next_page_token = body["nextPageToken"]
             self.limit = body["limit"]

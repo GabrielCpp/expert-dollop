@@ -18,7 +18,7 @@ async def find_project_definition_node(
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
     user=Depends(
-        CanPerformOnRequired("project_definition_id", ["project_definition:read"])
+        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
     ),
 ):
     return await handler.handle(
@@ -106,6 +106,9 @@ async def get_project_definition_node_by_project(
     limit: int = Query(alias="limit", default=100),
     request_handler=Depends(Inject(RequestHandler)),
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
+    ),
 ):
     return await request_handler.forward(
         usecase.find_project_nodes,
@@ -122,10 +125,13 @@ async def get_project_definition_node_by_project(
 
 
 @router.get("/definitions/{project_definition_id}/root_sections")
-async def find_root_sections(
+async def find_definition_root_sections(
     project_definition_id: UUID,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
+    ),
 ):
     return await request_handler.forward(
         usecase.find_root_sections,
@@ -138,11 +144,14 @@ async def find_root_sections(
 
 
 @router.get("/definitions/{project_definition_id}/root_section_nodes/{root_section_id}")
-async def find_root_section_nodes(
+async def find_definition_root_section_nodes(
     project_definition_id: UUID,
     root_section_id: UUID,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
+    ),
 ):
     return await request_handler.forward(
         usecase.find_root_section_nodes,
@@ -158,11 +167,14 @@ async def find_root_section_nodes(
 
 
 @router.get("/definitions/{project_definition_id}/form_contents/{form_id}")
-async def find_form_content(
+async def find_definition_form_content(
     project_definition_id: UUID,
     form_id: UUID,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
+    ),
 ):
     return await request_handler.forward(
         usecase.find_form_content,

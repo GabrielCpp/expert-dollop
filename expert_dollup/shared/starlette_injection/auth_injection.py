@@ -40,16 +40,15 @@ class CanPerformOnRequired:
         self,
         url_ressource: str,
         permissions: Union[str, List[str]],
-        user_permissions: Union[str, List[str]] = [],
+        user_permissions: Union[str, List[str], None] = None,
     ):
+        def to_list(v: Union[str, List[str]]) -> List[str]:
+            return v if isinstance(v, list) else [v]
+
         self.url_ressource = url_ressource
-        self.permissions = (
-            permissions if isinstance(permissions, list) else [permissions]
-        )
+        self.permissions = to_list(permissions)
         self.user_permissions = (
-            user_permissions
-            if isinstance(user_permissions, list)
-            else [user_permissions]
+            self.permissions if user_permissions is None else to_list(user_permissions)
         )
 
     async def __call__(

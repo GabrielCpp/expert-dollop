@@ -44,7 +44,7 @@ async def resolve_find_project_defintions(
 ):
     user = await info.context.container.get(AuthService).can_perform_required(
         info.context.request,
-        ["project_definition:read"],
+        ["project_definition:get"],
     )
 
     result = await handler.handle(

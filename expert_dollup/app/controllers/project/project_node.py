@@ -21,7 +21,7 @@ async def get_project_node(
     node_id: UUID,
     usecase=Depends(Inject(ProjectNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
+    user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     return await handler.handle(
         usecase.find_by_id, node_id, MappingChain(out_dto=ProjectNodeDto)
@@ -34,7 +34,7 @@ async def find_project_nodes_by(
     type_id: UUID = Query(alias="typeId", default=None),
     usecase=Depends(Inject(ProjectNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
+    user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     return await handler.forward_many(
         usecase.find_by_type,
@@ -50,7 +50,7 @@ async def find_project_children_tree(
     level: int = Query(alias="level", default=None),
     usecase=Depends(Inject(ProjectNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
+    user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     return await handler.forward_many(
         usecase.find_by_path,
@@ -65,7 +65,7 @@ async def find_project_subtree(
     path: List[UUID] = Query(alias="path", default=[]),
     usecase=Depends(Inject(ProjectNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
+    user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     return await handler.forward_many(
         usecase.find_subtree,
@@ -75,11 +75,11 @@ async def find_project_subtree(
 
 
 @router.get("/project/{project_id}/roots")
-async def find_root_sections(
+async def find_project_root_sections(
     project_id: UUID,
     usecase=Depends(Inject(ProjectNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
+    user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     return await request_handler.forward(
         usecase.find_root_sections,
@@ -92,12 +92,12 @@ async def find_root_sections(
 
 
 @router.get("/project/{project_id}/root_section_nodes/{root_section_id}")
-async def find_root_section_nodes(
+async def find_project_root_section_nodes(
     project_id: UUID,
     root_section_id: UUID,
     usecase=Depends(Inject(ProjectNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
+    user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     return await request_handler.forward(
         usecase.find_root_section_nodes,
@@ -113,12 +113,12 @@ async def find_root_section_nodes(
 
 
 @router.get("/project/{project_id}/form/{form_id}")
-async def find_form_content(
+async def find_project_form_content(
     project_id: UUID,
     form_id: UUID,
     usecase=Depends(Inject(ProjectNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
+    user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     return await request_handler.forward(
         usecase.find_form_content,

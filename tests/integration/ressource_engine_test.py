@@ -2,15 +2,14 @@ import pytest
 from injector import Injector
 from datetime import datetime, timezone
 from expert_dollup.core.domains import ProjectDetails, User
-from expert_dollup.core.utils.ressource_permissions import make_ressource
+from expert_dollup.core.utils.ressource_permissions import authorization_factory
 from expert_dollup.infra.ressource_engine import UserRessourceQuery
 from expert_dollup.shared.database_services import Page
 from expert_dollup.shared.database_services import UserRessourcePaginator
 from ..fixtures import *
 
 
-def make_projects_with_user():
-    db = FakeDb()
+def make_projects_with_user(db: FakeDb):
     user_a = UserFactory()
     user_b = UserFactory()
     db.add(user_a, user_b)
@@ -22,11 +21,9 @@ def make_projects_with_user():
             name=name,
             creation_date_utc=datetime(2011, 11, 4, i, 5, tzinfo=timezone.utc),
         )
-        project_ressource = make_ressource(ProjectDetails, project, current_user)
+        project_ressource = authorization_factory.allow_access_to(project, current_user)
         db.add(project)
         db.add(project_ressource)
-
-    return db
 
 
 @pytest.mark.asyncio

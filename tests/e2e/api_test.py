@@ -72,24 +72,23 @@ async def test_given_translation_should_be_able_to_create_update_delete(
     translation_input = TranslationInputDtoFactory(ressource_id=project_definition.id)
 
     await ac.post_json("/api/definitions", project_definition)
-
-    await ac.post_json("/api/translation", translation_input)
+    await ac.post_json("/api/translations", translation_input)
 
     expected_translation = TranslationDto(
         **translation_input.dict(), creation_date_utc=static_clock.utcnow()
     )
     actual = await ac.get_json(
-        f"/api/translation/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}",
+        f"/api/translations/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}",
         unwrap_with=TranslationDto,
     )
     assert actual == expected_translation
 
     await ac.delete_json(
-        f"/api/translation/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}"
+        f"/api/translations/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}"
     )
 
     await ac.get_json(
-        f"/api/translation/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}",
+        f"/api/translations/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}",
         expected_status_code=404,
     )
 
@@ -99,7 +98,13 @@ async def test_given_translation_should_be_able_to_retrieve_it(
     ac, db_helper, map_dao_to_dto, static_clock
 ):
     await ac.login_super_user()
-    ressource_id = uuid4()
+    definition = await ac.post_json(
+        "/api/definitions",
+        ProjectDefinitionDtoFactory(),
+        unwrap_with=ProjectDefinitionDto,
+    )
+    ressource_id = definition.id
+
     translations = dict(
         a_fr=TranslationDao(
             id=UUID("96492b2d-49fa-4250-b655-ff8cf5030953"),
@@ -147,8 +152,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
         CollectionService[Translation], list(translations.values())
     )
 
-    response = await ac.get(f"/api/translation/{ressource_id}/fr-CA")
-    assert response.status_code == 200
-
-    actual = unwrap(response, PageDto)
+    actual = await ac.get_json(
+        f"/api/translations/{ressource_id}/fr-CA", unwrap_with=PageDto
+    )
     assert actual == expected_translations

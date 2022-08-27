@@ -13,7 +13,7 @@ from ..utils import find_name
 class NodeDefinitionRebinding:
     mapper: Mapper
     static_clock: StaticClock
-    db: FakeDb = field(default_factory=lambda: SimpleProject()())
+    db: FakeDb = field(default_factory=lambda: FakeDb.create_from([SimpleProject()]))
     id_maps: Dict[UUID, UUID] = field(default_factory=dict)
 
     @property
@@ -79,7 +79,9 @@ async def test_project_creation(ac, mapper, static_clock):
 
 @pytest.mark.asyncio
 async def test_query_definition_parts(ac, db_helper: DbFixtureHelper):
-    db = await db_helper.load_fixtures(SuperUser(), SimpleProject())
+    db = await db_helper.load_fixtures(
+        SuperUser(), SimpleProject(), GrantRessourcePermissions()
+    )
     await ac.login_super_user()
     definition = db.get_only_one(ProjectDefinition)
     runner = FlowRunner()

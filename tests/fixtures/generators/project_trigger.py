@@ -7,13 +7,12 @@ from ..factories_domain import *
 
 class ProjectWithTrigger:
     def __init__(self):
-        self.db = FakeDb()
         self.field_config_factory = FieldConfigFactory()
         self.labels = ["root", "subsection", "form", "section", "field"]
 
-    def __call__(self):
+    def __call__(self, db: FakeDb) -> None:
         project_definition = ProjectDefinitionFactory()
-        self.db.add(project_definition)
+        db.add(project_definition)
 
         root_a = ProjectDefinitionNodeFactory(
             name="root_a",
@@ -31,10 +30,10 @@ class ProjectWithTrigger:
         form_a = self._create_container_node(subsection_a)
         section_a = self._create_section_node(form_a)
 
-        self.db.add(root_a)
-        self.db.add(subsection_a)
-        self.db.add(form_a)
-        self.db.add(section_a)
+        db.add(root_a)
+        db.add(subsection_a)
+        db.add(form_a)
+        db.add(section_a)
 
         root_b = ProjectDefinitionNodeFactory(
             name="root_b",
@@ -50,20 +49,18 @@ class ProjectWithTrigger:
         )
 
         field_a = self._create_checkbox_field(section_a, root_b.id)
-        self.db.add(field_a)
+        db.add(field_a)
 
         subsection_b = self._create_container_node(root_b)
         form_b = self._create_container_node(subsection_b)
         section_b = self._create_section_node(form_b)
         field_b = self._create_textfield(section_b, root_b.id)
 
-        self.db.add(root_b)
-        self.db.add(subsection_b)
-        self.db.add(form_b)
-        self.db.add(section_b)
-        self.db.add(field_b)
-
-        return self.db
+        db.add(root_b)
+        db.add(subsection_b)
+        db.add(form_b)
+        db.add(section_b)
+        db.add(field_b)
 
     def _create_container_node(
         self, parent: ProjectDefinitionNode, is_collection: bool = False

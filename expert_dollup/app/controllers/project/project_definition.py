@@ -22,7 +22,7 @@ async def find_project_definition(
     usecase: ProjectDefinitonUseCase = Depends(Inject(ProjectDefinitonUseCase)),
     handler=Depends(Inject(RequestHandler)),
     user=Depends(
-        CanPerformOnRequired("project_definition_id", ["project_definition:read"])
+        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
     ),
 ):
     return await handler.handle(

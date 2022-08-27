@@ -1,7 +1,7 @@
 from typing import List, Dict
 from uuid import UUID, uuid4
 from collections import defaultdict, OrderedDict
-from expert_dollup.core.utils.ressource_permissions import make_ressource
+from expert_dollup.core.utils.ressource_permissions import authorization_factory
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.core.domains import *
@@ -92,7 +92,7 @@ class ProjectBuilder:
             details=project_details,
             nodes=nodes,
             metas=node_metas,
-            ressource=make_ressource(ProjectDetails, project_details, user),
+            ressource=authorization_factory.allow_access_to(project_details, user),
         )
 
     async def clone(self, project_details: ProjectDetails, user: User) -> Project:
@@ -105,7 +105,7 @@ class ProjectBuilder:
             creation_date_utc=self.clock.utcnow(),
         )
 
-        ressource = make_ressource(ProjectDetails, cloned_project, user)
+        ressource = authorization_factory.allow_access_to(cloned_project, user)
         cloned_nodes = await self._clone_project_nodes(
             project_details.id, cloned_project
         )

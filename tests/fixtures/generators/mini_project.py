@@ -6,12 +6,11 @@ from ..factories_domain import *
 
 class MiniProject:
     def __init__(self):
-        self.db = FakeDb()
         self.field_config_factory = FieldConfigFactory()
 
-    def __call__(self):
-        project_definition = self.db.add(ProjectDefinitionFactory())
-        root = self.db.add(
+    def __call__(self, db: FakeDb) -> None:
+        project_definition = db.add(ProjectDefinitionFactory())
+        root = db.add(
             ProjectDefinitionNodeFactory(
                 name="root",
                 project_definition_id=project_definition.id,
@@ -39,7 +38,7 @@ class MiniProject:
         ):
             name = name_map[config_type]
             field_details = self.field_config_factory.build(name, index, config_type)
-            self.db.add(
+            db.add(
                 ProjectDefinitionNodeFactory(
                     name=name,
                     project_definition_id=project_definition.id,
@@ -54,7 +53,7 @@ class MiniProject:
         index = len(name_map)
         name = "taxes"
         field_details = self.field_config_factory.build(name, index, config_type)
-        self.db.add(
+        db.add(
             ProjectDefinitionNodeFactory(
                 name=name,
                 project_definition_id=project_definition.id,
@@ -65,5 +64,3 @@ class MiniProject:
                 field_details=field_details,
             )
         )
-
-        return self.db

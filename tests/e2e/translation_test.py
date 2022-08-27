@@ -14,7 +14,7 @@ async def test_should_be_able_to_scan_translations(
 
     translations = await AsyncCursor.all(
         ac,
-        f"/api/translation/{project_definition.id}/en-US",
+        f"/api/translations/{project_definition.id}/en-US",
         after=normalize_request_results(TranslationDto, lambda c: (c["name"], c["id"])),
     )
 

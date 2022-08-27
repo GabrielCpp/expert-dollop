@@ -1,7 +1,6 @@
 from typing import TypeVar, Optional, List, Union
 from asyncio import gather
-from expert_dollup.core.utils.ressource_permissions import get_ressource_kind
-from expert_dollup.core.utils import encode_date_with_uuid
+from expert_dollup.core.utils import encode_date_with_uuid, authorization_factory
 from expert_dollup.core.domains import Ressource, RessourceProtocol
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import (
@@ -32,6 +31,12 @@ class RessourceEngine(UserRessourcePaginator[Domain]):
         self._page_encoder = FieldTokenEncoder(
             "date_ordering", str, str, ("0" * 12) + ("0" * 32)
         )
+        self._domain_get_permission = authorization_factory.build_permission_for(
+            self._domain_service.domain, "get"
+        )
+        self._kind = authorization_factory.get_ressource_kind(
+            self._domain_service.domain
+        )
 
     async def find_page(
         self,
@@ -39,12 +44,11 @@ class RessourceEngine(UserRessourcePaginator[Domain]):
         limit: int,
         next_page_token: Optional[str],
     ) -> Page[Domain]:
-        kind = get_ressource_kind(self._domain_service.domain)
         builder = (
             self.ressource_service.get_builder()
             .where("organization_id", "==", query.organization_id)
-            .where("kind", "==", kind)
-            .where("permissions", "contain_one", f"{kind}:read")
+            .where("kind", "==", self._kind)
+            .where("permissions", "contain_one", self._domain_get_permission)
         )
         scoped_builder = builder.clone()
         self._page_encoder.extend_query(scoped_builder, limit, next_page_token)

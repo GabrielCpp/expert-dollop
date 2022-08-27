@@ -8,7 +8,6 @@ from ..factories_domain import *
 
 class SimpleProject:
     def __init__(self):
-        self.db = FakeDb()
         self.field_config_factory = FieldConfigFactory()
 
     def generate_project_node_definition(self, project_definition_id: UUID) -> None:
@@ -140,7 +139,7 @@ class SimpleProject:
                         )
                     )
 
-    def __call__(self):
+    def __call__(self, db: FakeDb) -> None:
+        self.db = db
         self.generate_project_definition()
         self.generate_translations()
-        return self.db

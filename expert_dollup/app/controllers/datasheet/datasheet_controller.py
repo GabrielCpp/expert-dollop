@@ -35,7 +35,7 @@ async def find_datasheet_by_id(
     datasheet_id: UUID,
     usecase=Depends(Inject(DatasheetUseCase)),
     handler=Depends(Inject(RequestHandler)),
-    user=Depends((CanPerformOnRequired("datasheet_id", ["datasheet:read"]))),
+    user=Depends((CanPerformOnRequired("datasheet_id", ["datasheet:get"]))),
 ):
     return await handler.handle(
         usecase.find_by_id,
@@ -97,7 +97,7 @@ async def clone_datasheet(
     handler: RequestHandler = Depends(Inject(RequestHandler)),
     user=Depends(
         CanPerformOnRequired(
-            "target_datasheet_id", ["datasheet:read"], ["datasheet:clone"]
+            "target_datasheet_id", ["datasheet:get"], ["datasheet:clone"]
         )
     ),
 ):

@@ -3,7 +3,7 @@ from expert_dollup.shared.database_services import CollectionService
 from expert_dollup.core.exceptions import RessourceNotFound
 from expert_dollup.core.domains import *
 from expert_dollup.infra.providers import WordProvider
-from expert_dollup.core.utils.ressource_permissions import make_ressource
+from expert_dollup.core.utils.ressource_permissions import authorization_factory
 
 
 class ProjectDefinitonUseCase:
@@ -18,7 +18,7 @@ class ProjectDefinitonUseCase:
         self.word_provider = word_provider
 
     async def add(self, domain: ProjectDefinition, user: User) -> ProjectDefinition:
-        ressource = make_ressource(ProjectDefinition, domain, user)
+        ressource = authorization_factory.allow_access_to(domain, user)
         await self.ressource_service.insert(ressource)
         await self.service.insert(domain)
         return domain

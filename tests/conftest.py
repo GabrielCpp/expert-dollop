@@ -1,4 +1,5 @@
 import pytest
+import faker
 import os
 import logging
 import expert_dollup.infra.expert_dollup_db as expert_dollup_db_daos
@@ -8,7 +9,6 @@ from injector import Injector
 from dotenv import load_dotenv
 from factory.random import reseed_random
 from factory import Faker
-from faker.providers import BaseProvider
 from async_asgi_testclient import TestClient
 from expert_dollup.app.app import creat_app
 from expert_dollup.app.modules import build_container
@@ -20,24 +20,29 @@ from expert_dollup.shared.starlette_injection import LoggerFactory, AuthService
 from expert_dollup.core.domains import *
 from .fixtures.injector_override.mock_services import logger_observer
 from .fixtures import *
-from faker.providers.date_time import Provider
 
 
-class DateTimeProvider(Provider):
+class DateTimeProvider(faker.providers.date_time.Provider):
     def date_time_s(self, tzinfo=None, end_datetime=None):
         return self.date_time(tzinfo, end_datetime).replace(microsecond=0)
 
 
-class PyProvider(BaseProvider):
+class PyUUIDProvider(faker.providers.BaseProvider):
     def pyuuid4(self) -> UUID:
         hexs = self.hexify("^" * 32)
         return UUID(hexs)
 
 
+class WordStringProvider(faker.providers.lorem.Provider):
+    def words_str(self) -> UUID:
+        return " ".join(self.words())
+
+
 load_dotenv(".env")
 reseed_random(1)
-Faker.add_provider(PyProvider)
+Faker.add_provider(PyUUIDProvider)
 Faker.add_provider(DateTimeProvider)
+Faker.add_provider(WordStringProvider)
 
 
 @pytest.fixture
@@ -122,12 +127,11 @@ class IntegratedTestClient(TestClient):
         self.headers.update({"Authorization": f"Bearer {token}"})
 
     async def login_super_user(self):
-        super_user = SuperUser()
         if self.db_helper.db is None:
-            await self.db_helper.load_fixtures(super_user)
+            await self.db_helper.load_fixtures(SuperUser())
 
         user = self.db_helper.db.get_only_one_matching(
-            User, lambda u: u.oauth_id == super_user.oauth_id
+            User, lambda u: u.oauth_id == SuperUser.oauth_id
         )
 
         if user is None:

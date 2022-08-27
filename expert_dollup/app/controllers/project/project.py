@@ -19,7 +19,7 @@ async def find_project_details(
     project_id: UUID,
     usecase=Depends(Inject(ProjectUseCase)),
     handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
+    user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     return await handler.handle(
         usecase.find_by_id, project_id, MappingChain(out_dto=ProjectDetailsDto)
@@ -52,7 +52,7 @@ async def clone_project(
     usecase=Depends(Inject(ProjectUseCase)),
     handler=Depends(Inject(RequestHandler)),
     user=Depends(
-        CanPerformOnRequired("project_id", ["project:read"], ["project:clone"])
+        CanPerformOnRequired("project_id", ["project:get"], ["project:clone"])
     ),
 ):
     return await handler.forward(

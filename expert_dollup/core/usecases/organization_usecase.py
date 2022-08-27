@@ -1,8 +1,7 @@
 from uuid import uuid4
 from expert_dollup.core.domains import *
-from expert_dollup.core.utils.ressource_permissions import actions, Action
 from expert_dollup.shared.database_services import DatabaseContext
-from expert_dollup.core.utils import make_permissions, all_action
+from expert_dollup.core.utils import authorization_factory
 
 
 class OrganizationUseCase:
@@ -28,11 +27,9 @@ class OrganizationUseCase:
             oauth_id=oauth_id,
             id=uuid4(),
             email=email,
-            permissions=[
-                *make_permissions(ProjectDetails, all_action()),
-                *make_permissions(Datasheet, all_action()),
-                *make_permissions(ProjectDefinition, actions(Action.CAN_READ)),
-            ],
+            permissions=authorization_factory.all_permissions_for_each(
+                Datasheet, ProjectDefinition, ProjectDetails
+            ),
             organization_id=organization.id,
         )
 

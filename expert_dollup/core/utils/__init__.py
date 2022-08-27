@@ -7,5 +7,5 @@ from .path_transform import (
     list_uuid_to_str,
     list_str_to_uuid,
 )
-from .ressource_permissions import make_permission, make_permissions, all_action
+from .ressource_permissions import authorization_factory
 from .helpers import create_id_dict, map_id_to_object

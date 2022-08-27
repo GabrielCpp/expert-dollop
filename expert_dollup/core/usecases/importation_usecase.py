@@ -1,7 +1,7 @@
 from typing import List
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import DatabaseContext
-from expert_dollup.core.utils.ressource_permissions import make_ressource
+from expert_dollup.core.utils.ressource_permissions import authorization_factory
 from expert_dollup.core.domains import *
 from .datasheet_usecase import DatasheetUseCase
 from .datasheet_definition_element_usecase import DatasheetDefinitionElementUseCase
@@ -139,8 +139,7 @@ class ImportationUseCase:
         self, user: User, projects_details: List[ProjectDetails]
     ):
         for project_details in projects_details:
-            ressource = make_ressource(
-                ProjectDetails,
+            ressource = authorization_factory.allow_access_to(
                 project_details,
                 user,
             )

@@ -1,5 +1,6 @@
 from collections import defaultdict
-from typing import Callable, List, Dict, Type, TypeVar, Union
+from typing import Callable, List, Dict, Type, TypeVar, Union, Optional
+from typing_extensions import TypeAlias
 from injector import Injector
 from inspect import isclass
 from shutil import rmtree
@@ -8,9 +9,23 @@ from expert_dollup.shared.database_services import DbConnection
 from expert_dollup.shared.database_services.adapter_interfaces import CollectionService
 
 Domain = TypeVar("Domain")
+FakeDbLoader: TypeAlias = Callable[["FakeDb"], None]
 
 
 class FakeDb:
+    @staticmethod
+    def create_from(loaders: List[FakeDbLoader]) -> "FakeDb":
+        return FakeDb.load_into(None, loaders)
+
+    @staticmethod
+    def load_into(db: Optional["FakeDb"], loaders: List[FakeDbLoader]) -> "FakeDb":
+        db = db or FakeDb()
+
+        for load_objects in loaders:
+            load_objects(db)
+
+        return db
+
     def __init__(self):
         self.collections: Dict[Type, List[object]] = defaultdict(list)
 
@@ -37,9 +52,20 @@ class FakeDb:
         return results[0]
 
     def add(self, *args: Domain) -> Union[Domain, List[Domain]]:
+        if len(args) == 0:
+            raise Exception("Add at lead one object")
+
         first_object = args[0]
         self.collections[type(first_object)].extend(args)
         return first_object if len(args) == 1 else args
+
+    def add_all(self, domains: List[Domain]) -> List[Domain]:
+        if len(domains) == 0:
+            return []
+
+        first_object = domains[0]
+        self.collections[type(first_object)].extend(domains)
+        return domains
 
     def merge(self, other: "FakeDb") -> None:
         for object_type, objects in other.collections.items():
@@ -69,23 +95,18 @@ class DbFixtureHelper:
         await self.auth_db.truncate_db()
         rmtree("/tmp/expertdollup", ignore_errors=True)
 
-    async def init_db(self, fake_db: FakeDb):
-        async def do_init():
-            await self.reset()
+    async def init_db(self, fake_db: FakeDb) -> FakeDb:
+        await self.reset()
 
-            for domain_type, objects in fake_db.collections.items():
-                service_type = CollectionService[domain_type]
-                service = self.injector.get(service_type)
-                await service.insert_many(objects)
+        for domain_type, objects in fake_db.collections.items():
+            service_type = CollectionService[domain_type]
+            service = self.injector.get(service_type)
+            await service.insert_many(objects)
 
-        await self.auth_db.transaction(do_init)
         self.db = fake_db
+        return fake_db
 
-    async def load_fixtures(self, *build_db_slices: Callable[[], FakeDb]) -> FakeDb:
-        db = self.db or FakeDb()
-
-        for build_db_slice in build_db_slices:
-            db.merge(build_db_slice())
-
-        await self.init_db(db)
+    async def load_fixtures(self, *loaders: FakeDbLoader) -> FakeDb:
+        db = FakeDb.load_into(self.db, loaders)
+        db = await self.init_db(db)
         return db

@@ -4,12 +4,7 @@ from typing import List
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *
 from expert_dollup.core.usecases import DistributableUseCase
-from expert_dollup.shared.starlette_injection import (
-    RequestHandler,
-    MappingChain,
-    Inject,
-)
-
+from expert_dollup.shared.starlette_injection import *
 
 router = APIRouter()
 
@@ -19,6 +14,7 @@ async def get_project_distributables(
     project_id: UUID,
     usecase=Depends(Inject(DistributableUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     return await handler.handle_many(
         usecase.distributable_reports,
@@ -33,6 +29,7 @@ async def get_project_distributable_items(
     report_definition_id: UUID,
     usecase: DistributableUseCase = Depends(Inject(DistributableUseCase)),
     handler: RequestHandler = Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     return await handler.forward_many(
         usecase.update_distributable,
@@ -48,6 +45,7 @@ async def distribute_items(
     items: List[UUID],
     usecase=Depends(Inject(DistributableUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:update"])),
 ):
     return await handler.distribute(
         usecase.distribute,

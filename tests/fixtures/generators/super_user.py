@@ -1,7 +1,7 @@
 from uuid import UUID
 from typing import List
 from expert_dollup.core.domains import *
-from expert_dollup.core.utils.ressource_permissions import all_permisions
+from expert_dollup.core.utils import authorization_factory
 from ..fake_db_helpers import FakeDb
 from ..factories import FieldConfigFactory
 from ..factories_domain import *
@@ -11,12 +11,8 @@ from ..factories.helpers import make_uuid
 class SuperUser:
     oauth_id: str = "testuser"
 
-    def __init__(self):
-        self.db = FakeDb()
-        self.oauth_id: str = "testuser"
-
-    def __call__(self):
-        oauth_id: str = self.oauth_id
+    def __call__(self, db: FakeDb) -> None:
+        oauth_id: str = SuperUser.oauth_id
         org_name = "root_org"
         email = f"{oauth_id}@example.com"
         organization = Organization(
@@ -30,15 +26,13 @@ class SuperUser:
                 active_datasheet_custom_element_count=5000,
             ),
         )
-        self.db.add(organization)
+        db.add(organization)
 
         user = User(
             oauth_id=oauth_id,
             id=make_uuid(oauth_id),
             email=email,
-            permissions=all_permisions(),
+            permissions=authorization_factory.build_super_user_permisions(),
             organization_id=organization.id,
         )
-        self.db.add(user)
-
-        return self.db
+        db.add(user)

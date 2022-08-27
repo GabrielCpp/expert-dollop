@@ -11,7 +11,6 @@ from typing import Callable, List, TypeVar, Optional, Dict, Type, Set, Any, Awai
 from dataclasses import dataclass
 from urllib.parse import urlparse
 from expert_dollup.shared.automapping import Mapper
-from tenacity import *
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 from ..batch_helper import batch
@@ -24,7 +23,6 @@ from ..adapter_interfaces import (
     DbConnection,
 )
 from ..simplifier import Simplifier
-from pymongo.errors import BulkWriteError
 
 
 def build_count_key_id(d, keys: Set[str]):
@@ -303,11 +301,6 @@ class MongoCollection(CollectionService[Domain]):
         document = self._dao_mapper.map_to_dict(domain)
         await self._collection.insert_one(document)
 
-    @retry(
-        retry=retry_if_exception_type(BulkWriteError),
-        wait=wait_random_exponential(multiplier=1, max=30),
-        stop=stop_after_attempt(3),
-    )
     async def insert_many(self, domains: List[Domain]):
         dicts = self._dao_mapper.map_many_to_dict(domains)
         for dicts_batch in batch(dicts, BATCH_SIZE):

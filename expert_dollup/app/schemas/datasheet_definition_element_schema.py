@@ -42,7 +42,7 @@ async def resolve_find_datasheet_definition_elements(
     await info.context.container.get(AuthService).can_perform_on_required(
         info.context.request,
         UUID(project_definition_id),
-        ["project_definition:read"],
+        ["project_definition:get"],
     )
 
     return await handler.handle(
@@ -70,7 +70,7 @@ async def resolve_query_datasheet_definition_elements(
     await info.context.container.get(AuthService).can_perform_on_required(
         info.context.request,
         UUID(project_definition_id),
-        ["project_definition:read"],
+        ["project_definition:get"],
     )
 
     return await handler.handle(

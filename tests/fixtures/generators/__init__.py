@@ -4,3 +4,4 @@ from .mini_datasheet import MiniDatasheet
 from .simple_datasheet_def import SimpleDatasheetDef
 from .project_trigger import ProjectWithTrigger
 from .super_user import SuperUser
+from .grant_ressource_permissions import GrantRessourcePermissions

@@ -22,7 +22,7 @@ async def get_project_node_meta(
     type_id: UUID,
     service=Depends(Inject(CollectionService[ProjectNodeMeta])),
     handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
+    user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     return await handler.handle(
         service.find_one_by,
@@ -38,7 +38,7 @@ async def get_project_node_meta_definition(
     meta_service=Depends(Inject(CollectionService[ProjectNodeMeta])),
     node_service=Depends(Inject(CollectionService[ProjectNode])),
     handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformOnRequired("project_id", ["project:read"])),
+    user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     node = await node_service.find_one_by(
         ProjectNodeFilter(project_id=project_id, id=node_id)

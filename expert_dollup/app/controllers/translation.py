@@ -17,7 +17,7 @@ from expert_dollup.core.domains import *
 router = APIRouter()
 
 
-@router.get("/translation/{ressource_id}/{scope}/{locale}/{name}")
+@router.get("/translations/{ressource_id}/{scope}/{locale}/{name}")
 async def find_translation(
     ressource_id: UUID,
     scope: UUID,
@@ -25,7 +25,7 @@ async def find_translation(
     name: str,
     usecase=Depends(Inject(TranslationUseCase)),
     handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformOnRequired("ressource_id", "*:read")),
+    user=Depends(CanPerformOnRequired("ressource_id", "*:get", [])),
 ):
     id = TranslationIdDto(
         ressource_id=ressource_id, scope=scope, locale=locale, name=name
@@ -40,12 +40,12 @@ async def find_translation(
     )
 
 
-@router.post("/translation")
+@router.post("/translations")
 async def create_translation(
     translation: TranslationInputDto,
     usecase=Depends(Inject(TranslationUseCase)),
     handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformRequired("translation:create")),
+    user=Depends(CanPerformRequired("project_definition:update")),
 ):
     return await handler.handle(
         usecase.add,
@@ -54,12 +54,12 @@ async def create_translation(
     )
 
 
-@router.put("/translation")
+@router.put("/translations")
 async def update_translation(
     translation: TranslationDto,
     usecase=Depends(Inject(TranslationUseCase)),
     handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformRequired("translation:create")),
+    user=Depends(CanPerformRequired("project_definition:update")),
 ):
     return await handler.handle(
         usecase.update,
@@ -68,25 +68,25 @@ async def update_translation(
     )
 
 
-@router.delete("/translation/{ressource_id}/{scope}/{locale}/{name}")
+@router.delete("/translations/{ressource_id}/{scope}/{locale}/{name}")
 async def delete_translation(
     ressource_id: UUID,
     scope: UUID,
     locale: str,
     name: str,
     usecase=Depends(Inject(TranslationUseCase)),
-    user=Depends(CanPerformRequired("translation:delete")),
+    user=Depends(CanPerformRequired("project_definition:update")),
 ):
     id = TranslationId(ressource_id=ressource_id, locale=locale, scope=scope, name=name)
     await usecase.delete_by_id(id)
 
 
-@router.get("/translation/{ressource_id}/{locale}")
+@router.get("/translations/{ressource_id}/{locale}")
 async def get_all_translation_for_ressource(
     ressource_id: UUID,
     locale: str,
     handler=Depends(Inject(HttpPageHandler[Paginator[Translation]])),
-    user=Depends(CanPerformRequired("translation:read")),
+    user=Depends(CanPerformRequired("project_definition:get")),
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = 10,
 ):
@@ -98,13 +98,13 @@ async def get_all_translation_for_ressource(
     )
 
 
-@router.get("/translation/{ressource_id}/scope/{scope}")
+@router.get("/translations/{ressource_id}/scopes/{scope}")
 async def find_translation_in_scope(
-    ressource_id,
-    scope,
+    ressource_id: UUID,
+    scope: UUID,
     handler=Depends(Inject(RequestHandler)),
     usecase=Depends(Inject(CollectionService[Translation])),
-    user=Depends(CanPerformRequired("translation:read")),
+    user=Depends(CanPerformOnRequired("ressource_id", "*:get", [])),
 ):
     return await handler.handle_many(
         usecase.find_by,
@@ -113,13 +113,13 @@ async def find_translation_in_scope(
     )
 
 
-@router.get("/translation/{ressource_id}/{locale}/json_bundle")
+@router.get("/translations/{ressource_id}/{locale}/json_bundle")
 async def get_json_bundle_for_ressource_locale(
     ressource_id: UUID,
     locale: str,
     handler: RequestHandler = Depends(Inject(RequestHandler)),
     usecase: TranslationUseCase = Depends(Inject(TranslationUseCase)),
-    user=Depends(CanPerformRequired("translation:read")),
+    user=Depends(CanPerformOnRequired("ressource_id", "*:get", [])),
 ):
     return await handler.forward(
         usecase.get_translation_bundle,

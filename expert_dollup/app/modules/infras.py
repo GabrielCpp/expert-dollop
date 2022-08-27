@@ -30,7 +30,7 @@ import expert_dollup.infra.paginators as paginators
 from expert_dollup.infra.storage_connectors import ObjectNotFound
 from expert_dollup.core.exceptions import RessourceNotFound
 from expert_dollup.infra.ressource_engine import RessourceEngine
-from expert_dollup.core.utils.ressource_permissions import get_ressource_domain
+from expert_dollup.core.utils import authorization_factory
 from expert_dollup.core.domains import *
 import expert_dollup.core.repositories as repositories
 from expert_dollup.app.settings import load_app_settings
@@ -39,15 +39,15 @@ storage_exception_mappings = {ObjectNotFound: lambda e: RessourceNotFound()}
 
 
 def bind_ressource_engines(binder: Binder) -> None:
-    for domain in get_ressource_domain():
+    for ressource_type in authorization_factory.ressource_types:
         binder.bind(
-            UserRessourcePaginator[domain],
+            UserRessourcePaginator[ressource_type],
             factory_of(
-                RessourceEngine[domain],
+                RessourceEngine[ressource_type],
                 user_service=CollectionService[Ressource],
                 ressource_service=CollectionService[Ressource],
                 mapper=Mapper,
-                domain_service=CollectionService[domain],
+                domain_service=CollectionService[ressource_type],
             ),
         )
 

@@ -5,11 +5,8 @@ from ..factories_domain import *
 
 
 class MiniDatasheet:
-    def __init__(self):
-        self.db = FakeDb()
-
-    def __call__(self):
-        project_definition = self.db.add(
+    def __call__(self, db: FakeDb) -> None:
+        project_definition = db.add(
             ProjectDefinitionFactory(
                 name=f"datasheet_definition_a",
                 properties={
@@ -21,14 +18,14 @@ class MiniDatasheet:
             )
         )
 
-        label_collection = self.db.add(
+        label_collection = db.add(
             LabelCollectionFactory(
                 project_definition_id=project_definition.id,
                 name="abstract_product",
             )
         )
 
-        label_a = self.db.add(
+        label_a = db.add(
             LabelFactory(
                 label_collection_id=label_collection.id,
                 order_index=0,
@@ -36,7 +33,7 @@ class MiniDatasheet:
             )
         )
 
-        label_b = self.db.add(
+        label_b = db.add(
             LabelFactory(
                 label_collection_id=label_collection.id,
                 order_index=1,
@@ -44,7 +41,7 @@ class MiniDatasheet:
             )
         )
 
-        self.db.add(
+        db.add(
             DatasheetDefinitionElementFactory(
                 unit_id="inch",
                 is_collection=False,
@@ -63,7 +60,7 @@ class MiniDatasheet:
             )
         )
 
-        self.db.add(
+        db.add(
             DatasheetDefinitionElementFactory(
                 unit_id="inch",
                 is_collection=True,
@@ -82,8 +79,4 @@ class MiniDatasheet:
             )
         )
 
-        return self.db
-
-    @property
-    def model(self) -> FakeDb:
-        return self.db
+        return db

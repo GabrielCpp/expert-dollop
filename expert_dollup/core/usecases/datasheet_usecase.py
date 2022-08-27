@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 from expert_dollup.shared.database_services import Page, Paginator, CollectionService
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
 from expert_dollup.shared.starlette_injection import Clock
-from expert_dollup.core.utils.ressource_permissions import make_ressource
+from expert_dollup.core.utils import authorization_factory
 from expert_dollup.core.domains import (
     Datasheet,
     DatasheetElement,
@@ -97,11 +97,15 @@ class DatasheetUseCase:
         return cloned_datasheet
 
     async def add(self, datasheet: Datasheet, user: User) -> Datasheet:
-        await self.ressource_service.insert(make_ressource(Datasheet, datasheet, user))
+        await self.ressource_service.insert(
+            authorization_factory.allow_access_to(datasheet, user)
+        )
         await self.datasheet_service.insert(datasheet)
 
     async def add_filled_datasheet(self, datasheet: Datasheet, user: User) -> Datasheet:
-        await self.ressource_service.insert(make_ressource(Datasheet, datasheet, user))
+        await self.ressource_service.insert(
+            authorization_factory.allow_access_to(datasheet, user)
+        )
         await self.datasheet_service.insert(datasheet)
         definition_elements = await self.datasheet_definition_element_service.find_by(
             DatasheetDefinitionElementFilter(

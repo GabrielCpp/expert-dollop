@@ -1,22 +1,12 @@
 from expert_dollup.core.domains import *
-from typing import Type, Iterable, Set, List
-from dataclasses import dataclass
+from typing import Type, Iterable, Set, List, Dict, Optional
+from dataclasses import dataclass, field
 from uuid import UUID
 from itertools import chain
-from enum import Enum
+from frozendict import frozendict
+from expert_dollup.core.exceptions import DetailedError
 
-
-class Action(Enum):
-    CAN_READ = "read"
-    CAN_UPDATE = "update"
-    CAN_CREATE = "create"
-    CAN_DELETE = "delete"
-
-
-@dataclass
-class RessourceAuthorisation:
-    kind: str
-    actions: Set[str]
+COMMON_ACTIONS: Set[str] = frozenset(["get", "list", "update", "create", "delete"])
 
 
 def set_of(*actions: str) -> frozenset:
@@ -26,65 +16,122 @@ def set_of(*actions: str) -> frozenset:
     return frozenset(actions)
 
 
-RESSOURCE_ACTIONS = frozenset(["read", "update", "create", "delete"])
-RESSOURCE_KIND_BY_DOMAIN = {
-    Ressource: RessourceAuthorisation("ressource", set_of("imports")),
-    ProjectDetails: RessourceAuthorisation(
-        "project", set_of(*RESSOURCE_ACTIONS, "clone")
-    ),
-    ProjectDefinition: RessourceAuthorisation("project_definition", RESSOURCE_ACTIONS),
-    Translation: RessourceAuthorisation("translation", RESSOURCE_ACTIONS),
-    Datasheet: RessourceAuthorisation("datasheet", set_of(*RESSOURCE_ACTIONS, "clone")),
-}
-
-
-def get_ressource_domain() -> List[Type]:
-    return list(RESSOURCE_KIND_BY_DOMAIN.keys())
-
-
-def get_ressource_kind(ressource: Type) -> str:
-    return RESSOURCE_KIND_BY_DOMAIN[ressource].kind
-
-
-def make_permission(ressource: Type, action: str) -> str:
-    name = RESSOURCE_KIND_BY_DOMAIN[ressource].kind
-    return f"{name}:{action}"
-
-
-def make_permissions(ressource: Type, actions: Iterable[str]) -> List[str]:
-    permissions = []
-
-    for action in actions:
-        permissions.append(make_permission(ressource, action))
-
-    return permissions
-
-
-def all_action() -> List[str]:
-    return [r for r in RESSOURCE_ACTIONS]
-
-
-def actions(*acts: Action) -> List[str]:
-    return [action.value for action in acts]
-
-
-def all_permisions() -> List[str]:
-    permissions = []
-
-    for ressource, ressource_authorisation in RESSOURCE_KIND_BY_DOMAIN.items():
-        permissions.extend(make_permissions(ressource, ressource_authorisation.actions))
-
-    return permissions
-
-
-def make_ressource(
-    kind: Type, target_ressource: RessourceProtocol, user: User
-) -> Ressource:
-    return Ressource(
-        id=target_ressource.id,
-        kind=RESSOURCE_KIND_BY_DOMAIN[kind].kind,
-        organization_id=user.organization_id,
-        permissions=make_permissions(kind, RESSOURCE_ACTIONS),
-        name=target_ressource.name.split(),
-        creation_date_utc=target_ressource.creation_date_utc,
+@dataclass(frozen=True)
+class RessourceAuthorization:
+    kind: str
+    permissions: Set[str]
+    subressources: Dict[Type, "RessourceAuthorization"] = field(
+        default_factory=frozendict
     )
+
+    def ensure_permission_exists(self, permission: str) -> bool:
+        if not permission in self.permissions:
+            raise DetailedError(
+                "Missing ressource permission",
+                ressource=ressource,
+                permission=permission,
+                available_permission=self.permissions,
+            )
+
+        return True
+
+
+@dataclass(frozen=True)
+class AuthorizationFactory:
+    authorizations: Dict[Type, RessourceAuthorization] = frozendict(
+        {
+            Ressource: RessourceAuthorization("ressource", set_of("imports")),
+            ProjectDetails: RessourceAuthorization(
+                "project", set_of(*COMMON_ACTIONS, "clone")
+            ),
+            ProjectDefinition: RessourceAuthorization(
+                "project_definition", COMMON_ACTIONS
+            ),
+            Translation: RessourceAuthorization("translation", COMMON_ACTIONS),
+            Datasheet: RessourceAuthorization(
+                "datasheet", set_of(*COMMON_ACTIONS, "clone")
+            ),
+        }
+    )
+
+    @property
+    def ressource_types(self) -> List[Type]:
+        return list(self.authorizations.keys())
+
+    def get_ressource_details(self, ressource_type: Type) -> RessourceAuthorization:
+        if not ressource_type in self.authorizations:
+            raise DetailedError(
+                "Missing ressource type",
+                ressource_type=ressource_type,
+                available_ressource_types=self.ressource_types,
+            )
+
+        return self.authorizations[ressource_type]
+
+    def get_ressource_kind(self, ressource_type: Type) -> str:
+        return self.get_ressource_details(ressource_type).kind
+
+    def build_permission_for(self, ressource_type: Type, permission: str) -> str:
+        ressource_authorization = self.get_ressource_details(ressource_type)
+        kind = ressource_authorization.kind
+
+        ressource_authorization.ensure_permission_exists(permission)
+
+        return f"{kind}:{permission}"
+
+    def build_permissions_for(
+        self, ressource: Type, permissions: Iterable[str]
+    ) -> List[str]:
+        ressource_authorization = self.get_ressource_details(ressource_type)
+        kind = ressource_authorization.kind
+
+        return [
+            f"{kind}:{permission}"
+            for permission in permissions
+            if ressource_authorization.ensure_permission_exists(permission)
+        ]
+
+    def all_permissions_for(self, ressource_type: Type) -> List[str]:
+        ressource_authorization = self.get_ressource_details(ressource_type)
+        kind = ressource_authorization.kind
+
+        return [
+            f"{kind}:{permission}" for permission in ressource_authorization.permissions
+        ]
+
+    def all_permissions_for_each(self, *ressource_types: Type) -> List[str]:
+        permissions = []
+
+        for ressource_type in ressource_types:
+            permissions.extend(self.all_permissions_for(ressource_type))
+
+        return permissions
+
+    def build_super_user_permisions(self) -> List[str]:
+        permissions = []
+
+        for ressource_type in self.authorizations.keys():
+            permissions.extend(self.all_permissions_for(ressource_type))
+
+        return permissions
+
+    def allow_access_to(
+        self,
+        target_ressource: RessourceProtocol,
+        user: User,
+        permissions: Optional[List[str]] = None,
+    ) -> Ressource:
+        ressource_type = type(target_ressource)
+        return Ressource(
+            id=target_ressource.id,
+            kind=self.get_ressource_details(ressource_type).kind,
+            organization_id=user.organization_id,
+            permissions=self.all_permissions_for(ressource_type)
+            if permissions is None
+            else self.build_permissions_for(ressource_type, permissions),
+            name=target_ressource.name.split(),
+            creation_date_utc=target_ressource.creation_date_utc,
+        )
+
+
+authorization_factory = AuthorizationFactory()

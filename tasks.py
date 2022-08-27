@@ -364,14 +364,14 @@ def load_default_users(c):
     from expert_dollup.core.domains import User, Organization
     from expert_dollup.shared.database_services import DatabaseContext
     from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
-    from tests.fixtures.generators.super_user import SuperUser
+    from tests.fixtures import SuperUser, FakeDb
 
     async def reload_db():
         load_dotenv()
         container = build_container()
         user_db = container.get(RessourceAuthDatabase)
         database_context = container.get(DatabaseContext)
-        db = SuperUser()()
+        db = FakeDb.create_from([SuperUser()])
 
         await user_db.truncate_db()
         await database_context.upserts(Organization, db.all(Organization))

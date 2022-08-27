@@ -101,18 +101,13 @@ steps:
   # Deploy
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     id: deploy
-    entrypoint: gcloud
     waitFor: ["migrate"]
+    entrypoint: bash
     args:
-      [
-        "run",
-        "deploy",
-        "$_SERVICE_NAME",
-        "--image",
-        "$$BUILD_IMAGE:$$BUILD_TAG",
-        "--region",
-        "$_REGION",
-      ]
+      - -ceux
+      - |
+        source /workspace/build_vars
+        gcloud run deploy $_SERVICE_NAME --image $$BUILD_IMAGE:$$BUILD_TAG --region $_REGION
 logsBucket: $_LOGS_BUCKET_NAME
 options:
   logging: GCS_ONLY

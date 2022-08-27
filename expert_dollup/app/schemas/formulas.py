@@ -31,7 +31,7 @@ async def resolve_find_project_definition_formulas(
 ):
     user = await info.context.container.get(AuthService).can_perform_required(
         info.context.request,
-        ["formula:read"],
+        ["formula:get"],
     )
 
     return await handler.handle(
