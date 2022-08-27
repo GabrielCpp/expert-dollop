@@ -1,37 +1,66 @@
 import pytest
+from dataclasses import dataclass, field
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
+from expert_dollup.core.utils import *
 from expert_dollup.infra.expert_dollup_db import *
+from expert_dollup.shared.automapping import Mapper
 from ..fixtures import *
 from ..utils import find_name
 
 
-@pytest.fixture(autouse=True)
-async def wip_db(dal):
-    await dal.truncate_db()
+@dataclass
+class NodeDefinitionRebinding:
+    mapper: Mapper
+    static_clock: StaticClock
+    db: FakeDb = field(default_factory=lambda: SimpleProject()())
+    id_maps: Dict[UUID, UUID] = field(default_factory=dict)
+
+    @property
+    def definition(self) -> ProjectDefinition:
+        return self.db.get_only_one(ProjectDefinition)
+
+    def rebind_path(
+        self,
+        definition_node_dto: ProjectDefinitionNodeDto,
+    ) -> ProjectDefinitionNodeDto:
+        definition_node_dto.path = [self.id_maps[id] for id in definition_node_dto.path]
+        return definition_node_dto
+
+    def rebind_values(
+        self,
+        initial_node_dto: ProjectDefinitionNodeDto,
+        new_node_dto: ProjectDefinitionNodeDto,
+    ) -> None:
+        self.id_maps[initial_node_dto.id] = new_node_dto.id
+        initial_node_dto.id = new_node_dto.id
+        initial_node_dto.creation_date_utc = self.static_clock.utcnow()
+
+    @property
+    def definition_nodes_dto(self) -> List[ProjectDefinitionNode]:
+        return self.mapper.map_many(
+            self.db.all(ProjectDefinitionNode),
+            ProjectDefinitionNodeDto,
+            ProjectDefinitionNode,
+        )
 
 
 @pytest.mark.asyncio
-async def test_project_creation(ac, mapper):
+async def test_project_creation(ac, mapper, static_clock):
+    rebinding = NodeDefinitionRebinding(mapper, static_clock)
+    definition_nodes_dto = rebinding.definition_nodes_dto
     await ac.login_super_user()
-    db = SimpleProject()()
-    definition = db.get_only_one(ProjectDefinition)
 
     definition_dto = await ac.post_json(
-        "/api/definitions", definition, unwrap_with=ProjectDefinitionDto
-    )
-
-    definition_nodes_dto = mapper.map_many(
-        db.all(ProjectDefinitionNode),
-        ProjectDefinitionNodeDto,
-        ProjectDefinitionNode,
+        "/api/definitions", rebinding.definition, unwrap_with=ProjectDefinitionDto
     )
 
     created_node_dtos = [
         await ac.post_json(
             f"/api/definitions/{definition_dto.id}/nodes",
-            definition_node_dto,
+            rebinding.rebind_path(definition_node_dto),
             unwrap_with=ProjectDefinitionNodeDto,
+            after=lambda x: rebinding.rebind_values(definition_node_dto, x),
         )
         for definition_node_dto in definition_nodes_dto
     ]

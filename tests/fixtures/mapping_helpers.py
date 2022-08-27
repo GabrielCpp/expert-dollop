@@ -4,6 +4,7 @@ from fastapi import Response
 from functools import singledispatch
 from injector import Injector
 from expert_dollup.shared.automapping import Mapper
+from pydantic import BaseModel
 
 
 @pytest.fixture
@@ -28,18 +29,15 @@ def map_dao_to_dto(mapper):
     return apply_map
 
 
-def normalize_request_results(dto_cls, key: callable):
+def normalize_dtos(dtos, key: Callable[[dict], Any]):
+    return sorted([dto.dict() for dto in dtos], key=key)
+
+
+def normalize_request_results(dto_cls: BaseModel, key: Callable[[dict], Any]):
     def parse_dto(data: list):
-        return sorted(
-            [dto_cls(**item).dict() for item in data],
-            key=key,
-        )
+        return normalize_dtos((dto_cls.parse_obj(item) for item in data), key)
 
     return parse_dto
-
-
-def normalize_dtos(dtos, key: callable):
-    return sorted([dto.dict() for dto in dtos], key=key)
 
 
 Dao = TypeVar("Dao")

@@ -12,14 +12,14 @@ from expert_dollup.shared.starlette_injection import (
 
 
 @pytest.fixture
-def static_clock(container):
+def static_clock(container) -> Clock:
     clock = StaticClock(datetime(2000, 4, 3, 1, 1, 1, 0, timezone.utc))
     container.binder.bind(Clock, clock, scope=singleton)
     return clock
 
 
 @pytest.fixture
-def logger_observer(container):
+def logger_observer(container) -> LoggerObserver:
     logger_observer = LoggerObserver()
     container.binder.bind(Logger, lambda: logger_observer, scope=singleton)
     container.binder.bind(
