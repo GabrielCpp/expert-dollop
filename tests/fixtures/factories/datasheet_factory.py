@@ -6,7 +6,6 @@ from datetime import datetime
 from collections import defaultdict
 from itertools import islice
 from uuid import UUID
-from .helpers import make_uuid
 from expert_dollup.core.domains import *
 from expert_dollup.core.units.node_value_validation import (
     INT_JSON_SCHEMA,
@@ -14,6 +13,8 @@ from expert_dollup.core.units.node_value_validation import (
     BOOL_JSON_SCHEMA,
     DECIMAL_JSON_SCHEMA,
 )
+from ..fake_db_helpers import FakeDb
+from .helpers import make_uuid
 
 DEFAULT_VALUE_MAPPING = {
     int: INT_JSON_SCHEMA,
@@ -346,3 +347,17 @@ class DatasheetInstanceFactory:
             labels=labels,
             translations=translations,
         )
+
+    def __init__(datasheet_seed: DatasheetSeed, project_definition: ProjectDefinition):
+        self.package = DatasheetInstanceFactory.build(
+            datasheet_seed, project_definition
+        )
+
+    def __call__(self, db: FakeDb) -> None:
+        db.add(self.package.project_definition)
+        db.add(self.package.datasheet)
+        db.add_all(self.package.datasheet_definition_elements)
+        db.add_all(self.package.datasheet_elements)
+        db.add_all(self.package.label_collections)
+        db.add_all(self.package.labels)
+        db.add_all(self.package.translations)

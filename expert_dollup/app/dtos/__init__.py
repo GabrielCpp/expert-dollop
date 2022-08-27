@@ -75,7 +75,6 @@ from .datasheet_dto import (
 )
 from .datasheet_element_dto import (
     DatasheetElementDto,
-    DatasheetElementPageDto,
     DatasheetElementImportDto,
 )
 from .report_dto import (
@@ -109,3 +108,4 @@ from .organization_dto import (
     OrganizationDto,
     OrganizationLimitsDto,
 )
+from .page_dto import PageDto, bind_page_dto

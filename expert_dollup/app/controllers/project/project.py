@@ -14,7 +14,7 @@ from expert_dollup.core.usecases import ProjectUseCase
 router = APIRouter()
 
 
-@router.get("/project/{project_id}")
+@router.get("/projects/{project_id}")
 async def find_project_details(
     project_id: UUID,
     usecase=Depends(Inject(ProjectUseCase)),
@@ -26,7 +26,7 @@ async def find_project_details(
     )
 
 
-@router.post("/project")
+@router.post("/projects")
 async def create_project(
     project: ProjectDetailsInputDto,
     usecase=Depends(Inject(ProjectUseCase)),
@@ -46,7 +46,7 @@ async def create_project(
     )
 
 
-@router.post("/project/{project_id}/clone")
+@router.post("/projects/{project_id}/clone")
 async def clone_project(
     project_id: UUID,
     usecase=Depends(Inject(ProjectUseCase)),
@@ -62,7 +62,7 @@ async def clone_project(
     )
 
 
-@router.delete("/project/{project_id}")
+@router.delete("/projects/{project_id}")
 async def delete_project(
     project_id: UUID,
     usecase=Depends(Inject(ProjectUseCase)),

@@ -16,7 +16,7 @@ from expert_dollup.app.dtos import *
 router = APIRouter()
 
 
-@router.get("/project/{project_id}/node_meta/{type_id}")
+@router.get("/projects/{project_id}/node_meta/{type_id}")
 async def get_project_node_meta(
     project_id: UUID,
     type_id: UUID,
@@ -31,7 +31,7 @@ async def get_project_node_meta(
     )
 
 
-@router.get("/project/{project_id}/node/{node_id}/meta")
+@router.get("/projects/{project_id}/node/{node_id}/meta")
 async def get_project_node_meta_definition(
     project_id: UUID,
     node_id: UUID,

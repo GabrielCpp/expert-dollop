@@ -77,7 +77,7 @@ async def remove_formula(
     return await usecase.delete_by_id(formula_id, remove_recursively)
 
 
-@router.post("/project/{project_id}/formula_cache")
+@router.post("/projects/{project_id}/formula_cache")
 async def refresh_formula_cache(
     project_id: UUID,
     usecase=Depends(Inject(FormulaUseCase)),

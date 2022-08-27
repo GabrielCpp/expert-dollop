@@ -1,8 +1,8 @@
 from uuid import UUID
 from expert_dollup.core.domains import *
 from ..fake_db_helpers import FakeDb
-from ..factories import FieldConfigFactory
 from ..factories_domain import *
+from .field_config_factory import FieldConfigFactory
 
 
 class ProjectWithTrigger:

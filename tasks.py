@@ -325,7 +325,7 @@ def upload_project(c):
     cwd = getcwd()
     token = asyncio.run(get_token())
     c.run(
-        f"curl -X DELETE -H 'Authorization: Bearer {token}'  http://localhost:8000/api/project/11ec4bbb-ebe8-fa7c-bcc3-42010a800002"
+        f"curl -X DELETE -H 'Authorization: Bearer {token}'  http://localhost:8000/api/projects/11ec4bbb-ebe8-fa7c-bcc3-42010a800002"
     )
     c.run(
         f"curl -X POST -H 'Authorization: Bearer {token}' -H \"Content-Type: multipart/form-data\" -F 'file=@{cwd}/project.jsonl' -F user_id=5d9c68c6-c50e-d3d0-2a2f-cf54f63993b6 http://localhost:8000/api/ressources/imports"
@@ -343,7 +343,7 @@ def refreshcache(c):
 @task(name="testreport")
 def testreport(c):
     c.run(
-        "curl http://localhost:8000/api/project/11ec4bbb-ebe8-fa7c-bcc3-42010a800002/report/8e084b1e-b331-4644-8485-5e91e21770b2/minimal"
+        "curl http://localhost:8000/api/projects/11ec4bbb-ebe8-fa7c-bcc3-42010a800002/report/8e084b1e-b331-4644-8485-5e91e21770b2/minimal"
     )
 
 

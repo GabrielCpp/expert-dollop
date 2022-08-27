@@ -6,7 +6,6 @@ from expert_dollup.core.utils import *
 from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.shared.automapping import Mapper
 from ..fixtures import *
-from ..utils import find_name
 
 
 @dataclass
@@ -65,13 +64,15 @@ async def test_project_creation(ac, mapper, static_clock):
         for definition_node_dto in definition_nodes_dto
     ]
 
+    do_sort = make_sorter(lambda c: c.name)
     containers = await AsyncCursor.all(
         ac,
         f"/api/definitions/{definition_dto.id}/nodes",
-        after=normalize_request_results(ProjectDefinitionNodeDto, lambda c: c["name"]),
+        unwrap_with=bind_page_dto(ProjectDefinitionNodeDto),
+        after=do_sort,
     )
 
-    expected_nodes = normalize_dtos(definition_nodes_dto, lambda c: c["name"])
+    expected_nodes = sorted(definition_nodes_dto, key=lambda c: c.name)
 
     assert len(containers) == len(definition_nodes_dto)
     assert containers == expected_nodes
@@ -79,15 +80,7 @@ async def test_project_creation(ac, mapper, static_clock):
 
 @pytest.mark.asyncio
 async def test_query_definition_parts(ac, db_helper: DbFixtureHelper):
-    db = await db_helper.load_fixtures(
-        SuperUser(), SimpleProject(), GrantRessourcePermissions()
-    )
-    await ac.login_super_user()
-    definition = db.get_only_one(ProjectDefinition)
-    runner = FlowRunner()
-
-    @runner.step
-    async def find_all_root_sections():
+    async def find_all_root_sections(definition: ProjectDefinition):
         root_sections = await ac.get_json(
             f"/api/definitions/{definition.id}/root_sections",
             unwrap_with=ProjectDefinitionNodeTreeDto,
@@ -96,9 +89,8 @@ async def test_query_definition_parts(ac, db_helper: DbFixtureHelper):
         expected_flat_tree = [("root_a", [0]), ("root_b", [1])]
         assert flat_tree == expected_flat_tree
 
-        return (root_sections.roots,)
+        return root_sections.roots
 
-    @runner.step
     async def find_first_root_section_nodes(
         root_sections: List[ProjectDefinitionTreeNode],
     ):
@@ -120,11 +112,9 @@ async def test_query_definition_parts(ac, db_helper: DbFixtureHelper):
         ]
         assert flat_tree == expected_flat_tree
 
-    @runner.step
-    async def find_first_root_section_form_content():
-        form_node = find_name(
-            db.all(ProjectDefinitionNode), "root_a_subsection_0_form_0"
-        )
+    async def find_first_root_section_form_content(
+        definition: ProjectDefinition, form_node: ProjectDefinitionNode
+    ):
         tree = await ac.get_json(
             f"/api/definitions/{definition.id}/form_contents/{form_node.id}",
             unwrap_with=ProjectDefinitionNodeTreeDto,
@@ -158,4 +148,15 @@ async def test_query_definition_parts(ac, db_helper: DbFixtureHelper):
         ]
         assert flat_tree == expected_flat_tree
 
-    await runner.run()
+    db = await db_helper.load_fixtures(
+        SuperUser(), SimpleProject(), GrantRessourcePermissions()
+    )
+    await ac.login_super_user()
+
+    definition = db.get_only_one(ProjectDefinition)
+    form_node = db.get_only_one_matching(
+        ProjectDefinitionNode, lambda e: e.name == "root_a_subsection_0_form_0"
+    )
+    roots = await find_all_root_sections(definition)
+    await find_first_root_section_nodes(roots)
+    await find_first_root_section_form_content(definition, form_node)

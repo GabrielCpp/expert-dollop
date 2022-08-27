@@ -7,170 +7,135 @@ from expert_dollup.infra.expert_dollup_db import *
 
 @pytest.mark.asyncio
 async def test_datasheet_definition(ac):
-    await ac.login_super_user()
-    runner = FlowRunner()
-
-    @runner.step
     async def create_datasheet_definition():
         expected_definition = ProjectDefinitionDtoFactory()
-        definition = await ac.post_json(
+        definition_dto = await ac.post_json(
             "/api/definitions", expected_definition, unwrap_with=ProjectDefinitionDto
         )
-        assert definition.json(
+        assert definition_dto.json(
             exclude={"id", "creation_date_utc"}
         ) == expected_definition.json(exclude={"id", "creation_date_utc"})
 
-        return (definition,)
+        return definition_dto
 
-    @runner.step
     async def create_datasheet_definition_element(
-        project_definition: ProjectDefinitionDto,
+        definition_dto: ProjectDefinitionDto,
     ):
-        datasheet_definition_element = DatasheetDefinitionElementDtoFactory(
-            project_definition_id=project_definition.id
-        )
-        await ac.post_json(
-            "/api/datasheet_definition_element", datasheet_definition_element
-        )
-
-        return (project_definition, datasheet_definition_element)
-
-    @runner.step
-    async def get_datasheet_definition(
-        project_definition: ProjectDefinitionDto,
-        datasheet_definition_element: DatasheetDefinitionElementDto,
-    ):
-        datasheet_definition_returned = await ac.get_json(
-            f"/api/definitions/{project_definition.id}",
-            unwrap_with=ProjectDefinitionDto,
-        )
-        assert project_definition == datasheet_definition_returned
-
-        return (project_definition, datasheet_definition_element)
-
-    @runner.step
-    async def get_datasheet_definition_element(
-        project_definition: ProjectDefinitionDto,
-        datasheet_definition_element: DatasheetDefinitionElementDto,
-    ):
-        element_definition = await ac.get_json(
-            f"/api/datasheet_definition_element/{datasheet_definition_element.id}",
+        definition_element_dto = await ac.post_json(
+            f"/api/definitions/{definition_dto.id}/datasheet_elements",
+            DatasheetDefinitionElementDtoFactory(
+                project_definition_id=definition_dto.id
+            ),
             unwrap_with=DatasheetDefinitionElementDto,
         )
-        assert datasheet_definition_element == element_definition
 
-        return (project_definition, datasheet_definition_element)
+        return definition_element_dto
 
-    @runner.step
+    async def get_datasheet_definition(
+        definition_dto: ProjectDefinitionDto,
+        definition_element_dto: DatasheetDefinitionElementDto,
+    ):
+        datasheet_definition_returned = await ac.get_json(
+            f"/api/definitions/{definition_dto.id}",
+            unwrap_with=ProjectDefinitionDto,
+        )
+        assert definition_dto == datasheet_definition_returned
+
+    async def get_datasheet_definition_element(
+        definition_dto: ProjectDefinitionDto,
+        definition_element_dto: DatasheetDefinitionElementDto,
+    ):
+        element_definition = await ac.get_json(
+            f"/api/definitions/{definition_dto.id}/datasheet_elements/{definition_element_dto.id}",
+            unwrap_with=DatasheetDefinitionElementDto,
+        )
+        assert definition_element_dto == element_definition
+
     async def delete_datasheet_definition_element(
-        project_definition: ProjectDefinitionDto,
-        datasheet_definition_element: DatasheetDefinitionElementDto,
+        definition_dto: ProjectDefinitionDto,
+        definition_element_dto: DatasheetDefinitionElementDto,
     ):
         await ac.delete_json(
-            f"/api/datasheet_definition_element/{datasheet_definition_element.id}"
+            f"/api/definitions/{definition_dto.id}/datasheet_elements/{definition_element_dto.id}"
         )
 
         await ac.get_json(
-            f"/api/datasheet_definition_element/{datasheet_definition_element.id}",
+            f"/api/definitions/{definition_dto.id}/datasheet_elements/{definition_element_dto.id}",
             expected_status_code=404,
         )
 
-        return (project_definition, datasheet_definition_element)
-
-    @runner.step
-    async def delete_datasheet_definition(
-        project_definition: ProjectDefinitionDto,
-        datasheet_definition_element: DatasheetDefinitionElementDto,
+    async def check_datasheet_definition_is_gone(
+        definition_dto: ProjectDefinitionDto,
+        definition_element_dto: DatasheetDefinitionElementDto,
     ):
-        await ac.delete_json(f"/api/definitions/{project_definition.id}")
+        await ac.delete_json(f"/api/definitions/{definition_dto.id}")
         await ac.get_json(
-            f"/api/definitions/{project_definition.id}", expected_status_code=404
+            f"/api/definitions/{definition_dto.id}", expected_status_code=404
         )
 
-        return (project_definition, datasheet_definition_element)
+    await ac.login_super_user()
 
-    await runner.run()
+    definition_dto = await create_datasheet_definition()
+    definition_element_dto = await create_datasheet_definition_element(definition_dto)
+    await get_datasheet_definition(definition_dto, definition_element_dto)
+    await get_datasheet_definition_element(definition_dto, definition_element_dto)
+    await delete_datasheet_definition_element(definition_dto, definition_element_dto)
+    await check_datasheet_definition_is_gone(definition_dto, definition_element_dto)
 
 
 @pytest.mark.asyncio
 async def test_label_collection(ac, db_helper: DbFixtureHelper):
-    await ac.login_super_user()
-    runner = FlowRunner()
-    mini_datasheet = await db_helper.load_fixtures(MiniDatasheet())
-
-    @runner.step
-    async def create_label_collection():
+    async def create_label_collection(definition: ProjectDefinition):
         label_collection = LabelCollectionDtoFactory(
-            project_definition_id=mini_datasheet.get_only_one(ProjectDefinition).id
+            project_definition_id=definition.id
         )
-        response = await ac.post("/api/label_collection", data=label_collection.json())
-        assert response.status_code == 200, response.json()
+        label_collection_dto = await ac.post_json(
+            "/api/label_collection", label_collection, unwrap_with=LabelCollectionDto
+        )
 
-        return (label_collection,)
+        return label_collection_dto
 
-    @runner.step
     async def create_label(
-        label_collection: LabelCollectionDto,
+        label_collection_dto: LabelCollectionDto,
     ):
-        label = LabelDtoFactory(label_collection_id=label_collection.id)
-        response = await ac.post(
-            "/api/label",
-            data=label.json(),
+        label = LabelDtoFactory(label_collection_id=label_collection_dto.id)
+        label_dto = await ac.post_json("/api/label", label, unwrap_with=LabelDto)
+        return label_dto
+
+    async def check_label_collection_is_identical(
+        label_collection_dto: LabelCollectionDto,
+    ):
+        actual_label_collection = await ac.get_json(
+            f"/api/label_collection/{label_collection_dto.id}",
+            unwrap_with=LabelCollectionDto,
         )
-        assert response.status_code == 200, response.json()
+        assert actual_label_collection == label_collection_dto
 
-        return (label_collection, label)
+    async def check_label_is_the_same(label_dto: LabelDto):
+        actual_label = await ac.get_json(
+            f"/api/label/{label_dto.id}", unwrap_with=LabelDto
+        )
+        assert actual_label == label_dto
 
-    @runner.step
-    async def get_label_collection(
-        label_collection: LabelCollectionDto,
-        label: LabelDto,
+    async def delete_label_and_check_it_is_gone(label_dto: LabelDto):
+        await ac.delete_json(f"/api/label/{label_dto.id}")
+        await ac.get_json(f"/api/label/{label_dto.id}", expected_status_code=404)
+
+    async def delete_label_collection_and_check_it_is_gone(
+        label_collection_dto: LabelCollectionDto,
     ):
-        response = await ac.get(f"/api/label_collection/{label_collection.id}")
-        assert response.status_code == 200, response.json()
+        await ac.delete_json(f"/api/label_collection/{label_collection_dto.id}")
+        await ac.get_json(
+            f"/api/label_collection/{label_collection_dto.id}", expected_status_code=404
+        )
 
-        label_collection_returned = unwrap(response, LabelCollectionDto)
-        assert label_collection == label_collection_returned
+    db = await db_helper.load_fixtures(SuperUser(), MiniDatasheet())
+    await ac.login_super_user()
 
-        return (label_collection, label)
-
-    @runner.step
-    async def get_label(
-        label_collection: LabelCollectionDto,
-        label: LabelDto,
-    ):
-        response = await ac.get(f"/api/label/{label.id}")
-        assert response.status_code == 200, response.json()
-
-        element_definition = unwrap(response, LabelDto)
-        assert label == element_definition
-
-        return (label_collection, label)
-
-    @runner.step
-    async def delete_label(
-        label_collection: LabelCollectionDto,
-        label: LabelDto,
-    ):
-        response = await ac.delete(f"/api/label/{label.id}")
-        assert response.status_code == 200, response.json()
-
-        response = await ac.get(f"/api/label/{label.id}")
-        assert response.status_code == 404, response.json()
-
-        return (label_collection, label)
-
-    @runner.step
-    async def delete_label_collection(
-        label_collection: LabelCollectionDto,
-        label: LabelDto,
-    ):
-        response = await ac.delete(f"/api/label_collection/{label_collection.id}")
-        assert response.status_code == 200, response.json()
-
-        response = await ac.get(f"/api/label_collection/{label_collection.id}")
-        assert response.status_code == 404, response.json()
-
-        return (label_collection, label)
-
-    await runner.run()
+    definition = db.get_only_one(ProjectDefinition)
+    label_collection_dto = await create_label_collection(definition)
+    await check_label_collection_is_identical(label_collection_dto)
+    label_dto = await create_label(label_collection_dto)
+    await check_label_is_the_same(label_dto)
+    await delete_label_and_check_it_is_gone(label_dto)
+    await delete_label_collection_and_check_it_is_gone(label_collection_dto)

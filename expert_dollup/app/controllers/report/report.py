@@ -9,7 +9,7 @@ from expert_dollup.app.dtos import *
 router = APIRouter()
 
 
-@router.get("/project/{project_id}/report/{report_definition_id}")
+@router.get("/projects/{project_id}/report/{report_definition_id}")
 async def get_project_report(
     project_id: UUID,
     report_definition_id: UUID,
@@ -27,7 +27,7 @@ async def get_project_report(
     )
 
 
-@router.get("/project/{project_id}/report/{report_definition_id}/minimal")
+@router.get("/projects/{project_id}/report/{report_definition_id}/minimal")
 async def get_project_report(
     project_id: UUID,
     report_definition_id: UUID,

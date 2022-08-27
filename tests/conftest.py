@@ -100,9 +100,9 @@ def app(container: Injector):
     return creat_app(container)
 
 
-from pydantic import BaseModel
+from pydantic import BaseModel, parse_obj_as
 from async_asgi_testclient.response import Response as ClientResponse
-from typing import Optional, Type, Callable
+from typing import Optional, Type, Callable, List
 
 
 class IntegratedTestClient(TestClient):
@@ -142,72 +142,90 @@ class IntegratedTestClient(TestClient):
     async def post_json(
         self,
         url: str,
-        data: BaseModel,
+        data: Optional[BaseModel] = None,
         expected_status_code: int = 200,
         unwrap_with: Optional[Type[BaseModel]] = None,
-        unwrap_many_with: Optional[Type[BaseModel]] = None,
         after: Optional[Callable[[BaseModel], None]] = None,
     ):
-        response = await self.post(url, data=jsonify(data), headers=self.json_headers)
+        params = self._json_request_params(data)
+        response = await self.post(url, **params)
         assert response.status_code == expected_status_code, response.text
-        return self._convert_response(response, unwrap_with, unwrap_many_with, after)
+        return self._convert_response(response, unwrap_with, after)
 
     async def put_json(
         self,
         url: str,
+        data: Optional[BaseModel] = None,
         expected_status_code: int = 200,
         unwrap_with: Optional[Type[BaseModel]] = None,
-        unwrap_many_with: Optional[Type[BaseModel]] = None,
         after: Optional[Callable[[BaseModel], None]] = None,
     ):
-        response = await self.put(url, data=jsonify(data), headers=self.json_headers)
+        params = self._json_request_params(data)
+        response = await self.put(url, **params)
         assert response.status_code == expected_status_code, response.text
-        return self._convert_response(response, unwrap_with, unwrap_many_with, after)
+        return self._convert_response(response, unwrap_with, after)
+
+    async def patch_json(
+        self,
+        url: str,
+        data: Optional[BaseModel] = None,
+        expected_status_code: int = 200,
+        unwrap_with: Optional[Type[BaseModel]] = None,
+        after: Optional[Callable[[BaseModel], None]] = None,
+    ):
+        params = self._json_request_params(data)
+        response = await self.patch(url, **params)
+        assert response.status_code == expected_status_code, response.text
+        return self._convert_response(response, unwrap_with, after)
 
     async def get_json(
         self,
         url: str,
         expected_status_code: int = 200,
         unwrap_with: Optional[Type[BaseModel]] = None,
-        unwrap_many_with: Optional[Type[BaseModel]] = None,
         after: Optional[Callable[[BaseModel], None]] = None,
     ):
         response = await self.get(url, headers=self.json_headers)
         assert response.status_code == expected_status_code, response.text
-        return self._convert_response(response, unwrap_with, unwrap_many_with, after)
+        return self._convert_response(response, unwrap_with, after)
 
     async def delete_json(
         self,
         url: str,
         expected_status_code: int = 200,
         unwrap_with: Optional[Type[BaseModel]] = None,
-        unwrap_many_with: Optional[Type[BaseModel]] = None,
         after: Optional[Callable[[BaseModel], None]] = None,
     ):
         response = await self.delete(url, headers=self.json_headers)
         assert response.status_code == expected_status_code, response.text
-        return self._convert_response(response, unwrap_with, unwrap_many_with, after)
+        return self._convert_response(response, unwrap_with, after)
 
     def _convert_response(
         self,
         response,
         unwrap_with,
-        unwrap_many_with,
         after: Optional[Callable[[BaseModel], None]] = None,
     ):
-        if unwrap_with is None and unwrap_many_with is None:
+        if unwrap_with is None:
             return response
 
-        result = (
-            unwrap(response, unwrap_with)
-            if unwrap_many_with is None
-            else unwrap_many(response, unwrap_many_with)
-        )
+        result = parse_obj_as(unwrap_with, response.json())
 
         if callable(after):
             after(result)
 
         return result
+
+    def _json_request_params(
+        self,
+        data: Optional[BaseModel] = None,
+    ) -> dict:
+        params = dict(headers=self.json_headers)
+
+        if not data is None:
+            params["data"] = jsonify(data)
+
+        return params
 
 
 @pytest.fixture

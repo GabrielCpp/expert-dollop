@@ -15,7 +15,7 @@ from expert_dollup.app.dtos import *
 router = APIRouter()
 
 
-@router.get("/datasheet/{datasheet_id}/elements")
+@router.get("/datasheets/{datasheet_id}/elements")
 async def find_datasheet_elements(
     datasheet_id: UUID,
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
@@ -31,7 +31,7 @@ async def find_datasheet_elements(
 
 
 @router.get(
-    "/datasheet/{datasheet_id}/element/{element_def_id}/{child_element_reference}"
+    "/datasheets/{datasheet_id}/element/{element_def_id}/{child_element_reference}"
 )
 async def find_datasheet_element(
     datasheet_id: UUID,
@@ -55,7 +55,7 @@ async def find_datasheet_element(
 
 
 @router.put(
-    "/datasheet/{datasheet_id}/element/{element_def_id}/{child_element_reference}"
+    "/datasheets/{datasheet_id}/element/{element_def_id}/{child_element_reference}"
 )
 async def update_datasheet_element_properties(
     datasheet_id: UUID,
@@ -82,7 +82,7 @@ async def update_datasheet_element_properties(
     )
 
 
-@router.post("/datasheet/{datasheet_id}/element_collection/{element_def_id}")
+@router.post("/datasheets/{datasheet_id}/element_collection/{element_def_id}")
 async def add_datasheet_element_to_collection(
     datasheet_id: UUID,
     element_def_id: UUID,
@@ -105,7 +105,7 @@ async def add_datasheet_element_to_collection(
 
 
 @router.delete(
-    "/datasheet/{datasheet_id}/element_collection/{element_def_id}/{child_element_reference}"
+    "/datasheets/{datasheet_id}/element_collection/{element_def_id}/{child_element_reference}"
 )
 async def delete_datasheet_element_from_collection(
     datasheet_id: UUID,

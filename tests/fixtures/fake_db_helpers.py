@@ -81,7 +81,7 @@ class DbFixtureHelper:
         return do_inserts
 
     def __init__(self, injector: Injector, dal: DbConnection, auth_db: DbConnection):
-        self.injector: Injector = injector
+        self.injector = injector
         self.dal = dal
         self.auth_db = auth_db
         self.db = None

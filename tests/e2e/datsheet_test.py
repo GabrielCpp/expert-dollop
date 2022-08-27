@@ -19,182 +19,159 @@ def assert_all_definition_where_impemented(datasheet_definition_elements, result
         assert implementations.get(definition_element.id) == 1
 
 
+async def create_datasheet(ac, definition: ProjectDefinition):
+    datasheet = DatasheetDtoFactory(project_definition_id=definition.id)
+    datasheet_dto = await ac.post_json(
+        "/api/datasheets", datasheet, unwrap_with=DatasheetDto
+    )
+    return datasheet_dto
+
+
 @pytest.mark.asyncio
 async def test_datasheet(ac, db_helper: DbFixtureHelper):
-    runner = FlowRunner()
-    mini_datasheet = await db_helper.load_fixtures(SuperUser(), MiniDatasheet())
-    await ac.login_super_user()
-    project_definition_id = mini_datasheet.get_only_one(ProjectDefinition).id
+    datasheet_element_child_json = {"lost": 3}
 
-    @runner.step
-    async def create_datasheet():
-        datasheet = DatasheetDtoFactory(project_definition_id=project_definition_id)
-        response = await ac.post("/api/datasheet", data=datasheet.json())
-        assert response.status_code == 200, response.json()
-
-        datasheet = parse_obj_as(DatasheetDto, response.json())
-        return (datasheet,)
-
-    @runner.step
-    async def get_all_datasheet_elements(datasheet: DatasheetDto):
-        response = await ac.get(f"/api/datasheet/{datasheet.id}/elements")
-        assert response.status_code == 200, response.json()
-
-        datasheet_element_page = unwrap(response, DatasheetElementPageDto)
-        assert len(datasheet_element_page.results) == 2
-
-        assert_all_definition_where_impemented(
-            mini_datasheet.all(DatasheetDefinitionElement),
-            datasheet_element_page.results,
+    async def get_paginated_datasheet_elements(datasheet_dto: DatasheetDto):
+        elements_page_dto = await ac.get_json(
+            f"/api/datasheets/{datasheet_dto.id}/elements",
+            unwrap_with=bind_page_dto(DatasheetElementDto),
         )
+        assert len(elements_page_dto.results) == 2
+        return elements_page_dto
 
-        return (datasheet, datasheet_element_page)
-
-    @runner.step
     async def update_single_instance_datasheet_element(
-        datasheet: DatasheetDto, datasheet_element_page: DatasheetElementPageDto
+        datasheet_dto: DatasheetDto,
+        elements_page_dto: PageDto[DatasheetElementDto],
+        definition_element: DatasheetDefinitionElement,
     ):
-        definition_element = mini_datasheet.get_only_one_matching(
-            DatasheetDefinitionElement, lambda n: n.name == "single_element"
-        )
-
-        element = [
+        element = next(
             result
-            for result in datasheet_element_page.results
+            for result in elements_page_dto.results
             if result.element_def_id == definition_element.id
-        ][0]
-
-        datasheet_element_child_json = '{ "lost": 3 }'
-
-        response = await ac.put(
-            f"/api/datasheet/{datasheet.id}/element/{element.element_def_id}/{element.child_element_reference}",
-            data=datasheet_element_child_json,
         )
-        assert response.status_code == 200, response.json()
-        new_child_element = unwrap(response, DatasheetElementDto)
 
-        response = await ac.get(
-            f"/api/datasheet/{datasheet.id}/element/{element.element_def_id}/{element.child_element_reference}",
+        new_child_element = await ac.put_json(
+            f"/api/datasheets/{datasheet_dto.id}/element/{element.element_def_id}/{element.child_element_reference}",
+            datasheet_element_child_json,
+            unwrap_with=DatasheetElementDto,
         )
-        assert response.status_code == 200, response.json()
 
-        datasheet_element_child = unwrap(response, DatasheetElementDto)
+        datasheet_element_child = await ac.get_json(
+            f"/api/datasheets/{datasheet_dto.id}/element/{element.element_def_id}/{element.child_element_reference}",
+            unwrap_with=DatasheetElementDto,
+        )
+
         assert new_child_element == datasheet_element_child
 
-        return (datasheet, datasheet_element_page)
-
-    @runner.step
     async def instanciate_collection_element(
-        datasheet: DatasheetDto, datasheet_element_page: DatasheetElementPageDto
+        datasheet_dto: DatasheetDto,
+        datasheet_element_page: PageDto[DatasheetElementDto],
+        definition_element: DatasheetDefinitionElement,
     ):
-        datasheet_element_child_json = '{ "lost": 3 }'
-        definition_element = mini_datasheet.get_only_one_matching(
-            DatasheetDefinitionElement, lambda e: e.name == "collection_element"
-        )
 
-        element = [
+        element = next(
             result
             for result in datasheet_element_page.results
             if result.element_def_id == definition_element.id
-        ][0]
-
-        response = await ac.post(
-            f"/api/datasheet/{datasheet.id}/element_collection/{element.element_def_id}",
-            data=datasheet_element_child_json,
         )
-        assert response.status_code == 200, response.json()
-        new_child_element = unwrap(response, DatasheetElementDto)
 
-        response = await ac.get(
-            f"/api/datasheet/{datasheet.id}/element/{new_child_element.element_def_id}/{new_child_element.child_element_reference}",
+        new_child_element = await ac.post_json(
+            f"/api/datasheets/{datasheet_dto.id}/element_collection/{element.element_def_id}",
+            datasheet_element_child_json,
+            unwrap_with=DatasheetElementDto,
         )
-        assert response.status_code == 200, response.json()
 
-        datasheet_element_child = unwrap(response, DatasheetElementDto)
+        datasheet_element_child = await ac.get_json(
+            f"/api/datasheets/{datasheet_dto.id}/element/{new_child_element.element_def_id}/{new_child_element.child_element_reference}",
+            unwrap_with=DatasheetElementDto,
+        )
         assert new_child_element == datasheet_element_child
 
-        return (datasheet, new_child_element)
+        return new_child_element
 
-    @runner.step
     async def delete_collection_element(
-        datasheet: DatasheetDto, new_child_element: DatasheetElementDto
+        datasheet_dto: DatasheetDto, new_child_element_dto: DatasheetElementDto
     ):
-        response = await ac.delete(
-            f"/api/datasheet/{datasheet.id}/element_collection/{new_child_element.element_def_id}/{new_child_element.child_element_reference}",
+        await ac.delete_json(
+            f"/api/datasheets/{datasheet_dto.id}/element_collection/{new_child_element_dto.element_def_id}/{new_child_element_dto.child_element_reference}",
         )
-        assert response.status_code == 200, response.json()
 
-        response = await ac.get(
-            f"/api/datasheet/{datasheet.id}/element/{new_child_element.element_def_id}/{new_child_element.child_element_reference}",
+        await ac.get_json(
+            f"/api/datasheets/{datasheet_dto.id}/element/{new_child_element_dto.element_def_id}/{new_child_element_dto.child_element_reference}",
+            expected_status_code=404,
         )
-        assert response.status_code == 404, response.json()
 
-    await runner.run()
+    db = await db_helper.load_fixtures(SuperUser(), MiniDatasheet())
+    await ac.login_super_user()
+
+    definition = db.get_only_one(ProjectDefinition)
+    collection_element = db.get_only_one_matching(
+        DatasheetDefinitionElement, lambda e: e.name == "collection_element"
+    )
+    single_element = db.get_only_one_matching(
+        DatasheetDefinitionElement, lambda n: n.name == "single_element"
+    )
+    datasheet_dto = await create_datasheet(ac, definition)
+    elements_page_dto = await get_paginated_datasheet_elements(datasheet_dto)
+    assert_all_definition_where_impemented(
+        db.all(DatasheetDefinitionElement), elements_page_dto.results
+    )
+
+    await update_single_instance_datasheet_element(
+        datasheet_dto, elements_page_dto, single_element
+    )
+    new_child_element_dto = await instanciate_collection_element(
+        datasheet_dto, elements_page_dto, collection_element
+    )
+    await delete_collection_element(datasheet_dto, new_child_element_dto)
 
 
 @pytest.mark.asyncio
 async def test_datasheet_crud(ac, db_helper: DbFixtureHelper):
-    runner = FlowRunner()
-    mini_datasheet = await db_helper.load_fixtures(SuperUser(), MiniDatasheet())
-    await ac.login_super_user()
-    project_definition = mini_datasheet.get_only_one(ProjectDefinition)
-
-    @runner.step
-    async def create_datasheet():
-        datasheet = DatasheetDtoFactory(project_definition_id=project_definition.id)
-        response = await ac.post("/api/datasheet", data=datasheet.json())
-        assert response.status_code == 200, response.json()
-
-        datasheet = parse_obj_as(DatasheetDto, response.json())
-        return (datasheet,)
-
-    @runner.step
-    async def clone_datasheet(datasheet: DatasheetDto):
+    async def clone_datasheet(datasheet_dto: DatasheetDto):
         datasheet_clone_target = DatasheetCloneTargetDto(
-            target_datasheet_id=datasheet.id, new_name="Renamed datasheet"
+            target_datasheet_id=datasheet_dto.id, new_name="Renamed datasheet"
         )
-        response = await ac.post(
-            f"/api/datasheet/{datasheet.id}/clone", data=datasheet_clone_target.json()
+        cloned_datasheet_dto = await ac.post_json(
+            f"/api/datasheets/{datasheet_dto.id}/clone",
+            datasheet_clone_target,
+            unwrap_with=DatasheetDto,
         )
-        assert response.status_code == 200, response.json()
+        assert cloned_datasheet_dto.name == datasheet_clone_target.new_name
 
-        cloned_datasheet = unwrap(response, DatasheetDto)
-        assert cloned_datasheet.name == datasheet_clone_target.new_name
+        actual_datasheet_dto = await ac.get_json(
+            f"/api/datasheets/{cloned_datasheet_dto.id}", unwrap_with=DatasheetDto
+        )
+        assert actual_datasheet_dto == cloned_datasheet_dto
 
-        response = await ac.get(f"/api/datasheet/{cloned_datasheet.id}")
-        assert response.status_code == 200, response.json()
+        return cloned_datasheet_dto
 
-        actual_datasheet = unwrap(response, DatasheetDto)
-        assert actual_datasheet == cloned_datasheet
-
-        return (datasheet, cloned_datasheet)
-
-    @runner.step
-    async def update_datasheet(datasheet: DatasheetDto, cloned_datasheet: DatasheetDto):
+    async def patch_datasheet(cloned_datasheet_dto: DatasheetDto):
         update_dto = DatasheetUpdateDto(
-            id=cloned_datasheet.id,
+            id=cloned_datasheet_dto.id,
             updates=DatasheetUpdatableProperties(name="patched name"),
         )
-        response = await ac.patch("/api/datasheet", data=update_dto.json())
-        assert response.status_code == 200, response.json()
+        updated_datasheet_dto = await ac.patch_json(
+            "/api/datasheets", update_dto, unwrap_with=DatasheetDto
+        )
+        assert updated_datasheet_dto.name == "patched name"
 
-        updated_datasheet = unwrap(response, DatasheetDto)
-        assert updated_datasheet.name == "patched name"
+        actual_datasheet = await ac.get_json(
+            f"/api/datasheets/{cloned_datasheet_dto.id}", unwrap_with=DatasheetDto
+        )
+        assert actual_datasheet == updated_datasheet_dto
 
-        response = await ac.get(f"/api/datasheet/{cloned_datasheet.id}")
-        assert response.status_code == 200, response.json()
+    async def delete_datasheet(datasheet_dto: DatasheetDto):
+        await ac.delete_json(f"/api/datasheets/{datasheet_dto.id}")
+        await ac.get_json(
+            f"/api/datasheets/{datasheet_dto.id}", expected_status_code=404
+        )
 
-        actual_datasheet = unwrap(response, DatasheetDto)
-        assert actual_datasheet == updated_datasheet
+    db = await db_helper.load_fixtures(SuperUser(), MiniDatasheet())
+    await ac.login_super_user()
 
-        return (datasheet,)
-
-    @runner.step
-    async def delete_datasheet(datasheet: DatasheetDto):
-        response = await ac.delete(f"/api/datasheet/{datasheet.id}")
-        assert response.status_code == 200, response.json()
-
-        response = await ac.get(f"/api/datasheet/{datasheet.id}")
-        assert response.status_code == 404, response.json()
-
-    await runner.run()
+    definition = db.get_only_one(ProjectDefinition)
+    datasheet_dto = await create_datasheet(ac, definition)
+    cloned_datasheet_dto = await clone_datasheet(datasheet_dto)
+    await patch_datasheet(cloned_datasheet_dto)
+    await delete_datasheet(datasheet_dto)

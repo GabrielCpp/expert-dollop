@@ -22,9 +22,3 @@ class DatasheetElementImportDto(CamelModel):
     original_datasheet_id: UUID
     original_owner_organization_id: UUID
     creation_date_utc: datetime
-
-
-class DatasheetElementPageDto(CamelModel):
-    next_page_token: Optional[str]
-    limit: int
-    results: List[DatasheetElementDto]

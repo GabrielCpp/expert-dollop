@@ -15,7 +15,7 @@ from expert_dollup.app.dtos import *
 router = APIRouter()
 
 
-@router.get("/project/{project_id}/container/{node_id}")
+@router.get("/projects/{project_id}/container/{node_id}")
 async def get_project_node(
     project_id: UUID,
     node_id: UUID,
@@ -28,7 +28,7 @@ async def get_project_node(
     )
 
 
-@router.get("/project/{project_id}/containers")
+@router.get("/projects/{project_id}/containers")
 async def find_project_nodes_by(
     project_id: UUID,
     type_id: UUID = Query(alias="typeId", default=None),
@@ -43,7 +43,7 @@ async def find_project_nodes_by(
     )
 
 
-@router.get("/project/{project_id}/children")
+@router.get("/projects/{project_id}/children")
 async def find_project_children_tree(
     project_id: UUID,
     path: List[UUID] = Query(alias="path", default=[]),
@@ -59,7 +59,7 @@ async def find_project_children_tree(
     )
 
 
-@router.get("/project/{project_id}/subtree")
+@router.get("/projects/{project_id}/subtree")
 async def find_project_subtree(
     project_id: UUID,
     path: List[UUID] = Query(alias="path", default=[]),
@@ -74,7 +74,7 @@ async def find_project_subtree(
     )
 
 
-@router.get("/project/{project_id}/roots")
+@router.get("/projects/{project_id}/roots")
 async def find_project_root_sections(
     project_id: UUID,
     usecase=Depends(Inject(ProjectNodeUseCase)),
@@ -91,7 +91,7 @@ async def find_project_root_sections(
     )
 
 
-@router.get("/project/{project_id}/root_section_nodes/{root_section_id}")
+@router.get("/projects/{project_id}/root_section_nodes/{root_section_id}")
 async def find_project_root_section_nodes(
     project_id: UUID,
     root_section_id: UUID,
@@ -112,7 +112,7 @@ async def find_project_root_section_nodes(
     )
 
 
-@router.get("/project/{project_id}/form/{form_id}")
+@router.get("/projects/{project_id}/form/{form_id}")
 async def find_project_form_content(
     project_id: UUID,
     form_id: UUID,
@@ -130,7 +130,7 @@ async def find_project_form_content(
     )
 
 
-@router.put("/project/{project_id}/container/{node_id}/value")
+@router.put("/projects/{project_id}/container/{node_id}/value")
 async def mutate_project_field(
     project_id: UUID,
     node_id: UUID,
@@ -151,7 +151,7 @@ async def mutate_project_field(
     )
 
 
-@router.patch("/project/{project_id}/containers/value")
+@router.patch("/projects/{project_id}/containers/value")
 async def mutate_project_fields(
     project_id: UUID,
     updates: List[FieldUpdateInputDto],
@@ -171,7 +171,7 @@ async def mutate_project_fields(
     )
 
 
-@router.post("/project/{project_id}/container/collection")
+@router.post("/projects/{project_id}/container/collection")
 async def add_project_collection(
     project_id: UUID,
     collection_target: ProjectNodeCollectionTargetDto,
@@ -186,7 +186,7 @@ async def add_project_collection(
     )
 
 
-@router.post("/project/{project_id}/container/{collection_node_id}/clone")
+@router.post("/projects/{project_id}/container/{collection_node_id}/clone")
 async def clone_project_collection(
     project_id: UUID,
     collection_node_id: UUID,
@@ -203,7 +203,7 @@ async def clone_project_collection(
     )
 
 
-@router.delete("/project/{project_id}/container/{node_id}")
+@router.delete("/projects/{project_id}/container/{node_id}")
 async def delete_project_node_collection(
     project_id: UUID,
     node_id: UUID,

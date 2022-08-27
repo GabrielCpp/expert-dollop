@@ -2,35 +2,16 @@ from fastapi import APIRouter, Depends, Query
 from uuid import UUID
 from typing import Optional, Union, Dict
 from expert_dollup.shared.database_services import Page
-from expert_dollup.shared.starlette_injection import (
-    RequestHandler,
-    MappingChain,
-    CanPerformOnRequired,
-    CanPerformRequired,
-    Inject,
-)
-from expert_dollup.core.domains import (
-    Datasheet,
-    DatasheetElement,
-    DatasheetElementId,
-    DatasheetCloneTarget,
-    DatasheetFilter,
-)
-from expert_dollup.app.dtos import (
-    NewDatasheetDto,
-    DatasheetDto,
-    DatasheetElementDto,
-    DatasheetElementPageDto,
-    DatasheetCloneTargetDto,
-    DatasheetUpdateDto,
-)
 from expert_dollup.core.usecases import DatasheetUseCase
+from expert_dollup.shared.starlette_injection import *
+from expert_dollup.core.domains import *
+from expert_dollup.app.dtos import *
 
 
 router = APIRouter()
 
 
-@router.get("/datasheet/{datasheet_id}")
+@router.get("/datasheets/{datasheet_id}")
 async def find_datasheet_by_id(
     datasheet_id: UUID,
     usecase=Depends(Inject(DatasheetUseCase)),
@@ -47,7 +28,7 @@ async def find_datasheet_by_id(
     )
 
 
-@router.post("/datasheet")
+@router.post("/datasheets")
 async def add_datasheet(
     datasheet: NewDatasheetDto,
     usecase=Depends(Inject(DatasheetUseCase)),
@@ -67,7 +48,7 @@ async def add_datasheet(
     )
 
 
-@router.patch("/datasheet")
+@router.patch("/datasheets")
 async def patch_datasheet(
     datasheet_update: DatasheetUpdateDto,
     usecase=Depends(Inject(DatasheetUseCase)),
@@ -90,7 +71,7 @@ async def patch_datasheet(
     )
 
 
-@router.post("/datasheet/{target_datasheet_id}/clone")
+@router.post("/datasheets/{target_datasheet_id}/clone")
 async def clone_datasheet(
     datasheet_target: DatasheetCloneTargetDto,
     usecase=Depends(Inject(DatasheetUseCase)),
@@ -114,7 +95,7 @@ async def clone_datasheet(
     )
 
 
-@router.delete("/datasheet/{datasheet_id}")
+@router.delete("/datasheets/{datasheet_id}")
 async def delete_datasheet(
     datasheet_id: UUID,
     usecase=Depends(Inject(DatasheetUseCase)),

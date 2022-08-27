@@ -809,16 +809,6 @@ def map_datasheet_to_dto(src: Datasheet, mapper: Mapper) -> DatasheetDto:
     )
 
 
-def map_datasheet_page_element_to_dto(
-    src: Page[DatasheetElement], mapper: Mapper
-) -> DatasheetElementPageDto:
-    return DatasheetElementPageDto(
-        next_page_token=src.next_page_token,
-        limit=src.limit,
-        results=mapper.map_many(src.results, DatasheetElementDto, DatasheetElement),
-    )
-
-
 def map_datasheet_element_import_from_dto(
     src: DatasheetElementImportDto, mapper: Mapper
 ) -> DatasheetElement:

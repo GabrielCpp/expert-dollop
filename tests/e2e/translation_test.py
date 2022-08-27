@@ -15,10 +15,11 @@ async def test_should_be_able_to_scan_translations(
     translations = await AsyncCursor.all(
         ac,
         f"/api/translations/{project_definition.id}/en-US",
-        after=normalize_request_results(TranslationDto, lambda c: (c["name"], c["id"])),
+        unwrap_with=bind_page_dto(TranslationDto),
+        after=make_sorter(lambda c: (c.name, c.id)),
     )
 
-    expectd_en_translations = normalize_dtos(
+    expectd_en_translations = sorted(
         mapper.map_many(
             [
                 translation
@@ -27,7 +28,7 @@ async def test_should_be_able_to_scan_translations(
             ],
             TranslationDto,
         ),
-        lambda c: (c["name"], c["id"]),
+        key=lambda c: (c.name, c.id),
     )
 
     assert len(translations) == len(expectd_en_translations)

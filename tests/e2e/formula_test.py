@@ -18,9 +18,7 @@ async def test_create_get_delete_formula(ac, db_helper: DbFixtureHelper):
         name="shipping_price",
         expression="5",
     )
-    response = await ac.post("/api/formula", data=formula.json())
-    assert response.status_code == 200, response.text
-
+    await ac.post_json("/api/formula", formula)
     formula = FormulaDtoFactory(
         project_definition_id=project_definition.id,
         attached_to_type_id=fake_db.get_only_one_matching(
@@ -30,16 +28,14 @@ async def test_create_get_delete_formula(ac, db_helper: DbFixtureHelper):
         expression="shipping_price/sqrt(1)+quantity*price*is_confirmed+4*(item_size == '0')+taxes",
     )
 
-    response = await ac.post("/api/formula", data=formula.json())
-    assert response.status_code == 200, response.text
+    await ac.post_json("/api/formula", formula)
 
     project = ProjectDetailsDtoFactory(project_definition_id=project_definition.id)
-    response = await ac.post("/api/project", data=project.json())
-    assert response.status_code == 200
+    project_dto = await ac.post_json(
+        "/api/projects", project, unwrap_with=ProjectDetailsDto
+    )
 
-    project = unwrap(response, ProjectDetailsDto)
-    response = await ac.post(f"/api/project/{project.id}/formula_cache")
-    assert response.status_code == 200, response.text
+    await ac.post_json(f"/api/projects/{project_dto.id}/formula_cache")
 
-    # response = await ac.get(f"/api/project/{project.id}formula_cache/{formula.id}")
+    # response = await ac.get(f"/api/projects/{project.id}formula_cache/{formula.id}")
     # assert response.status_code == 200, response.text
