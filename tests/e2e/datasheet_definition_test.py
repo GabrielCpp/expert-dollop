@@ -90,52 +90,71 @@ async def test_label_collection(ac, db_helper: DbFixtureHelper):
             project_definition_id=definition.id
         )
         label_collection_dto = await ac.post_json(
-            "/api/label_collection", label_collection, unwrap_with=LabelCollectionDto
+            f"/api/definitions/{definition.id}/label_collections",
+            label_collection,
+            unwrap_with=LabelCollectionDto,
         )
 
         return label_collection_dto
 
     async def create_label(
+        definition: ProjectDefinition,
         label_collection_dto: LabelCollectionDto,
     ):
         label = LabelDtoFactory(label_collection_id=label_collection_dto.id)
-        label_dto = await ac.post_json("/api/label", label, unwrap_with=LabelDto)
+        label_dto = await ac.post_json(
+            f"/api/definitions/{definition.id}/labels", label, unwrap_with=LabelDto
+        )
         return label_dto
 
     async def check_label_collection_is_identical(
         label_collection_dto: LabelCollectionDto,
     ):
         actual_label_collection = await ac.get_json(
-            f"/api/label_collection/{label_collection_dto.id}",
+            f"/api/definitions/{definition.id}/label_collections/{label_collection_dto.id}",
             unwrap_with=LabelCollectionDto,
         )
         assert actual_label_collection == label_collection_dto
 
-    async def check_label_is_the_same(label_dto: LabelDto):
+    async def check_label_is_the_same(
+        definition: ProjectDefinition, label_dto: LabelDto
+    ):
         actual_label = await ac.get_json(
-            f"/api/label/{label_dto.id}", unwrap_with=LabelDto
+            f"/api/definitions/{definition.id}/labels/{label_dto.id}",
+            unwrap_with=LabelDto,
         )
         assert actual_label == label_dto
 
-    async def delete_label_and_check_it_is_gone(label_dto: LabelDto):
-        await ac.delete_json(f"/api/label/{label_dto.id}")
-        await ac.get_json(f"/api/label/{label_dto.id}", expected_status_code=404)
-
-    async def delete_label_collection_and_check_it_is_gone(
-        label_collection_dto: LabelCollectionDto,
+    async def delete_label_and_check_it_is_gone(
+        definition: ProjectDefinition, label_dto: LabelDto
     ):
-        await ac.delete_json(f"/api/label_collection/{label_collection_dto.id}")
+        await ac.delete_json(f"/api/definitions/{definition.id}/labels/{label_dto.id}")
         await ac.get_json(
-            f"/api/label_collection/{label_collection_dto.id}", expected_status_code=404
+            f"/api/definitions/{definition.id}/labels/{label_dto.id}",
+            expected_status_code=404,
         )
 
-    db = await db_helper.load_fixtures(SuperUser(), MiniDatasheet())
+    async def delete_label_collection_and_check_it_is_gone(
+        definition: ProjectDefinition,
+        label_collection_dto: LabelCollectionDto,
+    ):
+        await ac.delete_json(
+            f"/api/definitions/{definition.id}/label_collections/{label_collection_dto.id}"
+        )
+        await ac.get_json(
+            f"/api/definitions/{definition.id}/label_collections/{label_collection_dto.id}",
+            expected_status_code=404,
+        )
+
+    db = await db_helper.load_fixtures(
+        SuperUser(), MiniDatasheet(), GrantRessourcePermissions()
+    )
     await ac.login_super_user()
 
     definition = db.get_only_one(ProjectDefinition)
     label_collection_dto = await create_label_collection(definition)
     await check_label_collection_is_identical(label_collection_dto)
-    label_dto = await create_label(label_collection_dto)
-    await check_label_is_the_same(label_dto)
-    await delete_label_and_check_it_is_gone(label_dto)
-    await delete_label_collection_and_check_it_is_gone(label_collection_dto)
+    label_dto = await create_label(definition, label_collection_dto)
+    await check_label_is_the_same(definition, label_dto)
+    await delete_label_and_check_it_is_gone(definition, label_dto)
+    await delete_label_collection_and_check_it_is_gone(definition, label_collection_dto)

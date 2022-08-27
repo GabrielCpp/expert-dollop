@@ -1,19 +1,24 @@
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
-from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.starlette_injection import RequestHandler, MappingChain
-from expert_dollup.core.domains import LabelCollection
-from expert_dollup.app.dtos import LabelCollectionDto
+from expert_dollup.shared.starlette_injection import *
+from expert_dollup.core.domains import *
+from expert_dollup.app.dtos import *
 from expert_dollup.core.usecases import LabelCollectionUseCase
 
 router = APIRouter()
 
 
-@router.get("/label_collection/{label_collection_id}")
+@router.get(
+    "/definitions/{project_definition_id}/label_collections/{label_collection_id}"
+)
 async def get_label_collection_by_id(
+    project_definition_id: UUID,
     label_collection_id: UUID,
     usecase=Depends(Inject(LabelCollectionUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:update"])
+    ),
 ):
     return await handler.handle(
         usecase.find_by_id,
@@ -22,11 +27,15 @@ async def get_label_collection_by_id(
     )
 
 
-@router.post("/label_collection")
+@router.post("/definitions/{project_definition_id}/label_collections")
 async def add_label_collection(
+    project_definition_id: UUID,
     label_collection: LabelCollectionDto,
     usecase=Depends(Inject(LabelCollectionUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:update"])
+    ),
 ):
     return await handler.handle(
         usecase.add,
@@ -39,11 +48,15 @@ async def add_label_collection(
     )
 
 
-@router.put("/label_collection")
+@router.put("/definitions/{project_definition_id}/label_collections")
 async def add_label_collection(
+    project_definition_id: UUID,
     label_collection: LabelCollectionDto,
     usecase=Depends(Inject(LabelCollectionUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:update"])
+    ),
 ):
     return await handler.handle(
         usecase.update,
@@ -56,10 +69,16 @@ async def add_label_collection(
     )
 
 
-@router.delete("/label_collection/{label_collection_id}")
+@router.delete(
+    "/definitions/{project_definition_id}/label_collections/{label_collection_id}"
+)
 async def delete_label_collection_by_id(
+    project_definition_id: UUID,
     label_collection_id: UUID,
     usecase=Depends(Inject(LabelCollectionUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:update"])
+    ),
 ):
     return await usecase.delete_by_id(label_collection_id)

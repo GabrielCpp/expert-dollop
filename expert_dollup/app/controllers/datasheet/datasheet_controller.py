@@ -48,12 +48,13 @@ async def add_datasheet(
     )
 
 
-@router.patch("/datasheets")
+@router.patch("/datasheets/{datasheet_id}")
 async def patch_datasheet(
+    datasheet_id: UUID,
     datasheet_update: DatasheetUpdateDto,
     usecase=Depends(Inject(DatasheetUseCase)),
     handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformRequired(["datasheet:update"])),
+    user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:update"])),
 ):
     return await handler.forward(
         usecase.update,

@@ -152,7 +152,9 @@ async def test_datasheet_crud(ac, db_helper: DbFixtureHelper):
             updates=DatasheetUpdatableProperties(name="patched name"),
         )
         updated_datasheet_dto = await ac.patch_json(
-            "/api/datasheets", update_dto, unwrap_with=DatasheetDto
+            f"/api/datasheets/{cloned_datasheet_dto.id}",
+            update_dto,
+            unwrap_with=DatasheetDto,
         )
         assert updated_datasheet_dto.name == "patched name"
 
@@ -167,7 +169,9 @@ async def test_datasheet_crud(ac, db_helper: DbFixtureHelper):
             f"/api/datasheets/{datasheet_dto.id}", expected_status_code=404
         )
 
-    db = await db_helper.load_fixtures(SuperUser(), MiniDatasheet())
+    db = await db_helper.load_fixtures(
+        SuperUser(), MiniDatasheet(), GrantRessourcePermissions()
+    )
     await ac.login_super_user()
 
     definition = db.get_only_one(ProjectDefinition)
