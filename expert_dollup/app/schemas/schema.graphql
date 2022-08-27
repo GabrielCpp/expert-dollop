@@ -1,5 +1,9 @@
 scalar JsonSchema
 
+type Unit {
+  id: ID!
+}
+
 type DatasheetDefinitionPropertySchema {
   valueValidator: JsonSchema!
 }
@@ -83,22 +87,22 @@ type DatasheetConnection {
 
 type IntFieldConfig {
   unit: String!
-  defaultValue: Int!
+  integer: Int!
 }
 
 type DecimalFieldConfig {
   unit: String!
   precision: Int!
-  defaultValue: Float!
+  numeric: Float!
 }
 
 type StringFieldConfig {
   transforms: [String!]!
-  defaultValue: String!
+  text: String!
 }
 
 type BoolFieldConfig {
-  defaultValue: Boolean!
+  enabled: Boolean!
 }
 
 type StaticChoiceOption {
@@ -109,7 +113,7 @@ type StaticChoiceOption {
 
 type StaticChoiceFieldConfig {
   options: [StaticChoiceOption!]!
-  defaultValue: String!
+  selected: String!
 }
 
 type CollapsibleContainerFieldConfig {
@@ -204,28 +208,30 @@ union FieldValue =
   | ReferenceId
 
 input IntFieldConfigInput {
-  defaultValue: Int!
+  integer: Int!
+  unit: String!
 }
 
 input DecimalFieldConfigInput {
   precision: Int!
-  defaultValue: Float!
+  numeric: Float!
+  unit: String
 }
 
 input StringFieldConfigInput {
   transforms: [String!]!
-  defaultValue: String!
+  text: String!
 }
 
 input BoolFieldConfigInput {
-  defaultValue: Boolean!
+  enabled: Boolean!
 }
 
 input StaticChoiceOptionInput {
   id: String!
   label: String!
   helpText: String!
-  defaultValue: String!
+  selected: String!
 }
 
 input StaticChoiceFieldConfigInput {
@@ -293,19 +299,6 @@ input FieldValueInput {
   decimal: DecimalFieldValueInput
   string: StringFieldValueInput
   bool: BoolFieldValueInput
-}
-
-input ProjectDefinitionNodeUpdateInput {
-  id: ID!
-  name: String!
-  isCollection: Boolean!
-  instanciateByDefault: Boolean!
-  orderIndex: Int!
-  path: [String!]!
-  translations: TranslationConfigInput!
-  fieldDetails: FieldDetailsUnionInput
-  triggers: [TriggerInput]!
-  meta: NodeMetaConfigInput!
 }
 
 input ProjectDefinitionNodeCreationInput {
@@ -589,6 +582,8 @@ input NewSingleUserOrganizationInput {
 
 type Query {
   currentUser: User
+  units: [Unit!]!
+
   findDatasheet(id: ID!): Datasheet!
   findDatasheets(
     query: String!
@@ -698,11 +693,14 @@ type Mutation {
 
   # ProjectDefinitionNode
   addProjectDefinitionNode(
+    projectDefinitionId: String!
     node: ProjectDefinitionNodeCreationInput!
   ): ProjectDefinitionNode!
 
   updateProjectDefinitionNode(
-    node: ProjectDefinitionNodeUpdateInput!
+    projectDefinitionId: String!
+    nodeId: String!
+    node: ProjectDefinitionNodeCreationInput!
   ): ProjectDefinitionNode!
 
   # ProjectNode

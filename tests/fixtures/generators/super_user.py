@@ -9,6 +9,8 @@ from ..factories.helpers import make_uuid
 
 
 class SuperUser:
+    oauth_id: str = "testuser"
+
     def __init__(self):
         self.db = FakeDb()
         self.oauth_id: str = "testuser"

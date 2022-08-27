@@ -13,24 +13,19 @@ async def test_given_project_definition_should_be_able_to_create_delete_update(a
     await ac.login_super_user()
 
     expected_project_definition = ProjectDefinitionDtoFactory()
-    response = await ac.post(
-        "/api/project_definition", data=expected_project_definition.json()
+    await ac.post_json("/api/definitions", expected_project_definition)
+
+    actual = await ac.get_json(
+        f"/api/definitions/{expected_project_definition.id}",
+        unwrap_with=ProjectDefinitionDto,
     )
-    assert response.status_code == 200, response.text
-
-    response = await ac.get(f"/api/project_definition/{expected_project_definition.id}")
-    assert response.status_code == 200, response.text
-
-    actual = unwrap(response, ProjectDefinitionDto)
     assert actual == expected_project_definition
 
-    response = await ac.delete(
-        f"/api/project_definition/{expected_project_definition.id}"
-    )
-    assert response.status_code == 200, response.text
+    await ac.delete_json(f"/api/definitions/{expected_project_definition.id}")
 
-    response = await ac.get(f"/api/project_definition/{expected_project_definition.id}")
-    assert response.status_code == 404, response.text
+    await ac.get_json(
+        f"/api/definitions/{expected_project_definition.id}", expected_status_code=404
+    )
 
 
 @pytest.mark.asyncio
@@ -38,37 +33,34 @@ async def test_given_project_definition_node_should_be_able_to_create_update_del
     ac,
 ):
     await ac.login_super_user()
-    project_definition = ProjectDefinitionDtoFactory()
-    expected_project_definition_node = ProjectDefinitionNodeDtoFactory(
-        project_definition_id=project_definition.id
+    definition = ProjectDefinitionDtoFactory()
+    expected_definition_node = ProjectDefinitionNodeDtoFactory(
+        project_definition_id=definition.id
     )
 
-    response = await ac.post("/api/project_definition", data=project_definition.json())
-    assert response.status_code == 200, response.json()
+    await ac.post_json("/api/definitions", definition)
 
-    response = await ac.post(
-        "/api/project_definition_node",
-        data=expected_project_definition_node.json(by_alias=True),
+    created_node = await ac.post_json(
+        f"/api/definitions/{definition.id}/nodes",
+        expected_definition_node,
+        unwrap_with=ProjectDefinitionNodeDto,
     )
-    assert response.status_code == 200, response.json()
+    assert created_node.dict(
+        exclude={"id", "creation_date_utc"}
+    ) == expected_definition_node.dict(exclude={"id", "creation_date_utc"})
 
-    response = await ac.get(
-        f"/api/project_definition/{project_definition.id}/node/{expected_project_definition_node.id}"
+    actual = await ac.get_json(
+        f"/api/definitions/{definition.id}/nodes/{created_node.id}",
+        unwrap_with=ProjectDefinitionNodeDto,
     )
-    assert response.status_code == 200, response.json()
+    assert actual == created_node
 
-    actual = unwrap(response, ProjectDefinitionNodeDto)
-    assert actual == expected_project_definition_node
+    await ac.delete_json(f"/api/definitions/{definition.id}/nodes/{created_node.id}")
 
-    response = await ac.delete(
-        f"/api/project_definition/{project_definition.id}/node/{expected_project_definition_node.id}"
+    await ac.get_json(
+        f"/api/definitions/{definition.id}/nodes/{created_node.id}",
+        expected_status_code=404,
     )
-    assert response.status_code == 200, response.json()
-
-    response = await ac.get(
-        f"/api/project_definition/{project_definition.id}/node/{expected_project_definition_node.id}"
-    )
-    assert response.status_code == 404, response.json()
 
 
 @pytest.mark.asyncio
@@ -79,32 +71,27 @@ async def test_given_translation_should_be_able_to_create_update_delete(
     project_definition = ProjectDefinitionDtoFactory()
     translation_input = TranslationInputDtoFactory(ressource_id=project_definition.id)
 
-    response = await ac.post("/api/project_definition", data=project_definition.json())
-    assert response.status_code == 200, response.json()
+    await ac.post_json("/api/definitions", project_definition)
 
-    response = await ac.post("/api/translation", data=translation_input.json())
-    assert response.status_code == 200, response.json()
-
-    response = await ac.get(
-        f"/api/translation/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}"
-    )
-    assert response.status_code == 200, response.json()
+    await ac.post_json("/api/translation", translation_input)
 
     expected_translation = TranslationDto(
         **translation_input.dict(), creation_date_utc=static_clock.utcnow()
     )
-    actual = unwrap(response, TranslationDto)
+    actual = await ac.get_json(
+        f"/api/translation/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}",
+        unwrap_with=TranslationDto,
+    )
     assert actual == expected_translation
 
-    response = await ac.delete(
+    await ac.delete_json(
         f"/api/translation/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}"
     )
-    assert response.status_code == 200, response.json()
 
-    response = await ac.get(
-        f"/api/translation/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}"
+    await ac.get_json(
+        f"/api/translation/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}",
+        expected_status_code=404,
     )
-    assert response.status_code == 404, response.json()
 
 
 @pytest.mark.asyncio

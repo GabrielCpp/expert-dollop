@@ -58,4 +58,7 @@ def dump_snapshot(json_serializable) -> str:
 
 
 def jsonify(v):
+    if hasattr(v, "json") and callable(getattr(v, "json")):
+        return v.json()
+
     return json.dumps(v, indent=2, sort_keys=True, cls=ExtraEncoder)

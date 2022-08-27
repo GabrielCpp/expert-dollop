@@ -21,10 +21,9 @@ async def get_token(oauth: Optional[str] = None):
     from dotenv import load_dotenv
     from expert_dollup.app.modules import build_container
     from expert_dollup.shared.starlette_injection import AuthService
-    from tests.fixtures.seeds import make_root_user_org
+    from tests.fixtures.generators.super_user import SuperUser
 
-    org = make_root_user_org()
-    oauth = org.users[0].oauth_id if oauth is None else oauth
+    oauth = SuperUser.oauth_id if oauth is None else oauth
 
     load_dotenv()
     container = build_container()
@@ -365,17 +364,17 @@ def load_default_users(c):
     from expert_dollup.core.domains import User, Organization
     from expert_dollup.shared.database_services import DatabaseContext
     from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
-    from tests.fixtures.seeds import make_root_user_org
+    from tests.fixtures.generators.super_user import SuperUser
 
     async def reload_db():
         load_dotenv()
         container = build_container()
         user_db = container.get(RessourceAuthDatabase)
         database_context = container.get(DatabaseContext)
-        org = make_root_user_org()
+        db = SuperUser()()
 
         await user_db.truncate_db()
-        await database_context.upserts(Organization, [org.organization])
-        await database_context.upserts(User, org.users)
+        await database_context.upserts(Organization, db.all(Organization))
+        await database_context.upserts(User, db.all(User))
 
     asyncio.run(reload_db())

@@ -25,7 +25,7 @@ class IntFieldConfigDtoFactory(factory.Factory):
         model = IntFieldConfigDto
 
     unit = "kg"
-    default_value = factory.Faker("pyint", min_value=0, max_value=1000)
+    integer = factory.Faker("pyint", min_value=0, max_value=1000)
 
 
 class ProjectDefinitionNodeDtoFactory(factory.Factory):
@@ -49,7 +49,6 @@ class ProjectDefinitionNodeDtoFactory(factory.Factory):
     validator = factory.LazyAttribute(
         lambda o: {"type": "integer", "minimum": 0, "maximum": 100000}
     )
-    default_value = IntFieldValueDto(integer=0)
     path = factory.List([])
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 

@@ -16,7 +16,7 @@ from expert_dollup.core.usecases import ProjectDefinitonUseCase
 router = APIRouter()
 
 
-@router.get("/project_definition/{project_definition_id}")
+@router.get("/definitions/{project_definition_id}")
 async def find_project_definition(
     project_definition_id: UUID,
     usecase: ProjectDefinitonUseCase = Depends(Inject(ProjectDefinitonUseCase)),
@@ -32,7 +32,7 @@ async def find_project_definition(
     )
 
 
-@router.post("/project_definition")
+@router.post("/definitions")
 async def create_project_definition(
     project_definition: ProjectDefinitionDto,
     usecase: ProjectDefinitonUseCase = Depends(Inject(ProjectDefinitonUseCase)),
@@ -52,7 +52,7 @@ async def create_project_definition(
     )
 
 
-@router.put("/project_definition/{project_definition_id}")
+@router.put("/definitions/{project_definition_id}")
 async def update_project_definition(
     project_definition: ProjectDefinitionDto,
     usecase=Depends(Inject(ProjectDefinitonUseCase)),
@@ -72,7 +72,7 @@ async def update_project_definition(
     )
 
 
-@router.delete("/project_definition/{project_definition_id}")
+@router.delete("/definitions/{project_definition_id}")
 async def delete_project_definition(
     project_definition_id: UUID,
     usecase=Depends(Inject(ProjectDefinitonUseCase)),

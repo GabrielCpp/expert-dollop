@@ -39,7 +39,7 @@ async def get_report_definition(
     )
 
 
-@router.post("/project_definition/{project_definition_id}/report_definitions")
+@router.post("/definitions/{project_definition_id}/report_definitions")
 async def get_project_def_reports_definitions(
     project_definition_id: UUID,
     usecase: ReportDefinitionUseCase = Depends(Inject(ReportDefinitionUseCase)),

@@ -31,7 +31,7 @@ async def find_datasheet_definition_element_by_id(
     )
 
 
-@router.get("/project_definition/{project_definition_id}/elements")
+@router.get("/definitions/{project_definition_id}/elements")
 async def find_datasheet_definition_elements(
     project_definition_id: UUID,
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),

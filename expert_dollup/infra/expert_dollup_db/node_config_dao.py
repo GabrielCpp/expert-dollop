@@ -15,7 +15,7 @@ class IntFieldConfigDao(BaseModel):
 class DecimalFieldConfigDao(BaseModel):
     unit: str
     precision: int
-    number: Decimal
+    numeric: Decimal
 
 
 class StringFieldConfigDao(BaseModel):

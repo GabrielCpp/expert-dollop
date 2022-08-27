@@ -15,54 +15,52 @@ async def wip_db(dal):
 async def test_project_creation(ac, mapper):
     await ac.login_super_user()
     db = SimpleProject()()
-    project_definition = db.get_only_one(ProjectDefinition)
+    definition = db.get_only_one(ProjectDefinition)
 
-    response = await ac.post(
-        "/api/project_definition", data=jsonify(project_definition)
+    definition_dto = await ac.post_json(
+        "/api/definitions", definition, unwrap_with=ProjectDefinitionDto
     )
-    assert response.status_code == 200, response.json()
 
-    project_definition_nodes_dto = mapper.map_many(
+    definition_nodes_dto = mapper.map_many(
         db.all(ProjectDefinitionNode),
         ProjectDefinitionNodeDto,
         ProjectDefinitionNode,
     )
 
-    for project_definition_node_dto in project_definition_nodes_dto:
-        response = await ac.post(
-            "/api/project_definition_node",
-            data=project_definition_node_dto.json(),
+    created_node_dtos = [
+        await ac.post_json(
+            f"/api/definitions/{definition_dto.id}/nodes",
+            definition_node_dto,
+            unwrap_with=ProjectDefinitionNodeDto,
         )
-
-        assert response.status_code == 200, response.json()
+        for definition_node_dto in definition_nodes_dto
+    ]
 
     containers = await AsyncCursor.all(
         ac,
-        f"/api/{project_definition.id}/project_definition_nodes",
+        f"/api/definitions/{definition_dto.id}/nodes",
         after=normalize_request_results(ProjectDefinitionNodeDto, lambda c: c["name"]),
     )
 
-    expected_nodes = normalize_dtos(project_definition_nodes_dto, lambda c: c["name"])
+    expected_nodes = normalize_dtos(definition_nodes_dto, lambda c: c["name"])
 
-    assert len(containers) == len(project_definition_nodes_dto)
+    assert len(containers) == len(definition_nodes_dto)
     assert containers == expected_nodes
 
 
 @pytest.mark.asyncio
-async def test_query_project_definition_parts(ac, db_helper: DbFixtureHelper):
+async def test_query_definition_parts(ac, db_helper: DbFixtureHelper):
     db = await db_helper.load_fixtures(SuperUser(), SimpleProject())
     await ac.login_super_user()
-    project_definition = db.get_only_one(ProjectDefinition)
+    definition = db.get_only_one(ProjectDefinition)
     runner = FlowRunner()
 
     @runner.step
     async def find_all_root_sections():
-        response = await ac.get(
-            f"/api/project_definition/{project_definition.id}/root_sections"
+        root_sections = await ac.get_json(
+            f"/api/definitions/{definition.id}/root_sections",
+            unwrap_with=ProjectDefinitionNodeTreeDto,
         )
-        assert response.status_code == 200, response.json()
-
-        root_sections = unwrap(response, ProjectDefinitionNodeTreeDto)
         flat_tree = [(node.name, trace) for (node, trace) in walk_tree(root_sections)]
         expected_flat_tree = [("root_a", [0]), ("root_b", [1])]
         assert flat_tree == expected_flat_tree
@@ -74,12 +72,10 @@ async def test_query_project_definition_parts(ac, db_helper: DbFixtureHelper):
         root_sections: List[ProjectDefinitionTreeNode],
     ):
         first_root_section = root_sections[0].definition
-        response = await ac.get(
-            f"/api/project_definition/{project_definition.id}/root_section_nodes/{first_root_section.id}"
+        tree = await ac.get_json(
+            f"/api/definitions/{definition.id}/root_section_nodes/{first_root_section.id}",
+            unwrap_with=ProjectDefinitionNodeTreeDto,
         )
-        assert response.status_code == 200, response.json()
-
-        tree = unwrap(response, ProjectDefinitionNodeTreeDto)
         flat_tree = [(node.name, trace) for (node, trace) in walk_tree(tree)]
         expected_flat_tree = [
             ("root_a_subsection_0", [0]),
@@ -98,12 +94,10 @@ async def test_query_project_definition_parts(ac, db_helper: DbFixtureHelper):
         form_node = find_name(
             db.all(ProjectDefinitionNode), "root_a_subsection_0_form_0"
         )
-        response = await ac.get(
-            f"/api/project_definition/{project_definition.id}/form_content/{form_node.id}"
+        tree = await ac.get_json(
+            f"/api/definitions/{definition.id}/form_contents/{form_node.id}",
+            unwrap_with=ProjectDefinitionNodeTreeDto,
         )
-        assert response.status_code == 200, response.json()
-
-        tree = unwrap(response, ProjectDefinitionNodeTreeDto)
         flat_tree = [(node.name, trace) for (node, trace) in walk_tree(tree)]
         expected_flat_tree = [
             ("root_a_subsection_0_form_0_section_0", [0]),

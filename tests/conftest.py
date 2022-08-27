@@ -95,6 +95,11 @@ def app(container: Injector):
     return creat_app(container)
 
 
+from pydantic import BaseModel
+from async_asgi_testclient.response import Response as ClientResponse
+from typing import Optional, Type
+
+
 class IntegratedTestClient(TestClient):
     def __init__(
         self,
@@ -107,6 +112,10 @@ class IntegratedTestClient(TestClient):
         self.auth_service = auth_service
         self.db_helper = db_helper
         self.user_service = user_service
+        self.json_headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
 
     def login(self, user: User):
         token = self.auth_service.make_token(user.oauth_id)
@@ -125,6 +134,60 @@ class IntegratedTestClient(TestClient):
             raise Exception("You must load SuperUser fixture")
 
         self.login(user)
+
+    async def post_json(
+        self,
+        url: str,
+        data: BaseModel,
+        expected_status_code: int = 200,
+        unwrap_with: Optional[Type[BaseModel]] = None,
+        unwrap_many_with: Optional[Type[BaseModel]] = None,
+    ):
+        response = await self.post(url, data=jsonify(data), headers=self.json_headers)
+        assert response.status_code == expected_status_code, response.text
+        return self._convert_response(response, unwrap_with, unwrap_many_with)
+
+    async def put_json(
+        self,
+        url: str,
+        expected_status_code: int = 200,
+        unwrap_with: Optional[Type[BaseModel]] = None,
+        unwrap_many_with: Optional[Type[BaseModel]] = None,
+    ):
+        response = await self.put(url, data=jsonify(data), headers=self.json_headers)
+        assert response.status_code == expected_status_code, response.text
+        return self._convert_response(response, unwrap_with, unwrap_many_with)
+
+    async def get_json(
+        self,
+        url: str,
+        expected_status_code: int = 200,
+        unwrap_with: Optional[Type[BaseModel]] = None,
+        unwrap_many_with: Optional[Type[BaseModel]] = None,
+    ):
+        response = await self.get(url, headers=self.json_headers)
+        assert response.status_code == expected_status_code, response.text
+        return self._convert_response(response, unwrap_with, unwrap_many_with)
+
+    async def delete_json(
+        self,
+        url: str,
+        expected_status_code: int = 200,
+        unwrap_with: Optional[Type[BaseModel]] = None,
+        unwrap_many_with: Optional[Type[BaseModel]] = None,
+    ):
+        response = await self.delete(url, headers=self.json_headers)
+        assert response.status_code == expected_status_code, response.text
+        return self._convert_response(response, unwrap_with, unwrap_many_with)
+
+    def _convert_response(self, response, unwrap_with, unwrap_many_with):
+        if unwrap_with is None and unwrap_many_with is None:
+            return response
+
+        if unwrap_many_with is None:
+            return unwrap(response, unwrap_with)
+
+        return unwrap_many(response, unwrap_many_with)
 
 
 @pytest.fixture

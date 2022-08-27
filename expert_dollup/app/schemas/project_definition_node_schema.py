@@ -97,7 +97,9 @@ async def resolve_form_content(
 
 
 @query.field("findProjectDefinitionNode")
-@inject_graphql_route(find_project_definition_node)
+@inject_graphql_route(
+    find_project_definition_node, ["project_definition_id", "node_id"]
+)
 @convert_kwargs_to_snake_case
 async def resolve_find_project_definition_node(
     _: Any,
@@ -117,12 +119,13 @@ async def resolve_find_project_definition_node(
 async def resolve_add_project_definition_node(
     _: Any,
     info: GraphQLResolveInfo,
+    project_definition_id: str,
     node: dict,
     create_project_definition_node: callable,
 ):
     node = collapse_union(
         node,
-        ["config", "fieldDetails"],
+        ["fieldDetails"],
         {
             "INT_FIELD_CONFIG": "int",
             "DECIMAL_FIELD_CONFIG": "decimal",
@@ -135,7 +138,43 @@ async def resolve_add_project_definition_node(
     )
 
     result = await create_project_definition_node(
-        info, ProjectDefinitionNodeDto.parse_obj(node)
+        info,
+        UUID(project_definition_id),
+        ProjectDefinitionNodeCreationDto.parse_obj(node),
+    )
+
+    return result
+
+
+@mutation.field("updateProjectDefinitionNode")
+@inject_graphql_route(update_project_definition_node)
+async def resolve_update_project_definition_node(
+    _: Any,
+    info: GraphQLResolveInfo,
+    project_definition_id: str,
+    node_id: str,
+    node: dict,
+    update_project_definition_node: callable,
+):
+    node = collapse_union(
+        node,
+        ["fieldDetails"],
+        {
+            "INT_FIELD_CONFIG": "int",
+            "DECIMAL_FIELD_CONFIG": "decimal",
+            "STRING_FIELD_CONFIG": "string",
+            "BOOL_FIELD_CONFIG": "bool",
+            "STATIC_CHOICE_FIELD_CONFIG": "staticChoice",
+            "COLLAPSIBLE_CONTAINER_FIELD_CONFIG": "collapsibleContainer",
+            "STATIC_NUMBER_FIELD_CONFIG": "staticNumberFieldConfig",
+        },
+    )
+
+    result = await update_project_definition_node(
+        info,
+        UUID(project_definition_id),
+        UUID(node_id),
+        ProjectDefinitionNodeCreationDto.parse_obj(node),
     )
 
     return result

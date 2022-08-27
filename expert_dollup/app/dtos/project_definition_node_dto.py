@@ -25,23 +25,23 @@ from .dynamic_primitive import (
 
 
 class IntFieldConfigDto(CamelModel):
-    unit: str
-    default_value: int
+    unit: Optional[str]
+    integer: int
 
 
 class DecimalFieldConfigDto(CamelModel):
-    unit: str
+    unit: Optional[str]
     precision: int
-    default_value: Decimal
+    numeric: Decimal
 
 
 class StringFieldConfigDto(CamelModel):
-    default_value: str
+    text: str
     transforms: List[str]
 
 
 class BoolFieldConfigDto(CamelModel):
-    default_value: bool
+    enabled: bool
 
 
 class StaticChoiceOptionDto(CamelModel):
@@ -52,7 +52,7 @@ class StaticChoiceOptionDto(CamelModel):
 
 class StaticChoiceFieldConfigDto(CamelModel):
     options: List[StaticChoiceOptionDto]
-    default_value: str
+    selected: str
 
 
 class StaticNumberFieldConfigDto(CamelModel):
@@ -131,9 +131,7 @@ value_type_lookup_map = {
 }
 
 
-class ProjectDefinitionNodeDto(CamelModel):
-    id: UUID
-    project_definition_id: UUID
+class ProjectDefinitionNodeCreationDto(CamelModel):
     name: str
     is_collection: bool
     instanciate_by_default: bool
@@ -144,6 +142,11 @@ class ProjectDefinitionNodeDto(CamelModel):
     field_details: Optional[FieldDetailsUnionDto]
     validator: Optional[JsonSchemaDto]
     path: List[UUID]
+
+
+class ProjectDefinitionNodeDto(ProjectDefinitionNodeCreationDto):
+    id: UUID
+    project_definition_id: UUID
     creation_date_utc: datetime
 
 

@@ -12,13 +12,15 @@ async def test_datasheet_definition(ac):
 
     @runner.step
     async def create_datasheet_definition():
-        project_definition = ProjectDefinitionDtoFactory()
-        response = await ac.post(
-            "/api/project_definition", data=project_definition.json()
+        expected_definition = ProjectDefinitionDtoFactory()
+        definition = await ac.post_json(
+            "/api/definitions", expected_definition, unwrap_with=ProjectDefinitionDto
         )
-        assert response.status_code == 200, response.json()
+        assert definition.json(
+            exclude={"id", "creation_date_utc"}
+        ) == expected_definition.json(exclude={"id", "creation_date_utc"})
 
-        return (project_definition,)
+        return (definition,)
 
     @runner.step
     async def create_datasheet_definition_element(
@@ -27,11 +29,9 @@ async def test_datasheet_definition(ac):
         datasheet_definition_element = DatasheetDefinitionElementDtoFactory(
             project_definition_id=project_definition.id
         )
-        response = await ac.post(
-            "/api/datasheet_definition_element",
-            data=datasheet_definition_element.json(),
+        await ac.post_json(
+            "/api/datasheet_definition_element", datasheet_definition_element
         )
-        assert response.status_code == 200, response.json()
 
         return (project_definition, datasheet_definition_element)
 
@@ -40,10 +40,10 @@ async def test_datasheet_definition(ac):
         project_definition: ProjectDefinitionDto,
         datasheet_definition_element: DatasheetDefinitionElementDto,
     ):
-        response = await ac.get(f"/api/project_definition/{project_definition.id}")
-        assert response.status_code == 200, response.json()
-
-        datasheet_definition_returned = unwrap(response, ProjectDefinitionDto)
+        datasheet_definition_returned = await ac.get_json(
+            f"/api/definitions/{project_definition.id}",
+            unwrap_with=ProjectDefinitionDto,
+        )
         assert project_definition == datasheet_definition_returned
 
         return (project_definition, datasheet_definition_element)
@@ -53,12 +53,10 @@ async def test_datasheet_definition(ac):
         project_definition: ProjectDefinitionDto,
         datasheet_definition_element: DatasheetDefinitionElementDto,
     ):
-        response = await ac.get(
-            f"/api/datasheet_definition_element/{datasheet_definition_element.id}"
+        element_definition = await ac.get_json(
+            f"/api/datasheet_definition_element/{datasheet_definition_element.id}",
+            unwrap_with=DatasheetDefinitionElementDto,
         )
-        assert response.status_code == 200, response.json()
-
-        element_definition = unwrap(response, DatasheetDefinitionElementDto)
         assert datasheet_definition_element == element_definition
 
         return (project_definition, datasheet_definition_element)
@@ -68,15 +66,14 @@ async def test_datasheet_definition(ac):
         project_definition: ProjectDefinitionDto,
         datasheet_definition_element: DatasheetDefinitionElementDto,
     ):
-        response = await ac.delete(
+        await ac.delete_json(
             f"/api/datasheet_definition_element/{datasheet_definition_element.id}"
         )
-        assert response.status_code == 200, response.json()
 
-        response = await ac.get(
-            f"/api/datasheet_definition_element/{datasheet_definition_element.id}"
+        await ac.get_json(
+            f"/api/datasheet_definition_element/{datasheet_definition_element.id}",
+            expected_status_code=404,
         )
-        assert response.status_code == 404, response.json()
 
         return (project_definition, datasheet_definition_element)
 
@@ -85,11 +82,10 @@ async def test_datasheet_definition(ac):
         project_definition: ProjectDefinitionDto,
         datasheet_definition_element: DatasheetDefinitionElementDto,
     ):
-        response = await ac.delete(f"/api/project_definition/{project_definition.id}")
-        assert response.status_code == 200, response.json()
-
-        response = await ac.get(f"/api/project_definition/{project_definition.id}")
-        assert response.status_code == 404, response.json()
+        await ac.delete_json(f"/api/definitions/{project_definition.id}")
+        await ac.get_json(
+            f"/api/definitions/{project_definition.id}", expected_status_code=404
+        )
 
         return (project_definition, datasheet_definition_element)
 

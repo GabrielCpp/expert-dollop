@@ -1,45 +1,52 @@
 from fastapi import APIRouter, Depends, Query
 from typing import Optional
-from uuid import UUID
-from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.starlette_injection import RequestHandler, MappingChain
-from expert_dollup.app.dtos import (
-    ProjectDefinitionNodeDto,
-    ProjectDefinitionNodePageDto,
-    ProjectDefinitionNodeTreeDto,
-)
-from expert_dollup.core.domains import (
-    ProjectDefinitionNode,
-    ProjectDefinitionNodeTree,
-)
+from uuid import UUID, uuid4
+from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.usecases import ProjectDefinitionNodeUseCase
 from expert_dollup.shared.database_services import Page
+from expert_dollup.app.dtos import *
+from expert_dollup.core.domains import *
 
 
 router = APIRouter()
 
 
-@router.get("/project_definition/{project_definition_id}/node/{id}")
+@router.get("/definitions/{project_definition_id}/nodes/{id}")
 async def find_project_definition_node(
     project_definition_id: UUID,
     id: UUID,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:read"])
+    ),
 ):
     return await handler.handle(
         usecase.find_by_id, id, MappingChain(out_dto=ProjectDefinitionNodeDto)
     )
 
 
-@router.post("/project_definition_node")
+@router.post("/definitions/{project_definition_id}/nodes")
 async def create_project_definition_node(
-    project_definition_node: ProjectDefinitionNodeDto,
+    project_definition_id: UUID,
+    project_definition_node: ProjectDefinitionNodeCreationDto,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
+    clock=Depends(Inject(Clock)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:create"])
+    ),
 ):
+    node = ProjectDefinitionNodeDto(
+        id=uuid4(),
+        project_definition_id=project_definition_id,
+        creation_date_utc=clock.utcnow(),
+        **project_definition_node.dict()
+    )
+
     return await request_handler.handle(
         usecase.add,
-        project_definition_node,
+        node,
         MappingChain(
             dto=ProjectDefinitionNodeDto,
             domain=ProjectDefinitionNode,
@@ -48,15 +55,28 @@ async def create_project_definition_node(
     )
 
 
-@router.put("/project_definition_node")
-async def replace_project_definition_node(
-    project_definition_node: ProjectDefinitionNodeDto,
+@router.put("/definitions/{project_definition_id}/nodes/{node_id}")
+async def update_project_definition_node(
+    project_definition_id: UUID,
+    node_id: UUID,
+    creation_dto: ProjectDefinitionNodeCreationDto,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
+    clock=Depends(Inject(Clock)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:update"])
+    ),
 ):
+    node = ProjectDefinitionNodeDto(
+        id=node_id,
+        project_definition_id=project_definition_id,
+        creation_date_utc=clock.utcnow(),
+        **creation_dto.dict()
+    )
+
     return await request_handler.handle(
         usecase.update,
-        project_definition_node,
+        node,
         MappingChain(
             dto=ProjectDefinitionNodeDto,
             domain=ProjectDefinitionNode,
@@ -65,14 +85,21 @@ async def replace_project_definition_node(
     )
 
 
-@router.delete("/project_definition/{project_definition_id}/node/{id}")
+@router.delete("/definitions/{project_definition_id}/nodes/{node_id}")
 async def delete_project_definition_node(
-    id: UUID, usecase=Depends(Inject(ProjectDefinitionNodeUseCase))
+    project_definition_id: UUID,
+    node_id: UUID,
+    usecase=Depends(
+        Inject(ProjectDefinitionNodeUseCase),
+    ),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:delete"])
+    ),
 ):
-    await usecase.delete_by_id(id)
+    await usecase.delete_by_id(node_id)
 
 
-@router.get("/{project_definition_id}/project_definition_nodes")
+@router.get("/definitions/{project_definition_id}/nodes")
 async def get_project_definition_node_by_project(
     project_definition_id: UUID,
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
@@ -94,7 +121,7 @@ async def get_project_definition_node_by_project(
     )
 
 
-@router.get("/project_definition/{project_definition_id}/root_sections")
+@router.get("/definitions/{project_definition_id}/root_sections")
 async def find_root_sections(
     project_definition_id: UUID,
     usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
@@ -110,9 +137,7 @@ async def find_root_sections(
     )
 
 
-@router.get(
-    "/project_definition/{project_definition_id}/root_section_nodes/{root_section_id}"
-)
+@router.get("/definitions/{project_definition_id}/root_section_nodes/{root_section_id}")
 async def find_root_section_nodes(
     project_definition_id: UUID,
     root_section_id: UUID,
@@ -132,7 +157,7 @@ async def find_root_section_nodes(
     )
 
 
-@router.get("/project_definition/{project_definition_id}/form_content/{form_id}")
+@router.get("/definitions/{project_definition_id}/form_contents/{form_id}")
 async def find_form_content(
     project_definition_id: UUID,
     form_id: UUID,

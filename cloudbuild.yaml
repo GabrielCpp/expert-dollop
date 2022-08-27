@@ -73,28 +73,18 @@ steps:
         docker pull -q $$BUILD_CI_IMAGE
         docker build --target=release -t $$BUILD_IMAGE:$$BUILD_TAG --cache-from $$BUILD_CI_IMAGE . 
         docker push $$BUILD_IMAGE:$$BUILD_TAG
-    env:
-      - "DOCKER_BUILDKIT=1"
 
-  # Deploy
-  - name: gcr.io/cloud-builders/docker
-    id: deploy
-    waitFor: ["build"]
-    entrypoint: bash
-    args:
-      - -ceux
-      - |
-        source /workspace/build_vars
         if [ "$$BUILD_BRANCH_NAME" != "main" ]; then exit 0; fi
-
         docker pull $$BUILD_IMAGE:$$BUILD_TAG
         docker tag $$BUILD_IMAGE:$$BUILD_TAG $$BUILD_IMAGE:latest
         docker image push $$BUILD_IMAGE:latest
+    env:
+      - "DOCKER_BUILDKIT=1"
 
   # Migrate
   - name: "gcr.io/cloud-builders/docker"
     id: migrate
-    waitFor: ["test"]
+    waitFor: ["build"]
     entrypoint: "bash"
     secretEnv: ["MIGRATION_USER_AUTH_DB", "MIGRATION_USER_EXPERT_DOLLUP_DB"]
     args:
@@ -108,7 +98,21 @@ steps:
     env:
       - "DOCKER_BUILDKIT=1"
 
-    # TODO: Trigger pulumi
+  # Deploy
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    id: deploy
+    entrypoint: gcloud
+    waitFor: ["migrate", "tag"]
+    args:
+      [
+        "run",
+        "deploy",
+        "$$_SERVICE_NAME",
+        "--image",
+        "$$BUILD_IMAGE:$$BUILD_TAG",
+        "--region",
+        "$$_REGION",
+      ]
 logsBucket: $_LOGS_BUCKET_NAME
 options:
   logging: GCS_ONLY

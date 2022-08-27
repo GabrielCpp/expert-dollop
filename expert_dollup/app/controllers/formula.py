@@ -12,7 +12,7 @@ from expert_dollup.core.usecases import FormulaUseCase
 router = APIRouter()
 
 
-@router.get("/project_definition/{project_definition_id}/formulas")
+@router.get("/definitions/{project_definition_id}/formulas")
 async def get_formulas(
     project_definition_id: UUID,
     limit: int = 10,

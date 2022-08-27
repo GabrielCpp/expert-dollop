@@ -118,7 +118,6 @@ class ProjectDefinitionNodeDao(BaseModel):
     triggers: List[TriggerDao]
     meta: NodeMetaConfigDao
     field_details: Optional[FieldDetailsUnionDao]
-    default_value: PrimitiveWithNoneUnionDao
     path: str
     level: int
     display_query_internal_id: UUID

@@ -12,13 +12,13 @@ JsonSchema = dict
 
 @dataclass
 class IntFieldConfig:
-    unit: str
+    unit: Optional[str]
     default_value: int
 
 
 @dataclass
 class DecimalFieldConfig:
-    unit: str
+    unit: Optional[str]
     precision: int
     default_value: Decimal
 

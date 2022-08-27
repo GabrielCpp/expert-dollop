@@ -145,7 +145,7 @@ def map_field_details_union_from_dao(
 
     if isinstance(src, DecimalFieldConfigDao):
         return DecimalFieldConfig(
-            unit=src.unit, precision=src.precision, default_value=src.number
+            unit=src.unit, precision=src.precision, default_value=src.numeric
         )
 
     if isinstance(src, StringFieldConfigDao):
@@ -202,7 +202,7 @@ def map_field_details_union_to_dao(
 
     if isinstance(src, DecimalFieldConfig):
         return DecimalFieldConfigDao(
-            unit=src.unit, precision=src.precision, number=src.default_value
+            unit=src.unit, precision=src.precision, numeric=src.default_value
         )
 
     if isinstance(src, StringFieldConfig):
@@ -489,7 +489,6 @@ def map_project_definition_node_filter_to_dict(
             "is_collection": ("is_collection", None),
             "instanciate_by_default": ("instanciate_by_default", None),
             "order_index": ("order_index", None),
-            "default_value": ("default_value", None),
             "path": ("path", join_uuid_path),
             "display_query_internal_id": ("display_query_internal_id", None),
         },

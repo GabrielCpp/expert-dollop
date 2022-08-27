@@ -77,49 +77,53 @@ def map_project_definition_to_dto(
 def map_int_field_config_from_dto(
     src: IntFieldConfigDto, mapper: Mapper
 ) -> IntFieldConfig:
-    return IntFieldConfig(unit=src.unit)
+    return IntFieldConfig(unit=src.unit, default_value=src.integer)
 
 
 def map_int_field_config_to_dto(
     src: IntFieldConfig, mapper: Mapper
 ) -> IntFieldConfigDto:
-    return IntFieldConfigDto(unit=src.unit)
+    return IntFieldConfigDto(unit=src.unit, integer=src.default_value)
 
 
 def map_decimal_field_config_from_dto(
     src: DecimalFieldConfigDto, mapper: Mapper
 ) -> DecimalFieldConfig:
-    return DecimalFieldConfig(unit=src.unit, precision=src.precision)
+    return DecimalFieldConfig(
+        unit=src.unit, precision=src.precision, default_value=src.numeric
+    )
 
 
 def map_decimal_field_config_to_dto(
     src: DecimalFieldConfig, mapper: Mapper
 ) -> DecimalFieldConfigDto:
-    return DecimalFieldConfigDto(unit=src.unit, precision=src.precision)
+    return DecimalFieldConfigDto(
+        unit=src.unit, precision=src.precision, numeric=src.default_value
+    )
 
 
 def map_string_field_config_from_dto(
     src: StringFieldConfigDto, mapper: Mapper
 ) -> StringFieldConfig:
-    return StringFieldConfig(transforms=src.transforms)
+    return StringFieldConfig(transforms=src.transforms, default_value=src.text)
 
 
 def map_string_field_config_to_dto(
     src: StringFieldConfig, mapper: Mapper
 ) -> StringFieldConfigDto:
-    return StringFieldConfigDto(transforms=src.transforms)
+    return StringFieldConfigDto(transforms=src.transforms, text=src.default_value)
 
 
 def map_bool_field_config_from_dto(
     src: BoolFieldConfigDto, mapper: Mapper
 ) -> BoolFieldConfig:
-    return BoolFieldConfig(default_value=src.default_value)
+    return BoolFieldConfig(default_value=src.enabled)
 
 
 def map_bool_field_config_to_dto(
     src: BoolFieldConfig, mapper: Mapper
 ) -> BoolFieldConfigDto:
-    return BoolFieldConfigDto(default_value=src.default_value)
+    return BoolFieldConfigDto(enabled=src.default_value)
 
 
 def map_static_choice_field_config_from_dto(
@@ -131,7 +135,8 @@ def map_static_choice_field_config_from_dto(
                 id=option.id, label=option.label, help_text=option.help_text
             )
             for option in src.options
-        ]
+        ],
+        default_value=src.selected,
     )
 
 
@@ -144,7 +149,8 @@ def map_static_choice_field_config_to_dto(
                 id=option.id, label=option.label, help_text=option.help_text
             )
             for option in src.options
-        ]
+        ],
+        selected=src.default_value,
     )
 
 
@@ -213,18 +219,6 @@ field_details_union_dto_mappings = RevervibleUnionMapping(
 )
 
 
-def map_bool_field_config_from_dto(
-    src: BoolFieldConfigDto, mapper: Mapper
-) -> BoolFieldConfig:
-    return BoolFieldConfig(default_value=src.default_value)
-
-
-def map_bool_field_config_to_dto(
-    src: BoolFieldConfig, mapper: Mapper
-) -> BoolFieldConfigDto:
-    return BoolFieldConfigDto(default_value=src.default_value)
-
-
 def map_collapsible_container_field_config_from_dto(
     src: CollapsibleContainerFieldConfigDto, mapper: Mapper
 ) -> CollapsibleContainerFieldConfig:
@@ -255,76 +249,6 @@ def map_static_number_field_config_to_dto(
         precision=src.precision,
         unit=src.unit,
     )
-
-
-def map_decimal_field_config_from_dto(
-    src: DecimalFieldConfigDto, mapper: Mapper
-) -> DecimalFieldConfig:
-    return DecimalFieldConfig(
-        precision=src.precision, unit=src.unit, default_value=src.default_value
-    )
-
-
-def map_decimal_field_config_to_dto(
-    src: DecimalFieldConfig, mapper: Mapper
-) -> DecimalFieldConfigDto:
-    return DecimalFieldConfigDto(
-        precision=src.precision, unit=src.unit, default_value=src.default_value
-    )
-
-
-def map_static_choice_field_config_from_dto(
-    src: StaticChoiceFieldConfigDto, mapper: Mapper
-) -> StaticChoiceFieldConfig:
-    return StaticChoiceFieldConfig(
-        options=[
-            StaticChoiceOption(
-                id=option.id, label=option.label, help_text=option.help_text
-            )
-            for option in src.options
-        ],
-        default_value=src.default_value,
-    )
-
-
-def map_static_choice_field_config_to_dto(
-    src: StaticChoiceFieldConfig, mapper: Mapper
-) -> StaticChoiceFieldConfigDto:
-    return StaticChoiceFieldConfigDto(
-        options=[
-            StaticChoiceOptionDto(
-                id=option.id, label=option.label, help_text=option.help_text
-            )
-            for option in src.options
-        ],
-        default_value=src.default_value,
-    )
-
-
-def map_string_field_config_from_dto(
-    src: StringFieldConfigDto, mapper: Mapper
-) -> StringFieldConfig:
-    return StringFieldConfig(transforms=src.transforms, default_value=src.default_value)
-
-
-def map_string_field_config_to_dto(
-    src: StringFieldConfig, mapper: Mapper
-) -> StringFieldConfigDto:
-    return StringFieldConfigDto(
-        transforms=src.transforms, default_value=src.default_value
-    )
-
-
-def map_int_field_config_from_dto(
-    src: IntFieldConfigDto, mapper: Mapper
-) -> IntFieldConfig:
-    return IntFieldConfig(unit=src.unit, default_value=src.default_value)
-
-
-def map_int_field_config_to_dto(
-    src: IntFieldConfig, mapper: Mapper
-) -> IntFieldConfigDto:
-    return IntFieldConfigDto(unit=src.unit, default_value=src.default_value)
 
 
 def map_node_meta_config_from_dto(
@@ -1270,3 +1194,7 @@ def map_supplied_item_to_dto(src: SuppliedItem, mapper: Mapper) -> SuppliedItemD
         child_reference_id=src.child_reference_id,
         organization_id=src.organization_id,
     )
+
+
+def map_measure_unit_to_dto(src: MeasureUnit, mapper: Mapper) -> MeasureUnitDto:
+    return MeasureUnitDto(id=src.id)
