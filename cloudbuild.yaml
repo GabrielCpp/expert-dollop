@@ -107,11 +107,11 @@ steps:
       [
         "run",
         "deploy",
-        "$$_SERVICE_NAME",
+        "$_SERVICE_NAME",
         "--image",
         "$$BUILD_IMAGE:$$BUILD_TAG",
         "--region",
-        "$$_REGION",
+        "$_REGION",
       ]
 logsBucket: $_LOGS_BUCKET_NAME
 options:
