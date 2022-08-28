@@ -12,25 +12,6 @@ from expert_dollup.core.domains import *
 from .types import mutation
 
 
-@mutation.field("addTranslations")
-@inject_graphql_route(create_translation)
-@convert_kwargs_to_snake_case
-async def resolve_add_translations(
-    _: Any,
-    info: GraphQLResolveInfo,
-    translations: List[dict],
-    create_translation: callable,
-):
-    results = []
-    for translation in translations:
-        result = await create_translation(
-            info, TranslationInputDto.parse_obj(translation)
-        )
-        results.append(result)
-
-    return results
-
-
 @mutation.field("updateTranslations")
 @inject_graphql_route(update_translation)
 @convert_kwargs_to_snake_case

@@ -109,7 +109,7 @@ import_method_by_model_id: Dict[str, ImportationMethod] = {
         domain=Datasheet,
         get_method=lambda u: u.import_datasheets,
     ),
-    "/api/datasheets/element": ImportationMethod(
+    "/api/datasheet/element": ImportationMethod(
         dto=DatasheetElementImportDto,
         domain=DatasheetElement,
         get_method=lambda u: u.import_datasheet_elements,

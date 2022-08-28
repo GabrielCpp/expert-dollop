@@ -18,7 +18,10 @@ from pydantic import parse_obj_as
 @inject_graphql_route(find_project_root_sections, ["project_id"])
 @convert_kwargs_to_snake_case
 async def resolve_find_root_sections(
-    _: Any, info: GraphQLResolveInfo, project_id: str, find_root_sections: callable
+    _: Any,
+    info: GraphQLResolveInfo,
+    project_id: str,
+    find_project_root_sections: callable,
 ):
     return await find_project_root_sections(info, UUID(project_id))
 

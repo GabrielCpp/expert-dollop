@@ -25,14 +25,14 @@ from .dynamic_primitive import (
 
 
 class IntFieldConfigDto(CamelModel):
-    unit: Optional[str]
     integer: int
+    unit: Optional[str]
 
 
 class DecimalFieldConfigDto(CamelModel):
-    unit: Optional[str]
-    precision: int
     numeric: Decimal
+    precision: int
+    unit: Optional[str]
 
 
 class StringFieldConfigDto(CamelModel):
@@ -51,8 +51,8 @@ class StaticChoiceOptionDto(CamelModel):
 
 
 class StaticChoiceFieldConfigDto(CamelModel):
-    options: List[StaticChoiceOptionDto]
     selected: str
+    options: List[StaticChoiceOptionDto]
 
 
 class StaticNumberFieldConfigDto(CamelModel):

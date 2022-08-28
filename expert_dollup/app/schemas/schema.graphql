@@ -109,6 +109,7 @@ type StaticChoiceOption {
   id: String!
   label: String!
   helpText: String!
+  translated: [Translation!]!
 }
 
 type StaticChoiceFieldConfig {
@@ -231,12 +232,12 @@ input StaticChoiceOptionInput {
   id: String!
   label: String!
   helpText: String!
-  selected: String!
+  translated: [TranslationInput!]!
 }
 
 input StaticChoiceFieldConfigInput {
-  validator: JsonSchema!
   options: [StaticChoiceOptionInput!]!
+  selected: String!
 }
 
 input CollapsibleContainerFieldConfigInput {
@@ -311,6 +312,7 @@ input ProjectDefinitionNodeCreationInput {
   fieldDetails: FieldDetailsUnionInput
   triggers: [TriggerInput]!
   meta: NodeMetaConfigInput!
+  translated: [TranslationInput!]!
 }
 
 type ProjectDefinitionNode {
@@ -654,8 +656,6 @@ type Query {
 }
 
 input TranslationInput {
-  ressourceId: String!
-  scope: String!
   locale: String!
   name: String!
   value: String!
@@ -688,7 +688,6 @@ input DatasheetInput {
 
 type Mutation {
   # Translations
-  addTranslations(translations: [TranslationInput!]!): [Translation!]!
   updateTranslations(translations: [TranslationUpdateInput!]!): [Translation!]!
 
   # ProjectDefinitionNode

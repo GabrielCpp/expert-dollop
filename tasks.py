@@ -21,7 +21,7 @@ async def get_token(oauth: Optional[str] = None):
     from dotenv import load_dotenv
     from expert_dollup.app.modules import build_container
     from expert_dollup.shared.starlette_injection import AuthService
-    from tests.fixtures.generators.super_user import SuperUser
+    from tests.fixtures import SuperUser
 
     oauth = SuperUser.oauth_id if oauth is None else oauth
 
