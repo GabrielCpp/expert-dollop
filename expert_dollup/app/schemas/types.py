@@ -21,6 +21,7 @@ datasheet_definition_element = ObjectType("DatasheetDefinitionElement")
 project_definition = ObjectType("ProjectDefinition")
 project_details = ObjectType("ProjectDetails")
 project_definition_node = ObjectType("ProjectDefinitionNode")
+static_choice_option = ObjectType("StaticChoiceOption")
 field_value = UnionType("FieldValue")
 field_details_union_type = UnionType("FieldDetailsUnion")
 datasheet = ObjectType("Datasheet")
@@ -43,6 +44,7 @@ types = [
     field_details_union_type,
     json_schema_scalar,
     supplied_item,
+    static_choice_option,
 ]
 
 

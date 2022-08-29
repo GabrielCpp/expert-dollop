@@ -2,16 +2,18 @@ from uuid import UUID
 from typing import Any, Optional
 from ariadne import ObjectType, QueryType, convert_kwargs_to_snake_case
 from ariadne.types import GraphQLResolveInfo
-from expert_dollup.shared.starlette_injection import (
-    inject_graphql_route,
-    inject_graphql_handler,
-    collapse_union,
-)
+from expert_dollup.shared.starlette_injection import *
 from expert_dollup.app.controllers.translation import *
 from expert_dollup.app.controllers.project.project_definition_node import *
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
-from .types import query, mutation, project_definition, project_definition_node
+from .types import (
+    query,
+    mutation,
+    project_definition,
+    project_definition_node,
+    static_choice_option,
+)
 
 
 @project_definition.field("rootSections")
@@ -192,11 +194,13 @@ async def resolve_update_project_definition_node(
 
 @project_definition_node.field("translated")
 @inject_graphql_route(find_translation_in_scope, ["ressource_id", "scope"])
-async def resolve_project_definition_node_translations(
+async def resolve_project_definition_node_translated(
     parent: ProjectDefinitionNodeDto,
     info: GraphQLResolveInfo,
     find_translation_in_scope: callable,
 ):
-    return await find_translation_in_scope(
+    translations = await find_translation_in_scope(
         info, parent.project_definition_id, parent.id
     )
+
+    return translations
