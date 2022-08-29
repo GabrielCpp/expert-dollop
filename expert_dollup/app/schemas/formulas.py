@@ -29,11 +29,6 @@ async def resolve_find_project_definition_formulas(
     handler: GraphqlPageHandler[Paginator[Formula]],
     after: Optional[str] = None,
 ):
-    user = await info.context.container.get(AuthService).can_perform_required(
-        info.context.request,
-        ["formula:get"],
-    )
-
     return await handler.handle(
         FormulaExpressionDto,
         FormulaFilter(project_definition_id=UUID(project_definition_id)),
