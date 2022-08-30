@@ -220,14 +220,13 @@ def generate_env(
         f"AUTH_DB_URL={auth_db}://{crendetial_part}{hostname}:27017/auth",
         f"JWT_PUBLIC_KEY={key_base64}",
         f"JWT_PRIVATE_KEY={private_key_base64}",
-        f"HOSTNAME={hostname}",
         "FASTAPI_ENV=development",
-        f"DB_USERNAME={username}",
-        f"DB_PASSWORD={password}",
         "PORT=8000",
         'JWT_AUDIENCES=["https://dev-id3ta63u.us.auth0.com/api/v2/","https://dev-id3ta63u.us.auth0.com/userinfo"]',
         "JWT_ISSUER=https://dev-id3ta63u.us.auth0.com/",
         "APP_BUCKET_NAME=expertdollup",
+        f"DB_USERNAME={username}",
+        f"DB_PASSWORD={password}",
     ]
 
     with open(".env", "w") as f:

@@ -78,10 +78,11 @@ def bind_database_context(binder: Binder) -> None:
 
 def bind_storage(binder: Binder) -> None:
     settings = load_app_settings()
-    storage = (
-        StorageProxy(LocalStorage(settings.app_bucket_name), storage_exception_mappings)
+    storage = StorageProxy(
+        LocalStorage(settings.app_bucket_name)
         if is_development()
-        else GoogleCloudStorage(settings.app_bucket_name)
+        else GoogleCloudStorage(settings.app_bucket_name),
+        storage_exception_mappings,
     )
     binder.bind(ExpertDollupStorage, to=storage, scope=singleton)
 
