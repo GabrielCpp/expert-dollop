@@ -2,7 +2,7 @@ import asyncio
 from pathlib import Path
 from google.cloud.storage import Client
 from google.cloud.exceptions import NotFound
-from .storage_client import StorageClient
+from .storage_client import StorageClient, ObjectNotFound
 
 
 class GoogleCloudStorage(StorageClient):
