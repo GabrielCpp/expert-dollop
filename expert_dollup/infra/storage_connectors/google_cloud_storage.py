@@ -1,6 +1,7 @@
 import asyncio
 from pathlib import Path
 from google.cloud.storage import Client
+from google.cloud.exceptions import NotFound
 from .storage_client import StorageClient
 
 
@@ -20,7 +21,12 @@ class GoogleCloudStorage(StorageClient):
     async def download_binary(self, path: str) -> bytes:
         loop = asyncio.get_event_loop()
         blob = self.bucket.blob(path)
-        b = await loop.run_in_executor(None, blob.download_as_bytes)
+
+        try:
+            b = await loop.run_in_executor(None, blob.download_as_bytes)
+        except NotFound:
+            raise ObjectNotFound("Object not found", path=path)
+
         return b
 
     @property

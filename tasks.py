@@ -310,25 +310,45 @@ def db_truncate(c):
 
 
 @task(name="upload-base-project")
-def upload_base_project(c):
+def upload_base_project(c, token=None, userid=None, hostname=None):
     cwd = getcwd()
-    db_truncate(c)
-    load_default_users(c)
-    token = asyncio.run(get_token())
+
+    if hostname is None:
+        asyncio.run(truncate_db("EXPERT_DOLLUP_DB_URL"))
+        hostname = "http://localhost:8000"
+
+    if token is None:
+        asyncio.run(truncate_db("AUTH_DB_URL"))
+        load_default_users(c)
+        token = asyncio.run(get_token())
+
+    if userid is None:
+        userid = "5d9c68c6-c50e-d3d0-2a2f-cf54f63993b6"
+
     c.run(
-        f"curl -X POST -H 'Authorization: Bearer {token}' -H \"Content-Type: multipart/form-data\" -F 'file=@{cwd}/project-setup.jsonl' -F user_id=5d9c68c6-c50e-d3d0-2a2f-cf54f63993b6 http://localhost:8000/api/ressources/imports"
+        f"curl -X POST -H 'Authorization: Bearer {token}' -H \"Content-Type: multipart/form-data\" -F 'file=@{cwd}/project-setup.jsonl' -F user_id={userid} {hostname}/api/ressources/imports"
     )
 
 
 @task(name="upload-project")
-def upload_project(c):
+def upload_project(c, token=None, userid=None, hostname=None):
     cwd = getcwd()
-    token = asyncio.run(get_token())
+
+    if hostname is None:
+        hostname = "http://localhost:8000"
+
+    if token is None:
+        token = asyncio.run(get_token())
+
+        c.run(
+            f"curl -X DELETE -H 'Authorization: Bearer {token}'  {hostname}/api/projects/11ec4bbb-ebe8-fa7c-bcc3-42010a800002"
+        )
+
+    if userid is None:
+        userid = "5d9c68c6-c50e-d3d0-2a2f-cf54f63993b6"
+
     c.run(
-        f"curl -X DELETE -H 'Authorization: Bearer {token}'  http://localhost:8000/api/projects/11ec4bbb-ebe8-fa7c-bcc3-42010a800002"
-    )
-    c.run(
-        f"curl -X POST -H 'Authorization: Bearer {token}' -H \"Content-Type: multipart/form-data\" -F 'file=@{cwd}/project.jsonl' -F user_id=5d9c68c6-c50e-d3d0-2a2f-cf54f63993b6 http://localhost:8000/api/ressources/imports"
+        f"curl -X POST -H 'Authorization: Bearer {token}' -H \"Content-Type: multipart/form-data\" -F 'file=@{cwd}/project.jsonl' -F user_id={userid} {hostname}/api/ressources/imports"
     )
 
 
