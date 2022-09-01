@@ -99,7 +99,7 @@ steps:
       - "DOCKER_BUILDKIT=1"
 
   # Deploy
-  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+  - name: "gcr.io/cloud-builders/gcloud"
     id: deploy
     waitFor: ["migrate"]
     entrypoint: bash

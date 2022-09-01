@@ -60,7 +60,9 @@ async def update_project_definition_node(
     project_definition_id: UUID,
     node_id: UUID,
     creation_dto: ProjectDefinitionNodeCreationDto,
-    usecase=Depends(Inject(ProjectDefinitionNodeUseCase)),
+    usecase: ProjectDefinitionNodeUseCase = Depends(
+        Inject(ProjectDefinitionNodeUseCase)
+    ),
     request_handler=Depends(Inject(RequestHandler)),
     clock=Depends(Inject(Clock)),
     user=Depends(

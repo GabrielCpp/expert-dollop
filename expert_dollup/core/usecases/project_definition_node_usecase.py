@@ -37,8 +37,8 @@ class ProjectDefinitionNodeUseCase:
 
     async def update(self, domain: ProjectDefinitionNode) -> None:
         await self._ensure_node_is_valid(domain)
-        await self.project_definition_node_repository.update(domain)
-        return await self.find_by_id(domain.id)
+        await self.project_definition_node_repository.upserts([domain])
+        return domain
 
     async def find_by_id(self, id: UUID) -> ProjectDefinitionNode:
         result = await self.project_definition_node_repository.find_by_id(id)

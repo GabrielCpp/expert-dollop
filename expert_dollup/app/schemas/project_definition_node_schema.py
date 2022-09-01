@@ -126,6 +126,7 @@ async def resolve_find_project_definition_node(
 
 @mutation.field("addProjectDefinitionNode")
 @inject_graphql_route(create_project_definition_node, ["project_definition_id"])
+@convert_kwargs_to_snake_case
 async def resolve_add_project_definition_node(
     _: Any,
     info: GraphQLResolveInfo,
@@ -135,15 +136,15 @@ async def resolve_add_project_definition_node(
 ):
     node = collapse_union(
         node,
-        ["fieldDetails"],
+        ["field_details"],
         {
             "INT_FIELD_CONFIG": "int",
             "DECIMAL_FIELD_CONFIG": "decimal",
             "STRING_FIELD_CONFIG": "string",
             "BOOL_FIELD_CONFIG": "bool",
-            "STATIC_CHOICE_FIELD_CONFIG": "staticChoice",
-            "COLLAPSIBLE_CONTAINER_FIELD_CONFIG": "collapsibleContainer",
-            "STATIC_NUMBER_FIELD_CONFIG": "staticNumberFieldConfig",
+            "STATIC_CHOICE_FIELD_CONFIG": "static_choice",
+            "COLLAPSIBLE_CONTAINER_FIELD_CONFIG": "collapsible_container",
+            "STATIC_NUMBER_FIELD_CONFIG": "static_number_field_config",
         },
     )
 
@@ -160,6 +161,7 @@ async def resolve_add_project_definition_node(
 @inject_graphql_route(
     update_project_definition_node, ["project_definition_id", "node_id"]
 )
+@convert_kwargs_to_snake_case
 async def resolve_update_project_definition_node(
     _: Any,
     info: GraphQLResolveInfo,
@@ -170,15 +172,15 @@ async def resolve_update_project_definition_node(
 ):
     node = collapse_union(
         node,
-        ["fieldDetails"],
+        ["field_details"],
         {
             "INT_FIELD_CONFIG": "int",
             "DECIMAL_FIELD_CONFIG": "decimal",
             "STRING_FIELD_CONFIG": "string",
             "BOOL_FIELD_CONFIG": "bool",
-            "STATIC_CHOICE_FIELD_CONFIG": "staticChoice",
-            "COLLAPSIBLE_CONTAINER_FIELD_CONFIG": "collapsibleContainer",
-            "STATIC_NUMBER_FIELD_CONFIG": "staticNumberFieldConfig",
+            "STATIC_CHOICE_FIELD_CONFIG": "static_choice",
+            "COLLAPSIBLE_CONTAINER_FIELD_CONFIG": "collapsible_container",
+            "STATIC_NUMBER_FIELD_CONFIG": "static_number_field_config",
         },
     )
 
@@ -194,6 +196,7 @@ async def resolve_update_project_definition_node(
 
 @project_definition_node.field("translated")
 @inject_graphql_route(find_translation_in_scope, ["ressource_id", "scope"])
+@convert_kwargs_to_snake_case
 async def resolve_project_definition_node_translated(
     parent: ProjectDefinitionNodeDto,
     info: GraphQLResolveInfo,
