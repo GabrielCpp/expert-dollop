@@ -3,7 +3,7 @@ from typing import Dict
 from expert_dollup.core.domains.project_definition import ProjectDefinition
 from expert_dollup.core.exceptions import ValidationError, InvalidUsageError
 from expert_dollup.core.domains import *
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
 from expert_dollup.shared.starlette_injection import Clock
 
@@ -11,14 +11,12 @@ from expert_dollup.shared.starlette_injection import Clock
 class DatasheetElementUseCase:
     def __init__(
         self,
-        datasheet_service: CollectionService[Datasheet],
-        datasheet_element_service: CollectionService[DatasheetElement],
+        datasheet_service: Repository[Datasheet],
+        datasheet_element_service: Repository[DatasheetElement],
         schema_validator: SchemaValidator,
-        datasheet_definition_element_service: CollectionService[
-            DatasheetDefinitionElement
-        ],
-        ressource_service: CollectionService[Ressource],
-        project_definition_service: CollectionService[ProjectDefinition],
+        datasheet_definition_element_service: Repository[DatasheetDefinitionElement],
+        ressource_service: Repository[Ressource],
+        project_definition_service: Repository[ProjectDefinition],
         clock: Clock,
     ):
         self.datasheet_service = datasheet_service

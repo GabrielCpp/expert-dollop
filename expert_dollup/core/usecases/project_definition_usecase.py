@@ -1,5 +1,5 @@
 from uuid import UUID
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.exceptions import RessourceNotFound
 from expert_dollup.core.domains import *
 from expert_dollup.infra.providers import WordProvider
@@ -9,8 +9,8 @@ from expert_dollup.core.utils.ressource_permissions import authorization_factory
 class ProjectDefinitonUseCase:
     def __init__(
         self,
-        service: CollectionService[ProjectDefinition],
-        ressource_service: CollectionService[Ressource],
+        service: Repository[ProjectDefinition],
+        ressource_service: Repository[Ressource],
         word_provider: WordProvider,
     ):
         self.service = service

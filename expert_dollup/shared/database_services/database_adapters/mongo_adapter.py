@@ -14,13 +14,14 @@ from expert_dollup.shared.automapping import Mapper
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 from ..batch_helper import batch
-from ..collection_mapper import CollectionMapper
+from ..collection_element_mapping import CollectionElementMapping
 from ..db_agnotist_query_builder import DbAgnotistQueryBuilder
 from ..adapter_interfaces import (
-    CollectionService,
+    InternalRepository,
     QueryBuilder,
     WhereFilter,
     DbConnection,
+    RepositoryMetadata,
 )
 from ..simplifier import Simplifier
 
@@ -55,7 +56,7 @@ class CollectionDetails:
             return str(pk)
 
         if len(self.pimary_keys) > 1:
-            d = mapper.map(pk, dict, pk.__class__)
+            d = self.unfold_query(pk, mapper)
             return "_".join(str(d[name]) for name in self.pimary_keys)
 
         return pk
@@ -69,13 +70,17 @@ class CollectionDetails:
             ), f"Collection count is not enabled for this {self.name}"
             return COLLECTION_STATS_ID
 
-        d = mapper.map(query_filter, dict, query_filter.__class__)
+        d = self.unfold_query(query_filter, mapper)
         keys_set = frozenset(d.keys())
         assert (
             keys_set in self.key_counts
         ), f"Filter type '{keys_set}' is unsuported by {self.name}, avaiable options are {self.key_counts}"
 
         return build_count_key_id(d, keys_set)
+
+    def unfold_query(self, query_filter: QueryFilter, mapper: Mapper):
+        d = mapper.map(query_filter, dict, query_filter.__class__)
+        return d
 
 
 from pymongo.errors import InvalidURI
@@ -105,27 +110,24 @@ class MongoConnection(DbConnection):
         self.db_name = urlparse(connection_string).path.strip("/ ")
         self.collections: Dict[Type, CollectionDetails] = {}
 
-    def get_collection_service(self, meta: Type, mapper: Mapper):
+    def get_collection_service(self, meta: RepositoryMetadata, mapper: Mapper):
         return MongoCollection(
             meta, self, self._client.get_database(self.db_name), mapper
         )
 
-    def load_metadatas(self, dao_types):
+    def load_metadatas(self, metadatas: List[RepositoryMetadata]):
         self.collections = {}
 
-        for dao_type in dao_types:
-            if not hasattr(dao_type, "Meta"):
-                continue
-
-            schema = dao_type.schema()
+        for metadata in metadatas:
+            schema = metadata.dao.schema()
             assert schema.get("type") == "object"
             assert "properties" in schema
 
-            meta = dao_type.Meta
+            meta = metadata.dao.Meta
             table_name = schema["title"]
             pimary_keys = list(meta.pk) if isinstance(meta.pk, tuple) else [meta.pk]
             options = getattr(meta, "options", {}).get("firestore", {})
-            self.collections[dao_type] = CollectionDetails(
+            self.collections[metadata.dao] = CollectionDetails(
                 name=table_name,
                 pimary_keys=pimary_keys,
                 collection_count=options.get("collection_count", False),
@@ -256,38 +258,34 @@ Domain = TypeVar("Domain")
 Id = TypeVar("Id")
 
 
-class MongoCollection(CollectionService[Domain]):
+class MongoCollection(InternalRepository[Domain]):
     def __init__(
         self,
-        meta: Type,
+        meta: RepositoryMetadata,
         parent: MongoConnection,
         client: AsyncIOMotorDatabase,
         mapper: Mapper,
     ):
         self._parent = parent
-        self._dao = meta.dao
         self._domain = meta.domain
         self._mapper = mapper
         self._client = client
         self._table_details = parent.collections[meta.dao]
         self._collection = client.get_collection(self._table_details.name)
         self._query_compiler = QueryCompiler(mapper, self._collection)
-        self._dao_mapper = CollectionMapper(
+        self._db_mapping = CollectionElementMapping(
             mapper,
             meta.domain,
             meta.dao,
             getattr(meta.dao.Meta, "version", None),
             getattr(meta.dao.Meta, "version_mappers", {}),
-            dao_to_dict=self._to_dao,
+            getattr(meta.dao.Meta, "type_of", None),
+            dao_to_dict=self._dao_to_dict,
         )
 
     @property
     def domain(self) -> Type:
         return self._domain
-
-    @property
-    def dao(self) -> Type:
-        return self._dao
 
     @property
     def batch_size(self) -> int:
@@ -298,22 +296,22 @@ class MongoCollection(CollectionService[Domain]):
         return self._parent
 
     async def insert(self, domain: Domain):
-        document = self._dao_mapper.map_to_dict(domain)
+        document = self._db_mapping.map_to_dict(domain)
         await self._collection.insert_one(document)
 
     async def insert_many(self, domains: List[Domain]):
-        dicts = self._dao_mapper.map_many_to_dict(domains)
+        dicts = self._db_mapping.map_many_to_dict(domains)
         for dicts_batch in batch(dicts, BATCH_SIZE):
             await self._collection.insert_many(dicts_batch)
 
     async def update(self, value_filter: QueryFilter, where_filter: WhereFilter):
-        value_dict = self._mapper.map(value_filter, dict, value_filter.__class__)
+        value_dict = self._table_details.unfold_query(value_filter, self._mapper)
         simplified_dict = self._query_compiler.simplify(value_dict)
         compiled_filter = self._query_compiler.build_filter(where_filter)
         await self._collection.update_many(compiled_filter, {"$set": simplified_dict})
 
     async def upserts(self, domains: List[Domain]) -> None:
-        dicts = self._dao_mapper.map_many_to_dict(domains)
+        dicts = self._db_mapping.map_many_to_dict(domains)
 
         for docs in batch(dicts, BATCH_SIZE):
             operations = [
@@ -333,20 +331,20 @@ class MongoCollection(CollectionService[Domain]):
         async for doc in self._collection.find().limit(limit):
             results.append(doc)
 
-        domains = self._dao_mapper.map_many_to_domain(results)
+        domains = self._db_mapping.map_many_to_domain(results)
         return domains
 
     async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
         query = self._query_compiler.find(query_filter)
         results = await query.to_list(length=None)
-        domains = self._dao_mapper.map_many_to_domain(results)
+        domains = self._db_mapping.map_many_to_domain(results)
         return domains
 
     async def find_one_by(self, query_filter: WhereFilter) -> Domain:
         query = self._query_compiler.find(query_filter).limit(1)
 
         async for doc in query:
-            return self._dao_mapper.map_to_domain(doc)
+            return self._db_mapping.map_to_domain(doc)
 
         raise RecordNotFound()
 
@@ -357,7 +355,7 @@ class MongoCollection(CollectionService[Domain]):
         if doc is None:
             raise RecordNotFound()
 
-        return self._dao_mapper.map_to_domain(doc)
+        return self._db_mapping.map_to_domain(doc)
 
     async def has(self, pk_id: Id) -> bool:
         document_id = self._table_details.build_id_from_pk(self._mapper, pk_id)
@@ -385,6 +383,8 @@ class MongoCollection(CollectionService[Domain]):
         document_id = self._table_details.build_id_from_pk(self._mapper, pk_id)
         await self._collection.delete_many({"_id": document_id})
 
+    # Extended api
+
     def get_builder(self) -> QueryBuilder:
         return DbAgnotistQueryBuilder()
 
@@ -409,13 +409,19 @@ class MongoCollection(CollectionService[Domain]):
 
         return results
 
-    async def bulk_insert(self, daos: List[BaseModel]):
-        dicts = (self._dao_mapper.add_version_to_dao(dao) for dao in daos)
+    async def bulk_insert(self, daos: List[BaseModel]) -> None:
+        dicts = self._db_mapping.map_many_dao_to_dict(daos)
 
         for dicts_batch in batch(dicts, BATCH_SIZE):
             await self._collection.insert_many(dicts_batch)
 
-    def _to_dao(self, model: BaseModel) -> dict:
+    def map_domain_to_dao(self, domain: Domain) -> BaseModel:
+        return self._db_mapping.map_domain_to_dao(domain)
+
+    def unpack_query(self, query_filter: QueryFilter) -> dict:
+        return self._table_details.unfold_query(query_filter, self._mapper)
+
+    def _dao_to_dict(self, model: BaseModel) -> dict:
         document = self._query_compiler.simplify(model)
         document["_id"] = self._table_details.build_id(document)
         return document

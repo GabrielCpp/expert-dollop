@@ -309,7 +309,7 @@ input ProjectDefinitionNodeCreationInput {
   path: [String!]!
   translations: TranslationConfigInput!
   fieldDetails: FieldDetailsUnionInput
-  triggers: [TriggerInput]!
+  triggers: [TriggerInput!]!
   meta: NodeMetaConfigInput!
   translated: [TranslationInput!]!
 }
@@ -322,7 +322,7 @@ type ProjectDefinitionNode {
   instanciateByDefault: Boolean!
   orderIndex: Int!
   fieldDetails: FieldDetailsUnion
-  triggers: [Trigger]!
+  triggers: [Trigger!]!
   translations: TranslationConfig!
   meta: NodeMetaConfig!
   path: [String!]!

@@ -26,3 +26,7 @@ def bind_mapper(binder: Binder) -> None:
     binder.bind(Mapper, to=MapperProvider(), scope=singleton)
     binder.bind(Clock, to=DateTimeClock(), scope=singleton)
     binder.bind(IdProvider, to=UniqueIdGenerator(), scope=singleton)
+
+
+def bind_shared_modules(binder: Binder) -> None:
+    bind_mapper(binder)

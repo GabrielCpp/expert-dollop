@@ -9,7 +9,7 @@ from expert_dollup.shared.starlette_injection import (
     CanPerformRequired,
     Inject,
 )
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *
 
@@ -20,7 +20,7 @@ router = APIRouter()
 async def get_project_node_meta(
     project_id: UUID,
     type_id: UUID,
-    service=Depends(Inject(CollectionService[ProjectNodeMeta])),
+    service=Depends(Inject(Repository[ProjectNodeMeta])),
     handler=Depends(Inject(RequestHandler)),
     user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
@@ -35,8 +35,8 @@ async def get_project_node_meta(
 async def get_project_node_meta_definition(
     project_id: UUID,
     node_id: UUID,
-    meta_service=Depends(Inject(CollectionService[ProjectNodeMeta])),
-    node_service=Depends(Inject(CollectionService[ProjectNode])),
+    meta_service=Depends(Inject(Repository[ProjectNodeMeta])),
+    node_service=Depends(Inject(Repository[ProjectNode])),
     handler=Depends(Inject(RequestHandler)),
     user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):

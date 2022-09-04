@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 from collections import defaultdict, OrderedDict
 from expert_dollup.core.utils.ressource_permissions import authorization_factory
 from expert_dollup.shared.starlette_injection import Clock
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.domains import *
 
 
@@ -26,9 +26,9 @@ class TriggerHandler:
 class ProjectBuilder:
     def __init__(
         self,
-        project_node_service: CollectionService[ProjectNode],
-        project_node_meta_service: CollectionService[ProjectNodeMeta],
-        project_definition_node_service: CollectionService[ProjectDefinitionNode],
+        project_node_service: Repository[ProjectNode],
+        project_node_meta_service: Repository[ProjectNodeMeta],
+        project_definition_node_service: Repository[ProjectDefinitionNode],
         clock: Clock,
     ):
         self.project_definition_node_service = project_definition_node_service

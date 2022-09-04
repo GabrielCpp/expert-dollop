@@ -1,42 +1,18 @@
+import http.client as httplib
+from injector import Binder, singleton, inject
 from typing import Dict, Any
 from typing_extensions import TypeAlias
-import http.client as httplib
-from injector import Binder, singleton
 from starlette.responses import JSONResponse
-from expert_dollup.shared.starlette_injection import problem
 from expert_dollup.app.middlewares import ExceptionHandlerDict
-import expert_dollup.app.handlers as handlers
 from expert_dollup.core.exceptions import *
-from expert_dollup.shared.database_services import RecordNotFound
-from expert_dollup.app.jwt_auth import (
-    NoBearerAuthorizationHeader,
-    InvalidBearerToken,
-    PermissionMissing,
-)
-from injector import Binder, inject
 from expert_dollup.app.settings import load_app_settings
+import expert_dollup.app.handlers as handlers
+from expert_dollup.app.jwt_auth import *
 from expert_dollup.core.domains import User, Ressource
-from expert_dollup.app.jwt_auth import AuthJWT
-import expert_dollup.infra.services as services
 from expert_dollup.shared.automapping import Mapper
-from expert_dollup.shared.database_services import (
-    CollectionService,
-    Paginator,
-    UserRessourcePaginator,
-)
-from expert_dollup.shared.starlette_injection import (
-    RequestHandler,
-    GraphqlPageHandler,
-    HttpPageHandler,
-    AuthService,
-    factory_of,
-    Constant,
-    factory_of,
-    get_classes,
-    get_base,
-    get_arg,
-)
-
+from expert_dollup.shared.database_services import *
+from expert_dollup.shared.starlette_injection import *
+from ..definitions import auth_metadatas, expert_dollup_metadatas, paginations
 
 exception_handlers = {
     RessourceNotFound: lambda e: JSONResponse(
@@ -76,51 +52,41 @@ def bind_auth_jwt(binder: Binder) -> None:
         to=factory_of(
             AuthJWT,
             settings=Constant(load_app_settings()),
-            user_service=CollectionService[User],
-            ressource_service=CollectionService[Ressource],
+            user_service=Repository[User],
+            ressource_service=Repository[Ressource],
         ),
     )
 
 
 def bind_graphql_handlers(binder: Binder) -> None:
-    service_by_domain: Dict[TypeAlias, Any] = {
-        get_arg(get_base(service_type)): service_type
-        for service_type in get_classes(services)
-    }
-
-    for domain_type in service_by_domain.keys():
+    for pagination in paginations:
         binder.bind(
-            GraphqlPageHandler[Paginator[domain_type]],
+            GraphqlPageHandler[Paginator[pagination.for_domain]],
             factory_of(
                 GraphqlPageHandler,
                 mapper=Mapper,
-                paginator=Paginator[domain_type],
+                paginator=Paginator[pagination.for_domain],
             ),
         )
 
         binder.bind(
-            GraphqlPageHandler[UserRessourcePaginator[domain_type]],
+            GraphqlPageHandler[UserRessourcePaginator[pagination.for_domain]],
             factory_of(
                 GraphqlPageHandler,
                 mapper=Mapper,
-                paginator=UserRessourcePaginator[domain_type],
+                paginator=UserRessourcePaginator[pagination.for_domain],
             ),
         )
 
 
 def bind_http_handlers(binder: Binder) -> None:
-    service_by_domain = {
-        get_arg(get_base(service_type)): service_type
-        for service_type in get_classes(services)
-    }
-
-    for domain_type in service_by_domain.keys():
+    for pagination in paginations:
         binder.bind(
-            HttpPageHandler[Paginator[domain_type]],
+            HttpPageHandler[Paginator[pagination.for_domain]],
             factory_of(
                 HttpPageHandler,
                 mapper=Mapper,
-                paginator=Paginator[domain_type],
+                paginator=Paginator[pagination.for_domain],
             ),
         )
 
@@ -129,3 +95,11 @@ def bind_handlers(binder: Binder) -> None:
     binder.bind(RequestHandler, inject(RequestHandler))
     for handler in get_classes(handlers):
         binder.bind(handler, inject(handler))
+
+
+def bind_app_modules(binder: Binder) -> None:
+    bind_error_handler(binder)
+    bind_auth_jwt(binder)
+    bind_graphql_handlers(binder)
+    bind_http_handlers(binder)
+    bind_handlers(binder)

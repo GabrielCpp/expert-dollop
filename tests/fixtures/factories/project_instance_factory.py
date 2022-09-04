@@ -351,6 +351,7 @@ class ProjectInstanceFactory:
                 attached_to_type_id=formula_seed.node.definition.id,
                 expression=formula_seed.expression,
                 name=formula_seed.name,
+                path=[formula_seed.node.definition.id],
                 dependency_graph=FormulaDependencyGraph(
                     formulas=[
                         FormulaDependency(
@@ -367,6 +368,7 @@ class ProjectInstanceFactory:
                         for dependant_name in formula_seed.node_dependencies
                     ],
                 ),
+                creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
             )
             for formula_seed in formulas_by_name.values()
         ]

@@ -5,7 +5,7 @@ from expert_dollup.shared.starlette_injection import (
     RequestHandler,
     MappingChain,
 )
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.usecases import ReportDefinitionUseCase
 from expert_dollup.core.domains import ReportDefinition
 from expert_dollup.app.dtos import ReportDefinitionDto
@@ -24,8 +24,8 @@ async def refresh_report_definition_rows_cache(
 @router.post("/report_definition/{report_definition_id}")
 async def get_report_definition(
     report_definition_id: UUID,
-    service: CollectionService[ReportDefinition] = Depends(
-        Inject(CollectionService[ReportDefinition])
+    service: Repository[ReportDefinition] = Depends(
+        Inject(Repository[ReportDefinition])
     ),
     handler=Depends(Inject(RequestHandler)),
 ):

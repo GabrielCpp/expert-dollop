@@ -11,31 +11,33 @@ from expert_dollup.core.domains import (
 )
 from expert_dollup.shared.database_services import (
     CollectionServiceProxy,
-    CollectionMapper,
+    CollectionElementMapping,
+    InternalRepository,
 )
 
 
-class ProjectNodeMetaService(CollectionServiceProxy[ProjectNodeMeta]):
-    class Meta:
-        dao = ProjectNodeMetaDao
-        domain = ProjectNodeMeta
+class ProjectNodeMetaInternalRepository(CollectionServiceProxy[ProjectNodeMeta]):
+    def __init__(self, repository: InternalRepository[ProjectNodeMeta]):
+        CollectionServiceProxy.__init__(self, repository)
+        self._repository = repository
 
     async def find_project_defs(self, project_id: UUID) -> List[ProjectDefinitionNode]:
         builder = (
-            self.get_builder()
+            self._repository.get_builder()
             .select("definition")
             .where("project_id", "==", project_id)
         )
 
-        records = await self.fetch_all_records(
+        records = await self._repository.fetch_all_records(
             builder,
             {
-                "definition": lambda mapper: CollectionMapper(
+                "definition": lambda mapper: CollectionElementMapping(
                     mapper,
                     ProjectDefinitionNode,
                     ProjectDefinitionNodeDao,
                     getattr(ProjectDefinitionNodeDao.Meta, "version", None),
                     getattr(ProjectDefinitionNodeDao.Meta, "version_mappers", {}),
+                    getattr(ProjectDefinitionNodeDao.Meta, "type_of", None),
                 ).map_to_domain
             },
         )

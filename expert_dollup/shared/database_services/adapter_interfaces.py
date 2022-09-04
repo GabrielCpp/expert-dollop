@@ -12,32 +12,12 @@ from typing import (
     Awaitable,
 )
 from typing_extensions import TypeAlias
-from inspect import isclass
-from urllib.parse import urlparse
+from dataclasses import dataclass
 from pydantic import BaseModel
+from urllib.parse import urlparse
 from expert_dollup.shared.automapping import Mapper
 from .page import Page
 from .query_filter import QueryFilter
-
-
-class DbConnection(ABC):
-    _REGISTRY = {}
-
-    @abstractmethod
-    def load_metadatas(self, dao_types):
-        pass
-
-    @abstractmethod
-    def get_collection_service(self, meta: Type, mapper: Mapper):
-        pass
-
-    @abstractmethod
-    async def truncate_db(self, tables: Optional[List[str]] = None):
-        pass
-
-    @abstractmethod
-    async def transaction(self, callback: Callable[[], Awaitable]):
-        pass
 
 
 class QueryBuilder(ABC):
@@ -75,15 +55,10 @@ Id = TypeVar("Id")
 WhereFilter: TypeAlias = Union[QueryFilter, QueryBuilder]
 
 
-class CollectionService(ABC, Generic[Domain]):
+class Repository(ABC, Generic[Domain]):
     @property
     @abstractmethod
     def domain(self) -> Type:
-        pass
-
-    @property
-    @abstractmethod
-    def dao(self) -> Type:
         pass
 
     @property
@@ -145,6 +120,8 @@ class CollectionService(ABC, Generic[Domain]):
     async def count(self, query_filter: Optional[WhereFilter] = None) -> int:
         pass
 
+
+class InternalRepository(Repository[Domain]):
     @abstractmethod
     def get_builder(self) -> QueryBuilder:
         pass
@@ -155,6 +132,46 @@ class CollectionService(ABC, Generic[Domain]):
         builder: QueryBuilder,
         mappings: Dict[str, Callable[[Mapper], Callable[[Any], Any]]] = {},
     ) -> dict:
+        pass
+
+    @abstractmethod
+    async def bulk_insert(self, daos: List[BaseModel]) -> None:
+        pass
+
+    @abstractmethod
+    def map_domain_to_dao(self, domain: Domain) -> BaseModel:
+        pass
+
+    @abstractmethod
+    def unpack_query(self, query: QueryFilter) -> dict:
+        pass
+
+
+@dataclass
+class RepositoryMetadata:
+    domain: Type
+    dao: Type
+
+
+class DbConnection(ABC):
+    _REGISTRY = {}
+
+    @abstractmethod
+    def load_metadatas(self, metadatas: List[RepositoryMetadata]) -> None:
+        pass
+
+    @abstractmethod
+    def get_collection_service(
+        self, meta: RepositoryMetadata, mapper: Mapper
+    ) -> InternalRepository[Domain]:
+        pass
+
+    @abstractmethod
+    async def truncate_db(self, tables: Optional[List[str]] = None) -> None:
+        pass
+
+    @abstractmethod
+    async def transaction(self, callback: Callable[[], Awaitable]) -> None:
         pass
 
 
@@ -193,9 +210,13 @@ class TokenEncoder(ABC):
         pass
 
 
-def create_connection(
-    connection_string: str, dao_module=None, **kwargs
-) -> DbConnection:
+@dataclass
+class PaginationDetails:
+    default_page_encoder: TokenEncoder
+    for_domain: Type
+
+
+def create_connection(connection_string: str, **kwargs) -> DbConnection:
     scheme = urlparse(connection_string).scheme
 
     if len(DbConnection._REGISTRY) == 0:
@@ -224,17 +245,8 @@ def create_connection(
     build_connection = DbConnection._REGISTRY.get(scheme)
 
     if build_connection is None:
-        raise KeyError(f"No key for schem {scheme}")
+        raise KeyError(f"No key for schema {scheme}")
 
     connection = build_connection(connection_string, **kwargs)
-
-    if not dao_module is None:
-        connection.load_metadatas(
-            [
-                class_type
-                for class_type in dao_module.__dict__.values()
-                if isclass(class_type) and issubclass(class_type, BaseModel)
-            ]
-        )
 
     return connection

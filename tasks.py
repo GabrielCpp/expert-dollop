@@ -1,31 +1,32 @@
-from typing import Optional
+from os import environ, path, getcwd
+from typing import Optional, List
 from dotenv import load_dotenv
 from invoke import task
 from pathlib import Path
+from uuid import uuid4
 from urllib.parse import urlparse, urlunparse, urlsplit, urlunsplit
-from os import environ, path, getcwd
 import base64
 import asyncio
 
+from expert_dollup.shared.starlette_injection import *
+from expert_dollup.shared.database_services import *
+from expert_dollup.app.modules import (
+    build_container,
+    expert_dollup_metadatas,
+    auth_metadatas,
+)
+from tests.fixtures import SuperUser, FakeDb
 
-async def truncate_db(db_url_name: str, tables=None):
-    from expert_dollup.shared.database_services import create_connection
-    import expert_dollup.infra.expert_dollup_db as daos
+load_dotenv()
 
-    load_dotenv()
+
+async def truncate_db(db_url_name: str, metadatas: List[RepositoryMetadata]):
     connection = create_connection(environ[db_url_name], daos)
     await connection.truncate_db(tables)
 
 
 async def get_token(oauth: Optional[str] = None):
-    from dotenv import load_dotenv
-    from expert_dollup.app.modules import build_container
-    from expert_dollup.shared.starlette_injection import AuthService
-    from tests.fixtures import SuperUser
-
     oauth = SuperUser.oauth_id if oauth is None else oauth
-
-    load_dotenv()
     container = build_container()
     auth_service: AuthService = container.get(AuthService)
     token = auth_service.make_token(oauth)
@@ -33,12 +34,6 @@ async def get_token(oauth: Optional[str] = None):
 
 
 async def get_random_empty_token():
-    from dotenv import load_dotenv
-    from uuid import uuid4
-    from expert_dollup.app.modules import build_container
-    from expert_dollup.shared.starlette_injection import AuthService
-
-    load_dotenv()
     container = build_container()
     auth_service: AuthService = container.get(AuthService)
     token = auth_service.make_token(str(uuid4()))
@@ -304,8 +299,8 @@ def newMigration(c, message=None):
 
 @task(name="db:truncate")
 def db_truncate(c):
-    asyncio.run(truncate_db("EXPERT_DOLLUP_DB_URL"))
-    asyncio.run(truncate_db("AUTH_DB_URL"))
+    asyncio.run(truncate_db("EXPERT_DOLLUP_DB_URL", expert_dollup_metadatas))
+    asyncio.run(truncate_db("AUTH_DB_URL", auth_metadatas))
 
 
 @task(name="upload-base-project")
@@ -313,11 +308,11 @@ def upload_base_project(c, token=None, userid=None, hostname=None):
     cwd = getcwd()
 
     if hostname is None:
-        asyncio.run(truncate_db("EXPERT_DOLLUP_DB_URL"))
+        asyncio.run(truncate_db("EXPERT_DOLLUP_DB_URL", expert_dollup_metadatas))
         hostname = "http://localhost:8000"
 
     if token is None:
-        asyncio.run(truncate_db("AUTH_DB_URL"))
+        asyncio.run(truncate_db("AUTH_DB_URL", auth_metadatas))
         load_default_users(c)
         token = asyncio.run(get_token())
 
@@ -378,15 +373,10 @@ def make_random_token(c):
 
 @task(name="load-default-users")
 def load_default_users(c):
-    from dotenv import load_dotenv
-    from expert_dollup.app.modules import build_container
     from expert_dollup.core.domains import User, Organization
-    from expert_dollup.shared.database_services import DatabaseContext
     from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
-    from tests.fixtures import SuperUser, FakeDb
 
     async def reload_db():
-        load_dotenv()
         container = build_container()
         user_db = container.get(RessourceAuthDatabase)
         database_context = container.get(DatabaseContext)

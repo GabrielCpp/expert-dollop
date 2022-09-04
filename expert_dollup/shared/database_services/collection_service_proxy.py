@@ -4,7 +4,8 @@ from inspect import isclass
 from expert_dollup.shared.automapping import Mapper
 from .query_filter import QueryFilter
 from .adapter_interfaces import (
-    CollectionService,
+    Repository,
+    InternalRepository,
     DbConnection,
     QueryBuilder,
 )
@@ -14,24 +15,13 @@ WhereFilter: TypeAlias = Union[QueryFilter, QueryBuilder]
 Id = TypeVar("Id")
 
 
-class CollectionServiceProxy(CollectionService[Domain]):
-    def __init__(self, database: DbConnection, mapper: Mapper):
-        meta = self.__class__.Meta
-
-        assert isclass(meta.dao), f"Meta of {__name__} must contain a dao type"
-        assert isclass(meta.domain), f"Meta of {__name__} must contain a domain type"
-
-        self._impl: CollectionService[Domain] = database.get_collection_service(
-            meta, mapper
-        )
+class CollectionServiceProxy(Repository[Domain]):
+    def __init__(self, repository: InternalRepository[Domain]):
+        self._impl = repository
 
     @property
     def domain(self) -> Type:
         return self._impl.domain
-
-    @property
-    def dao(self) -> Type:
-        return self._impl.dao
 
     @property
     def batch_size(self) -> int:
@@ -79,13 +69,3 @@ class CollectionServiceProxy(CollectionService[Domain]):
 
     async def count(self, query_filter: Optional[WhereFilter] = None) -> int:
         return await self._impl.count(query_filter)
-
-    def get_builder(self) -> QueryBuilder:
-        return self._impl.get_builder()
-
-    async def fetch_all_records(
-        self,
-        builder: QueryBuilder,
-        mappings: Dict[str, Callable[[Mapper], Callable[[Any], Any]]] = {},
-    ) -> dict:
-        return await self._impl.fetch_all_records(builder, mappings)

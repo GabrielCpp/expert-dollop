@@ -1,7 +1,7 @@
 from typing import Optional, List
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
-from expert_dollup.shared.database_services import Paginator, CollectionService
+from expert_dollup.shared.database_services import Paginator, Repository
 from expert_dollup.shared.starlette_injection import (
     RequestHandler,
     MappingChain,
@@ -103,7 +103,7 @@ async def find_translation_in_scope(
     ressource_id: UUID,
     scope: UUID,
     handler=Depends(Inject(RequestHandler)),
-    usecase=Depends(Inject(CollectionService[Translation])),
+    usecase=Depends(Inject(Repository[Translation])),
     user=Depends(CanPerformOnRequired("ressource_id", "*:get", [])),
 ):
     return await handler.handle_many(

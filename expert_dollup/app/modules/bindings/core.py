@@ -6,7 +6,7 @@ from injector import Binder, inject
 from itertools import chain
 
 
-def bind_core_classes(binder: Binder) -> None:
+def bind_core_modules(binder: Binder) -> None:
     for class_type in chain(
         usecases.__dict__.values(),
         units.__dict__.values(),

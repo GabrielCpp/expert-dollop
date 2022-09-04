@@ -45,7 +45,9 @@ class RevervibleUnionMapping(RevervibleMapping):
 
 
 def map_dict_keys(
-    args: dict, mapping: Dict[str, Tuple[str, Union[None, Callable[[Any], Any]]]]
+    args: dict,
+    mapping: Dict[str, Tuple[str, Union[None, Callable[[Any], Any]]]],
+    type_of: Optional[str] = None,
 ) -> dict:
     mapped_args = {}
 
@@ -55,5 +57,8 @@ def map_dict_keys(
             mapped_args[mapped_key] = value if map_value is None else map_value(value)
         else:
             raise KeyError(f"Key '{key}' not in mapping")
+
+    if not type_of is None:
+        mapped_args["_type"] = type_of
 
     return mapped_args

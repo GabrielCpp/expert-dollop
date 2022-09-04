@@ -1,6 +1,9 @@
 from typing import List, Dict, Optional
 from uuid import UUID
-from expert_dollup.shared.database_services import CollectionServiceProxy
+from expert_dollup.shared.database_services import (
+    CollectionServiceProxy,
+    InternalRepository,
+)
 from expert_dollup.core.domains import (
     ProjectDefinitionNode,
     ProjectDefinitionNodeFilter,
@@ -9,17 +12,19 @@ from expert_dollup.infra.expert_dollup_db import ProjectDefinitionNodeDao
 from expert_dollup.core.utils.path_transform import join_uuid_path
 
 
-class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]):
-    class Meta:
-        dao = ProjectDefinitionNodeDao
-        domain = ProjectDefinitionNode
+class ProjectDefinitionNodeInternalRepository(
+    CollectionServiceProxy[ProjectDefinitionNode]
+):
+    def __init__(self, repository: InternalRepository[ProjectDefinitionNode]):
+        CollectionServiceProxy.__init__(self, repository)
+        self._repository = repository
 
     async def get_fields_id_by_name(
         self, project_definition_id: UUID, names: Optional[List[str]] = None
     ) -> Dict[str, UUID]:
 
         query = (
-            self.get_builder()
+            self._repository.get_builder()
             .select("id", "name")
             .where("project_definition_id", "==", project_definition_id)
         )
@@ -30,7 +35,7 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
 
             query = query.where("name", "in", names)
 
-        records = await self.fetch_all_records(query)
+        records = await self._repository.fetch_all_records(query)
 
         return {record.get("name"): UUID(str(record.get("id"))) for record in records}
 
@@ -49,7 +54,7 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
     async def delete_child_of(self, id: UUID):
         value = await self.find_by_id(id)
         query = (
-            self.get_builder()
+            self._repository.get_builder()
             .where("project_definition_id", "==", value.project_definition_id)
             .where("path", "startwiths", join_uuid_path(value.subpath))
         )
@@ -59,7 +64,7 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
     async def find_children(
         self, project_definition_id: UUID, path: List[UUID]
     ) -> List[ProjectDefinitionNode]:
-        query = self.get_builder().where(
+        query = self._repository.get_builder().where(
             "project_definition_id", "==", project_definition_id
         )
 
@@ -74,7 +79,7 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
         self, project_definition_id: UUID
     ) -> List[ProjectDefinitionNode]:
         query = (
-            self.get_builder()
+            self._repository.get_builder()
             .where("project_definition_id", "==", project_definition_id)
             .where("display_query_internal_id", "==", project_definition_id)
             .orderby(("level", "desc"))
@@ -88,7 +93,7 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
         self, project_definition_id: UUID, root_section_id: UUID
     ) -> List[ProjectDefinitionNode]:
         query = (
-            self.get_builder()
+            self._repository.get_builder()
             .where("project_definition_id", "==", project_definition_id)
             .where("display_query_internal_id", "==", root_section_id)
             .orderby(("level", "desc"))
@@ -102,7 +107,7 @@ class ProjectDefinitionNodeService(CollectionServiceProxy[ProjectDefinitionNode]
         self, project_definition_id: UUID, form_id: UUID
     ) -> List[ProjectDefinitionNode]:
         query = (
-            self.get_builder()
+            self._repository.get_builder()
             .where("project_definition_id", "==", project_definition_id)
             .where("display_query_internal_id", "==", form_id)
             .orderby(("level", "desc"))

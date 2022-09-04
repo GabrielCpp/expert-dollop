@@ -6,7 +6,7 @@ from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import (
     FieldTokenEncoder,
     Page,
-    CollectionService,
+    InternalRepository,
     batch,
     UserRessourcePaginator,
     UserRessourceQuery,
@@ -19,10 +19,10 @@ Domain = TypeVar("Domain", bound=RessourceProtocol)
 class RessourceEngine(UserRessourcePaginator[Domain]):
     def __init__(
         self,
-        user_service: CollectionService[Ressource],
-        ressource_service: CollectionService[Ressource],
+        user_service: InternalRepository[Ressource],
+        ressource_service: InternalRepository[Ressource],
         mapper: Mapper,
-        domain_service: CollectionService[Domain],
+        domain_service: InternalRepository[Domain],
     ):
         self.user_service = user_service
         self.ressource_service = ressource_service

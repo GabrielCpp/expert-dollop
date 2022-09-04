@@ -91,36 +91,6 @@ def map_project_definition_to_dao(
     )
 
 
-def map_project_definition_node_from_dao(
-    src: ProjectDefinitionNodeDao, mapper: Mapper
-) -> ProjectDefinitionNode:
-    return ProjectDefinitionNode(
-        id=src.id,
-        project_definition_id=src.project_definition_id,
-        name=src.name,
-        is_collection=src.is_collection,
-        instanciate_by_default=src.instanciate_by_default,
-        order_index=src.order_index,
-        translations=TranslationConfig(
-            help_text_name=src.translations.help_text_name, label=src.translations.label
-        ),
-        triggers=[
-            Trigger(
-                action=TriggerAction[trigger.action],
-                target_type_id=trigger.target_type_id,
-                params=trigger.params,
-            )
-            for trigger in src.triggers
-        ],
-        meta=NodeMetaConfig(is_visible=src.meta.is_visible),
-        field_details=mapper.map(
-            src.field_details, FieldDetailsUnion, FieldDetailsUnionDao
-        ),
-        path=split_uuid_path(src.path),
-        creation_date_utc=src.creation_date_utc,
-    )
-
-
 def map_field_details_union_from_dao(
     src: FieldDetailsUnionDao, mapper: Mapper
 ) -> FieldDetailsUnion:
@@ -246,27 +216,61 @@ def map_project_definition_node_to_dao(
         id=src.id,
         project_definition_id=src.project_definition_id,
         name=src.name,
-        is_collection=src.is_collection,
-        instanciate_by_default=src.instanciate_by_default,
-        order_index=src.order_index,
-        translations=TranslationConfigDao(
-            help_text_name=src.translations.help_text_name, label=src.translations.label
-        ),
-        triggers=[
-            TriggerDao(
-                action=trigger.action.value,
-                target_type_id=trigger.target_type_id,
-                params=trigger.params,
-            )
-            for trigger in src.triggers
-        ],
-        meta=NodeMetaConfigDao(is_visible=src.meta.is_visible),
-        field_details=mapper.map(
-            src.field_details, FieldDetailsUnionDao, FieldDetailsUnion
-        ),
         path=join_uuid_path(src.path),
         display_query_internal_id=display_query_internal_id,
         level=len(src.path),
+        creation_date_utc=src.creation_date_utc,
+        config=DefinitionNodeConfigDao(
+            is_collection=src.is_collection,
+            instanciate_by_default=src.instanciate_by_default,
+            order_index=src.order_index,
+            translations=TranslationConfigDao(
+                help_text_name=src.translations.help_text_name,
+                label=src.translations.label,
+            ),
+            triggers=[
+                TriggerDao(
+                    action=trigger.action.value,
+                    target_type_id=trigger.target_type_id,
+                    params=trigger.params,
+                )
+                for trigger in src.triggers
+            ],
+            meta=NodeMetaConfigDao(is_visible=src.meta.is_visible),
+            field_details=mapper.map(
+                src.field_details, FieldDetailsUnionDao, FieldDetailsUnion
+            ),
+        ),
+    )
+
+
+def map_project_definition_node_from_dao(
+    src: ProjectDefinitionNodeDao, mapper: Mapper
+) -> ProjectDefinitionNode:
+    return ProjectDefinitionNode(
+        id=src.id,
+        project_definition_id=src.project_definition_id,
+        name=src.name,
+        is_collection=src.config.is_collection,
+        instanciate_by_default=src.config.instanciate_by_default,
+        order_index=src.config.order_index,
+        translations=TranslationConfig(
+            help_text_name=src.config.translations.help_text_name,
+            label=src.config.translations.label,
+        ),
+        triggers=[
+            Trigger(
+                action=TriggerAction[trigger.action],
+                target_type_id=trigger.target_type_id,
+                params=trigger.params,
+            )
+            for trigger in src.config.triggers
+        ],
+        meta=NodeMetaConfig(is_visible=src.config.meta.is_visible),
+        field_details=mapper.map(
+            src.config.field_details, FieldDetailsUnion, FieldDetailsUnionDao
+        ),
+        path=split_uuid_path(src.path),
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -492,6 +496,7 @@ def map_project_definition_node_filter_to_dict(
             "path": ("path", join_uuid_path),
             "display_query_internal_id": ("display_query_internal_id", None),
         },
+        type_of=DEFINITION_NODE_TYPE,
     )
 
 
@@ -573,22 +578,28 @@ def map_formula_to_dao(src: Formula, mapper: Mapper) -> ProjectDefinitionFormula
     return ProjectDefinitionFormulaDao(
         id=src.id,
         project_definition_id=src.project_definition_id,
-        attached_to_type_id=src.attached_to_type_id,
         name=src.name,
-        expression=src.expression,
-        dependency_graph=FormulaDependencyGraphDao(
-            formulas=[
-                FormulaDependencyDao(
-                    target_type_id=dependency.target_type_id, name=dependency.name
-                )
-                for dependency in src.dependency_graph.formulas
-            ],
-            nodes=[
-                FormulaDependencyDao(
-                    target_type_id=dependency.target_type_id, name=dependency.name
-                )
-                for dependency in src.dependency_graph.nodes
-            ],
+        path=join_uuid_path(src.path),
+        level=6,
+        display_query_internal_id=src.id,
+        creation_date_utc=src.creation_date_utc,
+        config=FormulaConfigDao(
+            attached_to_type_id=src.attached_to_type_id,
+            expression=src.expression,
+            dependency_graph=FormulaDependencyGraphDao(
+                formulas=[
+                    FormulaDependencyDao(
+                        target_type_id=dependency.target_type_id, name=dependency.name
+                    )
+                    for dependency in src.dependency_graph.formulas
+                ],
+                nodes=[
+                    FormulaDependencyDao(
+                        target_type_id=dependency.target_type_id, name=dependency.name
+                    )
+                    for dependency in src.dependency_graph.nodes
+                ],
+            ),
         ),
     )
 
@@ -597,21 +608,23 @@ def map_formula_from_dao(src: ProjectDefinitionFormulaDao, mapper: Mapper) -> Fo
     return Formula(
         id=src.id,
         project_definition_id=src.project_definition_id,
-        attached_to_type_id=src.attached_to_type_id,
         name=src.name,
-        expression=src.expression,
+        path=split_uuid_path(src.path),
+        expression=src.config.expression,
+        creation_date_utc=src.creation_date_utc,
+        attached_to_type_id=src.config.attached_to_type_id,
         dependency_graph=FormulaDependencyGraph(
             formulas=[
                 FormulaDependency(
                     target_type_id=dependency.target_type_id, name=dependency.name
                 )
-                for dependency in src.dependency_graph.formulas
+                for dependency in src.config.dependency_graph.formulas
             ],
             nodes=[
                 FormulaDependency(
                     target_type_id=dependency.target_type_id, name=dependency.name
                 )
-                for dependency in src.dependency_graph.nodes
+                for dependency in src.config.dependency_graph.nodes
             ],
         ),
     )
@@ -664,6 +677,8 @@ def map_staged_formula_from_dao(src: StagedFormulaDao, mapper: Mapper) -> Staged
                 for dependency in src.dependency_graph.nodes
             ],
         ),
+        path=formula.path,
+        creation_date_utc=formula.creation_date_utc,
     )
 
 
@@ -1109,6 +1124,7 @@ def map_formula_filter(src: FormulaFilter, mapper: Mapper) -> dict:
             "name": ("name", None),
             "expression": ("expression", None),
         },
+        type_of=FORMULA_TYPE,
     )
 
 

@@ -2,17 +2,28 @@ from asyncio import gather
 from typing import Optional, TypeVar
 from uuid import UUID
 from expert_dollup.shared.automapping import Mapper
-from .adapter_interfaces import QueryBuilder, CollectionService, Paginator, WhereFilter
 from .page import Page
+from .adapter_interfaces import (
+    QueryBuilder,
+    InternalRepository,
+    Paginator,
+    WhereFilter,
+    PaginationDetails,
+)
+
 
 Domain = TypeVar("Domain")
 
 
 class CollectionPaginator(Paginator[Domain]):
-    def __init__(self, service: CollectionService[Domain], mapper: Mapper):
-        meta = self.__class__.Meta
-        self._default_page_encoder = meta.default_page_encoder
-        self._service = service
+    def __init__(
+        self,
+        repository: InternalRepository[Domain],
+        mapper: Mapper,
+        pagination_details: PaginationDetails,
+    ):
+        self._default_page_encoder = pagination_details.default_page_encoder
+        self._repository = repository
         self._mapper = mapper
 
     async def find_page(
@@ -22,20 +33,20 @@ class CollectionPaginator(Paginator[Domain]):
         next_page_token: Optional[str] = None,
     ) -> Page[Domain]:
         builder = (
-            self._service.get_builder()
+            self._repository.get_builder()
             if where_filter is None
             else self._make_builder(where_filter)
         )
         self._default_page_encoder.extend_query(builder, limit, next_page_token)
         results, total_count = await gather(
-            self._service.find_by(builder), self._service.count(where_filter)
+            self._repository.find_by(builder), self._repository.count(where_filter)
         )
 
         new_next_page_token = self._default_page_encoder.default_token
 
         if len(results) > 0:
             last_result = results[-1]
-            last_dao = self._mapper.map(last_result, self._service.dao)
+            last_dao = self._repository.map_domain_to_dao(last_result)
             new_next_page_token = self._default_page_encoder.encode(last_dao)
 
         return Page(
@@ -46,7 +57,7 @@ class CollectionPaginator(Paginator[Domain]):
         )
 
     def make_record_token(self, domain: Domain) -> str:
-        dao = self._mapper.map(domain, self._service.dao)
+        dao = self._repository.map_domain_to_dao(domain)
         next_page_token = self._default_page_encoder.encode(dao)
         return next_page_token
 
@@ -55,7 +66,7 @@ class CollectionPaginator(Paginator[Domain]):
             return where_filter.clone()
 
         columns_filter = self._mapper.map(where_filter, dict, where_filter.__class__)
-        builder = self._service.get_builder()
+        builder = self._repository.get_builder()
 
         for name, value in columns_filter.items():
             builder.where(name, "==", value)

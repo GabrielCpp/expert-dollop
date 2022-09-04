@@ -6,7 +6,7 @@ from uuid import UUID
 from logging import Logger
 from .settings import AppSettings
 from expert_dollup.core.domains import RessourceId, Ressource, User
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 from expert_dollup.shared.starlette_injection import DetailedError, AuthService, Inject
 from expert_dollup.shared.database_services import RecordNotFound
 
@@ -31,8 +31,8 @@ class AuthJWT(AuthService[User]):
     def __init__(
         self,
         settings: AppSettings,
-        user_service: CollectionService[User],
-        ressource_service: CollectionService[Ressource],
+        user_service: Repository[User],
+        ressource_service: Repository[Ressource],
         logger: Logger,
     ):
         self.settings = settings

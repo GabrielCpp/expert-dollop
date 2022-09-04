@@ -25,6 +25,8 @@ SECTION_LEVEL = 1
 FORM_LEVEL = 2
 FORM_SECTION_LEVEL = 3
 FIELD_LEVEL = 4
+FORMULA_TYPE = "formula"
+DEFINITION_NODE_TYPE = "definition_node"
 
 
 class ExpertDollupDatabase(DbConnection):
@@ -93,11 +95,58 @@ class ProjectDefinitionDao(BaseModel):
     creation_date_utc: datetime
 
 
+class FormulaDependencyDao(BaseModel):
+    target_type_id: UUID
+    name: str = Field(max_length=64)
+
+
+class FormulaDependencyGraphDao(BaseModel):
+    formulas: List[FormulaDependencyDao]
+    nodes: List[FormulaDependencyDao]
+
+
+class FormulaConfigDao(BaseModel):
+    expression: str
+    dependency_graph: FormulaDependencyGraphDao
+    attached_to_type_id: UUID
+
+
+class ProjectDefinitionFormulaDao(BaseModel):
+    class Meta:
+        pk = "id"
+        version = 1
+        version_mappers = {}
+        type_of = lambda dao: FORMULA_TYPE
+
+    class Config:
+        title = "project_definition_node"
+
+    id: UUID
+    project_definition_id: UUID
+    name: str = Field(max_length=64)
+    path: str
+    level: int
+    display_query_internal_id: UUID
+    creation_date_utc: datetime
+    config: FormulaConfigDao
+
+
+class DefinitionNodeConfigDao(BaseModel):
+    is_collection: bool
+    instanciate_by_default: bool
+    order_index: int
+    translations: TranslationConfigDao
+    triggers: List[TriggerDao]
+    meta: NodeMetaConfigDao
+    field_details: Optional[FieldDetailsUnionDao]
+
+
 class ProjectDefinitionNodeDao(BaseModel):
     class Meta:
         pk = "id"
         version = 1
         version_mappers = {}
+        type_of = lambda dao: DEFINITION_NODE_TYPE
         options = {
             "firestore": {
                 "collection_count": False,
@@ -107,21 +156,16 @@ class ProjectDefinitionNodeDao(BaseModel):
 
     class Config:
         title = "project_definition_node"
+        type_of = lambda dao: dao.level
 
     id: UUID
     project_definition_id: UUID
     name: str = Field(max_length=64)
-    is_collection: bool
-    instanciate_by_default: bool
-    order_index: int
-    translations: TranslationConfigDao
-    triggers: List[TriggerDao]
-    meta: NodeMetaConfigDao
-    field_details: Optional[FieldDetailsUnionDao]
     path: str
     level: int
     display_query_internal_id: UUID
     creation_date_utc: datetime
+    config: DefinitionNodeConfigDao
 
 
 class ProjectDao(BaseModel):
@@ -210,37 +254,6 @@ class SettingDao(BaseModel):
 
     key: str
     value: Union[dict, str, bool, int, list]
-
-
-class FormulaDependencyDao(BaseModel):
-    target_type_id: UUID
-    name: str = Field(max_length=64)
-
-
-class FormulaDependencyGraphDao(BaseModel):
-    formulas: List[FormulaDependencyDao]
-    nodes: List[FormulaDependencyDao]
-
-
-class ProjectDefinitionFormulaDao(BaseModel):
-    class Meta:
-        pk = "id"
-        options = {
-            "firestore": {
-                "collection_count": False,
-                "key_counts": set([frozenset(["project_definition_id"])]),
-            }
-        }
-
-    class Config:
-        title = "project_definition_formula"
-
-    id: UUID
-    project_definition_id: UUID
-    attached_to_type_id: UUID
-    name: str = Field(max_length=64)
-    expression: str
-    dependency_graph: FormulaDependencyGraphDao
 
 
 class CollectionAggregateDao(BaseModel):

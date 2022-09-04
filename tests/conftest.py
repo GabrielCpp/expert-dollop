@@ -2,8 +2,6 @@ import pytest
 import faker
 import os
 import logging
-import expert_dollup.infra.expert_dollup_db as expert_dollup_db_daos
-import expert_dollup.infra.ressource_auth_db.daos as ressource_auth_db_daos
 from uuid import UUID
 from injector import Injector
 from dotenv import load_dotenv
@@ -46,34 +44,8 @@ Faker.add_provider(WordStringProvider)
 
 
 @pytest.fixture
-async def auth_dal() -> DbConnection:
-    DATABASE_URL = os.environ["AUTH_DB_URL"]
-    connection = create_connection(DATABASE_URL, ressource_auth_db_daos)
-
-    await connection.connect()
-    yield connection
-
-    if connection.is_connected:
-        await connection.disconnect()
-
-
-@pytest.fixture
-async def dal() -> DbConnection:
-    DATABASE_URL = os.environ["EXPERT_DOLLUP_DB_URL"]
-    connection = create_connection(DATABASE_URL, expert_dollup_db_daos)
-
-    await connection.connect()
-    yield connection
-
-    if connection.is_connected:
-        await connection.disconnect()
-
-
-@pytest.fixture
-def container(dal: DbConnection, auth_dal: DbConnection, request) -> Injector:
+def container(request) -> Injector:
     container = build_container()
-    container.binder.bind(ExpertDollupDatabase, dal)
-    container.binder.bind(RessourceAuthDatabase, auth_dal)
 
     other_bindings = get_overrides_for(request.function)
     for load_binding in other_bindings:
@@ -83,10 +55,32 @@ def container(dal: DbConnection, auth_dal: DbConnection, request) -> Injector:
 
 
 @pytest.fixture
+async def auth_dal(container: Injector) -> DbConnection:
+    connection = container.get(RessourceAuthDatabase)
+
+    await connection.connect()
+    yield connection
+
+    if connection.is_connected:
+        await connection.disconnect()
+
+
+@pytest.fixture
+async def expert_dollup_dal(container: Injector) -> DbConnection:
+    connection = container.get(ExpertDollupDatabase)
+
+    await connection.connect()
+    yield connection
+
+    if connection.is_connected:
+        await connection.disconnect()
+
+
+@pytest.fixture
 def db_helper(
-    container: Injector, dal: DbConnection, auth_dal: DbConnection
+    container: Injector, expert_dollup_dal: DbConnection, auth_dal: DbConnection
 ) -> DbFixtureHelper:
-    return DbFixtureHelper(container, dal, auth_dal)
+    return DbFixtureHelper(container, expert_dollup_dal, auth_dal)
 
 
 @pytest.fixture
@@ -110,7 +104,7 @@ class IntegratedTestClient(TestClient):
         self,
         app,
         auth_service: AuthService,
-        user_service: CollectionService[User],
+        user_service: Repository[User],
         db_helper: DbFixtureHelper,
     ):
         TestClient.__init__(self, app)
@@ -234,7 +228,7 @@ async def ac(
 ) -> TestClient:
     caplog.set_level(logging.ERROR)
     auth_service = container.get(AuthService)
-    user_service = container.get(CollectionService[User])
+    user_service = container.get(Repository[User])
 
     async with IntegratedTestClient(app, auth_service, user_service, db_helper) as ac:
         yield ac

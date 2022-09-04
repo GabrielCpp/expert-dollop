@@ -1,7 +1,7 @@
 from typing import Type, TypeVar, List, Any, Optional, Type
 from injector import Injector
 from .database_context import DatabaseContext
-from .adapter_interfaces import CollectionService, WhereFilter, QueryFilter
+from .adapter_interfaces import Repository, WhereFilter, QueryFilter
 
 Domain = TypeVar("Domain")
 Query = TypeVar("Query")
@@ -12,13 +12,13 @@ class DatabaseContextMultiplexer(DatabaseContext):
     def __init__(self, injector: Injector, databases: List[Type]):
         self.injector = injector
         self.databases = [injector.get(db_type) for db_type in databases]
-        self.repositories: Dict[Type, CollectionService[Any]] = {}
+        self.repositories: Dict[Type, Repository[Any]] = {}
 
-    def get_repository(self, domain_type: Type[Domain]) -> CollectionService[Domain]:
+    def get_repository(self, domain_type: Type[Domain]) -> Repository[Domain]:
         collection_service = self.repositories.get(domain_type)
 
         if collection_service is None:
-            collection_service = self.injector.get(CollectionService[domain_type])
+            collection_service = self.injector.get(Repository[domain_type])
             self.repositories[domain_type] = collection_service
 
         return collection_service

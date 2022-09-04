@@ -4,13 +4,13 @@ from typing import List
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.units import ReportRowCache
 from expert_dollup.core.domains import *
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 
 
 class ReportDefinitionUseCase:
     def __init__(
         self,
-        report_definition_service: CollectionService[ReportDefinition],
+        report_definition_service: Repository[ReportDefinition],
         report_row_cache_builder: ReportRowCache,
         report_definition_row_cache_service: ObjectStorage[
             ReportRowsCache, ReportRowKey

@@ -16,14 +16,15 @@ from expert_dollup.shared.automapping import Mapper
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 from ..batch_helper import batch
-from ..collection_mapper import CollectionMapper
+from ..collection_element_mapping import CollectionElementMapping
 from ..db_agnotist_query_builder import DbAgnotistQueryBuilder
 from ..simplifier import Simplifier
 from ..adapter_interfaces import (
-    CollectionService,
+    InternalRepository,
     QueryBuilder,
     WhereFilter,
     DbConnection,
+    RepositoryMetadata,
 )
 
 import google.cloud.exceptions as exceptions
@@ -69,25 +70,22 @@ class FirestoreConnection(DbConnection):
         self._client = AsyncClient(**options)
         self.collections: Dict[Type, CollectionDetails] = {}
 
-    def get_collection_service(self, meta: Type, mapper: Mapper):
+    def get_collection_service(self, meta: RepositoryMetadata, mapper: Mapper):
         return FirestoreCollection(meta, self.collections, self._client, mapper)
 
-    def load_metadatas(self, dao_types):
+    def load_metadatas(self, metadatas: List[RepositoryMetadata]):
         self.collections = {}
 
-        for dao_type in dao_types:
-            if not hasattr(dao_type, "Meta"):
-                continue
-
-            schema = dao_type.schema()
+        for metadata in metadatas:
+            schema = metadata.dao.schema()
             assert schema.get("type") == "object"
             assert "properties" in schema
 
-            meta = dao_type.Meta
+            meta = metadata.dao.Meta
             table_name = schema["title"]
             pimary_keys = list(meta.pk) if isinstance(meta.pk, tuple) else [meta.pk]
             options = getattr(meta, "options", {}).get("firestore", {})
-            self.collections[dao_type] = CollectionDetails(
+            self.collections[metadata.dao] = CollectionDetails(
                 name=table_name,
                 pimary_keys=pimary_keys,
                 collection_count=options.get("collection_count", False),
@@ -241,27 +239,27 @@ def record_to_dict(r) -> dict:
     return r.to_dict()
 
 
-class FirestoreCollection(CollectionService[Domain]):
+class FirestoreCollection(InternalRepository[Domain]):
     def __init__(
         self,
-        meta: Type,
+        meta: RepositoryMetadata,
         tables_details: Dict[Type, CollectionDetails],
         client: AsyncClient,
         mapper: Mapper,
     ):
-        self._dao = meta.dao
         self._domain = meta.domain
         self._mapper = mapper
         self._client = client
         self._table_details = tables_details.get(meta.dao)
         self._collection = client.collection(self._table_details.name)
         self._query_compiler = QueryCompiler(self._collection)
-        self._dao_mapper = CollectionMapper(
+        self._db_mapping = CollectionElementMapping(
             mapper,
             meta.domain,
             meta.dao,
             getattr(meta.dao.Meta, "version", None),
             getattr(meta.dao.Meta, "version_mappers", {}),
+            getattr(meta.dao.Meta, "type_of", None),
             Simplifier.simplify,
             record_to_dict=record_to_dict,
         )
@@ -271,15 +269,11 @@ class FirestoreCollection(CollectionService[Domain]):
         return self._domain
 
     @property
-    def dao(self) -> Type:
-        return self._dao
-
-    @property
     def batch_size(self) -> int:
         return 20
 
     async def insert(self, domain: Domain):
-        d = self._dao_mapper.map_to_dict(domain)
+        d = self._db_mapping.map_to_dict(domain)
 
         if self._table_details.is_counting_enabled:
             await self._batch_operation([d], lambda b, doc_ref, d: b.set(doc_ref, d))
@@ -288,7 +282,7 @@ class FirestoreCollection(CollectionService[Domain]):
             await self._collection.document(doc_id).set(d, retry=retry_strategy)
 
     async def insert_many(self, domains: List[Domain]):
-        dicts = self._dao_mapper.map_many_to_dict(domains)
+        dicts = self._db_mapping.map_many_to_dict(domains)
         await self._batch_operation(dicts, lambda b, doc_ref, d: b.set(doc_ref, d))
 
     async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):
@@ -300,7 +294,7 @@ class FirestoreCollection(CollectionService[Domain]):
         )
 
     async def upserts(self, domains: List[Domain]) -> None:
-        dicts = self._dao_mapper.map_many_to_dict(domains)
+        dicts = self._db_mapping.map_many_to_dict(domains)
         await self._batch_operation(
             dicts, lambda b, doc_ref, d: b.set(doc_ref, d, merge=True)
         )
@@ -311,7 +305,7 @@ class FirestoreCollection(CollectionService[Domain]):
         async for doc in self._collection.limit(limit).stream():
             results.append(doc)
 
-        domains = self._dao_mapper.map_many_to_domain(results)
+        domains = self._db_mapping.map_many_to_domain(results)
         return domains
 
     async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
@@ -321,14 +315,14 @@ class FirestoreCollection(CollectionService[Domain]):
         async for doc in query.stream():
             results.append(doc)
 
-        domains = self._dao_mapper.map_many_to_domain(results)
+        domains = self._db_mapping.map_many_to_domain(results)
         return domains
 
     async def find_one_by(self, query_filter: WhereFilter) -> Domain:
         query = self._build_query(query_filter).limit(1)
 
         async for doc in query.stream():
-            return self._dao_mapper.map_to_domain(doc)
+            return self._db_mapping.map_to_domain(doc)
 
         raise RecordNotFound()
 
@@ -337,7 +331,7 @@ class FirestoreCollection(CollectionService[Domain]):
         doc = await self._collection.document(document_id).get()
 
         if doc.exists:
-            return self._dao_mapper.map_to_domain(doc)
+            return self._db_mapping.map_to_domain(doc)
 
         raise RecordNotFound()
 
@@ -397,8 +391,11 @@ class FirestoreCollection(CollectionService[Domain]):
         return results
 
     async def bulk_insert(self, daos: List[BaseModel]):
-        dicts = (self._dao_mapper.add_version_to_dao(dao) for dao in daos)
+        dicts = self._db_mapping.map_many_dao_to_dict(daos)
         await self._batch_operation(dicts, lambda b, doc_ref, d: b.set(doc_ref, d))
+
+    def map_domain_to_dao(self, domain: Domain) -> BaseModel:
+        return self._db_mapping.map_domain_to_dao(domain)
 
     async def _batch_operation(self, dicts: Iterable[dict], act: callable):
         for dicts_batch in batch(dicts, BATCH_SIZE):

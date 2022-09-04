@@ -4,7 +4,7 @@ from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.shared.starlette_injection import make_page_model
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import InternalRepository
 from ..fixtures import *
 
 
@@ -95,7 +95,7 @@ async def test_given_translation_should_be_able_to_create_update_delete(
 
 @pytest.mark.asyncio
 async def test_given_translation_should_be_able_to_retrieve_it(
-    ac, db_helper, map_dao_to_dto, static_clock
+    ac, container, map_dao_to_dto, static_clock
 ):
     await ac.login_super_user()
     definition = await ac.post_json(
@@ -148,8 +148,8 @@ async def test_given_translation_should_be_able_to_retrieve_it(
         results=[dto_translations["b_fr"], dto_translations["a_fr"]],
     )
 
-    await db_helper.insert_daos(
-        CollectionService[Translation], list(translations.values())
+    await container.get(InternalRepository[Translation]).bulk_insert(
+        list(translations.values())
     )
 
     actual = await ac.get_json(

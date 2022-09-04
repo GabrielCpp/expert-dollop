@@ -1,10 +1,10 @@
 from uuid import UUID
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.domains import LabelCollection
 
 
 class LabelCollectionUseCase:
-    def __init__(self, label_collection_service: CollectionService[LabelCollection]):
+    def __init__(self, label_collection_service: Repository[LabelCollection]):
         self.label_collection_service = label_collection_service
 
     async def find_by_id(self, id: UUID):

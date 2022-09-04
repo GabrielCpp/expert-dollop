@@ -5,7 +5,7 @@ from decimal import Decimal
 from uuid import UUID
 from expert_dollup.core.logits import FormulaInjector, FrozenUnit
 from expert_dollup.shared.starlette_injection.clock_provider import StaticClock
-from expert_dollup.shared.database_services import CollectionService, Plucker
+from expert_dollup.shared.database_services import Repository, Plucker
 from tests.fixtures.factories.datasheet_factory import CustomDatasheetInstancePackage
 from tests.fixtures.factories.project_instance_factory import (
     CustomProjectInstancePackage,
@@ -196,7 +196,7 @@ async def test_given_row_cache_should_produce_correct_report(
         creation_date_utc=datetime(2000, 4, 3, 1, 1, 1, tzinfo=timezone.utc),
     )
 
-    datasheet_element_service = StrictInterfaceSetup(CollectionService)
+    datasheet_element_service = StrictInterfaceSetup(Repository)
     report_row_cache = StrictInterfaceSetup(ReportRowCache)
     formula_resolver = StrictInterfaceSetup(FormulaResolver)
     clock = StaticClock(datetime(2000, 4, 3, 1, 1, 1, 0, timezone.utc))

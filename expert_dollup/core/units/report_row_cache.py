@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from expert_dollup.shared.database_services import (
     JsonSerializer,
-    CollectionService,
+    Repository,
     Plucker,
 )
 from expert_dollup.core.domains import *
@@ -29,12 +29,10 @@ class ReportCache:
 class ReportRowCache:
     def __init__(
         self,
-        project_definition_service: CollectionService[ProjectDefinition],
-        datasheet_definition_element_service: CollectionService[
-            DatasheetDefinitionElement
-        ],
-        label_collection_service: CollectionService[LabelCollection],
-        label_service: CollectionService[Label],
+        project_definition_service: Repository[ProjectDefinition],
+        datasheet_definition_element_service: Repository[DatasheetDefinitionElement],
+        label_collection_service: Repository[LabelCollection],
+        label_service: Repository[Label],
         formula_plucker: Plucker[Formula],
         report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
     ):

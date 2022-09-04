@@ -6,7 +6,7 @@ from inspect import isclass
 from shutil import rmtree
 from pydantic.main import BaseModel
 from expert_dollup.shared.database_services import DbConnection
-from expert_dollup.shared.database_services.adapter_interfaces import CollectionService
+from expert_dollup.shared.database_services.adapter_interfaces import Repository
 
 Domain = TypeVar("Domain")
 FakeDbLoader: TypeAlias = Callable[["FakeDb"], None]
@@ -86,10 +86,6 @@ class DbFixtureHelper:
         self.auth_db = auth_db
         self.db = None
 
-    async def insert_daos(self, service_type: Type, daos: List[BaseModel]):
-        service = self.injector.get(service_type)
-        await service._impl.bulk_insert(daos)
-
     async def reset(self):
         await self.dal.truncate_db()
         await self.auth_db.truncate_db()
@@ -99,7 +95,7 @@ class DbFixtureHelper:
         await self.reset()
 
         for domain_type, objects in fake_db.collections.items():
-            service_type = CollectionService[domain_type]
+            service_type = Repository[domain_type]
             service = self.injector.get(service_type)
             await service.insert_many(objects)
 

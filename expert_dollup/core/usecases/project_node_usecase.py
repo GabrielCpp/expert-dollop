@@ -1,22 +1,22 @@
 from typing import List, Optional
 from uuid import UUID
-from expert_dollup.core.domains.bounded_node import BoundedNode
+from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.units import NodeValueValidation, NodeEventDispatcher
 from expert_dollup.core.builders import ProjectNodeSliceBuilder, ProjectTreeBuilder
+from expert_dollup.core.repositories import *
 from expert_dollup.core.domains import *
-from expert_dollup.shared.database_services import CollectionService
 
 
 class ProjectNodeUseCase:
     def __init__(
         self,
-        project_service: CollectionService[ProjectDetails],
-        project_node_service: CollectionService[ProjectNode],
+        project_service: Repository[ProjectDetails],
+        project_node_service: ProjectNodeRepository,
         node_event_dispatcher: NodeEventDispatcher,
         node_value_validation: NodeValueValidation,
         project_node_slice_builder: ProjectNodeSliceBuilder,
         project_tree_builder: ProjectTreeBuilder,
-        project_node_meta: CollectionService[ProjectNodeMeta],
+        project_node_meta: ProjectNodeMetaRepository,
     ):
         self.project_service = project_service
         self.project_node_service = project_node_service
