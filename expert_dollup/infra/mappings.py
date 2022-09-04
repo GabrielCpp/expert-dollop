@@ -580,7 +580,7 @@ def map_formula_to_dao(src: Formula, mapper: Mapper) -> ProjectDefinitionFormula
         project_definition_id=src.project_definition_id,
         name=src.name,
         path=join_uuid_path(src.path),
-        level=6,
+        level=FIELD_LEVEL,
         display_query_internal_id=src.id,
         creation_date_utc=src.creation_date_utc,
         config=FormulaConfigDao(
@@ -1533,3 +1533,14 @@ def map_distributable_item_to_dao(
         obsolete=src.obsolete,
         creation_date_utc=src.creation_date_utc,
     )
+
+
+def map_field_formula_node_filter_to_dao(
+    src: FieldFormulaNodeFilter, mapper: Mapper
+) -> dict:
+    d = map_dict_keys(
+        src.args,
+        {"project_definition_id": ("project_definition_id", None)},
+    )
+    d["level"] = FIELD_LEVEL
+    return d

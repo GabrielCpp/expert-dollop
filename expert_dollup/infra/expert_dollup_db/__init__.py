@@ -4,7 +4,12 @@ from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
 from pydantic import BaseModel, Field, StrictStr, StrictFloat, StrictBool, StrictInt
-from expert_dollup.shared.database_services import DbConnection
+from expert_dollup.shared.database_services import (
+    DbConnection,
+    DaoMappingConfig,
+    DaoVersioning,
+    DaoTypeAnnotation,
+)
 from .node_config_dao import (
     TranslationConfigDao,
     TriggerDao,
@@ -114,9 +119,12 @@ class FormulaConfigDao(BaseModel):
 class ProjectDefinitionFormulaDao(BaseModel):
     class Meta:
         pk = "id"
-        version = 1
-        version_mappers = {}
-        type_of = lambda dao: FORMULA_TYPE
+        dao_mapping_details = DaoMappingConfig(
+            versioning=DaoVersioning(latest_version=1, version_mappers={}),
+            typed=DaoTypeAnnotation(
+                kind=FORMULA_TYPE, is_my_kind=lambda d: "expression" in d["config"]
+            ),
+        )
 
     class Config:
         title = "project_definition_node"
@@ -144,9 +152,14 @@ class DefinitionNodeConfigDao(BaseModel):
 class ProjectDefinitionNodeDao(BaseModel):
     class Meta:
         pk = "id"
-        version = 1
-        version_mappers = {}
-        type_of = lambda dao: DEFINITION_NODE_TYPE
+        dao_mapping_details = DaoMappingConfig(
+            versioning=DaoVersioning(latest_version=1, version_mappers={}),
+            typed=DaoTypeAnnotation(
+                kind=DEFINITION_NODE_TYPE,
+                is_my_kind=lambda d: "field_details" in d["config"],
+            ),
+        )
+
         options = {
             "firestore": {
                 "collection_count": False,
@@ -156,7 +169,6 @@ class ProjectDefinitionNodeDao(BaseModel):
 
     class Config:
         title = "project_definition_node"
-        type_of = lambda dao: dao.level
 
     id: UUID
     project_definition_id: UUID

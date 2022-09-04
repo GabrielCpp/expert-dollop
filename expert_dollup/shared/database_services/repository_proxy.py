@@ -15,7 +15,7 @@ WhereFilter: TypeAlias = Union[QueryFilter, QueryBuilder]
 Id = TypeVar("Id")
 
 
-class CollectionServiceProxy(Repository[Domain]):
+class RepositoryProxy(Repository[Domain]):
     def __init__(self, repository: InternalRepository[Domain]):
         self._impl = repository
 

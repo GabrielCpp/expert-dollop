@@ -1,4 +1,4 @@
-from typing import List, TypeVar, Optional, Dict, Type, Union, Callable, Any
+from typing import List, TypeVar, Optional, Dict, Type, Union, Callable, Any, get_args
 from pydantic import BaseModel, ConstrainedStr
 from pydantic.fields import ModelField
 from inspect import isclass
@@ -167,23 +167,29 @@ class PostgresConnection(DbConnection):
         return PostgresTableService(meta, self.tables, self._engine, mapper)
 
     def load_metadatas(self, metadatas: List[RepositoryMetadata]):
+        def get_dao(dao):
+            for t in get_args(dao):
+                return t.schema(), t.Meta
+            else:
+                return dao.schema(), dao.Meta
+
         column_builder = PostgresColumnBuilder()
 
         for metadata in metadatas:
-            schema = metadata.dao.schema()
+            schema, meta = get_dao(metadata.dao)
             assert schema.get("type") == "object"
             assert "properties" in schema
 
             columns = [
                 column_builder.build(
-                    metadata.dao.Meta,
+                    meta,
                     schema["properties"][field.name],
                     field,
                 )
                 for field in metadata.dao.__fields__.values()
             ]
 
-            if hasattr(metadata.dao.Meta, "version"):
+            if hasattr(meta, "version"):
                 columns.append(Column("_version", Integer, nullable=False))
 
             table_name = schema["title"]
@@ -298,11 +304,7 @@ class PostgresTableService(InternalRepository[Domain]):
         self._table = tables.get(meta.dao)
         self._db_mapping = CollectionElementMapping(
             mapper,
-            meta.domain,
-            meta.dao,
-            getattr(meta.dao.Meta, "version", None),
-            getattr(meta.dao.Meta, "version_mappers", {}),
-            getattr(meta.dao.Meta, "type_of", None),
+            CollectionElementMapping.get_mapping_details(meta.domain, meta.dao),
             record_to_dict=lambda r: r._asdict(),
         )
 
@@ -328,13 +330,13 @@ class PostgresTableService(InternalRepository[Domain]):
         return self._database
 
     async def insert(self, domain: Domain):
-        value = self._db_mapping.map_to_dict(domain)
+        value = self._db_mapping.map_domain_to_dict(domain)
         query = self._table.insert().values(value)
 
         await self._execute(query)
 
     async def insert_many(self, domains: List[Domain]):
-        dicts = self._db_mapping.map_many_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_dict(domains)
 
         for dicts_batch in batch(dicts, BATCH_SIZE):
             query = pg_insert(self._table, dicts_batch)
@@ -344,7 +346,7 @@ class PostgresTableService(InternalRepository[Domain]):
         if len(domains) == 0:
             return
 
-        dicts = self._db_mapping.map_many_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_dict(domains)
         constraint = f"{self._table.name}_pkey"
 
         for items in batch(dicts, BATCH_SIZE):
@@ -360,13 +362,13 @@ class PostgresTableService(InternalRepository[Domain]):
     async def find_all(self, limit: int = 1000) -> List[Domain]:
         query = self._table.select().limit(limit)
         records = await self._fetch_all(query=query)
-        results = self._db_mapping.map_many_to_domain(records)
+        results = self._db_mapping.map_many_record_to_domain(records)
         return results
 
     async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
         query = self._build_query(query_filter)
         records = await self._fetch_all(query=query)
-        results = self._db_mapping.map_many_to_domain(records)
+        results = self._db_mapping.map_many_record_to_domain(records)
 
         return results
 
@@ -377,7 +379,7 @@ class PostgresTableService(InternalRepository[Domain]):
         if record is None:
             raise RecordNotFound()
 
-        result = self._db_mapping.map_to_domain(record)
+        result = self._db_mapping.map_record_to_domain(record)
 
         return result
 
@@ -420,7 +422,7 @@ class PostgresTableService(InternalRepository[Domain]):
         if record is None:
             raise RecordNotFound()
 
-        result = self._db_mapping.map_to_domain(record)
+        result = self._db_mapping.map_record_to_domain(record)
         return result
 
     async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):

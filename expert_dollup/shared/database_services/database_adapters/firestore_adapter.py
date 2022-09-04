@@ -74,14 +74,19 @@ class FirestoreConnection(DbConnection):
         return FirestoreCollection(meta, self.collections, self._client, mapper)
 
     def load_metadatas(self, metadatas: List[RepositoryMetadata]):
+        def get_dao(dao):
+            for t in get_args(dao):
+                return t.schema(), t.Meta
+            else:
+                return dao.schema(), dao.Meta
+
         self.collections = {}
 
         for metadata in metadatas:
-            schema = metadata.dao.schema()
+            schema, meta = get_dao(metadata.dao)
             assert schema.get("type") == "object"
             assert "properties" in schema
 
-            meta = metadata.dao.Meta
             table_name = schema["title"]
             pimary_keys = list(meta.pk) if isinstance(meta.pk, tuple) else [meta.pk]
             options = getattr(meta, "options", {}).get("firestore", {})
@@ -255,11 +260,7 @@ class FirestoreCollection(InternalRepository[Domain]):
         self._query_compiler = QueryCompiler(self._collection)
         self._db_mapping = CollectionElementMapping(
             mapper,
-            meta.domain,
-            meta.dao,
-            getattr(meta.dao.Meta, "version", None),
-            getattr(meta.dao.Meta, "version_mappers", {}),
-            getattr(meta.dao.Meta, "type_of", None),
+            CollectionElementMapping.get_mapping_details(meta.domain, meta.dao),
             Simplifier.simplify,
             record_to_dict=record_to_dict,
         )
@@ -273,7 +274,7 @@ class FirestoreCollection(InternalRepository[Domain]):
         return 20
 
     async def insert(self, domain: Domain):
-        d = self._db_mapping.map_to_dict(domain)
+        d = self._db_mapping.map_domain_to_dict(domain)
 
         if self._table_details.is_counting_enabled:
             await self._batch_operation([d], lambda b, doc_ref, d: b.set(doc_ref, d))
@@ -282,7 +283,7 @@ class FirestoreCollection(InternalRepository[Domain]):
             await self._collection.document(doc_id).set(d, retry=retry_strategy)
 
     async def insert_many(self, domains: List[Domain]):
-        dicts = self._db_mapping.map_many_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_dict(domains)
         await self._batch_operation(dicts, lambda b, doc_ref, d: b.set(doc_ref, d))
 
     async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):
@@ -294,7 +295,7 @@ class FirestoreCollection(InternalRepository[Domain]):
         )
 
     async def upserts(self, domains: List[Domain]) -> None:
-        dicts = self._db_mapping.map_many_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_dict(domains)
         await self._batch_operation(
             dicts, lambda b, doc_ref, d: b.set(doc_ref, d, merge=True)
         )
@@ -305,7 +306,7 @@ class FirestoreCollection(InternalRepository[Domain]):
         async for doc in self._collection.limit(limit).stream():
             results.append(doc)
 
-        domains = self._db_mapping.map_many_to_domain(results)
+        domains = self._db_mapping.map_many_record_to_domain(results)
         return domains
 
     async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
@@ -315,14 +316,14 @@ class FirestoreCollection(InternalRepository[Domain]):
         async for doc in query.stream():
             results.append(doc)
 
-        domains = self._db_mapping.map_many_to_domain(results)
+        domains = self._db_mapping.map_many_record_to_domain(results)
         return domains
 
     async def find_one_by(self, query_filter: WhereFilter) -> Domain:
         query = self._build_query(query_filter).limit(1)
 
         async for doc in query.stream():
-            return self._db_mapping.map_to_domain(doc)
+            return self._db_mapping.map_record_to_domain(doc)
 
         raise RecordNotFound()
 
@@ -331,7 +332,7 @@ class FirestoreCollection(InternalRepository[Domain]):
         doc = await self._collection.document(document_id).get()
 
         if doc.exists:
-            return self._db_mapping.map_to_domain(doc)
+            return self._db_mapping.map_record_to_domain(doc)
 
         raise RecordNotFound()
 

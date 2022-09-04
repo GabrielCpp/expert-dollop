@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional
 from uuid import UUID
 from expert_dollup.shared.database_services import (
-    CollectionServiceProxy,
+    RepositoryProxy,
     InternalRepository,
 )
 from expert_dollup.core.domains import (
@@ -12,11 +12,9 @@ from expert_dollup.infra.expert_dollup_db import ProjectDefinitionNodeDao
 from expert_dollup.core.utils.path_transform import join_uuid_path
 
 
-class ProjectDefinitionNodeInternalRepository(
-    CollectionServiceProxy[ProjectDefinitionNode]
-):
+class ProjectDefinitionNodeInternalRepository(RepositoryProxy[ProjectDefinitionNode]):
     def __init__(self, repository: InternalRepository[ProjectDefinitionNode]):
-        CollectionServiceProxy.__init__(self, repository)
+        RepositoryProxy.__init__(self, repository)
         self._repository = repository
 
     async def get_fields_id_by_name(

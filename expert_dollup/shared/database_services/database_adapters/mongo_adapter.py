@@ -7,7 +7,18 @@ from motor.motor_asyncio import (
     AsyncIOMotorCollection,
 )
 from pydantic import BaseModel
-from typing import Callable, List, TypeVar, Optional, Dict, Type, Set, Any, Awaitable
+from typing import (
+    Callable,
+    List,
+    TypeVar,
+    Optional,
+    Dict,
+    Type,
+    Set,
+    Any,
+    Awaitable,
+    get_args,
+)
 from dataclasses import dataclass
 from urllib.parse import urlparse
 from expert_dollup.shared.automapping import Mapper
@@ -116,14 +127,19 @@ class MongoConnection(DbConnection):
         )
 
     def load_metadatas(self, metadatas: List[RepositoryMetadata]):
+        def get_dao(dao):
+            for t in get_args(dao):
+                return t.schema(), t.Meta
+            else:
+                return dao.schema(), dao.Meta
+
         self.collections = {}
 
         for metadata in metadatas:
-            schema = metadata.dao.schema()
+            schema, meta = get_dao(metadata.dao)
             assert schema.get("type") == "object"
             assert "properties" in schema
 
-            meta = metadata.dao.Meta
             table_name = schema["title"]
             pimary_keys = list(meta.pk) if isinstance(meta.pk, tuple) else [meta.pk]
             options = getattr(meta, "options", {}).get("firestore", {})
@@ -275,11 +291,7 @@ class MongoCollection(InternalRepository[Domain]):
         self._query_compiler = QueryCompiler(mapper, self._collection)
         self._db_mapping = CollectionElementMapping(
             mapper,
-            meta.domain,
-            meta.dao,
-            getattr(meta.dao.Meta, "version", None),
-            getattr(meta.dao.Meta, "version_mappers", {}),
-            getattr(meta.dao.Meta, "type_of", None),
+            CollectionElementMapping.get_mapping_details(meta.domain, meta.dao),
             dao_to_dict=self._dao_to_dict,
         )
 
@@ -296,11 +308,11 @@ class MongoCollection(InternalRepository[Domain]):
         return self._parent
 
     async def insert(self, domain: Domain):
-        document = self._db_mapping.map_to_dict(domain)
+        document = self._db_mapping.map_domain_to_dict(domain)
         await self._collection.insert_one(document)
 
     async def insert_many(self, domains: List[Domain]):
-        dicts = self._db_mapping.map_many_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_dict(domains)
         for dicts_batch in batch(dicts, BATCH_SIZE):
             await self._collection.insert_many(dicts_batch)
 
@@ -311,7 +323,7 @@ class MongoCollection(InternalRepository[Domain]):
         await self._collection.update_many(compiled_filter, {"$set": simplified_dict})
 
     async def upserts(self, domains: List[Domain]) -> None:
-        dicts = self._db_mapping.map_many_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_dict(domains)
 
         for docs in batch(dicts, BATCH_SIZE):
             operations = [
@@ -331,20 +343,20 @@ class MongoCollection(InternalRepository[Domain]):
         async for doc in self._collection.find().limit(limit):
             results.append(doc)
 
-        domains = self._db_mapping.map_many_to_domain(results)
+        domains = self._db_mapping.map_many_record_to_domain(results)
         return domains
 
     async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
         query = self._query_compiler.find(query_filter)
         results = await query.to_list(length=None)
-        domains = self._db_mapping.map_many_to_domain(results)
+        domains = self._db_mapping.map_many_record_to_domain(results)
         return domains
 
     async def find_one_by(self, query_filter: WhereFilter) -> Domain:
         query = self._query_compiler.find(query_filter).limit(1)
 
         async for doc in query:
-            return self._db_mapping.map_to_domain(doc)
+            return self._db_mapping.map_record_to_domain(doc)
 
         raise RecordNotFound()
 
@@ -355,7 +367,7 @@ class MongoCollection(InternalRepository[Domain]):
         if doc is None:
             raise RecordNotFound()
 
-        return self._db_mapping.map_to_domain(doc)
+        return self._db_mapping.map_record_to_domain(doc)
 
     async def has(self, pk_id: Id) -> bool:
         document_id = self._table_details.build_id_from_pk(self._mapper, pk_id)

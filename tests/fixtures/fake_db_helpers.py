@@ -32,6 +32,17 @@ class FakeDb:
     def all(self, object_type: Type[Domain]) -> List[Domain]:
         return self.collections[object_type]
 
+    def all_match(
+        self, object_type: Type[Domain], predicate: Callable[[object], bool]
+    ) -> List[Domain]:
+        objects = self.collections[object_type]
+        results = [
+            matching_object
+            for matching_object in objects
+            if predicate(matching_object) is True
+        ]
+        return results
+
     def get_only_one(self, object_type: Type) -> object:
         assert object_type in self.collections
         objects = self.collections[object_type]

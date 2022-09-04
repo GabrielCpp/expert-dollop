@@ -10,15 +10,15 @@ from expert_dollup.core.domains import (
     ProjectDefinitionNode,
 )
 from expert_dollup.shared.database_services import (
-    CollectionServiceProxy,
+    RepositoryProxy,
     CollectionElementMapping,
     InternalRepository,
 )
 
 
-class ProjectNodeMetaInternalRepository(CollectionServiceProxy[ProjectNodeMeta]):
+class ProjectNodeMetaInternalRepository(RepositoryProxy[ProjectNodeMeta]):
     def __init__(self, repository: InternalRepository[ProjectNodeMeta]):
-        CollectionServiceProxy.__init__(self, repository)
+        RepositoryProxy.__init__(self, repository)
         self._repository = repository
 
     async def find_project_defs(self, project_id: UUID) -> List[ProjectDefinitionNode]:
@@ -33,12 +33,10 @@ class ProjectNodeMetaInternalRepository(CollectionServiceProxy[ProjectNodeMeta])
             {
                 "definition": lambda mapper: CollectionElementMapping(
                     mapper,
-                    ProjectDefinitionNode,
-                    ProjectDefinitionNodeDao,
-                    getattr(ProjectDefinitionNodeDao.Meta, "version", None),
-                    getattr(ProjectDefinitionNodeDao.Meta, "version_mappers", {}),
-                    getattr(ProjectDefinitionNodeDao.Meta, "type_of", None),
-                ).map_to_domain
+                    CollectionElementMapping.get_mapping_details(
+                        ProjectDefinitionNode, ProjectDefinitionNodeDao
+                    ),
+                ).map_record_to_domain
             },
         )
 

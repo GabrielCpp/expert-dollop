@@ -3,14 +3,14 @@ from uuid import UUID
 from expert_dollup.core.domains import Formula
 from expert_dollup.infra.expert_dollup_db import ProjectDefinitionFormulaDao
 from expert_dollup.shared.database_services import (
-    CollectionServiceProxy,
+    RepositoryProxy,
     InternalRepository,
 )
 
 
-class FormulaInternalRepository(CollectionServiceProxy):
+class FormulaInternalRepository(RepositoryProxy):
     def __init__(self, repository: InternalRepository[Formula]):
-        CollectionServiceProxy.__init__(self, repository)
+        RepositoryProxy.__init__(self, repository)
         self._repository = repository
 
     async def get_formulas_id_by_name(

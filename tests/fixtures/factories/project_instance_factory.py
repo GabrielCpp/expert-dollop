@@ -5,6 +5,7 @@ from uuid import UUID
 from decimal import Decimal
 from expert_dollup.core.domains import *
 from .helpers import make_uuid
+from ..fake_db_helpers import FakeDb
 
 
 class FormulaSeed:
@@ -411,3 +412,16 @@ class ProjectInstanceFactory:
             unit_instances=unit_instances,
             any_id_to_name=any_id_to_name,
         )
+
+    def __init__(self, seed: ProjectSeed):
+        self.seed = seed
+
+    def __call__(self, db: FakeDb) -> None:
+        package = ProjectInstanceFactory.build(self.seed)
+        self.package = package
+
+        db.add(package.project_definition)
+        db.add(package.project)
+        db.add_all(package.formulas)
+        db.add_all(package.definition_nodes)
+        db.add_all(package.nodes)

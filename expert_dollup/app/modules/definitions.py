@@ -16,6 +16,10 @@ expert_dollup_metadatas = [
     RepositoryMetadata(dao=ProjectDefinitionFormulaDao, domain=Formula),
     RepositoryMetadata(dao=MeasureUnitDao, domain=MeasureUnit),
     RepositoryMetadata(dao=ProjectDefinitionNodeDao, domain=ProjectDefinitionNode),
+    RepositoryMetadata(
+        dao=Union[ProjectDefinitionNodeDao, ProjectDefinitionFormulaDao],
+        domain=Union[ProjectDefinitionNode, Formula],
+    ),
     RepositoryMetadata(dao=ProjectDefinitionDao, domain=ProjectDefinition),
     RepositoryMetadata(dao=ProjectNodeMetaDao, domain=ProjectNodeMeta),
     RepositoryMetadata(dao=ProjectNodeDao, domain=ProjectNode),
@@ -62,5 +66,9 @@ paginations = [
     ),
     PaginationDetails(
         default_page_encoder=FieldTokenEncoder("id"), for_domain=Translation
+    ),
+    PaginationDetails(
+        default_page_encoder=FieldTokenEncoder("name", str, str, ""),
+        for_domain=Union[ProjectDefinitionNode, Formula],
     ),
 ]

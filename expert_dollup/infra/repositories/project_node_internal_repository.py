@@ -6,7 +6,7 @@ from expert_dollup.core.domains import (
     ProjectNodeFilter,
 )
 from expert_dollup.shared.database_services import (
-    CollectionServiceProxy,
+    RepositoryProxy,
     InternalRepository,
     PluckQuery,
 )
@@ -15,10 +15,10 @@ from expert_dollup.core.utils.path_transform import join_uuid_path
 
 
 class ProjectNodeInternalRepository(
-    CollectionServiceProxy[ProjectNode], PluckQuery[ProjectNode]
+    RepositoryProxy[ProjectNode], PluckQuery[ProjectNode]
 ):
     def __init__(self, repository: InternalRepository[ProjectNode]):
-        CollectionServiceProxy.__init__(self, repository)
+        RepositoryProxy.__init__(self, repository)
         PluckQuery.__init__(self, repository)
         self._repository = repository
 
