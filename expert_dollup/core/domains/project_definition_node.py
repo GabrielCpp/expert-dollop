@@ -143,6 +143,7 @@ class ProjectDefinitionNodeFilter(QueryFilter):
 
 class FieldFormulaNodeFilter(QueryFilter):
     project_definition_id: Optional[UUID]
+    name: str
 
 
 class ProjectDefinitionNodePluckFilter(QueryFilter):

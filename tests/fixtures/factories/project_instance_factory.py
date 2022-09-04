@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 from decimal import Decimal
 from expert_dollup.core.domains import *
@@ -304,7 +304,7 @@ class ProjectInstanceFactory:
             name=project_name,
             default_datasheet_id=make_uuid(f"{project_name}-default-datasheet"),
             properties={},
-            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
+            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000, timezone.utc),
         )
 
         project = ProjectDetails(
@@ -313,7 +313,7 @@ class ProjectInstanceFactory:
             is_staged=False,
             project_definition_id=project_definition.id,
             datasheet_id=project_definition.default_datasheet_id,
-            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
+            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000, timezone.utc),
         )
 
         definition_nodes = [
@@ -327,7 +327,7 @@ class ProjectInstanceFactory:
                 translations=node_def_seed.translations,
                 field_details=node_def_seed.field_details,
                 path=node_def_seed.path,
-                creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
+                creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000, timezone.utc),
             )
             for index, node_def_seed in enumerate(project_seed.definitions.values())
         ]
@@ -369,7 +369,7 @@ class ProjectInstanceFactory:
                         for dependant_name in formula_seed.node_dependencies
                     ],
                 ),
-                creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
+                creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000, timezone.utc),
             )
             for formula_seed in formulas_by_name.values()
         ]

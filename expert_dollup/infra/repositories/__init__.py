@@ -4,3 +4,6 @@ from .project_definition_node_internal_repository import (
 )
 from .project_node_internal_repository import ProjectNodeInternalRepository
 from .project_node_meta_internal_repository import ProjectNodeMetaInternalRepository
+from .definition_node_formula_internal_repository import (
+    DefinitionNodeFormulaInternalRepository,
+)

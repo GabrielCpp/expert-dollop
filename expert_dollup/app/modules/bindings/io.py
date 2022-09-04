@@ -140,6 +140,14 @@ def bind_custom_repositories(binder: Binder) -> None:
         ),
     )
 
+    binder.bind(
+        DefinitionNodeFormulaRepository,
+        factory_of(
+            DefinitionNodeFormulaInternalRepository,
+            repository=InternalRepository[Union[ProjectDefinitionNode, Formula]],
+        ),
+    )
+
 
 def bind_validators(binder: Binder) -> None:
     binder.bind(

@@ -1535,12 +1535,3 @@ def map_distributable_item_to_dao(
     )
 
 
-def map_field_formula_node_filter_to_dao(
-    src: FieldFormulaNodeFilter, mapper: Mapper
-) -> dict:
-    d = map_dict_keys(
-        src.args,
-        {"project_definition_id": ("project_definition_id", None)},
-    )
-    d["level"] = FIELD_LEVEL
-    return d
