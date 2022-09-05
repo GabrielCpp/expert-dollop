@@ -1,25 +1,25 @@
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
 from typing import Optional
-from expert_dollup.core.domains.formula import FormulaExpression
-from expert_dollup.shared.starlette_injection import HttpPageHandler
-from expert_dollup.shared.starlette_injection import Inject
-from expert_dollup.shared.starlette_injection import RequestHandler, MappingChain
-from expert_dollup.core.domains import FormulaFilter
-from expert_dollup.app.dtos import FormulaExpressionDto, InputFormulaDto
-from expert_dollup.core.usecases import FormulaUseCase
+from expert_dollup.shared.starlette_injection import *
+from expert_dollup.shared.database_services import *
+from expert_dollup.core.domains import *
+from expert_dollup.core.usecases import *
+from expert_dollup.app.dtos import *
 
 router = APIRouter()
 
 
 @router.get("/definitions/{project_definition_id}/formulas")
-async def get_formulas(
+async def find_paginated_formulas(
     project_definition_id: UUID,
-    limit: int = 10,
+    limit: int = Query(alias="limit", default=10),
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
-    handler=Depends(Inject(HttpPageHandler[FormulaExpression])),
+    handler=Depends(Inject(PageHandlerProxy)),
+    paginator=Depends(Inject(Paginator[FormulaExpression])),
 ):
-    return await handler.handle(
+    return await handler.use_paginator(paginator).handle(
+        FormulaExpressionDto,
         FormulaFilter(project_definition_id=project_definition_id),
         limit,
         next_page_token,

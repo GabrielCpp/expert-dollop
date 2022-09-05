@@ -38,7 +38,7 @@ def get_config(
     return decoder(environ[name])
 
 
-def load_app_settings():
+def load_app_settings() -> AppSettings:
     authjwt_public_key = base64.decodebytes(
         environ.get("JWT_PUBLIC_KEY").encode("ascii")
     ).decode("ascii")

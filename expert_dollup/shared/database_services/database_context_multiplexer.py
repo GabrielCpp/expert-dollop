@@ -1,5 +1,5 @@
 from typing import Type, TypeVar, List, Any, Optional, Type
-from injector import Injector
+from .injector_interface import InjectorProtocol
 from .database_context import DatabaseContext
 from .adapter_interfaces import Repository, WhereFilter, QueryFilter
 
@@ -9,7 +9,7 @@ Id = TypeVar("Id")
 
 
 class DatabaseContextMultiplexer(DatabaseContext):
-    def __init__(self, injector: Injector, databases: List[Type]):
+    def __init__(self, injector: InjectorProtocol, databases: List[Type]):
         self.injector = injector
         self.databases = [injector.get(db_type) for db_type in databases]
         self.repositories: Dict[Type, Repository[Any]] = {}

@@ -3,19 +3,11 @@ from json import dumps
 from typing import Any, Optional
 from ariadne import ObjectType, QueryType, convert_kwargs_to_snake_case
 from ariadne.types import GraphQLResolveInfo
-from expert_dollup.shared.database_services import (
-    UserRessourcePaginator,
-    UserRessourceQuery,
-)
-from expert_dollup.shared.starlette_injection import (
-    AuthService,
-    GraphqlPageHandler,
-    inject_graphql_route,
-    inject_graphql_handler,
-)
-from expert_dollup.app.controllers.project.project_definition import *
+from expert_dollup.shared.database_services import *
+from expert_dollup.shared.starlette_injection import *
+from expert_dollup.app.controllers.project.project_definition_controller import *
 from expert_dollup.app.controllers.datasheet.datasheet_definition_element_controller import (
-    find_datasheet_definition_elements,
+    find_paginated_datasheet_elements,
 )
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
@@ -32,36 +24,30 @@ async def resolve_find_project_definition(
 
 
 @query.field("findProjectDefintions")
-@inject_graphql_handler(GraphqlPageHandler[UserRessourcePaginator[ProjectDefinition]])
+@inject_graphql_route(find_paginated_project_definitions)
 @convert_kwargs_to_snake_case
 async def resolve_find_project_defintions(
     _: Any,
     info: GraphQLResolveInfo,
     query: str,
     first: int,
-    handler: GraphqlPageHandler[UserRessourcePaginator[ProjectDefinition]],
+    find_paginated_project_definitions,
     after: Optional[str] = None,
 ):
-    user = await info.context.container.get(AuthService).can_perform_required(
-        info.context.request,
-        ["project_definition:get"],
-    )
-
-    result = await handler.handle(
-        ProjectDefinitionDto, UserRessourceQuery(user.organization_id), first, after
-    )
-    return result
+    return await find_paginated_project_definitions(info, query, first, after)
 
 
-@inject_graphql_route(find_datasheet_definition_elements)
+@inject_graphql_route(find_paginated_datasheet_elements, ["project_definition_id"])
 @project_definition.field("elementsDefinition")
 @convert_kwargs_to_snake_case
 async def resolve_elements_definition(
     parent: ProjectDefinitionDto,
     info: GraphQLResolveInfo,
-    find_datasheet_definition_elements: callable,
+    first: int,
+    find_paginated_datasheet_elements,
+    after: Optional[str] = None,
 ):
-    return await find_datasheet_definition_elements(info, parent.id)
+    return await find_paginated_datasheet_elements(info, parent.id, first, after)
 
 
 @datasheet_definition_property_schema_dict.field("schema")

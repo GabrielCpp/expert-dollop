@@ -1,3 +1,5 @@
-from .request_handler import MappingChain, RequestHandler
-from .graphql_page_handler import GraphqlPageHandler
-from .http_page_handler import HttpPageHandler, make_page_model
+from .http import *
+from .graphql import *
+from .interfaces import PageHandler, MappingChain
+from .page_utils import make_page_model
+from .page_handle_proxy import PageHandlerProxy

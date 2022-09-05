@@ -1,5 +1,5 @@
 from os import environ
-from injector import *
+from typing import Union
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.shared.database_services import *
 from expert_dollup.shared.automapping import *
@@ -9,7 +9,6 @@ from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
 from expert_dollup.infra.validators import SchemaValidator
 from expert_dollup.infra.providers import WordProvider
-from expert_dollup.infra.storage_connectors import ObjectNotFound
 from expert_dollup.infra.ressource_engine import RessourceEngine
 from expert_dollup.core.utils import authorization_factory
 from expert_dollup.core.domains import *
@@ -23,193 +22,183 @@ from ..definitions import auth_metadatas, expert_dollup_metadatas, paginations
 storage_exception_mappings = {ObjectNotFound: lambda e: RessourceNotFound()}
 
 
-def bind_ressource_engines(binder: Binder) -> None:
+def bind_ressource_engines(builder: InjectorBuilder) -> None:
     for ressource_type in authorization_factory.ressource_types:
-        binder.bind(
-            UserRessourcePaginator[ressource_type],
-            factory_of(
-                RessourceEngine[ressource_type],
-                user_service=InternalRepository[Ressource],
-                ressource_service=InternalRepository[Ressource],
-                domain_service=InternalRepository[ressource_type],
-                mapper=Mapper,
+        builder.add_factory(
+            TypedInjection.make_type_name(UserRessourcePaginator, ressource_type),
+            RessourceEngine,
+            user_service=TypedInjection.make_type_name(InternalRepository, Ressource),
+            ressource_service=TypedInjection.make_type_name(
+                InternalRepository, Ressource
             ),
+            domain_service=TypedInjection.make_type_name(
+                InternalRepository, ressource_type
+            ),
+            mapper=Mapper,
         )
 
 
-def bind_database_expert_dollup(binder: Binder) -> None:
+def bind_database_expert_dollup(builder: InjectorBuilder) -> None:
     expert_dollup_db = create_connection(environ["EXPERT_DOLLUP_DB_URL"])
     expert_dollup_db.load_metadatas(expert_dollup_metadatas)
-    binder.bind(ExpertDollupDatabase, to=expert_dollup_db, scope=singleton)
+    builder.add_object(ExpertDollupDatabase, expert_dollup_db)
 
 
-def bind_database_ressource(binder: Binder) -> None:
+def bind_database_auth(builder: InjectorBuilder) -> None:
     auth_db = create_connection(environ["AUTH_DB_URL"])
     auth_db.load_metadatas(auth_metadatas)
-    binder.bind(RessourceAuthDatabase, to=auth_db, scope=singleton)
+    builder.add_object(RessourceAuthDatabase, auth_db)
 
 
-def bind_database_context(binder: Binder) -> None:
-    binder.bind(
+def bind_database_context(builder: InjectorBuilder) -> None:
+    builder.add_singleton(
         DatabaseContext,
-        to=factory_of(
-            DatabaseContextMultiplexer,
-            injector=Injector,
-            databases=Constant([RessourceAuthDatabase, ExpertDollupDatabase]),
+        DatabaseContextMultiplexer,
+        injector=Injector,
+        databases=InjectorBuilder.forward(
+            [RessourceAuthDatabase, ExpertDollupDatabase]
         ),
-        scope=singleton,
     )
 
 
-def bind_base_repositories(binder: Binder) -> None:
+def bind_base_repositories(builder: InjectorBuilder) -> None:
     def get_repository(
         database: DbConnection, mapper: Mapper, metadata: RepositoryMetadata
     ):
         return database.get_collection_service(metadata, mapper)
 
     for metadata in expert_dollup_metadatas:
-        binder.bind(
-            Repository[metadata.domain],
-            factory_of(
-                get_repository,
-                database=ExpertDollupDatabase,
-                mapper=Mapper,
-                metadata=Constant(metadata),
-            ),
+        builder.add_factory(
+            TypedInjection.make_type_name(Repository, metadata.domain),
+            get_repository,
+            database=ExpertDollupDatabase,
+            mapper=Mapper,
+            metadata=InjectorBuilder.forward(metadata),
         )
 
-        binder.bind(
-            InternalRepository[metadata.domain],
-            factory_of(
-                get_repository,
-                database=ExpertDollupDatabase,
-                mapper=Mapper,
-                metadata=Constant(metadata),
-            ),
+        builder.add_factory(
+            TypedInjection.make_type_name(InternalRepository, metadata.domain),
+            get_repository,
+            database=ExpertDollupDatabase,
+            mapper=Mapper,
+            metadata=InjectorBuilder.forward(metadata),
         )
 
     for metadata in auth_metadatas:
-        binder.bind(
-            Repository[metadata.domain],
-            factory_of(
-                get_repository,
-                database=RessourceAuthDatabase,
-                mapper=Mapper,
-                metadata=Constant(metadata),
-            ),
+        builder.add_factory(
+            TypedInjection.make_type_name(Repository, metadata.domain),
+            get_repository,
+            database=RessourceAuthDatabase,
+            mapper=Mapper,
+            metadata=InjectorBuilder.forward(metadata),
         )
 
-        binder.bind(
-            InternalRepository[metadata.domain],
-            factory_of(
-                get_repository,
-                database=RessourceAuthDatabase,
-                mapper=Mapper,
-                metadata=Constant(metadata),
-            ),
+        builder.add_factory(
+            TypedInjection.make_type_name(InternalRepository, metadata.domain),
+            get_repository,
+            database=RessourceAuthDatabase,
+            mapper=Mapper,
+            metadata=InjectorBuilder.forward(metadata),
         )
 
 
-def bind_custom_repositories(binder: Binder) -> None:
-    binder.bind(
+def bind_custom_repositories(builder: InjectorBuilder) -> None:
+    builder.add_factory(
         ProjectDefinitionNodeRepository,
-        factory_of(
-            ProjectDefinitionNodeInternalRepository,
-            repository=InternalRepository[ProjectDefinitionNode],
+        ProjectDefinitionNodeInternalRepository,
+        repository=TypedInjection.make_type_name(
+            InternalRepository, ProjectDefinitionNode
         ),
     )
-    binder.bind(
+
+    builder.add_factory(
         ProjectNodeMetaRepository,
-        factory_of(
-            ProjectNodeMetaInternalRepository,
-            repository=InternalRepository[ProjectNodeMeta],
-        ),
+        ProjectNodeMetaInternalRepository,
+        repository=TypedInjection.make_type_name(InternalRepository, ProjectNodeMeta),
     )
-    binder.bind(
+
+    builder.add_factory(
         ProjectNodeRepository,
-        factory_of(
-            ProjectNodeInternalRepository,
-            repository=InternalRepository[ProjectNode],
-        ),
+        ProjectNodeInternalRepository,
+        repository=TypedInjection.make_type_name(InternalRepository, ProjectNode),
     )
-    binder.bind(
+
+    builder.add_factory(
         FormulaRepository,
-        factory_of(
-            FormulaInternalRepository,
-            repository=InternalRepository[Formula],
-        ),
+        FormulaInternalRepository,
+        repository=TypedInjection.make_type_name(InternalRepository, Formula),
     )
 
-    binder.bind(
+    builder.add_factory(
         DefinitionNodeFormulaRepository,
-        factory_of(
-            DefinitionNodeFormulaInternalRepository,
-            repository=InternalRepository[Union[ProjectDefinitionNode, Formula]],
+        DefinitionNodeFormulaInternalRepository,
+        repository=TypedInjection.make_type_name(
+            InternalRepository, Union[ProjectDefinitionNode, Formula]
         ),
     )
 
 
-def bind_validators(binder: Binder) -> None:
-    binder.bind(
-        SchemaValidator,
-        inject(SchemaValidator),
-    )
+def bind_validators(builder: InjectorBuilder) -> None:
+    builder.add_singleton(SchemaValidator, SchemaValidator)
 
 
-def bind_queries(binder: Binder) -> None:
+def bind_queries(builder: InjectorBuilder) -> None:
     for metadata in expert_dollup_metadatas:
-        binder.bind(
-            Plucker[metadata.domain],
-            factory_of(
-                PluckQuery[metadata.domain], repository=Repository[metadata.domain]
-            ),
+        builder.add_factory(
+            TypedInjection.make_type_name(Plucker, metadata.domain),
+            PluckQuery,
+            repository=TypedInjection.make_type_name(Repository, metadata.domain),
         )
 
 
-def bind_paginators(binder: Binder) -> None:
+def bind_paginators(builder: InjectorBuilder) -> None:
     for pagination_details in paginations:
-        binder.bind(
-            Paginator[pagination_details.for_domain],
-            factory_of(
-                CollectionPaginator,
-                repository=Repository[pagination_details.for_domain],
-                mapper=Mapper,
-                pagination_details=Constant(pagination_details),
+        builder.add_factory(
+            TypedInjection.make_type_name(Paginator, pagination_details.for_domain),
+            CollectionPaginator,
+            repository=TypedInjection.make_type_name(
+                Repository, pagination_details.for_domain
             ),
+            mapper=Mapper,
+            pagination_details=InjectorBuilder.forward(pagination_details),
         )
 
 
-def bind_storages(binder: Binder) -> None:
+def bind_storages(builder: InjectorBuilder) -> None:
     settings = load_app_settings()
-    storage = StorageProxy(
-        LocalStorage(settings.app_bucket_name)
-        if is_development()
-        else GoogleCloudStorage(settings.app_bucket_name),
-        storage_exception_mappings,
+    builder.add_singleton(
+        ExpertDollupStorage,
+        lambda: StorageProxy(
+            LocalStorage(settings.app_bucket_name)
+            if is_development()
+            else GoogleCloudStorage(settings.app_bucket_name),
+            storage_exception_mappings,
+        ),
     )
-    binder.bind(ExpertDollupStorage, to=storage, scope=singleton)
 
     for class_type in get_classes(storages):
         core_class_type = get_base(class_type)
-        binder.bind(core_class_type, inject(class_type))
+        builder.add_factory(core_class_type, class_type, **get_annotations(class_type))
 
 
-def bind_providers(binder: Binder) -> None:
+def bind_providers(builder: InjectorBuilder) -> None:
     with open("./assets/corncob_lowercase.txt") as f:
         words = [word for word in f.readlines() if word != ""]
 
-    binder.bind(WordProvider, to=WordProvider(words), scope=singleton)
+    builder.add_singleton(
+        WordProvider, WordProvider, words=InjectorBuilder.forward(words)
+    )
 
 
-def bind_io_modules(binder: Binder) -> None:
-    bind_ressource_engines(binder)
-    bind_database_expert_dollup(binder)
-    bind_database_ressource(binder)
-    bind_database_context(binder)
-    bind_base_repositories(binder)
-    bind_custom_repositories(binder)
-    bind_validators(binder)
-    bind_queries(binder)
-    bind_paginators(binder)
-    bind_storages(binder)
-    bind_providers(binder)
+def bind_io_modules(builder: InjectorBuilder) -> None:
+    bind_database_expert_dollup(builder)
+    bind_database_auth(builder)
+    bind_base_repositories(builder)
+    bind_custom_repositories(builder)
+    bind_storages(builder)
+    bind_database_context(builder)
+    bind_providers(builder)
+    bind_validators(builder)
+    bind_ressource_engines(builder)
+    bind_queries(builder)
+    bind_paginators(builder)

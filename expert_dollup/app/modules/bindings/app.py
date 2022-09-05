@@ -1,12 +1,10 @@
 import http.client as httplib
-from injector import Binder, singleton, inject
 from typing import Dict, Any
 from typing_extensions import TypeAlias
 from starlette.responses import JSONResponse
 from expert_dollup.app.middlewares import ExceptionHandlerDict
 from expert_dollup.core.exceptions import *
-from expert_dollup.app.settings import load_app_settings
-import expert_dollup.app.handlers as handlers
+from expert_dollup.app.handlers import *
 from expert_dollup.app.jwt_auth import *
 from expert_dollup.core.domains import User, Ressource
 from expert_dollup.shared.automapping import Mapper
@@ -42,64 +40,28 @@ exception_handlers = {
 }
 
 
-def bind_error_handler(binder: Binder) -> None:
-    binder.bind(ExceptionHandlerDict, to=lambda: exception_handlers, scope=singleton)
+def bind_error_handler(builder: InjectorBuilder) -> None:
+    builder.add_object(ExceptionHandlerDict, exception_handlers)
 
 
-def bind_auth_jwt(binder: Binder) -> None:
-    binder.bind(
+def bind_auth_jwt(builder: InjectorBuilder) -> None:
+    builder.add_factory(
         AuthService,
-        to=factory_of(
-            AuthJWT,
-            settings=Constant(load_app_settings()),
-            user_service=Repository[User],
-            ressource_service=Repository[Ressource],
-        ),
+        AuthJWT,
+        settings=AppSettings,
+        user_service=Repository[User],
+        ressource_service=Repository[Ressource],
+        logger=Logger,
     )
 
 
-def bind_graphql_handlers(binder: Binder) -> None:
-    for pagination in paginations:
-        binder.bind(
-            GraphqlPageHandler[Paginator[pagination.for_domain]],
-            factory_of(
-                GraphqlPageHandler,
-                mapper=Mapper,
-                paginator=Paginator[pagination.for_domain],
-            ),
-        )
-
-        binder.bind(
-            GraphqlPageHandler[UserRessourcePaginator[pagination.for_domain]],
-            factory_of(
-                GraphqlPageHandler,
-                mapper=Mapper,
-                paginator=UserRessourcePaginator[pagination.for_domain],
-            ),
-        )
+def bind_custom_handlers(builder: InjectorBuilder) -> None:
+    builder.add_factory(
+        ImportRessourceHandler, ImportRessourceHandler, db_context=DatabaseContext
+    )
 
 
-def bind_http_handlers(binder: Binder) -> None:
-    for pagination in paginations:
-        binder.bind(
-            HttpPageHandler[Paginator[pagination.for_domain]],
-            factory_of(
-                HttpPageHandler,
-                mapper=Mapper,
-                paginator=Paginator[pagination.for_domain],
-            ),
-        )
-
-
-def bind_handlers(binder: Binder) -> None:
-    binder.bind(RequestHandler, inject(RequestHandler))
-    for handler in get_classes(handlers):
-        binder.bind(handler, inject(handler))
-
-
-def bind_app_modules(binder: Binder) -> None:
-    bind_error_handler(binder)
-    bind_auth_jwt(binder)
-    bind_graphql_handlers(binder)
-    bind_http_handlers(binder)
-    bind_handlers(binder)
+def bind_app_modules(builder: InjectorBuilder) -> None:
+    bind_error_handler(builder)
+    bind_auth_jwt(builder)
+    bind_custom_handlers(builder)

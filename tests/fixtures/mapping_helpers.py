@@ -2,7 +2,7 @@ import pytest
 from typing import TypeVar, Type, Callable, Any, List
 from fastapi import Response
 from functools import singledispatch
-from injector import Injector
+from expert_dollup.shared.starlette_injection import Injector
 from expert_dollup.shared.automapping import Mapper
 from pydantic import BaseModel
 from dataclasses import dataclass

@@ -1,14 +1,13 @@
 import pytest
 from base64 import encodebytes
 from typing import Union
-from injector import Injector
 from datetime import datetime, timezone
 from expert_dollup.core.domains import ProjectDetails, User
 from expert_dollup.core.utils.ressource_permissions import authorization_factory
 from expert_dollup.core.repositories import DefinitionNodeFormulaRepository
 from expert_dollup.infra.mappings import FIELD_LEVEL
-from expert_dollup.shared.database_services import Page
-from expert_dollup.shared.database_services import Paginator
+from expert_dollup.shared.database_services import Page, Paginator
+from expert_dollup.shared.starlette_injection import Injector
 from ..fixtures import *
 
 

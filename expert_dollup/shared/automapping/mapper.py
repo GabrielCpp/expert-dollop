@@ -2,7 +2,7 @@ from typing import Type, TypeVar, Callable, Dict, List, Optional, Union, Any, Li
 from collections import defaultdict
 from inspect import getmembers, isfunction, signature
 from .mapping_error import MapingError
-from .injector_interface import Injector
+from .injector_interface import InjectorProtocol
 
 
 T = TypeVar("T")
@@ -11,7 +11,7 @@ K = TypeVar("K")
 
 
 class Mapper:
-    def __init__(self, injector: Optional[Injector] = None):
+    def __init__(self, injector: Optional[InjectorProtocol] = None):
         self._mappings = defaultdict(dict)
         self._injector = injector
 

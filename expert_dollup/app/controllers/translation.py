@@ -1,16 +1,9 @@
 from typing import Optional, List
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
-from expert_dollup.shared.database_services import Paginator, Repository
-from expert_dollup.shared.starlette_injection import (
-    RequestHandler,
-    MappingChain,
-    HttpPageHandler,
-    Inject,
-    CanPerformOnRequired,
-    CanPerformRequired,
-)
-from expert_dollup.core.usecases import TranslationUseCase
+from expert_dollup.shared.database_services import *
+from expert_dollup.shared.starlette_injection import *
+from expert_dollup.core.usecases import *
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 
@@ -85,12 +78,13 @@ async def delete_translation(
 async def get_all_translation_for_ressource(
     ressource_id: UUID,
     locale: str,
-    handler=Depends(Inject(HttpPageHandler[Paginator[Translation]])),
-    user=Depends(CanPerformRequired("project_definition:get")),
+    limit: int = Query(alias="limit", default=10),
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
-    limit: int = 10,
+    handler=Depends(Inject(PageHandlerProxy)),
+    paginator=Depends(Inject(Paginator[Translation])),
+    user=Depends(CanPerformRequired("project_definition:get")),
 ):
-    return await handler.handle(
+    return await handler.use_paginator(paginator).handle(
         TranslationDto,
         TranslationRessourceLocaleQuery(ressource_id=ressource_id, locale=locale),
         limit,

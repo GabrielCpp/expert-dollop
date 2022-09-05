@@ -1,14 +1,6 @@
 from typing import Type, Optional, List
-from dataclasses import dataclass
-from ...automapping import Mapper
-
-
-@dataclass
-class MappingChain:
-    dto: Optional[Type] = None
-    domain: Optional[Type] = None
-    out_domain: Optional[Type] = None
-    out_dto: Optional[Type] = None
+from ..interfaces import MappingChain
+from ....automapping import Mapper
 
 
 class RequestHandler:

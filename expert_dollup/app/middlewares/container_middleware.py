@@ -3,13 +3,11 @@ from fastapi import Depends
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from injector import Injector
+from expert_dollup.shared.starlette_injection import *
+from uuid import uuid4
 
 
-def create_node_middleware(
-    global_injector: Injector,
-    build_request_node: Callable[[Injector, Request], Injector],
-):
+def create_injector_middleware(injector: TypedInjection):
     class ContainerMiddleware(BaseHTTPMiddleware):
         async def dispatch(
             self,
@@ -17,8 +15,15 @@ def create_node_middleware(
             call_next: RequestResponseEndpoint,
         ) -> Response:
 
-            request.state.global_injector = global_injector
-            request.state.container = build_request_node(global_injector, request)
-            return await call_next(request)
+            scoped_injector = injector.scoped(str(uuid4()))
+
+            try:
+                scoped_injector.bind_scoped_object(Request, request)
+                request.state.injector = scoped_injector
+                result = await call_next(request)
+            finally:
+                scoped_injector.destroy()
+
+            return result
 
     return ContainerMiddleware

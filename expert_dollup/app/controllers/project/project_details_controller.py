@@ -1,17 +1,30 @@
 from fastapi import APIRouter, Depends, Query
+from typing import Optional
 from uuid import UUID, uuid4
-from expert_dollup.shared.starlette_injection import (
-    RequestHandler,
-    MappingChain,
-    CanPerformOnRequired,
-    CanPerformRequired,
-    Inject,
-)
-from expert_dollup.app.dtos import ProjectDetailsDto, ProjectDetailsInputDto
-from expert_dollup.core.domains import ProjectDetails
-from expert_dollup.core.usecases import ProjectUseCase
+from expert_dollup.shared.database_services import *
+from expert_dollup.shared.starlette_injection import *
+from expert_dollup.core.domains import *
+from expert_dollup.core.usecases import *
+from expert_dollup.app.dtos import *
 
 router = APIRouter()
+
+
+@router.get("/projects")
+async def find_paginated_project_details(
+    query: str = Query(alias="query", default=""),
+    limit: int = Query(alias="limit", default=10),
+    next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
+    paginator=Depends(Inject(UserRessourcePaginator[ProjectDetails])),
+    handler: PageHandlerProxy = Depends(Inject(PageHandlerProxy)),
+    user=Depends(CanPerformRequired(["project:get"])),
+):
+    return await handler.use_paginator(paginator).handle(
+        ProjectDetailsDto,
+        UserRessourceQuery(organization_id=user.organization_id, names=query.split()),
+        limit,
+        next_page_token,
+    )
 
 
 @router.get("/projects/{project_id}")

@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Callable, List, Dict, Type, TypeVar, Union, Optional
 from typing_extensions import TypeAlias
-from injector import Injector
+from expert_dollup.shared.starlette_injection import Injector
 from inspect import isclass
 from shutil import rmtree
 from pydantic.main import BaseModel

@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, Query
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID, uuid4
 from expert_dollup.shared.starlette_injection import *
-from expert_dollup.core.usecases import ProjectDefinitionNodeUseCase
-from expert_dollup.shared.database_services import Page
+from expert_dollup.shared.database_services import *
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
-
+from expert_dollup.core.repositories import *
+from expert_dollup.core.usecases import *
 
 router = APIRouter()
 
@@ -185,4 +185,22 @@ async def find_definition_form_content(
             out_domain=ProjectDefinitionNodeTree,
             out_dto=ProjectDefinitionNodeTreeDto,
         ),
+    )
+
+
+@router.post("/definitions/{project_definition_id}/formula_field_mix")
+async def find_definition_formula_field_mix(
+    project_definition_id: UUID,
+    limit: int = Query(alias="limit", default=100),
+    next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
+    handler: PageHandlerProxy = Depends(Inject(PageHandlerProxy)),
+    paginator=Depends(Inject(Paginator[DatasheetElement])),
+    repository=Depends(Inject(DefinitionNodeFormulaRepository)),
+    user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:get"])),
+):
+    return await handler.use_paginator(paginator).handle(
+        CoreDefinitionNodeDto,
+        repository.make_node_query(project_definition.id, "formula"),
+        limit,
+        next_page_token,
     )

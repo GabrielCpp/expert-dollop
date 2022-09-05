@@ -1,5 +1,5 @@
-from pythonjsonlogger.jsonlogger import JsonFormatter
 from typing import Dict, Any
+from datetime import datetime, timezone
 from logging import (
     Logger,
     INFO,
@@ -11,13 +11,8 @@ from logging import (
     getLevelName,
     LogRecord,
 )
-from datetime import datetime, timezone
-from injector import Binder, singleton
-from expert_dollup.shared.starlette_injection import (
-    LoggerFactory,
-    PureBinding,
-    is_development,
-)
+from pythonjsonlogger.jsonlogger import JsonFormatter
+from expert_dollup.shared.starlette_injection import *
 
 
 class LoggerContext(LoggerAdapter):
@@ -37,7 +32,7 @@ class CustomJsonFormatter(JsonFormatter):
         JsonFormatter.add_fields(self, log_record, record, message_dict)
 
 
-def bind_logger(binder: Binder) -> None:
+def bind_logger(builder: InjectorBuilder) -> None:
     LOG_LEVEL = DEBUG if is_development() else INFO
     json_formatter = CustomJsonFormatter(
         timestamp=True, static_fields=dict(level=getLevelName(LOG_LEVEL))
@@ -56,15 +51,8 @@ def bind_logger(binder: Binder) -> None:
     logger.propagate = True
     logger.setLevel(LOG_LEVEL)
 
-    binder.bind(
-        Logger,
-        to=lambda: logger,
-        scope=singleton,
-    )
-    binder.bind(
+    builder.add_object(Logger, logger)
+    builder.add_singleton(
         LoggerFactory,
-        to=lambda: PureBinding(
-            lambda name: LoggerContext(logger, {"class_name": name})
-        ),
-        scope=singleton,
+        lambda: PureBinding(lambda name: LoggerContext(logger, {"class_name": name})),
     )

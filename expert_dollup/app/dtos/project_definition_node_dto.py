@@ -159,3 +159,10 @@ class ProjectDefinitionNodePageDto(CamelModel):
 class FieldUpdateInputDto(CamelModel):
     node_id: UUID
     value: PrimitiveWithNoneUnionDto
+
+
+class CoreDefinitionNodeDto(CamelModel):
+    id: UUID
+    project_definition_id: str
+    name: str
+    path: List[UUID]

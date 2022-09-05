@@ -1,15 +1,29 @@
-from injector import Injector, InstanceProvider, singleton
+from typing import Callable, List
+from starlette.requests import Request
+from expert_dollup.shared.starlette_injection import (
+    Injector,
+    TypedInjection,
+    InjectorBuilder,
+)
+from expert_dollup.app.settings import load_app_settings, AppSettings
 from .bindings import *
 
 
-def build_container(root_binded=[]) -> Injector:
-    injector = Injector(root_binded)
+def build_container(
+    overrides: List[Callable[[InjectorBuilder], None]] = []
+) -> TypedInjection:
+    builder = InjectorBuilder()
+    builder.add_container_self()
+    builder.add_scoped(Request)
+    builder.add_object(AppSettings, load_app_settings())
 
-    injector.binder.bind(Injector, to=InstanceProvider(injector), scope=singleton)
-    bind_logger(injector.binder)
-    bind_shared_modules(injector.binder)
-    bind_core_modules(injector.binder)
-    bind_app_modules(injector.binder)
-    bind_io_modules(injector.binder)
+    bind_logger(builder)
+    bind_shared_modules(builder)
+    bind_io_modules(builder)
+    bind_app_modules(builder)
+    bind_core_modules(builder)
 
-    return injector
+    for override in overrides:
+        override(builder)
+
+    return builder.build()

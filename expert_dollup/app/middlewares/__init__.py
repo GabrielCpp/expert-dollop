@@ -1,5 +1,5 @@
 from .logger_middleware import LoggerMiddleware
-from .container_middleware import create_node_middleware
+from .container_middleware import create_injector_middleware
 from .error_middleware import (
     create_error_middleware,
     ExceptionHandlerDict,

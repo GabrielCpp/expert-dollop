@@ -219,6 +219,23 @@ ordered-set = ">=4.1.0,<4.2.0"
 cli = ["click (==8.0.3)", "pyyaml (==5.4.1)", "toml (==0.10.2)", "clevercsv (==0.7.1)"]
 
 [[package]]
+name = "dependency-injector"
+version = "4.40.0"
+description = "Dependency injection framework for Python"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+six = ">=1.7.0,<=1.16.0"
+
+[package.extras]
+aiohttp = ["aiohttp"]
+flask = ["flask"]
+pydantic = ["pydantic"]
+yaml = ["pyyaml"]
+
+[[package]]
 name = "dnspython"
 version = "2.2.1"
 description = "DNS toolkit"
@@ -302,22 +319,24 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "google-api-core"
-version = "2.8.2"
+version = "2.10.0"
 description = "Google API client core library"
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 
 [package.dependencies]
 google-auth = ">=1.25.0,<3.0dev"
 googleapis-common-protos = ">=1.56.2,<2.0dev"
 grpcio = {version = ">=1.33.2,<2.0dev", optional = true, markers = "extra == \"grpc\""}
 grpcio-status = {version = ">=1.33.2,<2.0dev", optional = true, markers = "extra == \"grpc\""}
-protobuf = ">=3.15.0,<5.0.0dev"
+protobuf = ">=3.20.1,<5.0.0dev"
 requests = ">=2.18.0,<3.0.0dev"
 
 [package.extras]
 grpc = ["grpcio (>=1.33.2,<2.0dev)", "grpcio-status (>=1.33.2,<2.0dev)"]
+grpcgcp = ["grpcio-gcp (>=0.2.2,<1.0dev)"]
+grpcio-gcp = ["grpcio-gcp (>=0.2.2,<1.0dev)"]
 
 [[package]]
 name = "google-auth"
@@ -536,17 +555,6 @@ description = "iniconfig: brain-dead simple config-ini parsing"
 category = "dev"
 optional = false
 python-versions = "*"
-
-[[package]]
-name = "injector"
-version = "0.18.4"
-description = "Injector - Python dependency injection framework, inspired by Guice"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-typing-extensions = {version = ">=3.7.4", markers = "python_version < \"3.9\""}
 
 [[package]]
 name = "invoke"
@@ -1215,7 +1223,7 @@ postgre = ["SQLAlchemy", "asyncpg"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8.0"
-content-hash = "32e72a7bf3c792092d20393fa2bbaaf34388c39354afac4618efcee82720e1b9"
+content-hash = "17d0e7b5889e6e9e5945908f1487abc6156dee797a21455b7cb72737a25cdae4"
 
 [metadata.files]
 alembic = []
@@ -1262,6 +1270,7 @@ click = []
 colorama = []
 cryptography = []
 deepdiff = []
+dependency-injector = []
 dnspython = []
 factory-boy = []
 faker = [
@@ -1423,10 +1432,6 @@ importlib-resources = []
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
-]
-injector = [
-    {file = "injector-0.18.4-py2.py3-none-any.whl", hash = "sha256:9e6e7e63050630b2fc3fe1472bdc7ae5f98ca0242ca8506f562f3d9836170f91"},
-    {file = "injector-0.18.4.tar.gz", hash = "sha256:ced88ee14183b9f95b2cb6cdb17bf7382499fad187dee0dace6891874ae4b182"},
 ]
 invoke = []
 jsonschema = [

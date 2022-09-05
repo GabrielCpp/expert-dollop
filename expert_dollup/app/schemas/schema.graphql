@@ -314,6 +314,23 @@ input ProjectDefinitionNodeCreationInput {
   translated: [TranslationInput!]!
 }
 
+type CoreDefinitionNode {
+  id: ID!
+  projectDefinitionId: String!
+  name: String!
+  path: [String!]!
+}
+
+type CoreDefinitionNodeEdge {
+  node: CoreDefinitionNode!
+  cursor: String!
+}
+
+type CoreDefinitionNodeConnection {
+  edges: [CoreDefinitionNodeEdge!]!
+  pageInfo: PageInfo!
+}
+
 type ProjectDefinitionNode {
   id: ID!
   projectDefinitionId: String!
@@ -585,6 +602,15 @@ type Query {
   currentUser: User
   units: [Unit!]!
 
+  # ProjectDefinition
+  findDefinitionFormulaFieldMix(
+    projectDefinitionId: ID!
+    query: String!
+    first: Int!
+    after: String
+  ): CoreDefinitionNodeConnection!
+
+  # Datasheet
   findDatasheet(id: ID!): Datasheet!
   findDatasheets(
     query: String!
@@ -592,11 +618,6 @@ type Query {
     after: String
   ): DatasheetConnection!
   findDatasheetDefinitionElements(
-    projectDefinitionId: ID!
-    first: Int!
-    after: String
-  ): DatasheetDefinitionElementConnection!
-  queryDatasheetDefinitionElements(
     projectDefinitionId: ID!
     query: String!
     first: Int!
