@@ -1196,3 +1196,25 @@ def map_supplied_item_to_dto(src: SuppliedItem, mapper: Mapper) -> SuppliedItemD
 
 def map_measure_unit_to_dto(src: MeasureUnit, mapper: Mapper) -> MeasureUnitDto:
     return MeasureUnitDto(id=src.id)
+
+
+def map_formula_to_core_definition_node_dto(
+    src: Formula, mapper: Mapper
+) -> CoreDefinitionNodeDto:
+    return CoreDefinitionNodeDto(
+        id=src.id,
+        project_definition_id=src.project_definition_id,
+        name=src.name,
+        path=src.path,
+    )
+
+
+def map_definition_node_to_core_definition_node_dto(
+    src: ProjectDefinitionNode, mapper: Mapper
+) -> CoreDefinitionNodeDto:
+    return CoreDefinitionNodeDto(
+        id=src.id,
+        project_definition_id=src.project_definition_id,
+        name=src.name,
+        path=src.path,
+    )

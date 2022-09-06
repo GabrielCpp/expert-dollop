@@ -38,10 +38,11 @@ class CollectionPaginator(Paginator[Domain]):
             else self._make_builder(where_filter)
         )
         self._default_page_encoder.extend_query(builder, limit, next_page_token)
+
         results, total_count = await gather(
             self._repository.find_by(builder), self._repository.count(where_filter)
         )
-
+        print(total_count)
         new_next_page_token = self._default_page_encoder.default_token
 
         if len(results) > 0:

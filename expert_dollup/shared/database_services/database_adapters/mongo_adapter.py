@@ -150,15 +150,11 @@ class MongoConnection(DbConnection):
                 key_counts=options.get("key_counts", set()),
             )
 
-    async def truncate_db(self, names: Optional[List[str]] = None):
-        if names is None:
-            names = [c.name for c in self.collections.values()]
-
+    async def truncate_db(self):
         db = self._client.get_database(self.db_name)
 
-        for name in names:
-            collection = db.get_collection(name)
-            await collection.delete_many({})
+        for collection in self.collections.values():
+            await db.get_collection(collection.name).delete_many({})
 
     async def transaction(self, callback: Callable[[], Awaitable]):
         async with await self._client.start_session() as s:

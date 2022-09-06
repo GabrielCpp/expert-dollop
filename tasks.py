@@ -10,19 +10,21 @@ import asyncio
 
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.shared.database_services import *
+from expert_dollup.core.domains import *
 from expert_dollup.app.modules import (
     build_container,
     expert_dollup_metadatas,
     auth_metadatas,
 )
-from tests.fixtures import SuperUser, FakeDb
+from tests.fixtures import *
 
 load_dotenv()
 
 
 async def truncate_db(db_url_name: str, metadatas: List[RepositoryMetadata]):
-    connection = create_connection(environ[db_url_name], daos)
-    await connection.truncate_db(tables)
+    connection = create_connection(environ[db_url_name])
+    connection.load_metadatas(metadatas)
+    await connection.truncate_db()
 
 
 async def get_token(oauth: Optional[str] = None):
@@ -312,7 +314,16 @@ def upload_base_project(c, token=None, userid=None, hostname=None):
         hostname = "http://localhost:8000"
 
     if token is None:
-        asyncio.run(truncate_db("AUTH_DB_URL", auth_metadatas))
+        asyncio.run(
+            truncate_db(
+                "AUTH_DB_URL",
+                [
+                    m
+                    for m in auth_metadatas
+                    if m.domain is User or m.domain is Organization
+                ],
+            )
+        )
         load_default_users(c)
         token = asyncio.run(get_token())
 
@@ -373,7 +384,6 @@ def make_random_token(c):
 
 @task(name="load-default-users")
 def load_default_users(c):
-    from expert_dollup.core.domains import User, Organization
     from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
 
     async def reload_db():

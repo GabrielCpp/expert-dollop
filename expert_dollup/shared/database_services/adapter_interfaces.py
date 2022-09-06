@@ -167,7 +167,7 @@ class DbConnection(ABC):
         pass
 
     @abstractmethod
-    async def truncate_db(self, tables: Optional[List[str]] = None) -> None:
+    async def truncate_db(self) -> None:
         pass
 
     @abstractmethod

@@ -26,7 +26,7 @@ class GraphqlPageHandler(PageHandler):
         if self._paginator is None:
             raise Exception("No paginator set")
 
-        page = await self.paginator.find_page(query, limit, next_page_token)
+        page = await self._paginator.find_page(query, limit, next_page_token)
 
         return {
             "edges": [

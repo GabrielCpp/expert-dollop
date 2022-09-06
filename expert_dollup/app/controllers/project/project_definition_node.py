@@ -191,16 +191,19 @@ async def find_definition_form_content(
 @router.post("/definitions/{project_definition_id}/formula_field_mix")
 async def find_definition_formula_field_mix(
     project_definition_id: UUID,
+    query: int = Query(alias="query", default=""),
     limit: int = Query(alias="limit", default=100),
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     handler: PageHandlerProxy = Depends(Inject(PageHandlerProxy)),
-    paginator=Depends(Inject(Paginator[DatasheetElement])),
+    paginator=Depends(Inject(Paginator[Union[ProjectDefinitionNode, Formula]])),
     repository=Depends(Inject(DefinitionNodeFormulaRepository)),
-    user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:get"])),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
+    ),
 ):
     return await handler.use_paginator(paginator).handle(
         CoreDefinitionNodeDto,
-        repository.make_node_query(project_definition.id, "formula"),
+        repository.make_node_query(project_definition_id, query),
         limit,
         next_page_token,
     )

@@ -20,8 +20,8 @@ def build_container(
     bind_logger(builder)
     bind_shared_modules(builder)
     bind_io_modules(builder)
-    bind_app_modules(builder)
     bind_core_modules(builder)
+    bind_app_modules(builder)
 
     for override in overrides:
         override(builder)

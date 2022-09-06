@@ -20,6 +20,7 @@ from .project_definition_node_dto import (
     FieldDetailsUnionDto,
     TriggerDto,
     TranslationConfigDto,
+    CoreDefinitionNodeDto,
 )
 from .dynamic_primitive import (
     IntFieldValueDto,

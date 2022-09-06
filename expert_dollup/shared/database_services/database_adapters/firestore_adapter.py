@@ -97,9 +97,9 @@ class FirestoreConnection(DbConnection):
                 key_counts=options.get("key_counts", set()),
             )
 
-    async def truncate_db(self, names: Optional[List[str]] = None):
-        for name in names:
-            async for doc in self._client.collection(name).stream():
+    async def truncate_db(self):
+        for collection in self.collections.values():
+            async for doc in self._client.collection(collection.name).stream():
                 await doc.reference.delete()
 
     async def connect(self) -> None:

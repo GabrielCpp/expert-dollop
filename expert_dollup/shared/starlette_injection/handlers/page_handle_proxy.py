@@ -12,7 +12,10 @@ Domain = TypeVar("Domain")
 
 class PageHandlerProxy(PageHandler):
     def __init__(
-        self, request: Scoped[Request], graphql: PageHandler, http: HttpPageHandler
+        self,
+        request: Scoped[Request],
+        graphql: GraphqlPageHandler,
+        http: HttpPageHandler,
     ):
         self._request = request
         self._graphql_handler = graphql
@@ -30,7 +33,7 @@ class PageHandlerProxy(PageHandler):
         limit: int,
         next_page_token: Optional[str] = None,
     ):
-        if self._request.value.url == "/graphql":
+        if self._request.value.url.path.endswith("/graphql"):
             return await self._graphql_handler.handle(
                 out_dto, query, limit, next_page_token
             )

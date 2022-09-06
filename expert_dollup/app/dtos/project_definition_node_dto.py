@@ -163,6 +163,6 @@ class FieldUpdateInputDto(CamelModel):
 
 class CoreDefinitionNodeDto(CamelModel):
     id: UUID
-    project_definition_id: str
+    project_definition_id: UUID
     name: str
     path: List[UUID]

@@ -57,7 +57,9 @@ def bind_auth_jwt(builder: InjectorBuilder) -> None:
 
 def bind_custom_handlers(builder: InjectorBuilder) -> None:
     builder.add_factory(
-        ImportRessourceHandler, ImportRessourceHandler, db_context=DatabaseContext
+        ImportRessourceHandler,
+        ImportRessourceHandler,
+        **get_annotations(ImportRessourceHandler),
     )
 
 

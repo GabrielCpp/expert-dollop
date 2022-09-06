@@ -196,15 +196,13 @@ class PostgresConnection(DbConnection):
             table = Table(table_name, self.metadata, *columns)
             self.tables[metadata.dao] = table
 
-    async def truncate_db(self, tables: Optional[List[str]] = None):
+    async def truncate_db(self):
         async with self._engine.begin() as con:
-            if tables is None:
-                tables = [table.name for table in self.tables.values()]
-
-            for table in tables:
-                await con.execute(text(f'ALTER TABLE "{table}" DISABLE TRIGGER ALL;'))
-                await con.execute(text(f"DELETE FROM {table};"))
-                await con.execute(text(f'ALTER TABLE "{table}" ENABLE TRIGGER ALL;'))
+            for table in self.tables.values():
+                name = table.name
+                await con.execute(text(f'ALTER TABLE "{name}" DISABLE TRIGGER ALL;'))
+                await con.execute(text(f"DELETE FROM {name};"))
+                await con.execute(text(f'ALTER TABLE "{name}" ENABLE TRIGGER ALL;'))
 
     async def transaction(self, callback: Callable[[], Awaitable]):
         pass

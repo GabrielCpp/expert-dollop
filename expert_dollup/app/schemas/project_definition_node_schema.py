@@ -222,5 +222,5 @@ async def resolve_find_project_definition(
     after: Optional[str] = None,
 ):
     return await find_definition_formula_field_mix(
-        info, UUID(project_definition_id), first, after
+        info, UUID(project_definition_id), query, first, after
     )
