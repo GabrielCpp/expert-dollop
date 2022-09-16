@@ -24,13 +24,6 @@ async def create_project_definition_tables(db):
         [("project_definition_id", DESCENDING), ("name", ASCENDING)]
     )
 
-    project_definition_formula = await db.create_collection(
-        "project_definition_formula"
-    )
-    await project_definition_formula.create_index(
-        [("project_definition_id", DESCENDING), ("name", ASCENDING)]
-    )
-
 
 async def create_project_tables(db):
     await db.create_collection("project")

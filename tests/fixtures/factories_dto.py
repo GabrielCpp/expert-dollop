@@ -100,7 +100,7 @@ class NewProjectDetailsDtoFactory(factory.Factory):
     datasheet_id = factory.Faker("pyuuid4")
 
 
-class FormulaDtoFactory(factory.Factory):
+class FormulaExpressionDtoFactory(factory.Factory):
     class Meta:
         model = FormulaExpressionDto
 
@@ -109,6 +109,8 @@ class FormulaDtoFactory(factory.Factory):
     attached_to_type_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"formula{n}")
     expression = "a+b*c/2"
+    path = factory.LazyAttribute(lambda f: [f.attached_to_type_id])
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
 class DatasheetDefinitionElementDtoFactory(factory.Factory):

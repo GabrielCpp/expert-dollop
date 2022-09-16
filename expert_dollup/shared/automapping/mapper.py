@@ -2,7 +2,7 @@ from typing import Type, TypeVar, Callable, Dict, List, Optional, Union, Any, Li
 from collections import defaultdict
 from inspect import getmembers, isfunction, signature
 from .mapping_error import MapingError
-from .injector_interface import Injector
+from .injector_interface import InjectorProtocol
 
 
 T = TypeVar("T")
@@ -11,7 +11,7 @@ K = TypeVar("K")
 
 
 class Mapper:
-    def __init__(self, injector: Optional[Injector] = None):
+    def __init__(self, injector: Optional[InjectorProtocol] = None):
         self._mappings = defaultdict(dict)
         self._injector = injector
 
@@ -34,7 +34,10 @@ class Mapper:
         from_type: Type[T] = None,
         after=lambda x: x,
     ) -> List[U]:
-        return [after(self.map(instance, to_type, from_type)) for instance in instances]
+        return [
+            self.map(instance, to_type, from_type, after=after)
+            for instance in instances
+        ]
 
     def map_dict_values(
         self,
@@ -44,7 +47,7 @@ class Mapper:
         after=lambda x: x,
     ) -> Dict[K, U]:
         return {
-            key: after(self.map(instance, to_type, from_type))
+            key: self.map(instance, to_type, from_type, after=after)
             for key, instance in instances.items()
         }
 
@@ -56,7 +59,7 @@ class Mapper:
         after=lambda x: x,
     ) -> Dict[K, List[U]]:
         return {
-            key: after(self.map_many(instance, to_type, from_type))
+            key: self.map_many(instance, to_type, from_type, after=after)
             for key, instance in instances.items()
         }
 
@@ -65,6 +68,7 @@ class Mapper:
         instance: T,
         to_type: Union[Type[U], Literal[object], Dict[Type[Any], Type[Any]]],
         from_type: Union[Type, object, None] = None,
+        after=lambda x: x,
     ) -> U:
         from_type = type(instance) if from_type is None else from_type
 
@@ -90,7 +94,7 @@ class Mapper:
         apply_mapping = submappers.get(to_type)
         result = apply_mapping(instance, self)
 
-        return result
+        return after(result)
 
     def add_all_mapper_from_module(self, modules: list) -> "Mapper":
         for module in modules:

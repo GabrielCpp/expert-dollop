@@ -13,12 +13,13 @@ router = APIRouter()
 @router.get("/datasheets/{datasheet_id}/elements")
 async def find_datasheet_elements(
     datasheet_id: UUID,
-    next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     limit: int = Query(alias="limit", default=100),
-    handler=Depends(Inject(HttpPageHandler[Paginator[DatasheetElement]])),
+    next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
+    handler: PageHandlerProxy = Depends(Inject(PageHandlerProxy)),
+    paginator=Depends(Inject(Paginator[DatasheetElement])),
     user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:get"])),
 ):
-    return await handler.handle(
+    return await handler.use_paginator(paginator).handle(
         DatasheetElementDto,
         DatasheetElementFilter(datasheet_id=datasheet_id),
         limit,

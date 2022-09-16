@@ -1,21 +1,22 @@
 from typing import List
 from uuid import UUID
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.builders import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.units import *
 from expert_dollup.core.logits import *
+from expert_dollup.core.repositories import *
 
 
 class NodeEventDispatcher:
     def __init__(
         self,
-        project_service: CollectionService[ProjectDetails],
-        project_node_service: CollectionService[ProjectNode],
+        project_service: Repository[ProjectDetails],
+        project_node_service: ProjectNodeRepository,
         node_value_validation: NodeValueValidation,
         project_node_slice_builder: ProjectNodeSliceBuilder,
         project_tree_builder: ProjectTreeBuilder,
-        project_node_meta: CollectionService[ProjectNodeMeta],
+        project_node_meta: ProjectNodeMetaRepository,
         formula_resolver: FormulaResolver,
     ):
         self.project_service = project_service

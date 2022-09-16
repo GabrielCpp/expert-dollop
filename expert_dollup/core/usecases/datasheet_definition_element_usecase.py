@@ -2,16 +2,14 @@ from uuid import UUID
 from expert_dollup.core.exceptions import ValidationError
 from expert_dollup.core.domains import DatasheetDefinitionElement, ProjectDefinition
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 
 
 class DatasheetDefinitionElementUseCase:
     def __init__(
         self,
-        project_definition_service: CollectionService[ProjectDefinition],
-        datasheet_definition_element_service: CollectionService[
-            DatasheetDefinitionElement
-        ],
+        project_definition_service: Repository[ProjectDefinition],
+        datasheet_definition_element_service: Repository[DatasheetDefinitionElement],
         schema_validator: SchemaValidator,
     ):
         self.project_definition_service = project_definition_service

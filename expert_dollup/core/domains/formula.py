@@ -1,6 +1,7 @@
 from decimal import Decimal
 from uuid import UUID
 from dataclasses import dataclass, asdict, field
+from datetime import datetime
 from typing import List, Optional, Dict, Union
 from expert_dollup.shared.database_services import QueryFilter
 from .values_union import PrimitiveWithNoneUnion
@@ -61,6 +62,8 @@ class FormulaExpression:
     attached_to_type_id: UUID
     name: str
     expression: str
+    path: List[UUID]
+    creation_date_utc: datetime
 
 
 @dataclass

@@ -1,12 +1,12 @@
 from collections import defaultdict
 from typing import Callable, List, Dict, Type, TypeVar, Union, Optional
 from typing_extensions import TypeAlias
-from injector import Injector
+from expert_dollup.shared.starlette_injection import Injector
 from inspect import isclass
 from shutil import rmtree
 from pydantic.main import BaseModel
 from expert_dollup.shared.database_services import DbConnection
-from expert_dollup.shared.database_services.adapter_interfaces import CollectionService
+from expert_dollup.shared.database_services.adapter_interfaces import Repository
 
 Domain = TypeVar("Domain")
 FakeDbLoader: TypeAlias = Callable[["FakeDb"], None]
@@ -31,6 +31,17 @@ class FakeDb:
 
     def all(self, object_type: Type[Domain]) -> List[Domain]:
         return self.collections[object_type]
+
+    def all_match(
+        self, object_type: Type[Domain], predicate: Callable[[object], bool]
+    ) -> List[Domain]:
+        objects = self.collections[object_type]
+        results = [
+            matching_object
+            for matching_object in objects
+            if predicate(matching_object) is True
+        ]
+        return results
 
     def get_only_one(self, object_type: Type) -> object:
         assert object_type in self.collections
@@ -86,10 +97,6 @@ class DbFixtureHelper:
         self.auth_db = auth_db
         self.db = None
 
-    async def insert_daos(self, service_type: Type, daos: List[BaseModel]):
-        service = self.injector.get(service_type)
-        await service._impl.bulk_insert(daos)
-
     async def reset(self):
         await self.dal.truncate_db()
         await self.auth_db.truncate_db()
@@ -99,7 +106,7 @@ class DbFixtureHelper:
         await self.reset()
 
         for domain_type, objects in fake_db.collections.items():
-            service_type = CollectionService[domain_type]
+            service_type = Repository[domain_type]
             service = self.injector.get(service_type)
             await service.insert_many(objects)
 

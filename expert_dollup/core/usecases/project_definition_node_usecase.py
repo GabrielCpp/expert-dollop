@@ -2,7 +2,7 @@ from typing import Optional, List
 from uuid import UUID
 from expert_dollup.core.exceptions import InvalidObject
 from expert_dollup.core.domains import *
-from expert_dollup.shared.database_services import Page, Paginator, CollectionService
+from expert_dollup.shared.database_services import Page, Paginator, Repository
 from expert_dollup.shared.starlette_injection import LoggerFactory
 from expert_dollup.core.builders import ProjectDefinitionTreeBuilder
 from expert_dollup.core.units import NodeValueValidation
@@ -13,7 +13,7 @@ class ProjectDefinitionNodeUseCase:
     def __init__(
         self,
         project_definition_node_paginator: Paginator[ProjectDefinitionNode],
-        project_definition_service: CollectionService[ProjectDefinition],
+        project_definition_service: Repository[ProjectDefinition],
         project_definition_node_repository: ProjectDefinitionNodeRepository,
         project_definition_tree_builder: ProjectDefinitionTreeBuilder,
         node_value_validation: NodeValueValidation,

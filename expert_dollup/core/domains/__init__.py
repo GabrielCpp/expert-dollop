@@ -6,6 +6,7 @@ from .project_definition import (
 from .project_definition_node import (
     ProjectDefinitionNode,
     ProjectDefinitionNodeFilter,
+    FieldFormulaNodeFilter,
     ProjectDefinitionNodePluckFilter,
     IntFieldConfig,
     DecimalFieldConfig,

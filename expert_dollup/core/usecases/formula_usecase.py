@@ -3,15 +3,15 @@ from uuid import UUID
 from expert_dollup.core.domains import *
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.units import FormulaResolver
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 
 
 class FormulaUseCase:
     def __init__(
         self,
-        formula_service: CollectionService[Formula],
+        formula_service: Repository[Formula],
         formula_resolver: FormulaResolver,
-        project_service: CollectionService[ProjectDetails],
+        project_service: Repository[ProjectDetails],
         formula_instance_service: ObjectStorage[
             UnitInstanceCache, UnitInstanceCacheKey
         ],

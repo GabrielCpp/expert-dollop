@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import TypeVar, Generic, Optional, List
+from typing import TypeVar, Optional, List
 from uuid import UUID
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from expert_dollup.shared.database_services import Page
+from .adapter_interfaces import Paginator
+from .query_filter import QueryFilter
 
 Domain = TypeVar("Domain")
 
@@ -10,10 +12,10 @@ Domain = TypeVar("Domain")
 @dataclass
 class UserRessourceQuery:
     organization_id: UUID
-    names: Optional[List[str]] = None
+    names: List[str] = field(default_factory=list)
 
 
-class UserRessourcePaginator(Generic[Domain]):
+class UserRessourcePaginator(Paginator[Domain]):
     @abstractmethod
     async def find_page(
         self,

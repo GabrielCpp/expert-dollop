@@ -1,11 +1,11 @@
 from abc import abstractmethod
 from uuid import UUID
 from typing import List
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.domains import ProjectNodeMeta, ProjectDefinitionNode
 
 
-class ProjectNodeMetaRepository(CollectionService[ProjectNodeMeta]):
+class ProjectNodeMetaRepository(Repository[ProjectNodeMeta]):
     @abstractmethod
     async def find_project_defs(self, project_id: UUID) -> List[ProjectDefinitionNode]:
         pass

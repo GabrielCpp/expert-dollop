@@ -1,6 +1,6 @@
 from typing import Iterable, Optional
 from itertools import chain
-from expert_dollup.shared.database_services import Page, Paginator, CollectionService
+from expert_dollup.shared.database_services import Page, Paginator, Repository
 from expert_dollup.core.exceptions import RessourceNotFound, ValidationError
 from expert_dollup.core.domains import (
     Translation,
@@ -18,11 +18,11 @@ from expert_dollup.core.domains import (
 class TranslationUseCase:
     def __init__(
         self,
-        service: CollectionService[Translation],
+        service: Repository[Translation],
         translation_paginator: Paginator[Translation],
-        ressource_service: CollectionService[Ressource],
-        project_details_service: CollectionService[ProjectDetails],
-        datasheet_service: CollectionService[Datasheet],
+        ressource_service: Repository[Ressource],
+        project_details_service: Repository[ProjectDetails],
+        datasheet_service: Repository[Datasheet],
     ):
         self.service = service
         self.translation_paginator = translation_paginator

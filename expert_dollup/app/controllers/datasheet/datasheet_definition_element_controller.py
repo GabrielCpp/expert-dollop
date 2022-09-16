@@ -1,13 +1,32 @@
 from fastapi import APIRouter, Depends, Query
 from typing import Optional
 from uuid import UUID
-from expert_dollup.shared.database_services import Paginator
+from expert_dollup.shared.database_services import *
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
+from expert_dollup.core.usecases import *
 from expert_dollup.app.dtos import *
-from expert_dollup.core.usecases import DatasheetDefinitionElementUseCase
 
 router = APIRouter()
+
+
+@router.get("/definitions/{project_definition_id}/datasheet_elements")
+async def find_paginated_datasheet_elements(
+    project_definition_id: UUID,
+    limit: int = Query(alias="limit", default=100),
+    next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
+    handler=Depends(Inject(PageHandlerProxy)),
+    paginator=Depends(Inject(Paginator[DatasheetDefinitionElement])),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
+    ),
+):
+    return await handler.use_paginator(paginator).handle(
+        DatasheetDefinitionElementDto,
+        DatasheetDefinitionElementFilter(project_definition_id=project_definition_id),
+        limit,
+        next_page_token,
+    )
 
 
 @router.get(
@@ -25,24 +44,6 @@ async def find_datasheet_definition_element_by_id(
         usecase.find_by_id,
         datasheet_definition_element_id,
         MappingChain(out_dto=DatasheetDefinitionElementDto),
-    )
-
-
-@router.get("/definitions/{project_definition_id}/datasheet_elements")
-async def find_datasheet_definition_elements(
-    project_definition_id: UUID,
-    next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
-    limit: int = Query(alias="limit", default=100),
-    handler=Depends(Inject(HttpPageHandler[Paginator[DatasheetDefinitionElement]])),
-    user=Depends(
-        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
-    ),
-):
-    return await handler.handle(
-        DatasheetDefinitionElementDto,
-        DatasheetDefinitionElementFilter(project_definition_id=project_definition_id),
-        limit,
-        next_page_token,
     )
 
 

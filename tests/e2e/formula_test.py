@@ -9,8 +9,9 @@ from ..fixtures import *
 async def test_create_get_delete_formula(ac, db_helper: DbFixtureHelper):
     fake_db = await db_helper.load_fixtures(SuperUser(), MiniProject())
     await ac.login_super_user()
+
     project_definition = fake_db.get_only_one(ProjectDefinition)
-    formula = FormulaDtoFactory(
+    formula = FormulaExpressionDtoFactory(
         project_definition_id=project_definition.id,
         attached_to_type_id=fake_db.get_only_one_matching(
             ProjectDefinitionNode, lambda n: n.name == "price"
@@ -19,7 +20,8 @@ async def test_create_get_delete_formula(ac, db_helper: DbFixtureHelper):
         expression="5",
     )
     await ac.post_json("/api/formula", formula)
-    formula = FormulaDtoFactory(
+
+    formula = FormulaExpressionDtoFactory(
         project_definition_id=project_definition.id,
         attached_to_type_id=fake_db.get_only_one_matching(
             ProjectDefinitionNode, lambda n: n.name == "root"
@@ -27,7 +29,6 @@ async def test_create_get_delete_formula(ac, db_helper: DbFixtureHelper):
         name="article_price",
         expression="shipping_price/sqrt(1)+quantity*price*is_confirmed+4*(item_size == '0')+taxes",
     )
-
     await ac.post_json("/api/formula", formula)
 
     project = ProjectDetailsDtoFactory(project_definition_id=project_definition.id)

@@ -207,3 +207,20 @@ async def resolve_project_definition_node_translated(
     )
 
     return translations
+
+
+@query.field("findDefinitionFormulaFieldMix")
+@inject_graphql_route(find_definition_formula_field_mix, ["project_definition_id"])
+@convert_kwargs_to_snake_case
+async def resolve_find_project_definition(
+    _: Any,
+    info: GraphQLResolveInfo,
+    project_definition_id: str,
+    query: str,
+    first: int,
+    find_definition_formula_field_mix,
+    after: Optional[str] = None,
+):
+    return await find_definition_formula_field_mix(
+        info, UUID(project_definition_id), query, first, after
+    )

@@ -141,5 +141,10 @@ class ProjectDefinitionNodeFilter(QueryFilter):
     display_query_internal_id: Optional[UUID]
 
 
+class FieldFormulaNodeFilter(QueryFilter):
+    project_definition_id: Optional[UUID]
+    name: str
+
+
 class ProjectDefinitionNodePluckFilter(QueryFilter):
     names: List[str]

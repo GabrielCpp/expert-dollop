@@ -1,11 +1,11 @@
 from abc import abstractmethod
 from uuid import UUID
 from typing import List, Optional
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository, Plucker
 from expert_dollup.core.domains import ProjectNode
 
 
-class ProjectNodeRepository(CollectionService[ProjectNode]):
+class ProjectNodeRepository(Repository[ProjectNode], Plucker[ProjectNode]):
     @abstractmethod
     async def find_children(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None

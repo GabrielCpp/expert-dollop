@@ -1,22 +1,17 @@
-from typing import List, Tuple, Literal
+from typing import List, Tuple, Literal, Optional, Any, Dict
 from collections import defaultdict
+from copy import deepcopy
+from dataclasses import dataclass, field
 from .adapter_interfaces import QueryBuilder
 
 
+@dataclass
 class DbAgnotistQueryBuilder(QueryBuilder):
-    def __init__(
-        self,
-        selections=None,
-        max_records=None,
-        orders=None,
-        wheres=None,
-        constructs=None,
-    ):
-        self._selections = selections
-        self._max_records = max_records
-        self._orders = orders
-        self._wheres = wheres or []
-        self._constructs = constructs or defaultdict(list)
+    _selections: Optional[List[str]] = None
+    _max_records: Optional[int] = None
+    _orders: Optional[List[Tuple[str, Literal["desc", "asc"]]]] = None
+    _wheres: List[List[Any]] = field(default_factory=list)
+    _constructs: Dict[str, List[Any]] = field(default_factory=lambda: defaultdict(list))
 
     def select(self, *names: List[str]) -> QueryBuilder:
         if len(names) == 1 and names[0] == "*":
@@ -50,10 +45,4 @@ class DbAgnotistQueryBuilder(QueryBuilder):
         return self
 
     def clone(self) -> QueryBuilder:
-        return DbAgnotistQueryBuilder(
-            self._selections,
-            self._max_records,
-            self._orders,
-            [*self._wheres],
-            self._constructs,
-        )
+        return deepcopy(self)

@@ -3,7 +3,7 @@ from uuid import UUID
 from decimal import Decimal
 from tests.fixtures.mock_interface_utils import StrictInterfaceSetup
 from expert_dollup.core.object_storage import ObjectStorage
-from expert_dollup.shared.database_services import CollectionService, Plucker
+from expert_dollup.shared.database_services import Repository, Plucker
 from expert_dollup.core.repositories import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.units import *
@@ -143,9 +143,8 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
     )
 
     formula_resolver = FormulaResolver(
-        StrictInterfaceSetup(CollectionService).object,
+        StrictInterfaceSetup(Repository).object,
         project_node_service.object,
-        StrictInterfaceSetup(Plucker).object,
         StrictInterfaceSetup(ProjectDefinitionNodeRepository).object,
         unit_instance_builder.object,
         stage_formulas_storage.object,

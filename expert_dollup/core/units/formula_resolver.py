@@ -1,36 +1,29 @@
 from typing import List, Dict, Set
 from uuid import UUID
 from asyncio import gather
-from expert_dollup.core.domains.formula import (
-    StagedFormula,
-    StagedFormulas,
-    StagedFormulasKey,
-)
 from expert_dollup.shared.database_services import log_execution_time_async, StopWatch
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.exceptions import RessourceNotFound
-from expert_dollup.shared.starlette_injection import LoggerFactory
-from expert_dollup.shared.database_services import CollectionService, Plucker
+from expert_dollup.shared.starlette_injection import *
+from expert_dollup.shared.database_services import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.builders import *
 from expert_dollup.core.logits import *
-import expert_dollup.core.logits.formula_processor as formula_processor
+from expert_dollup.core.repositories import *
 
 
 class FormulaResolver:
     def __init__(
         self,
-        formula_service: CollectionService[Formula],
-        project_node_service: CollectionService[ProjectNode],
-        node_plucker: Plucker[ProjectNode],
-        project_definition_node_service: CollectionService[ProjectDefinitionNode],
+        formula_service: FormulaRepository,
+        project_node_service: ProjectNodeRepository,
+        project_definition_node_service: ProjectDefinitionNodeRepository,
         unit_instance_builder: UnitInstanceBuilder,
         stage_formulas_storage: ObjectStorage[StagedFormulas, StagedFormulasKey],
         logger: LoggerFactory,
     ):
         self.formula_service = formula_service
         self.project_node_service = project_node_service
-        self.node_plucker = node_plucker
         self.project_definition_node_service = project_definition_node_service
         self.unit_instance_builder = unit_instance_builder
         self.stage_formulas_storage = stage_formulas_storage
@@ -115,6 +108,8 @@ class FormulaResolver:
                         if name in known_field_names
                     ],
                 ),
+                path=formula_expression.path,
+                creation_date_utc=formula_expression.creation_date_utc,
             )
             for formula_expression in formula_expressions
         ]
@@ -170,6 +165,8 @@ class FormulaResolver:
                     for name, field_id in fields_id_by_name.items()
                 ],
             ),
+            path=formula_expression.path,
+            creation_date_utc=formula_expression.creation_date_utc,
         )
 
         return formula
@@ -184,9 +181,9 @@ class FormulaResolver:
                 name=formula.name,
                 expression=formula.expression,
                 dependency_graph=formula.dependency_graph,
-                final_ast=formula_processor.serialize_post_processed_expression(
-                    formula.expression
-                ),
+                final_ast=serialize_post_processed_expression(formula.expression),
+                path=formula.path,
+                creation_date_utc=formula.creation_date_utc,
             )
             for formula in formulas
         ]
@@ -294,7 +291,7 @@ class FormulaResolver:
             for formula_node in formula.dependency_graph.nodes:
                 field_depencies.add(formula_node.target_type_id)
 
-        nodes = await self.node_plucker.pluck_subressources(
+        nodes = await self.project_node_service.pluck_subressources(
             ProjectNodeFilter(project_id=project_id),
             lambda ids: NodePluckFilter(type_ids=ids),
             list(field_depencies),

@@ -1,14 +1,31 @@
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
 from typing import Optional, Union, Dict
-from expert_dollup.shared.database_services import Page
-from expert_dollup.core.usecases import DatasheetUseCase
+from expert_dollup.shared.database_services import *
 from expert_dollup.shared.starlette_injection import *
+from expert_dollup.core.usecases import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *
 
 
 router = APIRouter()
+
+
+@router.get("/datasheets")
+async def find_paginated_datasheets(
+    query: str = Query(alias="query", default=""),
+    limit: int = Query(alias="limit", default=10),
+    next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
+    paginator=Depends(Inject(UserRessourcePaginator[Datasheet])),
+    handler: PageHandlerProxy = Depends(Inject(PageHandlerProxy)),
+    user=Depends(CanPerformRequired(["datasheet:get"])),
+):
+    return await handler.use_paginator(paginator).handle(
+        DatasheetDto,
+        UserRessourceQuery(organization_id=user.organization_id, names=query.split()),
+        limit,
+        next_page_token,
+    )
 
 
 @router.get("/datasheets/{datasheet_id}")

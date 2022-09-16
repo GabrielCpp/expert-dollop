@@ -1,10 +1,11 @@
 from typing import Dict, List, Optional
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 from decimal import Decimal
 from expert_dollup.core.domains import *
 from .helpers import make_uuid
+from ..fake_db_helpers import FakeDb
 
 
 class FormulaSeed:
@@ -303,7 +304,7 @@ class ProjectInstanceFactory:
             name=project_name,
             default_datasheet_id=make_uuid(f"{project_name}-default-datasheet"),
             properties={},
-            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
+            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000, timezone.utc),
         )
 
         project = ProjectDetails(
@@ -312,7 +313,7 @@ class ProjectInstanceFactory:
             is_staged=False,
             project_definition_id=project_definition.id,
             datasheet_id=project_definition.default_datasheet_id,
-            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
+            creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000, timezone.utc),
         )
 
         definition_nodes = [
@@ -326,7 +327,7 @@ class ProjectInstanceFactory:
                 translations=node_def_seed.translations,
                 field_details=node_def_seed.field_details,
                 path=node_def_seed.path,
-                creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
+                creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000, timezone.utc),
             )
             for index, node_def_seed in enumerate(project_seed.definitions.values())
         ]
@@ -351,6 +352,7 @@ class ProjectInstanceFactory:
                 attached_to_type_id=formula_seed.node.definition.id,
                 expression=formula_seed.expression,
                 name=formula_seed.name,
+                path=[formula_seed.node.definition.id],
                 dependency_graph=FormulaDependencyGraph(
                     formulas=[
                         FormulaDependency(
@@ -367,6 +369,7 @@ class ProjectInstanceFactory:
                         for dependant_name in formula_seed.node_dependencies
                     ],
                 ),
+                creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000, timezone.utc),
             )
             for formula_seed in formulas_by_name.values()
         ]
@@ -409,3 +412,16 @@ class ProjectInstanceFactory:
             unit_instances=unit_instances,
             any_id_to_name=any_id_to_name,
         )
+
+    def __init__(self, seed: ProjectSeed):
+        self.seed = seed
+
+    def __call__(self, db: FakeDb) -> None:
+        package = ProjectInstanceFactory.build(self.seed)
+        self.package = package
+
+        db.add(package.project_definition)
+        db.add(package.project)
+        db.add_all(package.formulas)
+        db.add_all(package.definition_nodes)
+        db.add_all(package.nodes)

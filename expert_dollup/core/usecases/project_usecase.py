@@ -1,5 +1,5 @@
 from uuid import UUID
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.builders import ProjectBuilder
 from expert_dollup.shared.starlette_injection import LoggerFactory
 from expert_dollup.core.domains import (
@@ -17,10 +17,10 @@ from expert_dollup.core.domains import (
 class ProjectUseCase:
     def __init__(
         self,
-        project_service: CollectionService[ProjectDetails],
-        project_node_service: CollectionService[ProjectNode],
-        project_node_meta_service: CollectionService[ProjectNodeMeta],
-        ressource_service: CollectionService[Ressource],
+        project_service: Repository[ProjectDetails],
+        project_node_service: Repository[ProjectNode],
+        project_node_meta_service: Repository[ProjectNodeMeta],
+        ressource_service: Repository[Ressource],
         project_builder: ProjectBuilder,
         logger: LoggerFactory,
     ):
@@ -31,9 +31,7 @@ class ProjectUseCase:
         self.project_builder = project_builder
         self.logger = logger.create(__name__)
 
-    async def add(
-        self, project_details: ProjectDetails, user: User
-    ) -> ProjectDetails:
+    async def add(self, project_details: ProjectDetails, user: User) -> ProjectDetails:
         project = await self.project_builder.build_new(project_details, user)
         await self._insert_new_project(project)
 

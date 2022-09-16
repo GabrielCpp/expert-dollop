@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from injector import Injector
-from fastapi import Request
+from starlette.requests import Request
+from .injection import Injector
 
 
 @dataclass
 class GraphqlContext:
-    container: Injector
+    injector: Injector
     request: Request

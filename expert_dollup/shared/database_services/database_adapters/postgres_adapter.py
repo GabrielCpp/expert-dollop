@@ -1,4 +1,4 @@
-from typing import List, TypeVar, Optional, Dict, Type, Union, Callable, Any
+from typing import List, TypeVar, Optional, Dict, Type, Union, Callable, Any, get_args
 from pydantic import BaseModel, ConstrainedStr
 from pydantic.fields import ModelField
 from inspect import isclass
@@ -24,7 +24,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert, ARRAY
 from sqlalchemy.dialects import postgresql
 from expert_dollup.shared.automapping import Mapper
 from ..adapter_interfaces import (
-    CollectionService,
+    InternalRepository,
     QueryBuilder,
     WhereFilter,
     DbConnection,
@@ -33,7 +33,7 @@ from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 from ..batch_helper import batch
 from ..json_serializer import JsonSerializer
-from ..collection_mapper import CollectionMapper
+from ..collection_element_mapping import CollectionElementMapping
 from ..db_agnotist_query_builder import DbAgnotistQueryBuilder
 
 NoneType = type(None)
@@ -163,45 +163,46 @@ class PostgresConnection(DbConnection):
             **kwargs,
         )
 
-    def get_collection_service(self, meta: Type, mapper: Mapper):
+    def get_collection_service(self, meta: RepositoryMetadata, mapper: Mapper):
         return PostgresTableService(meta, self.tables, self._engine, mapper)
 
-    def load_metadatas(self, dao_types):
+    def load_metadatas(self, metadatas: List[RepositoryMetadata]):
+        def get_dao(dao):
+            for t in get_args(dao):
+                return t.schema(), t.Meta
+            else:
+                return dao.schema(), dao.Meta
+
         column_builder = PostgresColumnBuilder()
 
-        for dao_type in dao_types:
-            if not hasattr(dao_type, "Meta"):
-                continue
-
-            schema = dao_type.schema()
+        for metadata in metadatas:
+            schema, meta = get_dao(metadata.dao)
             assert schema.get("type") == "object"
             assert "properties" in schema
 
             columns = [
                 column_builder.build(
-                    dao_type.Meta,
+                    meta,
                     schema["properties"][field.name],
                     field,
                 )
-                for field in dao_type.__fields__.values()
+                for field in metadata.dao.__fields__.values()
             ]
 
-            if hasattr(dao_type.Meta, "version"):
+            if hasattr(meta, "version"):
                 columns.append(Column("_version", Integer, nullable=False))
 
             table_name = schema["title"]
             table = Table(table_name, self.metadata, *columns)
-            self.tables[dao_type] = table
+            self.tables[metadata.dao] = table
 
-    async def truncate_db(self, tables: Optional[List[str]] = None):
+    async def truncate_db(self):
         async with self._engine.begin() as con:
-            if tables is None:
-                tables = [table.name for table in self.tables.values()]
-
-            for table in tables:
-                await con.execute(text(f'ALTER TABLE "{table}" DISABLE TRIGGER ALL;'))
-                await con.execute(text(f"DELETE FROM {table};"))
-                await con.execute(text(f'ALTER TABLE "{table}" ENABLE TRIGGER ALL;'))
+            for table in self.tables.values():
+                name = table.name
+                await con.execute(text(f'ALTER TABLE "{name}" DISABLE TRIGGER ALL;'))
+                await con.execute(text(f"DELETE FROM {name};"))
+                await con.execute(text(f'ALTER TABLE "{name}" ENABLE TRIGGER ALL;'))
 
     async def transaction(self, callback: Callable[[], Awaitable]):
         pass
@@ -287,25 +288,21 @@ Domain = TypeVar("Domain")
 Id = TypeVar("Id")
 
 
-class PostgresTableService(CollectionService[Domain]):
+class PostgresTableService(InternalRepository[Domain]):
     def __init__(
         self,
-        meta: Type,
+        meta: RepositoryMetadata,
         tables: Dict[Type, Table],
         engine,
         mapper: Mapper,
     ):
-        self._dao = meta.dao
         self._domain = meta.domain
         self._mapper = mapper
         self._database = engine
         self._table = tables.get(meta.dao)
-        self._dao_mapper = CollectionMapper(
+        self._db_mapping = CollectionElementMapping(
             mapper,
-            meta.domain,
-            meta.dao,
-            getattr(meta.dao.Meta, "version", None),
-            getattr(meta.dao.Meta, "version_mappers", {}),
+            CollectionElementMapping.get_mapping_details(meta.domain, meta.dao),
             record_to_dict=lambda r: r._asdict(),
         )
 
@@ -323,10 +320,6 @@ class PostgresTableService(CollectionService[Domain]):
         return self._domain
 
     @property
-    def dao(self) -> Type:
-        return self._dao
-
-    @property
     def batch_size(self) -> int:
         return 1000
 
@@ -335,13 +328,13 @@ class PostgresTableService(CollectionService[Domain]):
         return self._database
 
     async def insert(self, domain: Domain):
-        value = self._dao_mapper.map_to_dict(domain)
+        value = self._db_mapping.map_domain_to_dict(domain)
         query = self._table.insert().values(value)
 
         await self._execute(query)
 
     async def insert_many(self, domains: List[Domain]):
-        dicts = self._dao_mapper.map_many_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_dict(domains)
 
         for dicts_batch in batch(dicts, BATCH_SIZE):
             query = pg_insert(self._table, dicts_batch)
@@ -351,7 +344,7 @@ class PostgresTableService(CollectionService[Domain]):
         if len(domains) == 0:
             return
 
-        dicts = self._dao_mapper.map_many_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_dict(domains)
         constraint = f"{self._table.name}_pkey"
 
         for items in batch(dicts, BATCH_SIZE):
@@ -367,13 +360,13 @@ class PostgresTableService(CollectionService[Domain]):
     async def find_all(self, limit: int = 1000) -> List[Domain]:
         query = self._table.select().limit(limit)
         records = await self._fetch_all(query=query)
-        results = self._dao_mapper.map_many_to_domain(records)
+        results = self._db_mapping.map_many_record_to_domain(records)
         return results
 
     async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
         query = self._build_query(query_filter)
         records = await self._fetch_all(query=query)
-        results = self._dao_mapper.map_many_to_domain(records)
+        results = self._db_mapping.map_many_record_to_domain(records)
 
         return results
 
@@ -384,7 +377,7 @@ class PostgresTableService(CollectionService[Domain]):
         if record is None:
             raise RecordNotFound()
 
-        result = self._dao_mapper.map_to_domain(record)
+        result = self._db_mapping.map_record_to_domain(record)
 
         return result
 
@@ -427,7 +420,7 @@ class PostgresTableService(CollectionService[Domain]):
         if record is None:
             raise RecordNotFound()
 
-        result = self._dao_mapper.map_to_domain(record)
+        result = self._db_mapping.map_record_to_domain(record)
         return result
 
     async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):
@@ -435,6 +428,8 @@ class PostgresTableService(CollectionService[Domain]):
         update_fields = self._mapper.map(value_filter, dict, value_filter.__class__)
         query = self._table.update().where(where_filter).values(update_fields)
         await self._execute(query)
+
+    # Internal api
 
     def get_builder(self) -> QueryBuilder:
         return DbAgnotistQueryBuilder()
@@ -463,8 +458,7 @@ class PostgresTableService(CollectionService[Domain]):
         columns_name = [column.name for column in self._table.c]
         records = []
 
-        for dao in daos:
-            d = self._dao_mapper.add_version_to_dao(dao)
+        for d in self._db_mapping.map_many_dao_to_dict(daos):
             records.append([d[column_name] for column_name in columns_name])
 
         async with self._database.connect() as connection:
@@ -472,6 +466,9 @@ class PostgresTableService(CollectionService[Domain]):
             await conn.driver_connection.copy_records_to_table(
                 self._table.name, records=records, columns=columns_name
             )
+
+    def map_domain_to_dao(self, domain: Domain) -> BaseModel:
+        return self._db_mapping.map_domain_to_dao(domain)
 
     def _build_query(self, builder: WhereFilter):
         if isinstance(builder, DbAgnotistQueryBuilder):

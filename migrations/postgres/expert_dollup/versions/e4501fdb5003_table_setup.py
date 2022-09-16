@@ -61,24 +61,16 @@ def create_project_definition_tables():
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
 
-    op.create_index(op.f("ix_project_definition_name"), "project_definition", ["name"])
-
     op.create_table(
         "project_definition_node",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("project_definition_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),
-        Column("is_collection", Boolean, nullable=False),
-        Column("instanciate_by_default", Boolean, nullable=False),
-        Column("order_index", Integer, nullable=False),
-        Column("translations", postgresql.JSON(), nullable=False),
-        Column("triggers", postgresql.JSON(), nullable=False),
-        Column("meta", postgresql.JSON(), nullable=False),
-        Column("field_details", postgresql.JSON(), nullable=True),
         Column("path", String, nullable=False),
         Column("level", Integer, nullable=False),
         Column("display_query_internal_id", postgresql.UUID(), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
+        Column("config", postgresql.JSON(), nullable=False),
         Column("_version", Integer, nullable=False),
     )
 
@@ -97,23 +89,6 @@ def create_project_definition_tables():
     op.create_index(
         op.f("ix_project_definition_node_def_id_name"),
         "project_definition_node",
-        ["project_definition_id", "name"],
-        unique=True,
-    )
-
-    op.create_table(
-        "project_definition_formula",
-        Column("id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("project_definition_id", postgresql.UUID(), nullable=False),
-        Column("attached_to_type_id", postgresql.UUID(), nullable=False),
-        Column("name", String, nullable=False),
-        Column("expression", String, nullable=False),
-        Column("dependency_graph", postgresql.JSON(), nullable=False),
-    )
-
-    op.create_index(
-        op.f("ix_project_definition_formula_def_id_name"),
-        "project_definition_formula",
         ["project_definition_id", "name"],
         unique=True,
     )

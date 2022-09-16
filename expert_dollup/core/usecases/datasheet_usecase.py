@@ -1,6 +1,6 @@
 from typing import List
 from uuid import UUID, uuid4
-from expert_dollup.shared.database_services import Page, Paginator, CollectionService
+from expert_dollup.shared.database_services import Page, Paginator, Repository
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.core.utils import authorization_factory
@@ -21,13 +21,11 @@ from expert_dollup.core.domains import (
 class DatasheetUseCase:
     def __init__(
         self,
-        ressource_service: CollectionService[Ressource],
-        datasheet_service: CollectionService[Datasheet],
-        datasheet_element_service: CollectionService[DatasheetElement],
+        ressource_service: Repository[Ressource],
+        datasheet_service: Repository[Datasheet],
+        datasheet_element_service: Repository[DatasheetElement],
         schema_validator: SchemaValidator,
-        datasheet_definition_element_service: CollectionService[
-            DatasheetDefinitionElement
-        ],
+        datasheet_definition_element_service: Repository[DatasheetDefinitionElement],
         datasheet_element_paginator: Paginator[DatasheetElement],
         clock: Clock,
     ):

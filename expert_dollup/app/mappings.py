@@ -556,9 +556,11 @@ def map_input_formula_expression_from_dto(
     return FormulaExpression(
         id=src.id,
         project_definition_id=src.project_definition_id,
-        attached_to_type_id=src.attached_to_type_id,
+        attached_to_type_id=src.path[-1],
         name=src.name,
         expression=src.expression,
+        path=src.path,
+        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
@@ -571,6 +573,8 @@ def map_formula_expression_to_dto(
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
+        path=src.path,
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -583,6 +587,8 @@ def map_formula_expression_from_dto(
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
+        path=src.path,
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -593,6 +599,8 @@ def map_formula_to_expression_dto(src: Formula, mapper: Mapper) -> FormulaExpres
         attached_to_type_id=src.attached_to_type_id,
         name=src.name,
         expression=src.expression,
+        path=src.path,
+        creation_date_utc=src.creation_date_utc,
     )
 
 
@@ -1188,3 +1196,25 @@ def map_supplied_item_to_dto(src: SuppliedItem, mapper: Mapper) -> SuppliedItemD
 
 def map_measure_unit_to_dto(src: MeasureUnit, mapper: Mapper) -> MeasureUnitDto:
     return MeasureUnitDto(id=src.id)
+
+
+def map_formula_to_core_definition_node_dto(
+    src: Formula, mapper: Mapper
+) -> CoreDefinitionNodeDto:
+    return CoreDefinitionNodeDto(
+        id=src.id,
+        project_definition_id=src.project_definition_id,
+        name=src.name,
+        path=src.path,
+    )
+
+
+def map_definition_node_to_core_definition_node_dto(
+    src: ProjectDefinitionNode, mapper: Mapper
+) -> CoreDefinitionNodeDto:
+    return CoreDefinitionNodeDto(
+        id=src.id,
+        project_definition_id=src.project_definition_id,
+        name=src.name,
+        path=src.path,
+    )

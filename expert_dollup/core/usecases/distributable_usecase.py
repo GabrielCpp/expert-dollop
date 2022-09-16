@@ -3,16 +3,16 @@ from uuid import UUID
 from expert_dollup.core.domains import *
 from expert_dollup.core.units import *
 from expert_dollup.core.object_storage import ObjectStorage
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 
 
 class DistributableUseCase:
     def __init__(
         self,
-        distributable_service: CollectionService[DistributableItem],
+        distributable_service: Repository[DistributableItem],
         report_distributor: ReportDistributor,
-        report_definition_service: CollectionService[ReportDefinition],
-        project_service: CollectionService[ProjectDetails],
+        report_definition_service: Repository[ReportDefinition],
+        project_service: Repository[ProjectDetails],
         report_linking: ReportLinking,
         report_storage: ObjectStorage[Report, ReportKey],
     ):

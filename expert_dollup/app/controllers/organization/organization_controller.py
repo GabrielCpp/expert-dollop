@@ -10,7 +10,7 @@ from expert_dollup.shared.starlette_injection import (
     AuthenticationRequired,
     Inject,
 )
-from expert_dollup.shared.database_services import CollectionService
+from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *
 
@@ -20,9 +20,7 @@ router = APIRouter()
 @router.get("/organizations/{organization_id}")
 async def get_organization_by_id(
     organization_id: UUID,
-    service: CollectionService[Organization] = Depends(
-        Inject(CollectionService[Organization])
-    ),
+    service: Repository[Organization] = Depends(Inject(Repository[Organization])),
     handler=Depends(Inject(RequestHandler)),
     jwt_dict: dict = Depends(AuthenticationRequired()),
 ):

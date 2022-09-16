@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Type, TypeVar, List, Optional, Union
-from .adapter_interfaces import CollectionService, WhereFilter, QueryFilter
+from .adapter_interfaces import Repository, WhereFilter, QueryFilter
 
 Domain = TypeVar("Domain")
 Query = TypeVar("Query")
@@ -9,7 +9,7 @@ Id = TypeVar("Id")
 
 class DatabaseContext(ABC):
     @abstractmethod
-    def get_repository(self, domain_type: Type[Domain]) -> CollectionService[Domain]:
+    def get_repository(self, domain_type: Type[Domain]) -> Repository[Domain]:
         pass
 
     @abstractmethod

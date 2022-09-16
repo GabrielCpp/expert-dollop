@@ -1,11 +1,10 @@
 import pytest
-from injector import Injector
 from datetime import datetime, timezone
 from expert_dollup.core.domains import ProjectDetails, User
 from expert_dollup.core.utils.ressource_permissions import authorization_factory
 from expert_dollup.infra.ressource_engine import UserRessourceQuery
-from expert_dollup.shared.database_services import Page
-from expert_dollup.shared.database_services import UserRessourcePaginator
+from expert_dollup.shared.database_services import Page, UserRessourcePaginator
+from expert_dollup.shared.starlette_injection import Injector
 from ..fixtures import *
 
 
@@ -33,7 +32,7 @@ async def test_given_project_it_could_be_paginated_by_user(
     db = await db_helper.load_fixtures(make_projects_with_user)
     projects = db.all(ProjectDetails)
     user = db.all(User)[0]
-    ressource_query = UserRessourceQuery(user.organization_id)
+    ressource_query = UserRessourceQuery(organization_id=user.organization_id)
     ressource_engine = container.get(UserRessourcePaginator[ProjectDetails])
     token_page_1 = ressource_engine.make_record_token(projects[10])
     token_page_2 = ressource_engine.make_record_token(projects[0])
