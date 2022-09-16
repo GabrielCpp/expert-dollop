@@ -18,7 +18,7 @@ async def find_paginated_project_definitions(
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     paginator=Depends(Inject(UserRessourcePaginator[ProjectDefinition])),
     handler: PageHandlerProxy = Depends(Inject(PageHandlerProxy)),
-    user=Depends(CanPerformRequired(["project_definition_id:get"])),
+    user=Depends(CanPerformRequired(["project_definition:get"])),
 ):
     return await handler.use_paginator(paginator).handle(
         ProjectDefinitionDto,
