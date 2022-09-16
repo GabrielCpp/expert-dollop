@@ -610,6 +610,9 @@ type Query {
     after: String
   ): CoreDefinitionNodeConnection!
 
+  # Formula
+  findFormula(projectDefinitionId: ID!, formulaId: ID!): Formula
+
   # Datasheet
   findDatasheet(id: ID!): Datasheet!
   findDatasheets(

@@ -8,7 +8,10 @@ from expert_dollup.core.domains import *
 from expert_dollup.app.controllers.translation import *
 from expert_dollup.app.controllers.project.project_definition_node import *
 from expert_dollup.app.dtos import *
-from expert_dollup.app.controllers.formulas_controller import find_paginated_formulas
+from expert_dollup.app.controllers.formulas_controller import (
+    find_paginated_formulas,
+    find_formula_by_id,
+)
 from .types import query
 
 
@@ -27,3 +30,16 @@ async def resolve_find_project_definition_formulas(
     return await find_paginated_formulas(
         info, UUID(project_definition_id), first, after
     )
+
+
+@query.field("findFormula")
+@inject_graphql_route(find_formula_by_id, ["project_definition_id"])
+@convert_kwargs_to_snake_case
+async def resolve_find_formula(
+    _: Any,
+    info: GraphQLResolveInfo,
+    project_definition_id: str,
+    formula_id: str,
+    find_formula_by_id,
+):
+    return await find_formula_by_id(info, UUID(project_definition_id), UUID(formula_id))

@@ -17,6 +17,9 @@ async def find_paginated_formulas(
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     handler=Depends(Inject(PageHandlerProxy)),
     paginator=Depends(Inject(Paginator[FormulaExpression])),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
+    ),
 ):
     return await handler.use_paginator(paginator).handle(
         FormulaExpressionDto,
@@ -26,11 +29,15 @@ async def find_paginated_formulas(
     )
 
 
-@router.get("/formula/{formula_id}")
-async def get_formula(
+@router.get("/definitions/{project_definition_id}/formulas/{formula_id}")
+async def find_formula_by_id(
+    project_definition_id: UUID,
     formula_id: UUID,
     usecase=Depends(Inject(FormulaUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
+    ),
 ):
     return await handler.handle(
         usecase.find_by_id,
@@ -39,24 +46,15 @@ async def get_formula(
     )
 
 
-@router.get("/formula/{formula_id}")
-async def get_formula(
-    formula_id: UUID,
-    usecase=Depends(Inject(FormulaUseCase)),
-    handler=Depends(Inject(RequestHandler)),
-):
-    return await handler.handle(
-        usecase.find_by_id,
-        formula_id,
-        MappingChain(out_dto=FormulaExpressionDto),
-    )
-
-
-@router.post("/formula")
+@router.post("/definitions/{project_definition_id}/formulas")
 async def add_formula(
+    project_definition_id: UUID,
     formula: InputFormulaDto,
     usecase: FormulaUseCase = Depends(Inject(FormulaUseCase)),
     handler: RequestHandler = Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:update"])
+    ),
 ):
     return await handler.handle(
         usecase.add,
@@ -67,12 +65,16 @@ async def add_formula(
     )
 
 
-@router.delete("/formula/{formula_id}")
+@router.delete("/definitions/{project_definition_id}/formulas/{formula_id}")
 async def remove_formula(
+    project_definition_id: UUID,
     formula_id: UUID,
     remove_recursively: bool = Query(alias="removeRecursively", default=False),
     usecase=Depends(Inject(FormulaUseCase)),
     handler=Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:delete"])
+    ),
 ):
     return await usecase.delete_by_id(formula_id, remove_recursively)
 
@@ -81,5 +83,6 @@ async def remove_formula(
 async def refresh_formula_cache(
     project_id: UUID,
     usecase=Depends(Inject(FormulaUseCase)),
+    user=Depends(CanPerformOnRequired("project_id", ["project:delete"])),
 ):
     await usecase.compute_project_formulas(project_id)
