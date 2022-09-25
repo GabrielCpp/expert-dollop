@@ -715,15 +715,16 @@ type Mutation {
 
   # ProjectDefinitionNode
   addProjectDefinitionNode(
-    projectDefinitionId: String!
+    projectDefinitionId: ID!
     node: ProjectDefinitionNodeCreationInput!
   ): ProjectDefinitionNode!
 
   updateProjectDefinitionNode(
-    projectDefinitionId: String!
-    nodeId: String!
+    projectDefinitionId: ID!
+    nodeId: ID!
     node: ProjectDefinitionNodeCreationInput!
   ): ProjectDefinitionNode!
+  deleteProjectDefinitionNode(projectDefinitionId: ID!, nodeId: ID!): String!
 
   # ProjectNode
   updateProjectField(

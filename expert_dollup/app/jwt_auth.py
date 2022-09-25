@@ -84,7 +84,10 @@ class AuthJWT(AuthService[User]):
             )
         except RecordNotFound:
             self._deny_access(
-                "user has not access to ressource.", user.oauth_id, user.organization_id
+                reason="user has not access to ressource.",
+                oauth_id=user.oauth_id,
+                organization_id=user.organization_id,
+                ressource_id=ressource_id,
             )
 
         for permission in permissions:
@@ -104,7 +107,7 @@ class AuthJWT(AuthService[User]):
         try:
             user = await self.user_service.find_by_id(oauth_id)
         except RecordNotFound:
-            self._deny_access("user not found", oauth_id)
+            self._deny_access(reason="user not found", oauth_id=oauth_id)
 
         for permission in permissions:
             if not permission in user.permissions:
@@ -131,11 +134,6 @@ class AuthJWT(AuthService[User]):
         self.logger.debug("Permission missing", extra=details)
         raise PermissionMissing("Permission missing", **details)
 
-    def _deny_access(
-        self, reason: str, oauth_id: str, organization_id: Optional[UUID] = None
-    ):
-        details = dict(
-            reason=reason, oauth_id=oauth_id, organization_id=organization_id
-        )
+    def _deny_access(self, **details):
         self.logger.debug("Permission missing", extra=details)
         raise PermissionMissing("Permission missing", **details)

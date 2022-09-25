@@ -16,7 +16,7 @@ async def find_paginated_formulas(
     limit: int = Query(alias="limit", default=10),
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     handler=Depends(Inject(PageHandlerProxy)),
-    paginator=Depends(Inject(Paginator[FormulaExpression])),
+    paginator=Depends(Inject(Paginator[Formula])),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:get"])
     ),

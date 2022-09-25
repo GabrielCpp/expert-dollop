@@ -16,7 +16,7 @@ from expert_dollup.app.modules import (
     expert_dollup_metadatas,
     auth_metadatas,
 )
-from tests.fixtures import *
+
 
 load_dotenv()
 
@@ -154,16 +154,6 @@ def start_docker(c):
     c.run(
         "docker build --target=release -t expert-dollup-release . && docker run --env-file .env -it --entrypoint /bin/bash   "
     )
-
-
-@task(name="test:ci")
-def test_ci(c):
-    from dotenv import load_dotenv
-
-    load_dotenv()
-    apply_db_migrations(c, urlparse(environ["EXPERT_DOLLUP_DB_URL"]))
-    apply_db_migrations(c, urlparse(environ["AUTH_DB_URL"]))
-    c.run("pytest")
 
 
 @task(name="test:docker")
@@ -385,6 +375,7 @@ def make_random_token(c):
 @task(name="load-default-users")
 def load_default_users(c):
     from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
+    from tests.fixtures import FakeDb
 
     async def reload_db():
         container = build_container()

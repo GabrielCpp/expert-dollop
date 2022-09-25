@@ -124,6 +124,27 @@ async def resolve_find_project_definition_node(
     return result
 
 
+@mutation.field("deleteProjectDefinitionNode")
+@inject_graphql_route(
+    delete_project_definition_node, ["project_definition_id", "node_id"]
+)
+@convert_kwargs_to_snake_case
+async def resolve_update_project_definition_node(
+    _: Any,
+    info: GraphQLResolveInfo,
+    project_definition_id: str,
+    node_id: str,
+    delete_project_definition_node,
+):
+    await delete_project_definition_node(
+        info,
+        UUID(project_definition_id),
+        UUID(node_id),
+    )
+
+    return node_id
+
+
 @mutation.field("addProjectDefinitionNode")
 @inject_graphql_route(create_project_definition_node, ["project_definition_id"])
 @convert_kwargs_to_snake_case

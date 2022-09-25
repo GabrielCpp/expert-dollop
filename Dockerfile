@@ -1,5 +1,5 @@
 FROM python:3.8-slim@sha256:d20122663d629b8b0848e2bb78d929c01aabab37c920990b37bb32bc47328818 as build
-ENV POETRY_VERSION=1.1.12
+ENV POETRY_VERSION=1.2.1
 RUN apt-get update -y && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends build-essential gcc curl wget gnupg && \
@@ -8,34 +8,33 @@ RUN apt-get update -y && \
     echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/6.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
     apt-get update -y && \ 
     apt-get install -y mongodb-org && \
+    mkdir -p /data/db && \
     # Cleanup
     apt-get autoremove -y && \
     apt-get clean -y && \
-    curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+    curl -sSL https://install.python-poetry.org | python -
 
 WORKDIR /app
-ENV PATH="/root/.poetry/bin:$PATH"
+ENV PATH="/root/.local/bin:$PATH"
 COPY pyproject.toml .
 COPY poetry.lock .
-RUN $HOME/.poetry/bin/poetry config virtualenvs.create true && \
-    $HOME/.poetry/bin/poetry config virtualenvs.in-project true && \
-    $HOME/.poetry/bin/poetry install --no-interaction --no-ansi --extras mongo
+RUN $HOME/.local/bin/poetry config virtualenvs.create true && \
+    $HOME/.local/bin/poetry config virtualenvs.in-project true && \
+    $HOME/.local/bin/poetry install --no-interaction --no-ansi --extras mongo
 
 # ------------------------------------------------ test ------------------------------------------------
 FROM build as test
 COPY tasks.py tasks.py
-RUN mkdir -p /data/db && \
-    poetry run invoke env:init --hostname 127.0.0.1 --username '' --password ''
-
+COPY expert_dollup ./expert_dollup
+RUN  poetry run invoke env:init --hostname 127.0.0.1 --username '' --password ''
 COPY assets ./assets
 COPY migrations ./migrations
-COPY expert_dollup ./expert_dollup
 COPY tests ./tests
-CMD [ "bash", "-c", "(mongod > /dev/null &) && poetry run invoke test:ci" ]
+CMD [ "bash", "-c", "(mongod > /dev/null &) && poetry run invoke db:migrate && poetry run pytest" ]
 
 # ------------------------------------------------ staging ------------------------------------------------
 FROM build as staged_venv
-RUN $HOME/.poetry/bin/poetry install --no-dev --no-interaction --no-ansi --extras mongo
+RUN $HOME/.local/bin/poetry install --only main --no-interaction --no-ansi --extras mongo
 
 # ------------------------------------------------ migration ------------------------------------------------
 FROM python:3.8-slim@sha256:d20122663d629b8b0848e2bb78d929c01aabab37c920990b37bb32bc47328818 as migration
