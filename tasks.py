@@ -156,6 +156,13 @@ def start_docker(c):
     )
 
 
+@task(name="migration:docker")
+def start_docker(c):
+    c.run(
+        "docker build --target=migration -t expert-dollup-migration . && docker run --env-file .env -it --entrypoint /bin/bash expert-dollup-migration"
+    )
+
+
 @task(name="test:docker")
 def test_docker(c):
     c.run(

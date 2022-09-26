@@ -40,6 +40,7 @@ RUN $HOME/.local/bin/poetry install --only main --no-interaction --no-ansi --ext
 FROM python:3.8-slim@sha256:d20122663d629b8b0848e2bb78d929c01aabab37c920990b37bb32bc47328818 as migration
 WORKDIR /app
 COPY --from=build /app/.venv ./venv
+COPY expert_dollup ./expert_dollup
 COPY migrations ./migrations
 COPY tasks.py tasks.py
 ENV PATH="/app/venv/bin:$PATH"
