@@ -28,6 +28,8 @@ async def truncate_db(db_url_name: str, metadatas: List[RepositoryMetadata]):
 
 
 async def get_token(oauth: Optional[str] = None):
+    from tests.fixtures import FakeDb, SuperUser
+
     oauth = SuperUser.oauth_id if oauth is None else oauth
     container = build_container()
     auth_service: AuthService = container.get(AuthService)
@@ -382,7 +384,7 @@ def make_random_token(c):
 @task(name="load-default-users")
 def load_default_users(c):
     from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
-    from tests.fixtures import FakeDb
+    from tests.fixtures import FakeDb, SuperUser
 
     async def reload_db():
         container = build_container()
