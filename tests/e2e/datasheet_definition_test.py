@@ -8,14 +8,11 @@ from expert_dollup.infra.expert_dollup_db import *
 @pytest.mark.asyncio
 async def test_datasheet_definition(ac):
     async def create_datasheet_definition():
-        expected_definition = ProjectDefinitionDtoFactory()
+        new_definition = NewDefinitionDtoFactory()
         definition_dto = await ac.post_json(
-            "/api/definitions", expected_definition, unwrap_with=ProjectDefinitionDto
+            "/api/definitions", new_definition, unwrap_with=ProjectDefinitionDto
         )
-        assert definition_dto.json(
-            exclude={"id", "creation_date_utc"}
-        ) == expected_definition.json(exclude={"id", "creation_date_utc"})
-
+        assert definition_dto.name == new_definition.name
         return definition_dto
 
     async def create_datasheet_definition_element(

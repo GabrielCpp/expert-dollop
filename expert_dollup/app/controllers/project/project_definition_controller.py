@@ -46,18 +46,18 @@ async def find_project_definition(
 
 @router.post("/definitions")
 async def create_project_definition(
-    project_definition: ProjectDefinitionDto,
+    new_definition: NewDefinitionDto,
     usecase: ProjectDefinitonUseCase = Depends(Inject(ProjectDefinitonUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
     user=Depends(CanPerformRequired("project_definition:create")),
 ):
     return await request_handler.forward_mapped(
         usecase.add,
-        dict(domain=project_definition, user=user),
+        dict(domain=new_definition, user=user),
         MappingChain(out_dto=ProjectDefinitionDto),
         map_keys=dict(
             domain=MappingChain(
-                dto=ProjectDefinitionDto,
+                dto=NewDefinitionDto,
                 domain=ProjectDefinition,
             ),
         ),
@@ -66,8 +66,8 @@ async def create_project_definition(
 
 @router.put("/definitions/{project_definition_id}")
 async def update_project_definition(
-    project_definition: ProjectDefinitionDto,
-    usecase=Depends(Inject(ProjectDefinitonUseCase)),
+    project_definition: NewDefinitionDto,
+    usecase: ProjectDefinitonUseCase = Depends(Inject(ProjectDefinitonUseCase)),
     request_handler=Depends(Inject(RequestHandler)),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:update"])
@@ -77,7 +77,7 @@ async def update_project_definition(
         usecase.update,
         project_definition,
         MappingChain(
-            dro=ProjectDefinitionDto,
+            dro=NewDefinitionDto,
             domain=ProjectDefinition,
             out_dto=ProjectDefinitionDto,
         ),

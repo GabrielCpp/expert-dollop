@@ -709,9 +709,16 @@ input DatasheetInput {
   fromDatasheetId: String
 }
 
+input DefinitionInput {
+  name: String!
+}
+
 type Mutation {
   # Translations
   updateTranslations(translations: [TranslationUpdateInput!]!): [Translation!]!
+
+  # ProjectDefinition
+  addProjectDefinition(definitionInput: DefinitionInput!): ProjectDefinition!
 
   # ProjectDefinitionNode
   addProjectDefinitionNode(

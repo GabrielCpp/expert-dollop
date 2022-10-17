@@ -1,4 +1,8 @@
-from .project_definition_dto import ProjectDefinitionDto, ElementPropertySchemaDto
+from .project_definition_dto import (
+    ProjectDefinitionDto,
+    ElementPropertySchemaDto,
+    NewDefinitionDto,
+)
 from .project_definition_node_dto import (
     ProjectDefinitionNodeDto,
     ProjectDefinitionNodeCreationDto,

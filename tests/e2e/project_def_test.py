@@ -19,11 +19,17 @@ class NodeDefinitionRebinding:
     def definition(self) -> ProjectDefinition:
         return self.db.get_only_one(ProjectDefinition)
 
+    @property
+    def new_definition(self) -> NewDefinitionDto:
+        return NewDefinitionDto(name=self.definition.name)
+
     def rebind_path(
         self,
+        definition_id: UUID,
         definition_node_dto: ProjectDefinitionNodeDto,
     ) -> ProjectDefinitionNodeDto:
         definition_node_dto.path = [self.id_maps[id] for id in definition_node_dto.path]
+        definition_node_dto.project_definition_id = definition_id
         return definition_node_dto
 
     def rebind_values(
@@ -51,13 +57,13 @@ async def test_project_creation(ac, mapper, static_clock):
     await ac.login_super_user()
 
     definition_dto = await ac.post_json(
-        "/api/definitions", rebinding.definition, unwrap_with=ProjectDefinitionDto
+        "/api/definitions", rebinding.new_definition, unwrap_with=ProjectDefinitionDto
     )
 
     created_node_dtos = [
         await ac.post_json(
             f"/api/definitions/{definition_dto.id}/nodes",
-            rebinding.rebind_path(definition_node_dto),
+            rebinding.rebind_path(definition_dto.id, definition_node_dto),
             unwrap_with=ProjectDefinitionNodeDto,
             after=lambda x: rebinding.rebind_values(definition_node_dto, x),
         )

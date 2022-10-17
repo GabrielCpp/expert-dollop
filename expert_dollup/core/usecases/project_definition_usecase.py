@@ -1,5 +1,6 @@
 from uuid import UUID
-from expert_dollup.shared.database_services import Repository
+from expert_dollup.shared.starlette_injection import Clock
+from expert_dollup.shared.database_services import DatabaseContext
 from expert_dollup.core.exceptions import RessourceNotFound
 from expert_dollup.core.domains import *
 from expert_dollup.infra.providers import WordProvider
@@ -9,26 +10,38 @@ from expert_dollup.core.utils.ressource_permissions import authorization_factory
 class ProjectDefinitonUseCase:
     def __init__(
         self,
-        service: Repository[ProjectDefinition],
-        ressource_service: Repository[Ressource],
+        db_context: DatabaseContext,
         word_provider: WordProvider,
+        clock: Clock,
     ):
-        self.service = service
-        self.ressource_service = ressource_service
+        self.db_context = db_context
         self.word_provider = word_provider
+        self.clock = clock
 
     async def add(self, domain: ProjectDefinition, user: User) -> ProjectDefinition:
         ressource = authorization_factory.allow_access_to(domain, user)
-        await self.ressource_service.insert(ressource)
-        await self.service.insert(domain)
+        datasheet = Datasheet(
+            domain.default_datasheet_id,
+            domain.name,
+            True,
+            domain.id,
+            domain.default_datasheet_id,
+            self.clock.utcnow(),
+        )
+        await self.db_context.insert(Datasheet, datasheet)
+        await self.db_context.insert(Ressource, ressource)
+        await self.db_context.insert(ProjectDefinition, domain)
         return domain
 
     async def delete_by_id(self, id: UUID) -> None:
-        await self.service.delete_by_id(id)
-        await self.ressource_service.delete_by((RessourceFilter(id=id)))
+        definition = await self.db_context.find_by_id(ProjectDefinition, id)
+        await self.db_context.delete_by_id(ProjectDefinition, id)
+        await self.db_context.delete_by_id(Datasheet, definition.default_datasheet_id)
+        await self.db_context.delete_by(Ressource, RessourceFilter(id=id))
 
     async def update(self, domain: ProjectDefinition) -> ProjectDefinition:
-        await self.service.update(
+        await self.db_context.update(
+            ProjectDefinition,
             ProjectDefinitionFilter(
                 name=domain.name,
                 default_datasheet_id=domain.default_datasheet_id,
@@ -39,9 +52,4 @@ class ProjectDefinitonUseCase:
         return domain
 
     async def find_by_id(self, id: UUID) -> ProjectDefinition:
-        result = await self.service.find_by_id(id)
-
-        if result is None:
-            raise RessourceNotFound()
-
-        return result
+        return await self.db_context.find_by_id(ProjectDefinition, id)

@@ -11,7 +11,12 @@ from expert_dollup.app.controllers.datasheet.datasheet_definition_element_contro
 )
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
-from .types import query, datasheet_definition_property_schema_dict, project_definition
+from .types import (
+    query,
+    datasheet_definition_property_schema_dict,
+    project_definition,
+    mutation,
+)
 
 
 @query.field("findProjectDefinition")
@@ -37,8 +42,8 @@ async def resolve_find_project_defintions(
     return await find_paginated_project_definitions(info, query, first, after)
 
 
-@inject_graphql_route(find_paginated_datasheet_elements, ["project_definition_id"])
 @project_definition.field("elementsDefinition")
+@inject_graphql_route(find_paginated_datasheet_elements, ["project_definition_id"])
 @convert_kwargs_to_snake_case
 async def resolve_elements_definition(
     parent: ProjectDefinitionDto,
@@ -67,3 +72,17 @@ def resolve_element_definition(
         {"name": name, "schema": schema.dict()}
         for name, schema in parent.properties.items()
     ]
+
+
+@mutation.field("addProjectDefinition")
+@inject_graphql_route(create_project_definition, [])
+@convert_kwargs_to_snake_case
+async def resolve_add_project_definition(
+    parent: ProjectDefinitionDto,
+    info: GraphQLResolveInfo,
+    definition_input: dict,
+    create_project_definition,
+):
+    return await create_project_definition(
+        info, NewDefinitionDto.parse_obj(definition_input)
+    )

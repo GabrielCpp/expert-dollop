@@ -52,8 +52,8 @@ def map_project_definition_from_dto(
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
         properties={
-            key: ElementPropertySchema(value_validator=value.value_validator)
-            for key, value in src.properties.items()
+            prop.name: ElementPropertySchema(value_validator=prop.value_validator)
+            for prop in src.properties
         },
         creation_date_utc=src.creation_date_utc,
     )
@@ -66,10 +66,10 @@ def map_project_definition_to_dto(
         id=src.id,
         name=src.name,
         default_datasheet_id=src.default_datasheet_id,
-        properties={
-            key: ElementPropertySchemaDto(value_validator=value.value_validator)
+        properties=[
+            ElementPropertySchemaDto(name=key, value_validator=value.value_validator)
             for key, value in src.properties.items()
-        },
+        ],
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -1217,4 +1217,14 @@ def map_definition_node_to_core_definition_node_dto(
         project_definition_id=src.project_definition_id,
         name=src.name,
         path=src.path,
+    )
+
+
+def map_new_definition_dto(src: NewDefinitionDto, mapper: Mapper) -> ProjectDefinition:
+    return ProjectDefinition(
+        id=mapper.get(IdProvider).uuid4(),
+        creation_date_utc=mapper.get(Clock).utcnow(),
+        default_datasheet_id=mapper.get(IdProvider).uuid4(),
+        name=src.name,
+        properties={},
     )

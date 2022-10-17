@@ -12,8 +12,9 @@ from ..fixtures import *
 async def test_given_project_definition_should_be_able_to_create_delete_update(ac):
     await ac.login_super_user()
 
-    expected_project_definition = ProjectDefinitionDtoFactory()
-    await ac.post_json("/api/definitions", expected_project_definition)
+    expected_project_definition = await ac.post_json(
+        "/api/definitions", NewDefinitionDtoFactory(), unwrap_with=ProjectDefinitionDto
+    )
 
     actual = await ac.get_json(
         f"/api/definitions/{expected_project_definition.id}",
@@ -29,16 +30,14 @@ async def test_given_project_definition_should_be_able_to_create_delete_update(a
 
 
 @pytest.mark.asyncio
-async def test_given_project_definition_node_should_be_able_to_create_update_delete(
-    ac,
-):
+async def test_given_project_definition_node_should_be_able_to_create_update_delete(ac):
     await ac.login_super_user()
-    definition = ProjectDefinitionDtoFactory()
+    definition = await ac.post_json(
+        "/api/definitions", NewDefinitionDtoFactory(), unwrap_with=ProjectDefinitionDto
+    )
     expected_definition_node = ProjectDefinitionNodeDtoFactory(
         project_definition_id=definition.id
     )
-
-    await ac.post_json("/api/definitions", definition)
 
     created_node = await ac.post_json(
         f"/api/definitions/{definition.id}/nodes",
@@ -68,10 +67,11 @@ async def test_given_translation_should_be_able_to_create_update_delete(
     ac, static_clock
 ):
     await ac.login_super_user()
-    project_definition = ProjectDefinitionDtoFactory()
-    translation_input = TranslationInputDtoFactory(ressource_id=project_definition.id)
+    project_definition = await ac.post_json(
+        "/api/definitions", NewDefinitionDtoFactory(), unwrap_with=ProjectDefinitionDto
+    )
 
-    await ac.post_json("/api/definitions", project_definition)
+    translation_input = TranslationInputDtoFactory(ressource_id=project_definition.id)
     await ac.post_json("/api/translations", translation_input)
 
     expected_translation = TranslationDto(
@@ -100,7 +100,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
     await ac.login_super_user()
     definition = await ac.post_json(
         "/api/definitions",
-        ProjectDefinitionDtoFactory(),
+        NewDefinitionDtoFactory(),
         unwrap_with=ProjectDefinitionDto,
     )
     ressource_id = definition.id

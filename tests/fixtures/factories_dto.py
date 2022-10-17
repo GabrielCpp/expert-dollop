@@ -3,6 +3,13 @@ from datetime import timezone
 from expert_dollup.app.dtos import *
 
 
+class NewDefinitionDtoFactory(factory.Factory):
+    class Meta:
+        model = NewDefinitionDto
+
+    name = factory.Sequence(lambda n: f"Gab{n}")
+
+
 class ProjectDefinitionDtoFactory(factory.Factory):
     class Meta:
         model = ProjectDefinitionDto
@@ -11,12 +18,15 @@ class ProjectDefinitionDtoFactory(factory.Factory):
     name = factory.Sequence(lambda n: f"Gab{n}")
     project_definition_id = factory.Faker("pyuuid4")
     default_datasheet_id = factory.Faker("pyuuid4")
-    properties = {
-        "conversion_factor": ElementPropertySchemaDto(
-            value_validator={"type": "number"}
-        ),
-        "lost": ElementPropertySchemaDto(value_validator={"type": "number"}),
-    }
+    properties = factory.List(
+        [
+            ElementPropertySchemaDto(
+                name="conversion_factor", value_validator={"type": "number"}
+            ),
+            ElementPropertySchemaDto(name="lost", value_validator={"type": "number"}),
+        ]
+    )
+
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
