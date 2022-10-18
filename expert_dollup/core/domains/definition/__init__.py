@@ -3,6 +3,7 @@ from .aggregate_collection import (
     NodeReferenceConfig,
     AggregateAttributeSchema,
     AggregateCollection,
+    NewAggregateCollection,
     Aggregation,
     AggregateCollectionFilter,
 )

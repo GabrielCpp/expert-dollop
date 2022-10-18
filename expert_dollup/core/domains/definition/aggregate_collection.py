@@ -54,6 +54,13 @@ class Aggregation(AggregateCollection):
     aggregates: List[AggregateDto] = field(default_factory=list)
 
 
+@dataclass
+class NewAggregateCollection:
+    name: str
+    is_abstract: bool
+    attributes_schema: List[AggregateAttributeSchema] = field(default_factory=list)
+
+
 class AggregateCollectionFilter(QueryFilter):
     id: Optional[UUID]
     project_definition_id: Optional[UUID]

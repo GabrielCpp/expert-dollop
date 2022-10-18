@@ -46,6 +46,10 @@ class NewDatasheetElement(CamelModel):
     attributes: List[Attribute]
 
 
+class DatasheetElementUpdateDto(NewDatasheetElement):
+    id: UUID
+
+
 class DatasheetElementFilter(QueryFilter):
     id: Optional[UUID]
     datasheet_id: Optional[UUID]

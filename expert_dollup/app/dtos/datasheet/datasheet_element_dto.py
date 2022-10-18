@@ -26,10 +26,8 @@ class NewDatasheetElementDto(CamelModel):
     attributes: List[AttributeDto]
 
 
-class DatasheetElementUpdateDto(CamelModel):
+class DatasheetElementUpdateDto(NewDatasheetElementDto):
     id: UUID
-    aggregate_id: UUID
-    attributes: List[AttributeDto]
 
 
 class DatasheetElementImportDto(CamelModel):

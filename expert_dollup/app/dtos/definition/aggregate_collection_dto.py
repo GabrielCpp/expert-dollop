@@ -51,4 +51,5 @@ class AggregationDto(AggregateCollectionDto):
 
 class NewAggregateCollectionDto(CamelModel):
     name: str
+    is_abstract: bool
     attributes_schema: List[AggregateAttributeSchemaDto]

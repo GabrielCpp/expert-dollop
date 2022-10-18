@@ -93,6 +93,17 @@ class DatasheetElementUseCase:
 
         return new_element
 
+    async def batch_update_values(
+        self, datasheet_id: UUID, updates: List[DatasheetElementUpdate]
+    ) -> List[DatasheetElement]:
+        datasheet = await self.db_context.find_by_id(Datasheet, datasheet_id)
+        for update in updates:
+            self._validate_datasheet_element_properties(update, datasheet)
+
+        # TODO: finish the update
+
+        self.db_context.upserts(DatsheetElement, domains)
+
     async def delete(self, datasheet_id: UUID, datasheet_element_id: UUID) -> None:
         datasheet = await self.db_context.find_by_id(Datasheet, datasheet_id)
         element = await self.find(datasheet_id, datasheet_element_id)

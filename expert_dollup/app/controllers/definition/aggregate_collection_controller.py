@@ -3,7 +3,7 @@ from uuid import UUID
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *
-from expert_dollup.core.usecases import LabelCollectionUseCase
+from expert_dollup.core.usecases import AggregationUseCase
 
 router = APIRouter()
 
@@ -12,16 +12,17 @@ router = APIRouter()
 async def get_label_collection_by_id(
     project_definition_id: UUID,
     collection_id: UUID,
-    usecase=Depends(Inject(LabelCollectionUseCase)),
-    handler=Depends(Inject(RequestHandler)),
+    usecase: AggregationUseCase = Depends(Inject(AggregationUseCase)),
+    handler: RequestHandler = Depends(Inject(RequestHandler)),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:update"])
     ),
 ):
-    return await handler.handle(
-        usecase.find_by_id,
-        collection_id,
-        MappingChain(out_dto=AggregateCollectionDto),
+    return await handler.do_handle(
+        usecase.find,
+        MappingChain(dto=AggregateCollectionDto),
+        project_definition_id=project_definition_id,
+        collection_id=collection_id,
     )
 
 
@@ -29,19 +30,20 @@ async def get_label_collection_by_id(
 async def add_aggregate_collection(
     project_definition_id: UUID,
     new_aggregate_collection: NewAggregateCollectionDto,
-    usecase=Depends(Inject(LabelCollectionUseCase)),
-    handler=Depends(Inject(RequestHandler)),
+    usecase: AggregationUseCase = Depends(Inject(AggregationUseCase)),
+    handler: RequestHandler = Depends(Inject(RequestHandler)),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:update"])
     ),
 ):
-    return await handler.handle(
+    return await handler.do_handle(
         usecase.add,
-        new_aggregate_collection,
-        MappingChain(
+        MappingChain(dto=AggregateCollectionDto),
+        project_definition_id=project_definition_id,
+        new_aggregate_collection=MappingChain(
             dto=NewAggregateCollectionDto,
-            domain=LabelCollection,
-            out_dto=AggregateCollectionDto,
+            domain=NewAggregateCollection,
+            value=new_aggregate_collection,
         ),
     )
 
@@ -49,20 +51,22 @@ async def add_aggregate_collection(
 @router.put("/definitions/{project_definition_id}/collections/{collection_id}")
 async def update_aggregate_collection(
     project_definition_id: UUID,
-    aggregate_collection: NewAggregateCollectionDto,
-    usecase=Depends(Inject(LabelCollectionUseCase)),
-    handler=Depends(Inject(RequestHandler)),
+    new_aggregate_collection: NewAggregateCollectionDto,
+    usecase: AggregationUseCase = Depends(Inject(AggregationUseCase)),
+    handler: RequestHandler = Depends(Inject(RequestHandler)),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:update"])
     ),
 ):
-    return await handler.handle(
+    return await handler.do_handle(
         usecase.update,
-        aggregate_collection,
-        MappingChain(
+        MappingChain(dto=AggregateCollectionDto),
+        project_definition_id=project_definition_id,
+        collection_id=collection_id,
+        new_aggregate_collection=MappingChain(
             dto=NewAggregateCollectionDto,
-            domain=LabelCollection,
-            out_dto=AggregateCollectionDto,
+            domain=AggregateCollection,
+            value=new_aggregate_collection,
         ),
     )
 
@@ -71,10 +75,9 @@ async def update_aggregate_collection(
 async def delete_aggregate_collection_by_id(
     project_definition_id: UUID,
     collection_id: UUID,
-    usecase=Depends(Inject(LabelCollectionUseCase)),
-    handler=Depends(Inject(RequestHandler)),
+    usecase=Depends(Inject(AggregationUseCase)),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:update"])
     ),
 ):
-    return await usecase.delete_by_id(collection_id)
+    await usecase.delete(project_definition_id, collection_id)
