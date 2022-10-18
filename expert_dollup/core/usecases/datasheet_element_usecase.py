@@ -3,7 +3,7 @@ from typing import Dict
 from expert_dollup.core.domains.project_definition import ProjectDefinition
 from expert_dollup.core.exceptions import ValidationError, InvalidUsageError
 from expert_dollup.core.domains import *
-from expert_dollup.shared.database_services import Repository
+from expert_dollup.shared.database_services import DatabaseContext
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
 from expert_dollup.shared.starlette_injection import Clock
 
@@ -11,88 +11,81 @@ from expert_dollup.shared.starlette_injection import Clock
 class DatasheetElementUseCase:
     def __init__(
         self,
-        datasheet_service: Repository[Datasheet],
-        datasheet_element_service: Repository[DatasheetElement],
-        schema_validator: SchemaValidator,
-        datasheet_definition_element_service: Repository[DatasheetDefinitionElement],
-        ressource_service: Repository[Ressource],
-        project_definition_service: Repository[ProjectDefinition],
+        db_context: DatabaseContext,
         clock: Clock,
     ):
-        self.datasheet_service = datasheet_service
-        self.datasheet_element_service = datasheet_element_service
-        self.datasheet_definition_element_service = datasheet_definition_element_service
-        self.schema_validator = schema_validator
-        self.project_definition_service = project_definition_service
-        self.ressource_service = ressource_service
+        self.db_context = db_context
         self.clock = clock
 
-    async def find_datasheet_element(self, id: DatasheetElementId) -> DatasheetElement:
-        return await self.datasheet_element_service.find_by_id(id)
-
-    async def update_datasheet_element_properties(
-        self, id: DatasheetElementId, properties: Dict[str, PrimitiveUnion]
+    async def find(
+        self, datasheet_id: UUID, datasheet_element_id: UUID
     ) -> DatasheetElement:
-        datasheet: Datasheet = await self.datasheet_service.find_by_id(id.datasheet_id)
-        project_definition: ProjectDefinition = (
-            await self.project_definition_service.find_by_id(
-                datasheet.project_definition_id
-            )
-        )
-        element_definition: DatasheetDefinitionElement = (
-            await self.datasheet_definition_element_service.find_by_id(
-                id.element_def_id
-            )
-        )
-
-        self._validate_datasheet_element_properties(
-            properties, project_definition, element_definition
-        )
-
-        await self.datasheet_element_service.update(
-            DatasheetElementValues(properties=properties),
+        return await self.db_context.find_one_by(
+            DatasheetElement,
             DatasheetElementFilter(
-                datasheet_id=id.datasheet_id,
-                element_def_id=id.element_def_id,
-                child_element_reference=id.child_element_reference,
+                id=datasheet_element_id,
+                datasheet_id=datasheet_id,
             ),
         )
 
-        return await self.datasheet_element_service.find_by_id(id)
+    async def count(
+        self, datasheet_id: UUID, datasheet_element_id: UUID
+    ) -> DatasheetElement:
+        collection_size = await self.db_context.count(
+            DatasheetElement,
+            DatasheetElementFilter(
+                datasheet_id=datasheet_id,
+                element_def_id=datasheet_element_id,
+            ),
+        )
+        return collection_size
 
-    async def add_collection_item(
+    async def update(
         self,
         datasheet_id: UUID,
-        element_def_id: UUID,
-        properties: Dict[str, PrimitiveUnion],
+        datasheet_element_id: UUID,
+        replacement: NewDatasheetElement,
     ) -> DatasheetElement:
-        datasheet: Datasheet = await self.datasheet_service.find_by_id(datasheet_id)
-        project_definition: ProjectDefinition = (
-            await self.project_definition_service.find_by_id(
-                datasheet.project_definition_id
-            )
-        )
-        element_definition: DatasheetDefinitionElement = (
-            await self.datasheet_definition_element_service.find_by_id(element_def_id)
-        )
+        datasheet = await self.db_context.find_by_id(Datashet, datasheet_id)
+        self._validate_datasheet_element_properties(replacement, datasheet)
 
-        if not element_definition.is_collection:
+        element = await self.find(datasheet_id, datasheet_element_id)
+        new_element = DatasheetElement(
+            id=element.id,
+            datasheet_id=datasheet_id,
+            aggregate_id=element.aggregate_id,
+            ordinal=replacement.ordinal,
+            attributes=replacement.attributes,
+            original_datasheet_id=replacement.original_datasheet_id,
+            original_owner_organization_id=replacement.original_owner_organization_id,
+            creation_date_utc=element.creation_date_utc,
+        )
+        await self.db_context.upserts([new_element])
+        return new_element
+
+    async def add(
+        self, datasheet_id: UUID, new_element: NewDatasheetElement, user: User
+    ) -> DatasheetElement:
+        datasheet = await self.db_context.find_by_id(Datasheet, datasheet_id)
+        self._validate_datasheet_element_properties(new_element, datasheet)
+
+        if not new_element.aggregate_id in datasheet.instances_schema:
+            raise ValidationError.for_field(
+                "aggregate_id", "Aggregate id does not exists for that datasheet"
+            )
+
+        aggregate_schema = datasheet.instances_schema[new_element.aggregate_id]
+        if not aggregate_schema.is_collection:
             raise InvalidUsageError("Non collection element cannot be instanciated.")
 
-        self._validate_datasheet_element_properties(
-            properties, project_definition, element_definition
-        )
-
-        datasheet_ressource = await self.ressource_service.find_one_by(
-            RessourceFilter(id=datasheet_id)
-        )
+        collection_size = await self.count(datasheet_id, datasheet_element_id)
         new_element = DatasheetElement(
+            id=uuid4(),
             datasheet_id=datasheet_id,
-            element_def_id=element_def_id,
-            child_element_reference=uuid4(),
-            properties=properties,
-            ordinal=1,  # TODO: find max
-            original_owner_organization_id=datasheet_ressource.organization_id,
+            aggregate_id=new_element.aggregate_id,
+            attributes=new_element.attributes,
+            ordinal=new_element.ordinal or collection_size,
+            original_owner_organization_id=user.organization_id,
             original_datasheet_id=datasheet_id,
             creation_date_utc=self.clock.utcnow(),
         )
@@ -100,48 +93,51 @@ class DatasheetElementUseCase:
 
         return new_element
 
-    async def delete_element(self, element_id: DatasheetElementId) -> None:
-        element_definition: DatasheetDefinitionElement = (
-            await self.datasheet_definition_element_service.find_by_id(
-                element_id.element_def_id
+    async def delete(self, datasheet_id: UUID, datasheet_element_id: UUID) -> None:
+        datasheet = await self.db_context.find_by_id(Datasheet, datasheet_id)
+        element = await self.find(datasheet_id, datasheet_element_id)
+        aggregate_schema = datasheet.instances_schema[element.aggregate_id]
+
+        if not aggregate_schema.is_collection:
+            raise ValidationError.generic(
+                "Non collection element cannot be instanciated."
             )
-        )
 
-        if not element_definition.is_collection:
-            raise InvalidUsageError("Non collection element cannot be instanciated.")
-
-        collection_size = await self.datasheet_element_service.count(
-            DatasheetElementFilter(
-                datasheet_id=element_id.datasheet_id,
-                element_def_id=element_id.element_def_id,
-            )
-        )
-
+        collection_size = await self.count(datasheet_id, datasheet_element_id)
         if collection_size <= 1:
-            raise InvalidUsageError("Cannot delete all items of collection")
+            raise ValidationError.generic("Cannot delete all items of collection")
 
-        await self.datasheet_element_service.delete_by_id(element_id)
+        await self.db_context.delete_by_id(DatasheetElement, element_id)
 
     def _validate_datasheet_element_properties(
-        self,
-        properties: Dict[str, PrimitiveUnion],
-        project_definition: ProjectDefinition,
-        element_definition: DatasheetDefinitionElement,
+        self, replacement: DatasheetElementUpdate, datasheet: Datasheet
     ):
-        for name, default_property in element_definition.default_properties.items():
-            if name in properties:
-                if default_property.is_readonly is True:
-                    raise ValidationError.for_field(name, "Field is readonly")
+        replacement_names = set(attribute.name for attribute in replacement.attributes)
+        expected_names = set(datasheet.attributes_schema.keys())
 
-                assert name in project_definition.properties
-                property_schema = project_definition.properties[name].value_validator
-                self.schema_validator.validate_instance_of(
-                    property_schema, properties[name]
-                )
+        missing_names = expected_names - replacement_names
+        if len(missing_names) > 0:
+            raise ValidationError.for_field(
+                "attributes", "Missing field names", missing_names=missing_names
+            )
 
-            elif default_property.is_readonly is False:
-                raise ValidationError.for_field(name, "Field is missing")
+        extra_names = replacement_names - expected_names
+        if len(extra_names) > 0:
+            raise ValidationError.for_field(
+                "attributes", "Extra field names", extra_names=extra_names
+            )
 
-        for name in properties.keys():
-            if not name in project_definition.properties:
-                raise ValidationError.for_field(name, "Field does not exist")
+        instance_schema = datasheet.instances_schema[replacement.aggregate_id]
+
+        for attribute in replacement.attributes:
+            name = attribute.name
+            default_instance = instance_schema.attributes_schema[name]
+
+            if (
+                default_instance.is_readonly
+                and default_instance.value != attribute.value
+            ):
+                raise ValidationError.for_field(name, "Field is readonly")
+
+            schema = datasheet.attributes_schema[name]
+            # TODO: replace with propoer validation

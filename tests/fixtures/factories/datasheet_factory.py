@@ -274,7 +274,7 @@ class DatasheetInstanceFactory:
                 unit_id=element_seed.unit_id,
                 is_collection=element_seed.is_collection,
                 project_definition_id=project_definition.id,
-                order_index=index,
+                ordinal=index,
                 name=element_seed.name,
                 default_properties={
                     name: DatasheetDefinitionElementProperty(
@@ -324,7 +324,7 @@ class DatasheetInstanceFactory:
                     Label(
                         id=label_seed.id,
                         label_collection_id=collection_seed.id,
-                        order_index=index,
+                        ordinal=index,
                         name=label_seed.name,
                         attributes=label_seed.attributes,
                     )

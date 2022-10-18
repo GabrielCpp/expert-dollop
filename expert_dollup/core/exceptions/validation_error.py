@@ -1,12 +1,16 @@
 from typing import List, Tuple
+from expert_dollup.shared.starlette_injection import DetailedError
 
 
-class ValidationError(Exception):
+class ValidationError(DetailedError):
     @staticmethod
-    def for_field(name: str, message: str) -> "ValidationError":
-        return ValidationError([(name, message)])
+    def for_field(path, error, **props):
+        return ValidationError(path, error, **props)
 
-    def __init__(self, errors: List[Tuple[str, str]]):
-        Exception.__init__(self, "Validation error")
-        self.message = "Validation error"
-        self.errors = errors
+    @staticmethod
+    def generic(error, **props):
+        return ValidationError("*", error, **props)
+
+    def __init__(self, path, error, **props):
+        props.update(dict(path=path, error=error))
+        DetailedError.__init__(self, "Validation error", **props)

@@ -36,7 +36,7 @@ class SimpleDatasheetDef:
                 project_definition_id=project_definition.id,
                 unit_id="cube_meter",
                 is_collection=False,
-                order_index=0,
+                ordinal=0,
                 name="concrete_mpa",
                 default_properties={
                     "price": DatasheetDefinitionElementProperty(
@@ -55,7 +55,7 @@ class SimpleDatasheetDef:
                 project_definition_id=project_definition.id,
                 unit_id="cube_meter",
                 is_collection=False,
-                order_index=1,
+                ordinal=1,
                 name="concrete_mpa_air",
                 default_properties={
                     "price": DatasheetDefinitionElementProperty(
@@ -74,7 +74,7 @@ class SimpleDatasheetDef:
                 project_definition_id=project_definition.id,
                 unit_id="square_foot",
                 is_collection=True,
-                order_index=2,
+                ordinal=2,
                 name="tile_wall_ceramic",
                 default_properties={
                     "price": DatasheetDefinitionElementProperty(
@@ -107,19 +107,19 @@ class SimpleDatasheetDef:
         db.add(
             LabelFactory(
                 id=uuid4(),
-                order_index=0,
+                ordinal=0,
                 label_collection_id=order_form_category.id,
             ),
             LabelFactory(
                 id=uuid4(),
-                order_index=1,
+                ordinal=1,
                 label_collection_id=order_form_category.id,
             ),
             LabelFactory(
-                id=uuid4(), order_index=0, label_collection_id=product_category.id
+                id=uuid4(), ordinal=0, label_collection_id=product_category.id
             ),
             LabelFactory(
-                id=uuid4(), order_index=1, label_collection_id=product_category.id
+                id=uuid4(), ordinal=1, label_collection_id=product_category.id
             ),
         )
 

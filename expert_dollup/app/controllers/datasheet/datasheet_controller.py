@@ -65,33 +65,9 @@ async def add_datasheet(
     )
 
 
-@router.patch("/datasheets/{datasheet_id}")
-async def patch_datasheet(
-    datasheet_id: UUID,
-    datasheet_update: DatasheetUpdateDto,
-    usecase=Depends(Inject(DatasheetUseCase)),
-    handler=Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:update"])),
-):
-    return await handler.forward(
-        usecase.update,
-        dict(
-            datasheet_id=datasheet_update.id,
-            updates=DatasheetFilter(
-                **dict(
-                    (k, v)
-                    for k, v in datasheet_update.updates.dict().items()
-                    if v is not None
-                )
-            ),
-        ),
-        MappingChain(out_dto=DatasheetDto),
-    )
-
-
 @router.post("/datasheets/{target_datasheet_id}/clone")
 async def clone_datasheet(
-    datasheet_target: DatasheetCloneTargetDto,
+    datasheet_target: CloningDatasheetDto,
     usecase=Depends(Inject(DatasheetUseCase)),
     handler: RequestHandler = Depends(Inject(RequestHandler)),
     user=Depends(
@@ -106,8 +82,8 @@ async def clone_datasheet(
         MappingChain(out_dto=DatasheetDto),
         {
             "datasheet_clone_target": MappingChain(
-                dto=DatasheetCloneTargetDto,
-                domain=DatasheetCloneTarget,
+                dto=CloningDatasheetDto,
+                domain=CloningDatasheet,
             ),
         },
     )

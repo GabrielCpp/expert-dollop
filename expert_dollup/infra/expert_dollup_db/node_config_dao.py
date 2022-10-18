@@ -27,6 +27,10 @@ class BoolFieldConfigDao(BaseModel):
     enabled: bool
 
 
+class AggregateReferenceConfigDao(BaseModel):
+    from_collection: str
+
+
 class StaticNumberFieldConfigDao(BaseModel):
     pass_to_translation: bool
     precision: int

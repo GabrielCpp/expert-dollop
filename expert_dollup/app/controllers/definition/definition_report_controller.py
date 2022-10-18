@@ -13,7 +13,9 @@ from expert_dollup.app.dtos import ReportDefinitionDto
 router = APIRouter()
 
 
-@router.post("/report_definition/{report_definition_id}/refresh_cache")
+@router.post(
+    "/definitions/{project_definition_id}/reports/{report_definition_id}/refresh_cache"
+)
 async def refresh_report_definition_rows_cache(
     report_definition_id: UUID,
     usecase=Depends(Inject(ReportDefinitionUseCase)),
@@ -21,7 +23,7 @@ async def refresh_report_definition_rows_cache(
     await usecase.refresh_cache(report_definition_id)
 
 
-@router.post("/report_definition/{report_definition_id}")
+@router.post("/definitions/{project_definition_id}/reports/{report_definition_id}")
 async def get_report_definition(
     report_definition_id: UUID,
     service: Repository[ReportDefinition] = Depends(

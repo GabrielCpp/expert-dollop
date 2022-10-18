@@ -8,12 +8,10 @@ from expert_dollup.core.usecases import LabelCollectionUseCase
 router = APIRouter()
 
 
-@router.get(
-    "/definitions/{project_definition_id}/label_collections/{label_collection_id}"
-)
+@router.get("/definitions/{project_definition_id}/collections/{collection_id}")
 async def get_label_collection_by_id(
     project_definition_id: UUID,
-    label_collection_id: UUID,
+    collection_id: UUID,
     usecase=Depends(Inject(LabelCollectionUseCase)),
     handler=Depends(Inject(RequestHandler)),
     user=Depends(
@@ -22,15 +20,15 @@ async def get_label_collection_by_id(
 ):
     return await handler.handle(
         usecase.find_by_id,
-        label_collection_id,
-        MappingChain(out_dto=LabelCollectionDto),
+        collection_id,
+        MappingChain(out_dto=AggregateCollectionDto),
     )
 
 
-@router.post("/definitions/{project_definition_id}/label_collections")
-async def add_label_collection(
+@router.post("/definitions/{project_definition_id}/collections")
+async def add_aggregate_collection(
     project_definition_id: UUID,
-    label_collection: LabelCollectionDto,
+    new_aggregate_collection: NewAggregateCollectionDto,
     usecase=Depends(Inject(LabelCollectionUseCase)),
     handler=Depends(Inject(RequestHandler)),
     user=Depends(
@@ -39,19 +37,19 @@ async def add_label_collection(
 ):
     return await handler.handle(
         usecase.add,
-        label_collection,
+        new_aggregate_collection,
         MappingChain(
-            dto=LabelCollectionDto,
+            dto=NewAggregateCollectionDto,
             domain=LabelCollection,
-            out_dto=LabelCollectionDto,
+            out_dto=AggregateCollectionDto,
         ),
     )
 
 
-@router.put("/definitions/{project_definition_id}/label_collections")
-async def add_label_collection(
+@router.put("/definitions/{project_definition_id}/collections/{collection_id}")
+async def update_aggregate_collection(
     project_definition_id: UUID,
-    label_collection: LabelCollectionDto,
+    aggregate_collection: NewAggregateCollectionDto,
     usecase=Depends(Inject(LabelCollectionUseCase)),
     handler=Depends(Inject(RequestHandler)),
     user=Depends(
@@ -60,25 +58,23 @@ async def add_label_collection(
 ):
     return await handler.handle(
         usecase.update,
-        label_collection,
+        aggregate_collection,
         MappingChain(
-            dto=LabelCollectionDto,
+            dto=NewAggregateCollectionDto,
             domain=LabelCollection,
-            out_dto=LabelCollectionDto,
+            out_dto=AggregateCollectionDto,
         ),
     )
 
 
-@router.delete(
-    "/definitions/{project_definition_id}/label_collections/{label_collection_id}"
-)
-async def delete_label_collection_by_id(
+@router.delete("/definitions/{project_definition_id}/collections/{collection_id}")
+async def delete_aggregate_collection_by_id(
     project_definition_id: UUID,
-    label_collection_id: UUID,
+    collection_id: UUID,
     usecase=Depends(Inject(LabelCollectionUseCase)),
     handler=Depends(Inject(RequestHandler)),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:update"])
     ),
 ):
-    return await usecase.delete_by_id(label_collection_id)
+    return await usecase.delete_by_id(collection_id)

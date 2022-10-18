@@ -85,6 +85,4 @@ class ProjectTreeBuilder:
 
         del def_map[def_path]
 
-        return sorted(
-            tree_node_by_type.values(), key=lambda x: x.definition.order_index
-        )
+        return sorted(tree_node_by_type.values(), key=lambda x: x.definition.ordinal)

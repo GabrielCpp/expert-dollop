@@ -4,18 +4,7 @@ from expert_dollup.shared.database_services import Page, Paginator, Repository
 from expert_dollup.infra.validators.schema_validator import SchemaValidator
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.core.utils import authorization_factory
-from expert_dollup.core.domains import (
-    Datasheet,
-    DatasheetElement,
-    DatasheetFilter,
-    DatasheetElementFilter,
-    DatasheetCloneTarget,
-    Ressource,
-    DatasheetDefinitionElement,
-    DatasheetDefinitionElementFilter,
-    User,
-    zero_uuid,
-)
+from expert_dollup.core.domains import *
 
 
 class DatasheetUseCase:
@@ -40,16 +29,14 @@ class DatasheetUseCase:
     async def find_by_id(self, datasheet_id: UUID) -> Datasheet:
         return await self.datasheet_service.find_by_id(datasheet_id)
 
-    async def clone(self, datasheet_clone_target: DatasheetCloneTarget, user: User):
-        datasheet = await self.datasheet_service.find_by_id(
-            datasheet_clone_target.target_datasheet_id
-        )
+    async def clone(self, target: CloningDatasheet, user: User):
+        datasheet = await self.datasheet_service.find_by_id(target.target_datasheet_id)
         cloned_datasheet = Datasheet(
             id=uuid4(),
             name=datasheet.name,
             is_staged=datasheet.is_staged,
             project_definition_id=datasheet.project_definition_id,
-            from_datasheet_id=datasheet_clone_target.target_datasheet_id,
+            from_datasheet_id=target.target_datasheet_id,
             creation_date_utc=self.clock.utcnow(),
         )
 
@@ -82,7 +69,7 @@ class DatasheetUseCase:
 
         cloned_datasheet = Datasheet(
             id=uuid4(),
-            name=datasheet_clone_target.new_name,
+            name=datasheet_clone_target.clone_name,
             is_staged=datasheet.is_staged,
             project_definition_id=datasheet.project_definition_id,
             from_datasheet_id=datasheet.from_datasheet_id,
@@ -130,10 +117,6 @@ class DatasheetUseCase:
 
         await self.datasheet_element_service.insert_many(elements)
         return datasheet
-
-    async def update(self, datasheet_id: UUID, updates: DatasheetFilter) -> Datasheet:
-        await self.datasheet_service.update(updates, DatasheetFilter(id=datasheet_id))
-        return await self.datasheet_service.find_by_id(datasheet_id)
 
     async def delete_by_id(self, datasheet_id: UUID) -> None:
         await self.datasheet_element_service.delete_by(

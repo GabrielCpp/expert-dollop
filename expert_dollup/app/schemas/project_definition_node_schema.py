@@ -50,7 +50,6 @@ async def resolve_project_definition_root_section_nodes(
 async def resolve_project_definition_form_content(
     parent: ProjectDefinitionDto,
     info: GraphQLResolveInfo,
-    project_definition_id: str,
     form_id: str,
     find_definition_form_content: callable,
 ):

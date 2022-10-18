@@ -304,7 +304,7 @@ class RowOrdering(ProjectionStep):
         rows.sort(key=self.get_row_order_tuple)
 
         for index, row in enumerate(rows):
-            row[INTERNAL_BUCKET_NAME]["order_index"] = index
+            row[INTERNAL_BUCKET_NAME]["ordinal"] = index
 
         return rows
 

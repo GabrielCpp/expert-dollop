@@ -8,7 +8,7 @@ def test_collapse_union():
         "name": "g",
         "isCollection": True,
         "instanciateByDefault": True,
-        "orderIndex": 0,
+        "ordinal": 0,
         "config": {
             "fieldDetails": {
                 "kind": "COLLAPSIBLE_CONTAINER_FIELD_CONFIG",
@@ -40,7 +40,7 @@ def test_collapse_union():
         "name": "g",
         "isCollection": True,
         "instanciateByDefault": True,
-        "orderIndex": 0,
+        "ordinal": 0,
         "config": {
             "fieldDetails": {"isCollapsible": True},
             "valueValidator": None,

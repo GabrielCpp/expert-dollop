@@ -5,11 +5,7 @@ from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.infra.ressource_auth_db import *
 
 expert_dollup_metadatas = [
-    RepositoryMetadata(
-        dao=DatasheetDefinitionElementDao, domain=DatasheetDefinitionElement
-    ),
-    RepositoryMetadata(dao=LabelCollectionDao, domain=LabelCollection),
-    RepositoryMetadata(dao=LabelDao, domain=Label),
+    RepositoryMetadata(dao=AggregateCollectionDao, domain=AggregateCollection),
     RepositoryMetadata(dao=DatasheetElementDao, domain=DatasheetElement),
     RepositoryMetadata(dao=DatasheetDao, domain=Datasheet),
     RepositoryMetadata(dao=DistributableItemDao, domain=DistributableItem),

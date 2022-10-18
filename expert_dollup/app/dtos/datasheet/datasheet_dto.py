@@ -3,36 +3,28 @@ from typing import Optional
 from datetime import datetime
 from expert_dollup.shared.starlette_injection import CamelModel
 from pydantic import Field
+from ..definition.aggregate_collection_dto import AggregateAttributeSchemaDto
+from ..definition.aggregate_dto import AggregateAttributeDto
 
 
 class NewDatasheetDto(CamelModel):
     name: str
-    project_definition_id: UUID
-    from_datasheet_id: Optional[UUID] = None
-    is_staged: bool = False
+    from_abstract_collection: UUID
 
 
-class DatasheetUpdatableProperties(CamelModel):
-    name: Optional[str]
-    is_staged: Optional[bool]
-
-
-class DatasheetUpdateDto(CamelModel):
-    id: UUID
-    updates: DatasheetUpdatableProperties
-
-
-class DatasheetCloneTargetDto(CamelModel):
+class CloningDatasheetDto(CamelModel):
+    clone_name: str
     target_datasheet_id: UUID
-    new_name: str
 
 
 class DatasheetDto(CamelModel):
     id: UUID
     name: str
-    is_staged: bool
     project_definition_id: UUID
-    from_datasheet_id: Optional[UUID]
+    from_abstract_collection: UUID
+    from_datasheet_id: UUID
+    attributes_schema: List[AggregateAttributeSchemaDto]
+    default_instances: List[AggregateAttributeDto]
     creation_date_utc: datetime
 
 

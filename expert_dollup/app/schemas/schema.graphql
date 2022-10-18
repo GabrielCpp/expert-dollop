@@ -4,15 +4,6 @@ type Unit {
   id: ID!
 }
 
-type DatasheetDefinitionPropertySchema {
-  valueValidator: JsonSchema!
-}
-
-type DatasheetDefinitionPropertySchemaDict {
-  name: String!
-  schema: DatasheetDefinitionPropertySchema!
-}
-
 type DatasheetDefinitionElementEdge {
   node: DatasheetDefinitionElement!
   cursor: String!
@@ -24,13 +15,9 @@ type DatasheetDefinitionElementConnection {
 }
 
 type DatasheetDefinitionElementProperty {
+  name: String!
   isReadonly: Boolean!
   value: String!
-}
-
-type DatasheetDefinitionElementPropertyDict {
-  name: String!
-  property: DatasheetDefinitionElementProperty!
 }
 
 type DatasheetDefinitionElement {
@@ -39,9 +26,9 @@ type DatasheetDefinitionElement {
   isCollection: Boolean!
   projectDefinitionId: String!
   projectDefinition: ProjectDefinition
-  orderIndex: Int!
+  ordinal: Int!
   name: String!
-  defaultProperties: [DatasheetDefinitionElementPropertyDict!]!
+  defaultProperties: [DatasheetDefinitionElementProperty!]!
   tags: [String!]!
   creationDateUtc: String!
 }
@@ -305,7 +292,7 @@ input ProjectDefinitionNodeCreationInput {
   name: String!
   isCollection: Boolean!
   instanciateByDefault: Boolean!
-  orderIndex: Int!
+  ordinal: Int!
   path: [String!]!
   translations: TranslationConfigInput!
   fieldDetails: FieldDetailsUnionInput
@@ -337,7 +324,7 @@ type ProjectDefinitionNode {
   name: String!
   isCollection: Boolean!
   instanciateByDefault: Boolean!
-  orderIndex: Int!
+  ordinal: Int!
   fieldDetails: FieldDetailsUnion
   triggers: [Trigger!]!
   translations: TranslationConfig!
@@ -361,17 +348,11 @@ type ProjectDefinitionNodeTree {
 type ProjectDefinition {
   id: ID!
   name: String!
-  defaultDatasheetId: String!
-  defaultDatasheet: Datasheet!
-  projectDefinitionId: String!
-  projectDefinition: ProjectDefinition!
-  rootSections(projectDefinitionId: ID!): ProjectDefinitionNodeTree!
+  rootSections(): ProjectDefinitionNodeTree!
   rootSectionContainers(
-    projectDefinitionId: ID!
     rootSectionId: ID!
   ): ProjectDefinitionNodeTree!
-  formContent(projectDefinitionId: ID!, formId: ID!): ProjectDefinitionNodeTree!
-  properties: [DatasheetDefinitionPropertySchemaDict!]!
+  formContent(formId: ID!): ProjectDefinitionNodeTree!
   elementsDefinition(
     first: Int!
     after: String

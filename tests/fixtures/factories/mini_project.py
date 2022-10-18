@@ -17,7 +17,7 @@ class MiniProject:
                 path=[],
                 is_collection=False,
                 instanciate_by_default=True,
-                order_index=0,
+                ordinal=0,
                 translations=TranslationConfig(
                     help_text_name="root_help_text", label="root"
                 ),
@@ -45,7 +45,7 @@ class MiniProject:
                     path=parents,
                     is_collection=False,
                     instanciate_by_default=True,
-                    order_index=index,
+                    ordinal=index,
                     field_details=field_details,
                 )
             )
@@ -60,7 +60,7 @@ class MiniProject:
                 path=parents,
                 is_collection=True,
                 instanciate_by_default=True,
-                order_index=index,
+                ordinal=index,
                 field_details=field_details,
             )
         )

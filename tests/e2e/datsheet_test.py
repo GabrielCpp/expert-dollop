@@ -129,15 +129,15 @@ async def test_datasheet(ac, db_helper: DbFixtureHelper):
 @pytest.mark.asyncio
 async def test_datasheet_crud(ac, db_helper: DbFixtureHelper):
     async def clone_datasheet(datasheet_dto: DatasheetDto):
-        datasheet_clone_target = DatasheetCloneTargetDto(
-            target_datasheet_id=datasheet_dto.id, new_name="Renamed datasheet"
+        datasheet_clone_target = CloningDatasheetDto(
+            target_datasheet_id=datasheet_dto.id, clone_name="Renamed datasheet"
         )
         cloned_datasheet_dto = await ac.post_json(
             f"/api/datasheets/{datasheet_dto.id}/clone",
             datasheet_clone_target,
             unwrap_with=DatasheetDto,
         )
-        assert cloned_datasheet_dto.name == datasheet_clone_target.new_name
+        assert cloned_datasheet_dto.name == datasheet_clone_target.clone_name
 
         actual_datasheet_dto = await ac.get_json(
             f"/api/datasheets/{cloned_datasheet_dto.id}", unwrap_with=DatasheetDto

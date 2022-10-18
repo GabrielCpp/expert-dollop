@@ -11,18 +11,6 @@ from expert_dollup.app.controllers.datasheet.datasheet_definition_element_contro
 from .types import datasheet_definition_element, query
 
 
-@datasheet_definition_element.field("defaultProperties")
-@convert_kwargs_to_snake_case
-def resolve_default_properties(
-    parent: DatasheetDefinitionElementDto,
-    info: GraphQLResolveInfo,
-):
-    return [
-        {"name": name, "property": property_value}
-        for name, property_value in parent.default_properties.items()
-    ]
-
-
 @query.field("findDatasheetDefinitionElements")
 @inject_graphql_route(find_paginated_datasheet_elements, ["project_definition_id"])
 @convert_kwargs_to_snake_case

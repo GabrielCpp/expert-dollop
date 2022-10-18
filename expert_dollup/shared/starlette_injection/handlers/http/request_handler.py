@@ -7,6 +7,49 @@ class RequestHandler:
     def __init__(self, mapper: Mapper):
         self.mapper = mapper
 
+    async def do_handle(
+        self,
+        usecase,
+        query_dto,
+        result_mapping: Optional[MappingChain] = None,
+        **kwargs: Dict[str, MappingChain]
+    ):
+        mapped_kwargs = {
+            name: self._do_mapping(value) for name, value in kwargs.items()
+        }
+
+        result = await usecase(**mapped_kwargs)
+
+        if not result_mapping is None:
+            result = self._do_mapping(
+                MappingChain(
+                    value=result, dto=result_mapping.dto, domain=result_mapping.domain
+                ),
+                True,
+            )
+
+        return result
+
+    def _do_mapping(self, src, is_reversed=False):
+        if isinstance(src, MappingChain):
+            if is_reversed:
+                in_type = src.domain
+                out_type = src.dto
+            else:
+                in_type = src.dto
+                out_type = src.domain
+
+            if getattr(out_type, "__origin__", None) is list:
+                return self.mapper.map_many(
+                    result,
+                    out_type.__args__[0],
+                    in_type and in_type.__args__[0],
+                )
+            else:
+                return self.mapper.map(src.value, out_type, in_type)
+
+        return src
+
     async def handle(self, usecase, query_dto, mapping_chain: MappingChain):
         query_domain = query_dto
 

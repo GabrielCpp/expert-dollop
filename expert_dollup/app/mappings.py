@@ -50,11 +50,6 @@ def map_project_definition_from_dto(
     return ProjectDefinition(
         id=src.id,
         name=src.name,
-        default_datasheet_id=src.default_datasheet_id,
-        properties={
-            prop.name: ElementPropertySchema(value_validator=prop.value_validator)
-            for prop in src.properties
-        },
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -65,11 +60,6 @@ def map_project_definition_to_dto(
     return ProjectDefinitionDto(
         id=src.id,
         name=src.name,
-        default_datasheet_id=src.default_datasheet_id,
-        properties=[
-            ElementPropertySchemaDto(name=key, value_validator=value.value_validator)
-            for key, value in src.properties.items()
-        ],
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -272,7 +262,7 @@ def map_project_definition_node_from_dto(
         name=src.name,
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
-        order_index=src.order_index,
+        ordinal=src.ordinal,
         field_details=mapper.map(
             src.field_details, field_details_union_dto_mappings.from_origin
         ),
@@ -293,7 +283,7 @@ def map_project_definition_node_to_dto(
         name=src.name,
         is_collection=src.is_collection,
         instanciate_by_default=src.instanciate_by_default,
-        order_index=src.order_index,
+        ordinal=src.ordinal,
         field_details=mapper.map(
             src.field_details, field_details_union_dto_mappings.to_origin
         ),
@@ -613,10 +603,15 @@ def map_datasheet_definition_element_to_dto(
         is_collection=src.is_collection,
         name=src.name,
         project_definition_id=src.project_definition_id,
-        order_index=src.order_index,
-        default_properties=mapper.map_dict_values(
-            src.default_properties, DatasheetDefinitionElementPropertyDto
-        ),
+        ordinal=src.ordinal,
+        default_properties=[
+            DatasheetDefinitionElementPropertyDto(
+                name=name,
+                is_readonly=prop.is_readonly,
+                value=mapper.map(prop.value, primitive_union_dto_mappings.to_origin),
+            )
+            for name, prop in src.default_properties.items()
+        ],
         tags=src.tags,
         creation_date_utc=src.creation_date_utc,
     )
@@ -631,30 +626,16 @@ def map_datasheet_definition_element_from_dto(
         name=src.name,
         is_collection=src.is_collection,
         project_definition_id=src.project_definition_id,
-        order_index=src.order_index,
-        default_properties=mapper.map_dict_values(
-            src.default_properties, DatasheetDefinitionElementProperty
-        ),
+        ordinal=src.ordinal,
+        default_properties={
+            prop.name: DatasheetDefinitionElementProperty(
+                is_readonly=prop.is_readonly,
+                value=mapper.map(prop.value, primitive_union_dto_mappings.to_origin),
+            )
+            for prop in src.default_properties
+        },
         tags=src.tags,
         creation_date_utc=src.creation_date_utc,
-    )
-
-
-def map_datasheet_definition_element_property_from_dto(
-    src: DatasheetDefinitionElementPropertyDto, mapper: Mapper
-) -> DatasheetDefinitionElementProperty:
-    return DatasheetDefinitionElementProperty(
-        is_readonly=src.is_readonly,
-        value=mapper.map(src.value, primitive_union_dto_mappings.from_origin),
-    )
-
-
-def map_datasheet_definition_element_property_to_dto(
-    src: DatasheetDefinitionElementProperty, mapper: Mapper
-) -> DatasheetDefinitionElementPropertyDto:
-    return DatasheetDefinitionElementPropertyDto(
-        is_readonly=src.is_readonly,
-        value=mapper.map(src.value, primitive_union_dto_mappings.to_origin),
     )
 
 
@@ -745,8 +726,8 @@ def map_formula_aggregate_to_dto(
 
 
 label_attribute_value_dto_mappings = RevervibleUnionMapping(
-    LabelAttributeValueDto,
-    LabelAttributeUnion,
+    PrimitiveWithReferenceUnionDto,
+    PrimitiveWithReferenceUnion,
     {
         BoolFieldValueDto: bool,
         IntFieldValueDto: int,
@@ -762,7 +743,7 @@ def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> La
         id=src.id,
         name=src.name,
         label_collection_id=src.label_collection_id,
-        order_index=src.order_index,
+        ordinal=src.ordinal,
         attributes=mapper.map_dict_values(
             src.attributes, label_attribute_value_dto_mappings.from_origin
         ),
@@ -774,7 +755,7 @@ def map_datasheet_definition_label_to_dto(src: Label, mapper: Mapper) -> LabelDt
         id=src.id,
         name=src.name,
         label_collection_id=src.label_collection_id,
-        order_index=src.order_index,
+        ordinal=src.ordinal,
         attributes=mapper.map_dict_values(
             src.attributes, label_attribute_value_dto_mappings.to_origin
         ),
@@ -867,10 +848,10 @@ def map_datasheet_element_from_dto(
 
 
 def map_datasheet_clone_target_from_dto(
-    src: DatasheetCloneTargetDto, mapper: Mapper
-) -> DatasheetCloneTarget:
-    return DatasheetCloneTarget(
-        target_datasheet_id=src.target_datasheet_id, new_name=src.new_name
+    src: CloningDatasheetDto, mapper: Mapper
+) -> CloningDatasheet:
+    return CloningDatasheet(
+        target_datasheet_id=src.target_datasheet_id, clone_name=src.clone_name
     )
 
 
@@ -1224,7 +1205,5 @@ def map_new_definition_dto(src: NewDefinitionDto, mapper: Mapper) -> ProjectDefi
     return ProjectDefinition(
         id=mapper.get(IdProvider).uuid4(),
         creation_date_utc=mapper.get(Clock).utcnow(),
-        default_datasheet_id=mapper.get(IdProvider).uuid4(),
         name=src.name,
-        properties={},
     )

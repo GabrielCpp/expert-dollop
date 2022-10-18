@@ -17,16 +17,6 @@ class ProjectDefinitionDtoFactory(factory.Factory):
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"Gab{n}")
     project_definition_id = factory.Faker("pyuuid4")
-    default_datasheet_id = factory.Faker("pyuuid4")
-    properties = factory.List(
-        [
-            ElementPropertySchemaDto(
-                name="conversion_factor", value_validator={"type": "number"}
-            ),
-            ElementPropertySchemaDto(name="lost", value_validator={"type": "number"}),
-        ]
-    )
-
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 

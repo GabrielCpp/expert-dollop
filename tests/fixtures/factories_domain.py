@@ -10,8 +10,6 @@ class ProjectDefinitionFactory(factory.Factory):
 
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"project_definition_{n}")
-    default_datasheet_id = factory.Faker("pyuuid4")
-    properties = factory.Dict({})
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
@@ -24,7 +22,7 @@ class ProjectDefinitionNodeFactory(factory.Factory):
     name = factory.Sequence(lambda n: f"node{n}")
     is_collection = False
     instanciate_by_default = True
-    order_index = factory.Sequence(lambda n: n)
+    ordinal = factory.Sequence(lambda n: n)
     translations = factory.LazyAttribute(
         lambda o: TranslationConfig(help_text_name=f"{o.name}_help_text", label=o.name)
     )
@@ -145,7 +143,7 @@ class ReportStructureFactory(factory.Factory):
             factory.SubFactory(
                 AttributeBucketFactory,
                 bucket_name="substage",
-                attribute_name="order_index",
+                attribute_name="ordinal",
             )
         ]
     )
@@ -238,7 +236,7 @@ class DatasheetDefinitionElementFactory(factory.Factory):
     unit_id: str
     is_collection: bool
     project_definition_id = factory.Faker("pyuuid4")
-    order_index: int
+    ordinal: int
     name: str
     default_properties = factory.Dict({})
     tags = factory.List([factory.Faker("pyuuid4")])
@@ -251,7 +249,7 @@ class LabelFactory(factory.Factory):
 
     id = factory.Faker("pyuuid4")
     label_collection_id = factory.Faker("pyuuid4")
-    order_index = factory.Sequence(lambda n: n)
+    ordinal = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: f"label_{n}")
     attributes = factory.Dict({})
 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from expert_dollup.shared.database_services import Paginator
 from expert_dollup.core.usecases import DatasheetElementUseCase
 from expert_dollup.shared.starlette_injection import *
@@ -27,97 +27,86 @@ async def find_datasheet_elements(
     )
 
 
-@router.get(
-    "/datasheets/{datasheet_id}/element/{element_def_id}/{child_element_reference}"
-)
+@router.get("/datasheets/{datasheet_id}/elements/{datasheet_element_id}")
 async def find_datasheet_element(
     datasheet_id: UUID,
-    element_def_id: UUID,
-    child_element_reference: UUID,
-    request_handler=Depends(Inject(RequestHandler)),
-    usecase=Depends(Inject(DatasheetElementUseCase)),
+    datasheet_element_id: UUID,
+    request_handler: RequestHandler = Depends(Inject(RequestHandler)),
+    usecase: DatasheetElementUseCase = Depends(Inject(DatasheetElementUseCase)),
     user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:get"])),
 ):
-    return await request_handler.handle(
-        usecase.find_datasheet_element,
-        DatasheetElementId(
-            datasheet_id=datasheet_id,
-            element_def_id=element_def_id,
-            child_element_reference=child_element_reference,
-        ),
-        MappingChain(
-            out_domain=DatasheetElement,
-            out_dto=DatasheetElementDto,
-        ),
+    return await request_handler.do_handle(
+        usecase.find,
+        MappingChain(domain=DatasheetElement, dto=DatasheetElementDto),
+        datasheet_element_id=datasheet_element_id,
+        datasheet_id=datasheet_id,
     )
 
 
-@router.put(
-    "/datasheets/{datasheet_id}/element/{element_def_id}/{child_element_reference}"
-)
+@router.put("/datasheets/{datasheet_id}/elements/{datasheet_element_id}")
 async def update_datasheet_element_properties(
     datasheet_id: UUID,
-    element_def_id: UUID,
-    child_element_reference: UUID,
-    properties: Dict[str, PrimitiveUnion],
-    request_handler=Depends(Inject(RequestHandler)),
-    usecase=Depends(Inject(DatasheetElementUseCase)),
+    datasheet_element_id: UUID,
+    replacement: NewDatasheetElementDto,
+    request_handler: RequestHandler = Depends(Inject(RequestHandler)),
+    usecase: DatasheetElementUseCase = Depends(Inject(DatasheetElementUseCase)),
     user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:update"])),
 ):
-    return await request_handler.forward(
-        usecase.update_datasheet_element_properties,
-        {
-            "id": DatasheetElementId(
-                datasheet_id=datasheet_id,
-                element_def_id=element_def_id,
-                child_element_reference=child_element_reference,
-            ),
-            "properties": properties,
-        },
-        MappingChain(
-            out_domain=DatasheetElement,
-            out_dto=DatasheetElementDto,
+    return await request_handler.do_handle(
+        usecase.update,
+        MappingChain(domain=DatasheetElement, dto=DatasheetElementDto),
+        datasheet_id=datasheet_id,
+        datasheet_element_id=datasheet_element_id,
+        replacement=MappingChain(
+            value=replacement, dto=NewDatasheetElementDto, domain=NewDatasheetElement
         ),
     )
 
 
-@router.post("/datasheets/{datasheet_id}/element_collection/{element_def_id}")
-async def add_datasheet_element_to_collection(
+@router.post("/datasheets/{datasheet_id}/elements")
+async def add_datasheet_element(
     datasheet_id: UUID,
-    element_def_id: UUID,
-    properties: Dict[str, PrimitiveUnion],
-    request_handler=Depends(Inject(RequestHandler)),
-    usecase=Depends(Inject(DatasheetElementUseCase)),
+    new_element: NewDatasheetElementDto,
+    request_handler: RequestHandler = Depends(Inject(RequestHandler)),
+    usecase: DatasheetElementUseCase = Depends(Inject(DatasheetElementUseCase)),
     user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:update"])),
 ):
-    return await request_handler.forward(
-        usecase.add_collection_item,
-        dict(
-            datasheet_id=datasheet_id,
-            element_def_id=element_def_id,
-            properties=properties,
-        ),
-        MappingChain(
-            out_domain=DatasheetElement,
-            out_dto=DatasheetElementDto,
+    return await request_handler.do_handle(
+        usecase.add,
+        MappingChain(domain=DatasheetElement, dto=DatasheetElementDto),
+        datasheet_id=datasheet_id,
+        user=user,
+        new_element=MappingChain(
+            value=new_element, domain=NewDatasheetElement, dto=NewDatasheetElementDto
         ),
     )
 
 
-@router.delete(
-    "/datasheets/{datasheet_id}/element_collection/{element_def_id}/{child_element_reference}"
-)
+@router.put("/datasheets/{datasheet_id}/elements")
+async def batch_update_datasheet_elements_attributes(
+    datasheet_id: UUID,
+    updates: List[DatasheetElementUpdateDto],
+    usecase: DatasheetElementUseCase = Depends(Inject(DatasheetElementUseCase)),
+    handler: RequestHandler = Depends(Inject(RequestHandler)),
+    user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:update"])),
+):
+    return await handler.do_handle(
+        usecase.batch_update_values,
+        MappingChain(dto=List[DatasheetElementUpdateDto]),
+        datasheet_id=datasheet_id,
+        updates=MappingChain(
+            value=updates,
+            dto=List[DatasheetElementUpdateDto],
+            domain=List[DatasheetElementUpdate],
+        ),
+    )
+
+
+@router.delete("/datasheets/{datasheet_id}/elements/{datasheet_element_id}")
 async def delete_datasheet_element_from_collection(
     datasheet_id: UUID,
-    element_def_id: UUID,
-    child_element_reference: UUID,
-    usecase=Depends(Inject(DatasheetElementUseCase)),
+    datasheet_element_id: UUID,
+    usecase: DatasheetElementUseCase = Depends(Inject(DatasheetElementUseCase)),
     user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:delete"])),
 ):
-    await usecase.delete_element(
-        DatasheetElementId(
-            datasheet_id=datasheet_id,
-            element_def_id=element_def_id,
-            child_element_reference=child_element_reference,
-        )
-    )
+    await usecase.delete(datasheet_id, datasheet_element_id)

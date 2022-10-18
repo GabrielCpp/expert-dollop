@@ -4,17 +4,23 @@ from typing import Dict, Optional, List, Union
 from typing_extensions import TypeAlias
 from decimal import Decimal
 from expert_dollup.shared.database_services import QueryFilter
-
-LabelAttributeUnion: TypeAlias = Union[bool, int, str, Decimal, UUID]
+from ..values_union import PrimitiveWithReferenceUnion
 
 
 @dataclass
-class Label:
-    id: UUID
-    label_collection_id: UUID
-    order_index: int
+class AggregateAttribute:
     name: str
-    attributes: Dict[str, LabelAttributeUnion] = field(default_factory=dict)
+    is_readonly: bool
+    value: PrimitiveWithReferenceUnion
+
+
+@dataclass
+class Aggregate:
+    id: UUID
+    ordinal: int
+    name: str
+    is_extendable: bool
+    attributes: List[AggregateAttribute] = field(default_factory=dict)
 
     def get_attribute(self, name: str):
         if name == "id":
@@ -27,15 +33,6 @@ class Label:
         return {
             **self.attributes,
             "id": self.id,
-            "order_index": self.order_index,
+            "ordinal": self.ordinal,
             "name": self.name,
         }
-
-
-class LabelFilter(QueryFilter):
-    id: Optional[UUID]
-    label_collection_id: Optional[UUID]
-
-
-class LabelPluckFilter(QueryFilter):
-    ids: Optional[List[UUID]]

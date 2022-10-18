@@ -56,7 +56,6 @@ def create_project_definition_tables():
         "project_definition",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("name", String, nullable=False),
-        Column("default_datasheet_id", postgresql.UUID(), nullable=False),
         Column("project_definition_id", postgresql.UUID(), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),
     )
@@ -183,7 +182,7 @@ def create_datasheet_tables():
             postgresql.UUID(),
             nullable=False,
         ),
-        Column("order_index", Integer, nullable=False),
+        Column("ordinal", Integer, nullable=False),
         Column("name", String, nullable=False),
         Column("attributes", postgresql.JSON(), nullable=False),
     )
@@ -201,7 +200,7 @@ def create_datasheet_tables():
         Column("is_collection", Boolean, nullable=False),
         Column("name", String(64), nullable=False),
         Column("project_definition_id", postgresql.UUID(), nullable=False),
-        Column("order_index", Integer, nullable=False),
+        Column("ordinal", Integer, nullable=False),
         Column("default_properties", postgresql.JSON(), nullable=False),
         Column("tags", ARRAY(postgresql.UUID(), dimensions=1), nullable=False),
         Column("creation_date_utc", DateTime(timezone=True), nullable=False),

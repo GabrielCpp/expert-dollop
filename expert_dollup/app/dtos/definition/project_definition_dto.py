@@ -4,16 +4,9 @@ from uuid import UUID
 from datetime import datetime
 
 
-class ElementPropertySchemaDto(CamelModel):
-    name: str
-    value_validator: dict
-
-
 class ProjectDefinitionDto(CamelModel):
     id: UUID
     name: str
-    default_datasheet_id: UUID
-    properties: List[ElementPropertySchemaDto]
     creation_date_utc: datetime
 
 

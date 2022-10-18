@@ -8,7 +8,9 @@ from expert_dollup.core.usecases import LabelUseCase
 router = APIRouter()
 
 
-@router.get("/definitions/{project_definition_id}/labels/{label_id}")
+@router.get(
+    "/definitions/{project_definition_id}/collections/{collection_id}/aggregates"
+)
 async def get_label_by_id(
     project_definition_id: UUID,
     label_id: UUID,
@@ -25,28 +27,9 @@ async def get_label_by_id(
     )
 
 
-@router.post("/definitions/{project_definition_id}/labels")
-async def add_label(
-    project_definition_id: UUID,
-    label: LabelDto,
-    usecase=Depends(Inject(LabelUseCase)),
-    handler=Depends(Inject(RequestHandler)),
-    user=Depends(
-        CanPerformOnRequired("project_definition_id", ["project_definition:update"])
-    ),
-):
-    return await handler.handle(
-        usecase.add,
-        label,
-        MappingChain(
-            dto=LabelDto,
-            domain=Label,
-            out_dto=LabelDto,
-        ),
-    )
-
-
-@router.put("/definitions/{project_definition_id}/labels")
+@router.put(
+    "/definitions/{project_definition_id}/collections/{collection_id}/aggregates"
+)
 async def add_label(
     project_definition_id: UUID,
     label: LabelDto,
@@ -65,16 +48,3 @@ async def add_label(
             out_dto=LabelDto,
         ),
     )
-
-
-@router.delete("/definitions/{project_definition_id}/labels/{label_id}")
-async def delete_label_by_id(
-    project_definition_id: UUID,
-    label_id: UUID,
-    usecase=Depends(Inject(LabelUseCase)),
-    handler=Depends(Inject(RequestHandler)),
-    user=Depends(
-        CanPerformOnRequired("project_definition_id", ["project_definition:update"])
-    ),
-):
-    return await usecase.delete_by_id(label_id)

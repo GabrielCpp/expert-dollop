@@ -37,7 +37,7 @@ class ProjectDefinitionTreeBuilder:
                 if children_path in node_map:
                     node.children = sorted(
                         node_map[children_path],
-                        key=lambda child: child.definition.order_index,
+                        key=lambda child: child.definition.ordinal,
                     )
                     del node_map[children_path]
 
@@ -49,6 +49,6 @@ class ProjectDefinitionTreeBuilder:
         return ProjectDefinitionNodeTree(
             roots=sorted(
                 roots,
-                key=lambda child: child.definition.order_index,
+                key=lambda child: child.definition.ordinal,
             )
         )

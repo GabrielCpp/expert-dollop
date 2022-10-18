@@ -30,6 +30,11 @@ class StringFieldConfig:
 
 
 @dataclass
+class AggregateReferenceConfig:
+    from_collection: str
+
+
+@dataclass
 class BoolFieldConfig:
     default_value: bool
 
@@ -109,7 +114,7 @@ class ProjectDefinitionNode:
     name: str
     is_collection: bool
     instanciate_by_default: bool
-    order_index: int
+    ordinal: int
     path: List[UUID]
     creation_date_utc: datetime
     translations: TranslationConfig
@@ -135,7 +140,7 @@ class ProjectDefinitionNodeFilter(QueryFilter):
     name: Optional[str]
     is_collection: Optional[bool]
     instanciate_by_default: Optional[bool]
-    order_index: Optional[int]
+    ordinal: Optional[int]
     path: Optional[List[UUID]]
     creation_date_utc: Optional[datetime]
     display_query_internal_id: Optional[UUID]

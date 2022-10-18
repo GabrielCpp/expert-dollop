@@ -28,7 +28,7 @@ class MiniDatasheet:
         label_a = db.add(
             LabelFactory(
                 label_collection_id=label_collection.id,
-                order_index=0,
+                ordinal=0,
                 name="label_a",
             )
         )
@@ -36,7 +36,7 @@ class MiniDatasheet:
         label_b = db.add(
             LabelFactory(
                 label_collection_id=label_collection.id,
-                order_index=1,
+                ordinal=1,
                 name="label_b",
             )
         )
@@ -46,7 +46,7 @@ class MiniDatasheet:
                 unit_id="inch",
                 is_collection=False,
                 project_definition_id=project_definition.id,
-                order_index=0,
+                ordinal=0,
                 name="single_element",
                 default_properties={
                     "conversion_factor": DatasheetDefinitionElementProperty(
@@ -65,7 +65,7 @@ class MiniDatasheet:
                 unit_id="inch",
                 is_collection=True,
                 project_definition_id=project_definition.id,
-                order_index=0,
+                ordinal=0,
                 name="collection_element",
                 default_properties={
                     "conversion_factor": DatasheetDefinitionElementProperty(

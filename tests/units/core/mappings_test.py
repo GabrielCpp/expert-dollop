@@ -11,7 +11,7 @@ def test_deserialize_node_config_dto():
             "name": "smxhu",
             "is_collection": False,
             "instanciate_by_default": True,
-            "order_index": 1,
+            "ordinal": 1,
             "translations": {"label": "smxhu", "help_text_name": "smxhu_help_text"},
             "triggers": [],
             "field_details": {

@@ -87,7 +87,7 @@ async def test_given_row_cache_should_produce_correct_report(
             "substage": {
                 "id": UUID("6524c49c-93e7-0606-4d62-1ac982d40027"),
                 "name": "floor_label_0",
-                "order_index": 0,
+                "ordinal": 0,
                 "datasheet_element": element_def.id,
                 "formula": formula.id,
             },
@@ -137,14 +137,14 @@ async def test_given_row_cache_should_produce_correct_report(
                                 "id": UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
                                 "unit_id": "m",
                                 "is_collection": False,
-                                "order_index": 1,
+                                "ordinal": 1,
                                 "name": "concrete",
                             },
                             "datasheet_element": {
                                 "id": UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
                                 "unit_id": "m",
                                 "is_collection": False,
-                                "order_index": 1,
+                                "ordinal": 1,
                                 "name": "concrete",
                                 "price": Decimal("1.01"),
                                 "factor": Decimal("1.01"),
@@ -170,7 +170,7 @@ async def test_given_row_cache_should_produce_correct_report(
                             "substage": {
                                 "id": UUID("6524c49c-93e7-0606-4d62-1ac982d40027"),
                                 "name": "floor_label_0",
-                                "order_index": 0,
+                                "ordinal": 0,
                                 "datasheet_element": UUID(
                                     "00ecf6d0-6f00-c4bb-2902-4057469a3f3d"
                                 ),
@@ -185,7 +185,7 @@ async def test_given_row_cache_should_produce_correct_report(
                             },
                             "internal": {
                                 "group_digest": "show_concrete/concrete",
-                                "order_index": 0,
+                                "ordinal": 0,
                             },
                         },
                     )

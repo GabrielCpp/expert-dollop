@@ -13,7 +13,7 @@ from expert_dollup.core.domains import (
     CollapsibleContainerFieldConfig,
     StaticNumberFieldConfig,
 )
-from .dynamic_primitive import (
+from ..dynamic_primitive import (
     IntFieldValueDto,
     DecimalFieldValueDto,
     StringFieldValueDto,
@@ -42,6 +42,10 @@ class StringFieldConfigDto(CamelModel):
 
 class BoolFieldConfigDto(CamelModel):
     enabled: bool
+
+
+class AggregateReferenceConfigDto(CamelModel):
+    from_collection: str
 
 
 class StaticChoiceOptionDto(CamelModel):
@@ -135,7 +139,7 @@ class ProjectDefinitionNodeCreationDto(CamelModel):
     name: str
     is_collection: bool
     instanciate_by_default: bool
-    order_index: int
+    ordinal: int
     translations: TranslationConfigDto
     meta: NodeMetaConfigDto
     triggers: List[TriggerDto]

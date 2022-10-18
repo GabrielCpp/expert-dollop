@@ -15,14 +15,10 @@ class ElementPropertySchema:
 class ProjectDefinition:
     id: UUID
     name: str
-    default_datasheet_id: UUID
-    properties: Dict[str, ElementPropertySchema]
     creation_date_utc: datetime
 
 
 class ProjectDefinitionFilter(QueryFilter):
     id: Optional[UUID]
     name: Optional[str]
-    default_datasheet_id: Optional[UUID]
-    properties: Optional[Dict[str, ElementPropertySchema]]
     creation_date_utc: Optional[datetime]

@@ -20,7 +20,7 @@ class ProjectWithTrigger:
             path=[],
             is_collection=False,
             instanciate_by_default=True,
-            order_index=0,
+            ordinal=0,
             translations=TranslationConfig(
                 help_text_name="root_a_text", label="root_a"
             ),
@@ -41,7 +41,7 @@ class ProjectWithTrigger:
             path=[],
             is_collection=True,
             instanciate_by_default=False,
-            order_index=1,
+            ordinal=1,
             translations=TranslationConfig(
                 help_text_name="root_b_text", label="root_b"
             ),
@@ -75,7 +75,7 @@ class ProjectWithTrigger:
             path=parent.subpath,
             is_collection=is_collection,
             instanciate_by_default=True,
-            order_index=0,
+            ordinal=0,
             field_details=field_details,
         )
 
@@ -96,7 +96,7 @@ class ProjectWithTrigger:
             path=parent.subpath,
             is_collection=is_collection,
             instanciate_by_default=True,
-            order_index=0,
+            ordinal=0,
             field_details=field_details,
         )
 
@@ -114,7 +114,7 @@ class ProjectWithTrigger:
             path=parent.subpath,
             is_collection=False,
             instanciate_by_default=True,
-            order_index=0,
+            ordinal=0,
             field_details=BoolFieldConfig(default_value=False),
             triggers=[
                 Trigger(
@@ -138,7 +138,7 @@ class ProjectWithTrigger:
             path=parent.subpath,
             is_collection=False,
             instanciate_by_default=True,
-            order_index=0,
+            ordinal=0,
             field_details=field_details,
             triggers=[
                 Trigger(
