@@ -49,7 +49,7 @@ async def update_collection_aggregates(
         project_definition_id=project_definition_id,
         collection_id=collection_id,
         aggregates=MappingChain(
-            dto=LabelDto,
+            dto=AggregateDto,
             domain=Label,
             value=aggregates,
         ),

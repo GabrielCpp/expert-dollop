@@ -639,126 +639,105 @@ def map_datasheet_definition_element_from_dto(
     )
 
 
-label_attribute_schema_union_dto_mapping = RevervibleUnionMapping(
-    LabelAttributeSchemaDtoUnion,
-    LabelAttributeSchemaUnion,
-    {
-        StaticPropertyDto: StaticProperty,
-        CollectionAggregateDto: CollectionAggregate,
-        DatasheetAggregateDto: DatasheetAggregate,
-        FormulaAggregateDto: FormulaAggregate,
-    },
-)
-
-
-def map_label_collection_from_dto(
-    src: LabelCollectionDto, mapper: Mapper
-) -> LabelCollection:
-    return LabelCollection(
+def map_aggregate_collection_from_dto(
+    src: AggregateCollectionDto, mapper: Mapper
+) -> AggregateCollection:
+    return AggregateCollection(
         id=src.id,
         project_definition_id=src.project_definition_id,
         name=src.name,
-        attributes_schema=mapper.map_dict_values(
-            src.attributes_schema, label_attribute_schema_union_dto_mapping.from_origin
+        is_abstract=src.is_abstract,
+        attributes_schema=mapper.map_many(
+            src.attributes_schema, AggregateAttributeSchema
         ),
     )
 
 
-def map_label_collection_to_dto(
-    src: LabelCollection, mapper: Mapper
-) -> LabelCollectionDto:
-    return LabelCollectionDto(
+def map_aggregate_collection_to_dto(
+    src: AggregateCollection, mapper: Mapper
+) -> AggregateCollectionDto:
+    return AggregateCollectionDto(
         id=src.id,
         project_definition_id=src.project_definition_id,
         name=src.name,
-        attributes_schema=mapper.map_dict_values(
-            src.attributes_schema, label_attribute_schema_union_dto_mapping.to_origin
+        is_abstract=src.is_abstract,
+        attributes_schema=mapper.map_many(
+            src.attributes_schema, AggregateAttributeSchemaDto
         ),
     )
 
 
-def map_static_property_from_dto(
-    src: StaticPropertyDto, mapper: Mapper
-) -> StaticProperty:
-    return StaticProperty(json_schema=src.json_schema)
-
-
-def map_static_property_to_dto(
-    src: StaticProperty, mapper: Mapper
-) -> StaticPropertyDto:
-    return StaticPropertyDto(json_schema=src.json_schema)
-
-
-def map_collection_aggregate_from_dto(
-    src: CollectionAggregateDto, mapper: Mapper
-) -> CollectionAggregate:
-    return CollectionAggregate(from_collection=src.from_collection)
-
-
-def map_collection_aggregate_to_dto(
-    src: CollectionAggregate, mapper: Mapper
-) -> CollectionAggregateDto:
-    return CollectionAggregateDto(from_collection=src.from_collection)
-
-
-def map_datasheet_aggregate_from_dto(
-    src: DatasheetAggregateDto, mapper: Mapper
-) -> DatasheetAggregate:
-    return DatasheetAggregate(from_datasheet=src.from_datasheet)
-
-
-def map_datasheet_aggregate_to_dto(
-    src: DatasheetAggregate, mapper: Mapper
-) -> DatasheetAggregateDto:
-    return DatasheetAggregateDto(from_datasheet=src.from_datasheet)
-
-
-def map_formula_aggregate_from_dto(
-    src: FormulaAggregateDto, mapper: Mapper
-) -> FormulaAggregate:
-    return FormulaAggregate(from_formula=src.from_formula)
-
-
-def map_formula_aggregate_to_dto(
-    src: FormulaAggregate, mapper: Mapper
-) -> FormulaAggregateDto:
-    return FormulaAggregateDto(from_formula=src.from_formula)
-
-
-label_attribute_value_dto_mappings = RevervibleUnionMapping(
-    PrimitiveWithReferenceUnionDto,
-    PrimitiveWithReferenceUnion,
-    {
-        BoolFieldValueDto: bool,
-        IntFieldValueDto: int,
-        StringFieldValueDto: str,
-        DecimalFieldValueDto: Decimal,
-        ReferenceIdDto: UUID,
-    },
-)
-
-
-def map_datasheet_definition_label_from_dto(src: LabelDto, mapper: Mapper) -> Label:
-    return Label(
+def map_aggregation_from_dto(src: AggregationDto, mapper: Mapper) -> Aggregation:
+    return Aggregation(
         id=src.id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
-        label_collection_id=src.label_collection_id,
-        ordinal=src.ordinal,
-        attributes=mapper.map_dict_values(
-            src.attributes, label_attribute_value_dto_mappings.from_origin
+        is_abstract=src.is_abstract,
+        attributes_schema=mapper.map_many(
+            src.attributes_schema, AggregateAttributeSchema
         ),
+        aggregates=mapper.map_many(src.attributes_schema, Aggregate),
     )
 
 
-def map_datasheet_definition_label_to_dto(src: Label, mapper: Mapper) -> LabelDto:
-    return LabelDto(
+def map_aggregation_collection_to_dto(
+    src: AggregateCollection, mapper: Mapper
+) -> AggregationDto:
+    return AggregationDto(
         id=src.id,
+        project_definition_id=src.project_definition_id,
         name=src.name,
-        label_collection_id=src.label_collection_id,
-        ordinal=src.ordinal,
-        attributes=mapper.map_dict_values(
-            src.attributes, label_attribute_value_dto_mappings.to_origin
+        is_abstract=src.is_abstract,
+        attributes_schema=mapper.map_many(
+            src.attributes_schema, AggregateAttributeSchemaDto
         ),
+        aggregates=mapper.map_many(src.attributes_schema, AggregateDto),
+    )
+
+
+def map_aggregate_from_dto(src: AggregateDto, mapper: Mapper) -> Aggregate:
+    return Aggregate(
+        id=src.id,
+        ordinal=src.ordinal,
+        name=src.name,
+        is_extendable=src.is_extendable,
+        attributes={
+            attribute.name: mapper.map(attribute, AggregateAttribute)
+            for attribute in src.attribute
+        },
+    )
+
+
+def map_aggregate_to_dto(src: Aggregate, mapper: Mapper) -> AggregateDto:
+    return AggregateDto(
+        id=src.id,
+        ordinal=src.ordinal,
+        name=src.name,
+        is_extendable=src.is_extendable,
+        attributes=[
+            mapper.map(attribute, AggregateAttributeDto)
+            for attribute in src.attributes.values()
+        ],
+    )
+
+
+def map_aggregate_attribute_to_dto(
+    src: AggregateAttribute, mapper: Mapper
+) -> AggregateAttributeDto:
+    return AggregateAttributeDto(
+        name=src.name,
+        is_readonly=src.is_readonly,
+        value=mapper.map(src, primitive_with_reference_union_dto_mappings.to_origin),
+    )
+
+
+def map_aggregate_attribute_from_dto(
+    src: AggregateAttributeDto, mapper: Mapper
+) -> AggregateAttribute:
+    return AggregateAttribute(
+        name=src.name,
+        is_readonly=src.is_readonly,
+        value=mapper.map(src, primitive_with_reference_union_dto_mappings.from_origin),
     )
 
 

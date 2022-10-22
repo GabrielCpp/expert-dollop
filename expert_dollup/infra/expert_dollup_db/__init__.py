@@ -278,7 +278,7 @@ class NodeReferenceConfigDao(BaseModel):
     node_type: str
 
 
-class AggregateAttributeSchema(BaseModel):
+class AggregateAttributeSchemaDao(BaseModel):
     name: str
     details: Union[
         IntFieldConfigDao,
@@ -301,7 +301,7 @@ class AggregateCollectionDao(BaseModel):
     project_definition_id: UUID
     name: str = Field(max_length=64)
     is_abstract: bool = False
-    attributes_schema: List[AggregateAttributeSchema]
+    attributes_schema: List[AggregateAttributeSchemaDao]
     aggregates: List[AggregateDao]
 
 
@@ -322,7 +322,7 @@ class DatasheetDao(BaseModel):
 
 class AttributeDao(BaseModel):
     name: str
-    value: PrimitiveWithReferenceUnion
+    value: PrimitiveWithReferenceDaoUnion
 
 
 class DatasheetElementDao(BaseModel):

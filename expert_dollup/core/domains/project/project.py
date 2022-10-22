@@ -4,7 +4,7 @@ from typing import List
 from datetime import datetime
 from .project_node import ProjectNode
 from .project_node_meta import ProjectNodeMeta
-from .ressource import Ressource
+from ..ressource import Ressource
 
 
 @dataclass

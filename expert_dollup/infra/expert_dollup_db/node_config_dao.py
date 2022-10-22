@@ -4,8 +4,6 @@ from uuid import UUID
 from pydantic import BaseModel
 from decimal import Decimal
 
-JsonSchemaDao = dict
-
 
 class IntFieldConfigDao(BaseModel):
     unit: str

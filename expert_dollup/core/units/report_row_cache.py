@@ -20,10 +20,10 @@ class ReportCache:
     warnings: List[str]
     report_definition: ReportDefinition
     project_definition: ProjectDefinition
-    label_collections: List[LabelCollection]
-    labels_by_collection_id: Dict[UUID, List[Label]]
-    labels_by_id: Dict[UUID, Label]
-    label_collections_by_name: Dict[str, LabelCollection]
+    aggregations: List[Aggregation]
+    aggregation_by_id: Dict[UUID, List[Aggregation]]
+    aggregates_by_id: Dict[UUID, Aggregate]
+    aggregations_by_name: Dict[str, Aggregation]
 
 
 class ReportRowCache:
@@ -31,15 +31,13 @@ class ReportRowCache:
         self,
         project_definition_service: Repository[ProjectDefinition],
         datasheet_definition_element_service: Repository[DatasheetDefinitionElement],
-        label_collection_service: Repository[LabelCollection],
-        label_service: Repository[Label],
+        aggregation_service: Repository[Aggregation],
         formula_plucker: Plucker[Formula],
         report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
     ):
         self.project_definition_service = project_definition_service
         self.datasheet_definition_element_service = datasheet_definition_element_service
-        self.label_collection_service = label_collection_service
-        self.label_service = label_service
+        self.aggregation_service = aggregation_service
         self.formula_plucker = formula_plucker
         self.report_def_row_cache = report_def_row_cache
 
@@ -79,42 +77,28 @@ class ReportRowCache:
             report_definition.project_definition_id
         )
 
-        project_definition = await self.project_definition_service.find_by_id(
-            project_definition.id
+        aggregations = await self.aggregation_service.find_by(
+            AggregateCollectionFilter(project_definition_id=project_definition.id)
         )
 
-        label_collections = await self.label_collection_service.find_by(
-            LabelCollectionFilter(project_definition_id=project_definition.id)
-        )
+        aggregation_by_id: Dict[UUID, List[Aggregate]] = {}
+        aggregates_by_id: Dict[UUID, Aggregate] = {}
 
-        collections_labels = await gather(
-            *[
-                self.label_service.find_by(
-                    LabelFilter(label_collection_id=label_collection.id)
-                )
-                for label_collection in label_collections
-            ]
-        )
+        for aggregation in aggregations:
+            aggregation_by_id[aggregation.id] = aggregation.aggregates
 
-        labels_by_collection_id: Dict[UUID, List[Label]] = {}
-        labels_by_id: Dict[UUID, Label] = {}
-
-        for label_collection, labels in zip(label_collections, collections_labels):
-            labels_by_collection_id[label_collection.id] = labels
-
-            for label in labels:
-                assert label.label_collection_id == label_collection.id
-                labels_by_id[label.id] = label
+            for aggregate in aggregation.aggregates:
+                aggregates_by_id[aggregate.id] = aggregate
 
         return ReportCache(
             warnings=[],
             report_definition=report_definition,
             project_definition=project_definition,
-            label_collections=label_collections,
-            labels_by_collection_id=labels_by_collection_id,
-            labels_by_id=labels_by_id,
-            label_collections_by_name={
-                collection.name: collection for collection in label_collections
+            aggregations=aggregations,
+            aggregation_by_id=aggregation_by_id,
+            aggregates_by_id=aggregates_by_id,
+            aggregations_by_name={
+                aggregation.name: aggregation for aggregation in aggregations
             },
         )
 
@@ -194,7 +178,7 @@ class ReportRowCache:
                 avaiable_names=list(item.keys()),
             )
 
-        collections_by_names = cache.label_collections_by_name
+        collections_by_names = cache.aggregations_by_name
 
         if not join.join_on_collection in collections_by_names:
             raise ReportGenerationError(
@@ -215,7 +199,7 @@ class ReportRowCache:
                 avaiable_names=list(joined_collection.attributes_schema.keys()),
             )
 
-        labels = cache.labels_by_collection_id[joined_collection.id]
+        labels = cache.aggregation_by_id[joined_collection.id]
         new_buckets: ReportRowsCache = []
         attributes_to_label = defaultdict(list)
         seen = set()

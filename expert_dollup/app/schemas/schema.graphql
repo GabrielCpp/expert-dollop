@@ -4,42 +4,87 @@ type Unit {
   id: ID!
 }
 
-type DatasheetDefinitionElementEdge {
-  node: DatasheetDefinitionElement!
-  cursor: String!
+type AggregateAttribute {
+    name: str
+    isReadonly: bool
+    value: PrimitiveWithReferenceUnion
 }
 
-type DatasheetDefinitionElementConnection {
-  edges: [DatasheetDefinitionElementEdge!]!
-  pageInfo: PageInfo!
+type Aggregate {
+    id: String!
+    ordinal: Int!
+    name: String!
+    is_extendable: Boolean!
+    attributes: [AggregateAttribute!]!
+
 }
 
-type DatasheetDefinitionElementProperty {
-  name: String!
-  isReadonly: Boolean!
-  value: String!
+enum NodeType {
+  FORMULA
+  FIELD
+  SECTION
+  FORM
+  SUB_SECTION
+  ROOT_SECTION
 }
 
-type DatasheetDefinitionElement {
-  id: ID!
-  unitId: String!
-  isCollection: Boolean!
-  projectDefinitionId: String!
-  projectDefinition: ProjectDefinition
-  ordinal: Int!
-  name: String!
-  defaultProperties: [DatasheetDefinitionElementProperty!]!
-  tags: [String!]!
-  creationDateUtc: String!
+type NodeReferenceConfig {
+   node_type: NodeType!
+}
+
+union AttributeDetailsUnion =
+    IntFieldConfig
+  | DecimalFieldConfig
+  | StringFieldConfig
+  | BoolFieldConfig
+  | StaticChoiceFieldConfig
+  | AggregateReferenceConfig
+  | NodeReferenceConfig
+
+
+type AggregateAttributeSchema {
+    name: String!
+    details: AttributeDetailsUnion!
+}
+
+interface AggregateCollection {
+    id: String!
+    projectDefinitionId: String!
+    name: String!
+    isAbstract: Boolean!
+    attributesSchema: [AggregateAttributeSchema!]!
+}
+
+type CollectionDetails implements AggregateCollection {
+    id: String!
+    projectDefinitionId: String!
+    name: String!
+    isAbstract: Boolean!
+    attributesSchema: [AggregateAttributeSchema!]!
+}
+
+type Aggregation implements AggregateCollection {
+    id: String!
+    projectDefinitionId: String!
+    name: String!
+    isAbstract: Boolean!
+    attributesSchema: [AggregateAttributeSchema!]!
+    aggregates: [Aggregate!]!
+}
+
+type Attribute {
+    name: str
+    value: PrimitiveWithReferenceUnion
 }
 
 type DatasheetElement {
+  id: ID!
   datasheetId: String!
-  elementDefId: String!
-  elementDefinition: DatasheetDefinitionElement!
-  childElementReference: ID!
-  properties: String!
+  aggregateId: String!
+  aggregate: Aggregate!
+  attributes: [Attribute!]!
   originalDatasheetId: String!
+  originalOwnerOrganizationId: String!
   creationDateUtc: String!
 }
 
@@ -56,9 +101,8 @@ type DatasheetElementConnection {
 type Datasheet {
   id: ID!
   name: String!
-  isStaged: Boolean!
   projectDefinitionId: String!
-  fromDatasheetId: String
+  fromDatasheetId: String!
   elements(first: Int!, after: String): DatasheetElementConnection!
 }
 
@@ -187,7 +231,7 @@ type BoolFieldValue {
   enabled: Boolean!
 }
 
-union FieldValue =
+union PrimitiveWithReferenceUnion =
     IntFieldValue
   | DecimalFieldValue
   | StringFieldValue
@@ -404,7 +448,7 @@ type ProjectNode {
   typeId: String!
   typeName: String!
   path: [String!]!
-  value: FieldValue
+  value: PrimitiveWithReferenceUnion
   label: String
 }
 
@@ -488,7 +532,7 @@ type ReportRow {
 
 type ComputedValue {
   label: String!
-  value: FieldValue!
+  value: PrimitiveWithReferenceUnion!
   unit: String
   isVisible: Boolean!
 }
@@ -594,6 +638,10 @@ type Query {
   # Formula
   findFormula(projectDefinitionId: ID!, formulaId: ID!): Formula
 
+  # Aggregates
+  findDefinitionAggregateCollections(projectDefinitionId: ID!): [AggregateCollection!]!
+  findAggregation(projectDefinitionId: ID!, collectionId: ID!): Aggregation!
+
   # Datasheet
   findDatasheet(id: ID!): Datasheet!
   findDatasheets(
@@ -601,12 +649,6 @@ type Query {
     first: Int!
     after: String
   ): DatasheetConnection!
-  findDatasheetDefinitionElements(
-    projectDefinitionId: ID!
-    query: String!
-    first: Int!
-    after: String
-  ): DatasheetDefinitionElementConnection!
   findProjectDefinition(id: ID!): ProjectDefinition!
   findProjectDefinitionRootSections(
     projectDefinitionId: ID!

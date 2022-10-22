@@ -20,7 +20,7 @@ class Aggregate:
     ordinal: int
     name: str
     is_extendable: bool
-    attributes: List[AggregateAttribute] = field(default_factory=dict)
+    attributes: Dict[str, AggregateAttribute] = field(default_factory=dict)
 
     def get_attribute(self, name: str):
         if name == "id":

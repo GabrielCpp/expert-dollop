@@ -41,8 +41,7 @@ class CustomDatasheetInstancePackage:
     datasheet_definition_elements: List[DatasheetDefinitionElement]
     datasheet: Datasheet
     datasheet_elements: List[DatasheetElement]
-    label_collections: List[LabelCollection]
-    labels: List[Label]
+    aggregations: List[Aggregation]
     translations: List[Translation]
 
 
@@ -306,29 +305,25 @@ class DatasheetInstanceFactory:
             for index, element_seed in enumerate(datasheet_seed.element_seeds.values())
         ]
 
-        label_collections = [
-            LabelCollection(
+        aggregations = [
+            AggregationFactory(
                 id=collection_seed.id,
                 project_definition_id=project_definition.id,
                 name=collection_seed.name,
                 attributes_schema=collection_seed.attributes_schema,
-            )
-            for collection_seed in datasheet_seed.collection_seeds.values()
-        ]
-
-        labels: List[Label] = []
-
-        for collection_seed in datasheet_seed.collection_seeds.values():
-            for index, label_seed in enumerate(collection_seed.label_seeds):
-                labels.append(
-                    Label(
+                aggregates=[
+                    Aggregate(
                         id=label_seed.id,
-                        label_collection_id=collection_seed.id,
                         ordinal=index,
                         name=label_seed.name,
                         attributes=label_seed.attributes,
+                        is_extendable=False,
                     )
-                )
+                    for index, label_seed in enumerate(collection_seed.label_seeds)
+                ],
+            )
+            for collection_seed in datasheet_seed.collection_seeds.values()
+        ]
 
         translations: List[Translation] = []
 
@@ -343,8 +338,7 @@ class DatasheetInstanceFactory:
             datasheet=datasheet,
             datasheet_definition_elements=datasheet_definition_elements,
             datasheet_elements=datasheet_elements,
-            label_collections=label_collections,
-            labels=labels,
+            aggregations=aggregations,
             translations=translations,
         )
 
@@ -358,6 +352,5 @@ class DatasheetInstanceFactory:
         db.add(self.package.datasheet)
         db.add_all(self.package.datasheet_definition_elements)
         db.add_all(self.package.datasheet_elements)
-        db.add_all(self.package.label_collections)
-        db.add_all(self.package.labels)
+        db.add_all(self.package.aggregations)
         db.add_all(self.package.translations)

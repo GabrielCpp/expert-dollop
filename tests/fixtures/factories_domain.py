@@ -243,25 +243,38 @@ class DatasheetDefinitionElementFactory(factory.Factory):
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
-class LabelFactory(factory.Factory):
+class AggregateFactory(factory.Factory):
     class Meta:
-        model = Label
+        model = Aggregate
 
     id = factory.Faker("pyuuid4")
-    label_collection_id = factory.Faker("pyuuid4")
     ordinal = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: f"label_{n}")
-    attributes = factory.Dict({})
+    is_extendable = False
+    attributes = factory.List([])
 
 
-class LabelCollectionFactory(factory.Factory):
+class AggregateCollectionFactory(factory.Factory):
     class Meta:
-        model = LabelCollection
+        model = AggregateCollection
 
     id = factory.Faker("pyuuid4")
     project_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"label_collection_{n}")
+    is_abstract = False
     attributes_schema = factory.Dict({})
+
+
+class AggregationFactory(factory.Factory):
+    class Meta:
+        model = Aggregation
+
+    id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
+    name = factory.Sequence(lambda n: f"label_collection_{n}")
+    is_abstract = False
+    attributes_schema = factory.Dict({})
+    aggregates = factory.List([])
 
 
 class TranslationFactory(factory.Factory):

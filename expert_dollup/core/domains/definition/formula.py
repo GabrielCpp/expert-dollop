@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from typing import List, Optional, Dict, Union
 from expert_dollup.shared.database_services import QueryFilter
-from .values_union import PrimitiveWithNoneUnion
+from ..values_union import PrimitiveWithNoneUnion
 
 
 @dataclass

@@ -1,4 +1,4 @@
-from typing import Type, Optional, List
+from typing import Type, Optional, List, Dict
 from ..interfaces import MappingChain
 from ....automapping import Mapper
 

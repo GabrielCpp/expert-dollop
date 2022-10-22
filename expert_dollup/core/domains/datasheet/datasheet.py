@@ -1,6 +1,6 @@
 from uuid import UUID
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Dict
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
 from ..definition.aggregate_collection import AggregateAttributeSchema

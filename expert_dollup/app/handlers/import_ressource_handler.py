@@ -115,15 +115,10 @@ import_method_by_model_id: Dict[str, ImportationMethod] = {
         get_method=lambda u: u.import_datasheet_elements,
         backfill_user_fields=fill_original_owner_organization_id,
     ),
-    "/api/label_collection": ImportationMethod(
-        dto=LabelCollectionDto,
-        domain=LabelCollection,
-        get_method=lambda u: u.import_label_collections,
-    ),
-    "/api/label": ImportationMethod(
-        dto=LabelDto,
-        domain=Label,
-        get_method=lambda u: u.import_labels,
+    "aggregation": ImportationMethod(
+        dto=AggregationDto,
+        domain=Aggregation,
+        get_method=lambda u: u.import_aggregations,
     ),
     "/api/translation": ImportationMethod(
         dto=TranslationDto,

@@ -725,119 +725,78 @@ def map_datasheet_definition_element_filter(
     )
 
 
-label_attribute_schema_dao_mappings = RevervibleUnionMapping(
-    LabelAttributeSchemaDaoUnion, LabelAttributeSchemaUnion
-)
-
-
 def map_datasheet_definition_label_collection_from_dao(
-    src: LabelCollectionDao, mapper: Mapper
-) -> LabelCollection:
-    return LabelCollection(
+    src: AggregateCollectionDao, mapper: Mapper
+) -> Aggregation:
+    return Aggregation(
         id=src.id,
         project_definition_id=src.project_definition_id,
         name=src.name,
-        attributes_schema=mapper.map_dict_values(
-            src.attributes_schema, label_attribute_schema_dao_mappings.from_origin
-        ),
+        is_abstract=src.is_abstract,
+        attributes_schema={
+            schema.name: mapper.map(schema, AggregateAttributeSchema)
+            for schema in src.attributes_schema
+        },
+        aggregates=mapper.map_many(src.aagregates, Aggregate),
     )
 
 
 def map_datasheet_definition_label_collection_to_dao(
-    src: LabelCollection, mapper: Mapper
-) -> LabelCollectionDao:
-    return LabelCollectionDao(
+    src: Aggregation, mapper: Mapper
+) -> AggregateCollectionDao:
+    return AggregateCollectionDao(
         id=src.id,
         project_definition_id=src.project_definition_id,
         name=src.name,
-        attributes_schema=mapper.map_dict_values(
-            src.attributes_schema, label_attribute_schema_dao_mappings.to_origin
+        attributes_schema=[
+            mapper.map(schema, AggregateAttributeSchemaDao)
+            for schema in src.attributes_schema.values()
+        ],
+        aggregates=mapper.map_many(src.aagregates, AggregateDao),
+    )
+
+
+def map_aggregate_attribute_from_dao(
+    src: AggregateAttributeDao, mapper: Mapper
+) -> AggregateAttribute:
+    return AggregateAttribute(
+        name=src.name,
+        is_readonly=src.is_readonly,
+        value=mapper.map(
+            src.value, primitive_with_reference_union_dao_mappings.from_origin
         ),
     )
 
 
-def map_static_property_from_dao(
-    src: StaticPropertyDao, mapper: Mapper
-) -> StaticProperty:
-    return StaticProperty(json_schema=src.json_schema)
-
-
-def map_static_property_to_dao(
-    src: StaticProperty, mapper: Mapper
-) -> StaticPropertyDao:
-    return StaticPropertyDao(json_schema=src.json_schema)
-
-
-def map_collection_aggregate_from_dao(
-    src: CollectionAggregateDao, mapper: Mapper
-) -> CollectionAggregate:
-    return CollectionAggregate(from_collection=src.from_collection)
-
-
-def map_collection_aggregate_to_dao(
-    src: CollectionAggregate, mapper: Mapper
-) -> CollectionAggregateDao:
-    return CollectionAggregateDao(from_collection=src.from_collection)
-
-
-def map_datasheet_aggregate_from_dao(
-    src: DatasheetAggregateDao, mapper: Mapper
-) -> DatasheetAggregate:
-    return DatasheetAggregate(from_datasheet=src.from_datasheet)
-
-
-def map_datasheet_aggregate_to_dao(
-    src: DatasheetAggregate, mapper: Mapper
-) -> DatasheetAggregateDao:
-    return DatasheetAggregateDao(from_datasheet=src.from_datasheet)
-
-
-def map_formula_aggregate_from_dao(
-    src: FormulaAggregateDao, mapper: Mapper
-) -> FormulaAggregate:
-    return FormulaAggregate(from_formula=src.from_formula)
-
-
-def map_formula_aggregate_to_dao(
-    src: FormulaAggregate, mapper: Mapper
-) -> FormulaAggregateDao:
-    return FormulaAggregateDao(from_formula=src.from_formula)
-
-
-label_attribute_dao_mappings = RevervibleUnionMapping(
-    PrimitiveWithReferenceDaoUnion,
-    PrimitiveWithReferenceUnionUnion,
-    {
-        BoolFieldValueDao: bool,
-        IntFieldValueDao: int,
-        StringFieldValueDao: str,
-        DecimalFieldValueDao: Decimal,
-        ReferenceIdDao: UUID,
-    },
-)
-
-
-def map_datasheet_definition_label_to_dao(src: Label, mapper: Mapper) -> LabelDao:
-    return LabelDao(
-        id=src.id,
-        label_collection_id=src.label_collection_id,
-        ordinal=src.ordinal,
+def map_aggregate_attribute_to_dao(
+    src: AggregateAttribute, mapper: Mapper
+) -> AggregateAttributeDao:
+    return AggregateAttribute(
         name=src.name,
-        attributes=mapper.map_dict_values(
-            src.attributes, label_attribute_dao_mappings.to_origin
+        is_readonly=src.is_readonly,
+        value=mapper.map(
+            src.value, primitive_with_reference_union_dao_mappings.to_origin
         ),
     )
 
 
-def map_datasheet_definition_label_from_dao(src: LabelDao, mapper: Mapper) -> Label:
-    return Label(
+def map_aggregate_to_dao(src: Aggregate, mapper: Mapper) -> AggregateDao:
+    return AggregateDao(
+        id=src.id,
+        ordinal=src.ordinal,
+        name=src.name,
+        is_extendable=src.is_extendable,
+        attributes=mapper.map_values(src.attributes, AggregateAttributeDao),
+    )
+
+
+def map_aggregate_from_dao(src: AggregateDao, mapper: Mapper) -> Aggregate:
+    return Aggregate(
         id=src.id,
         label_collection_id=src.label_collection_id,
         ordinal=src.ordinal,
         name=src.name,
-        attributes=mapper.map_dict_values(
-            src.attributes, label_attribute_dao_mappings.from_origin
-        ),
+        attributes=mapper.map_values(src.attributes, AggregateAttribute),
     )
 
 
@@ -952,35 +911,6 @@ def map_datasheet_element_filter_to_dict(
             "child_element_reference": ("child_element_reference", None),
             "ordinal": ("ordinal", None),
             "creation_date_utc": ("creation_date_utc", None),
-        },
-    )
-
-
-def map_datasheet_element_values_to_dict(
-    src: DatasheetElementValues, mapper: Mapper
-) -> dict:
-    def map_properties(x: dict):
-        return mapper.map_dict_values(x, primitive_union_dao_mappings.to_origin)
-
-    return map_dict_keys(
-        src.args,
-        {
-            "datasheet_id": ("datasheet_id", None),
-            "element_def_id": ("element_def_id", None),
-            "child_element_reference": ("child_element_reference", None),
-            "properties": ("properties", map_properties),
-            "creation_date_utc": ("creation_date_utc", None),
-        },
-    )
-
-
-def map_datasheet_element_id_to_dict(src: DatasheetElementId, mapper: Mapper) -> dict:
-    return map_dict_keys(
-        src.args,
-        {
-            "datasheet_id": ("datasheet_id", None),
-            "element_def_id": ("element_def_id", None),
-            "child_element_reference": ("child_element_reference", None),
         },
     )
 
@@ -1222,7 +1152,7 @@ def map_report_join_to_dao(src: ReportJoin, mapper: Mapper) -> ReportJoinDao:
     )
 
 
-def map_label_collection_filter(src: LabelCollectionFilter, mapper: Mapper) -> dict:
+def map_label_collection_filter(src: AggregateCollectionFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
         {

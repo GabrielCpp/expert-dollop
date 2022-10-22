@@ -18,26 +18,21 @@ class MiniDatasheet:
             )
         )
 
-        label_collection = db.add(
-            LabelCollectionFactory(
+        aggregate_a = AggregateFactory(
+            ordinal=0,
+            name="aggregate_a",
+        )
+
+        aggregate_b = AggregateFactory(
+            ordinal=1,
+            name="aggregate_b",
+        )
+
+        aggregation = db.add(
+            AggregationFactory(
                 project_definition_id=project_definition.id,
                 name="abstract_product",
-            )
-        )
-
-        label_a = db.add(
-            LabelFactory(
-                label_collection_id=label_collection.id,
-                ordinal=0,
-                name="label_a",
-            )
-        )
-
-        label_b = db.add(
-            LabelFactory(
-                label_collection_id=label_collection.id,
-                ordinal=1,
-                name="label_b",
+                aggregates=[aggregate_a, aggregate_b],
             )
         )
 
@@ -56,7 +51,7 @@ class MiniDatasheet:
                         is_readonly=False, value=Decimal(1)
                     ),
                 },
-                tags=[str(label_a.id)],
+                tags=[str(aggregate_a.id)],
             )
         )
 
@@ -75,7 +70,7 @@ class MiniDatasheet:
                         is_readonly=False, value=Decimal(0)
                     ),
                 },
-                tags=[label_b.id],
+                tags=[aggregate_b.id],
             )
         )
 

@@ -40,12 +40,14 @@ class DatasheetElement:
         }
 
 
-class NewDatasheetElement(CamelModel):
+@dataclass
+class NewDatasheetElement:
     aggregate_id: UUID
     ordinal: int
     attributes: List[Attribute]
 
 
+@dataclass
 class DatasheetElementUpdateDto(NewDatasheetElement):
     id: UUID
 

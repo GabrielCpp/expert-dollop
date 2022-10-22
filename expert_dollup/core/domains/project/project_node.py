@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 from uuid import UUID
 from expert_dollup.shared.database_services import QueryFilter
-from .values_union import PrimitiveWithNoneUnion
+from ..values_union import PrimitiveWithNoneUnion
 
 
 @dataclass

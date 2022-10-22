@@ -37,7 +37,7 @@ class ProjectDefinitionNodeDtoFactory(factory.Factory):
     name = factory.Sequence(lambda n: f"Container{n}")
     is_collection = False
     instanciate_by_default = True
-    order_index = factory.Sequence(lambda n: n)
+    ordinal = factory.Sequence(lambda n: n)
     triggers = factory.List([])
     field_details = IntFieldConfigDtoFactory()
     meta = NodeMetaConfigDto(is_visible=True)
@@ -121,7 +121,7 @@ class DatasheetDefinitionElementDtoFactory(factory.Factory):
     unit_id = "inch"
     is_collection = False
     project_definition_id = factory.Faker("pyuuid4")
-    order_index = factory.Sequence(lambda n: n)
+    ordinal = factory.Sequence(lambda n: n)
     tags = factory.LazyFunction(lambda: [])
     name = factory.Sequence(lambda n: f"field_name{n}")
     default_properties = factory.Dict(
@@ -137,25 +137,57 @@ class DatasheetDefinitionElementDtoFactory(factory.Factory):
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
-class LabelCollectionDtoFactory(factory.Factory):
+class NewAggregateCollectionDtoFactory(factory.Factory):
     class Meta:
-        model = LabelCollectionDto
+        model = NewAggregateCollectionDto
+
+    name = factory.Sequence(lambda n: f"new_aggregate_collection_{n}")
+    is_abstract = False
+    attributes_schema = factory.List([])
+
+
+class AggregateCollectionDtoFactory(factory.Factory):
+    class Meta:
+        model = AggregateCollectionDto
+
+    id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
+    name = factory.Sequence(lambda n: f"aggregate_collection_{n}")
+    is_abstract = False
+    attributes_schema = factory.List([])
+
+
+class AggregationDtoFactory(factory.Factory):
+    class Meta:
+        model = AggregationDto
 
     id = factory.Faker("pyuuid4")
     project_definition_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"label_collection_{n}")
-    attributes_schema = factory.Dict({})
+    is_abstract = False
+    attributes_schema = factory.List([])
+    aggregates = factory.List([])
 
 
-class LabelDtoFactory(factory.Factory):
+class NewAggregateDtoFactory(factory.Factory):
     class Meta:
-        model = LabelDto
+        model = NewAggregateDto
+
+    ordinal = factory.Sequence(lambda n: n)
+    name = factory.Sequence(lambda n: f"label_{n}")
+    is_extendable = False
+    attributes = factory.List([])
+
+
+class AggregateDtoFactory(factory.Factory):
+    class Meta:
+        model = AggregateDto
 
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"label_{n}")
-    label_collection_id = factory.Faker("pyuuid4")
-    order_index = factory.Sequence(lambda n: n)
-    attributes = factory.Dict({})
+    is_extendable = False
+    ordinal = factory.Sequence(lambda n: n)
+    attributes = factory.List([])
 
 
 class DatasheetDtoFactory(factory.Factory):

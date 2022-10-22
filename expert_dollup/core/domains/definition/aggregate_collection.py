@@ -1,7 +1,7 @@
 from uuid import UUID
 from enum import Enum
 from dataclasses import dataclass, field
-from typing import Dict, Union, Optional
+from typing import Dict, Union, Optional, List
 from expert_dollup.shared.database_services import QueryFilter
 from .project_definition_node import (
     IntFieldConfig,
@@ -24,7 +24,7 @@ class NodeType(Enum):
 
 @dataclass
 class NodeReferenceConfig:
-    node_type: NodeTypeDto
+    node_type: NodeType
 
 
 @dataclass
@@ -46,12 +46,12 @@ class AggregateCollection:
     project_definition_id: UUID
     name: str
     is_abstract: bool = False
-    attributes_schema: List[AggregateAttributeSchema] = field(default_factory=list)
+    attributes_schema: Dict[str, AggregateAttributeSchema] = field(default_factory=list)
 
 
 @dataclass
 class Aggregation(AggregateCollection):
-    aggregates: List[AggregateDto] = field(default_factory=list)
+    aggregates: List[Aggregate] = field(default_factory=list)
 
 
 @dataclass

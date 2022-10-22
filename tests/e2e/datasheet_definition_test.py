@@ -83,47 +83,45 @@ async def test_datasheet_definition(ac):
 @pytest.mark.asyncio
 async def test_label_collection(ac, db_helper: DbFixtureHelper):
     async def create_label_collection(definition: ProjectDefinition):
-        label_collection = LabelCollectionDtoFactory(
-            project_definition_id=definition.id
-        )
-        label_collection_dto = await ac.post_json(
+        collection_dto = await ac.post_json(
             f"/api/definitions/{definition.id}/label_collections",
-            label_collection,
-            unwrap_with=LabelCollectionDto,
+            NewAggregateCollectionDtoFactory(project_definition_id=definition.id),
+            unwrap_with=AggregateCollectionDto,
         )
 
-        return label_collection_dto
+        return collection_dto
 
     async def create_label(
         definition: ProjectDefinition,
-        label_collection_dto: LabelCollectionDto,
+        collection_dto: AggregateCollectionDto,
     ):
-        label = LabelDtoFactory(label_collection_id=label_collection_dto.id)
         label_dto = await ac.post_json(
-            f"/api/definitions/{definition.id}/labels", label, unwrap_with=LabelDto
+            f"/api/definitions/{definition.id}/labels",
+            [NewAggregateDtoFactory(label_collection_id=collection_dto.id)],
+            unwrap_with=AggregateDto,
         )
         return label_dto
 
     async def check_label_collection_is_identical(
-        label_collection_dto: LabelCollectionDto,
+        collection_dto: AggregateCollectionDto,
     ):
         actual_label_collection = await ac.get_json(
-            f"/api/definitions/{definition.id}/label_collections/{label_collection_dto.id}",
-            unwrap_with=LabelCollectionDto,
+            f"/api/definitions/{definition.id}/label_collections/{collection_dto.id}",
+            unwrap_with=AggregateCollectionDto,
         )
         assert actual_label_collection == label_collection_dto
 
     async def check_label_is_the_same(
-        definition: ProjectDefinition, label_dto: LabelDto
+        definition: ProjectDefinition, label_dto: AggregateDto
     ):
         actual_label = await ac.get_json(
             f"/api/definitions/{definition.id}/labels/{label_dto.id}",
-            unwrap_with=LabelDto,
+            unwrap_with=AggregateDto,
         )
         assert actual_label == label_dto
 
     async def delete_label_and_check_it_is_gone(
-        definition: ProjectDefinition, label_dto: LabelDto
+        definition: ProjectDefinition, label_dto: AggregateDto
     ):
         await ac.delete_json(f"/api/definitions/{definition.id}/labels/{label_dto.id}")
         await ac.get_json(
@@ -133,13 +131,13 @@ async def test_label_collection(ac, db_helper: DbFixtureHelper):
 
     async def delete_label_collection_and_check_it_is_gone(
         definition: ProjectDefinition,
-        label_collection_dto: LabelCollectionDto,
+        collection_dto: AggregateCollectionDto,
     ):
         await ac.delete_json(
-            f"/api/definitions/{definition.id}/label_collections/{label_collection_dto.id}"
+            f"/api/definitions/{definition.id}/label_collections/{collection_dto.id}"
         )
         await ac.get_json(
-            f"/api/definitions/{definition.id}/label_collections/{label_collection_dto.id}",
+            f"/api/definitions/{definition.id}/label_collections/{collection_dto.id}",
             expected_status_code=404,
         )
 
@@ -149,9 +147,9 @@ async def test_label_collection(ac, db_helper: DbFixtureHelper):
     await ac.login_super_user()
 
     definition = db.get_only_one(ProjectDefinition)
-    label_collection_dto = await create_label_collection(definition)
-    await check_label_collection_is_identical(label_collection_dto)
-    label_dto = await create_label(definition, label_collection_dto)
+    collection_dto = await create_label_collection(definition)
+    await check_label_collection_is_identical(collection_dto)
+    label_dto = await create_label(definition, collection_dto)
     await check_label_is_the_same(definition, label_dto)
     await delete_label_and_check_it_is_gone(definition, label_dto)
-    await delete_label_collection_and_check_it_is_gone(definition, label_collection_dto)
+    await delete_label_collection_and_check_it_is_gone(definition, collection_dto)

@@ -91,14 +91,14 @@ class SimpleDatasheetDef:
             ),
         )
 
-        order_form_category = LabelCollectionFactory(
+        order_form_category = AggregateCollectionFactory(
             project_definition_id=project_definition.id,
             name="orderformcategory",
         )
 
         db.add(order_form_category)
 
-        product_category = LabelCollectionFactory(
+        product_category = AggregateCollectionFactory(
             project_definition_id=project_definition.id
         )
 

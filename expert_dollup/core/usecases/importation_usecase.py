@@ -57,10 +57,8 @@ class ImportationUseCase:
             assert len(elements) == 0, f"element id exists {element} -> {elements}"
             await self.db_context.insert(DatasheetElement, datasheet_element)
 
-    async def import_label_collections(
-        self, user: User, datasheet_elements: List[LabelCollection]
-    ):
-        await self.db_context.insert_many(LabelCollection, datasheet_elements)
+    async def import_aggregations(self, user: User, aggregations: List[Aggregation]):
+        await self.db_context.insert_many(Aggregation, aggregations)
 
     async def import_labels(self, user: User, labels: List[Label]):
         await self.db_context.insert_many(Label, labels)

@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import List
 from .project_node import ProjectNode
-from .project_definition_node import ProjectDefinitionNode
-from .formula import UnitInstance
+from ..definition.formula import UnitInstance
+from ..definition.project_definition_node import ProjectDefinitionNode
 
 
 @dataclass

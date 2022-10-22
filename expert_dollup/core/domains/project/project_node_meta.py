@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Optional
 from uuid import UUID
 from expert_dollup.shared.database_services import QueryFilter
-from .project_definition_node import ProjectDefinitionNode
+from ..definition.project_definition_node import ProjectDefinitionNode
 
 
 @dataclass
