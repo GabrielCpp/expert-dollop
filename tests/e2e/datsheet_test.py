@@ -7,16 +7,16 @@ from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_db import *
 
 
-def assert_all_definition_where_impemented(datasheet_definition_elements, results):
+def assert_all_definition_where_impemented(aggregates, results):
     implementations = defaultdict(int)
 
     for result in results:
         implementations[result.element_def_id] += 1
 
-    assert len(datasheet_definition_elements) > 0
-    for definition_element in datasheet_definition_elements:
-        assert definition_element.id in implementations
-        assert implementations.get(definition_element.id) == 1
+    assert len(aggregates) > 0
+    for aggregate in aggregates:
+        assert aggregate.id in implementations
+        assert implementations.get(aggregate.id) == 1
 
 
 async def create_datasheet(ac, definition: ProjectDefinition):
@@ -42,22 +42,22 @@ async def test_datasheet(ac, db_helper: DbFixtureHelper):
     async def update_single_instance_datasheet_element(
         datasheet_dto: DatasheetDto,
         elements_page_dto: PageDto[DatasheetElementDto],
-        definition_element: DatasheetDefinitionElement,
+        aggregate_dto: AggregateDto,
     ):
         element = next(
             result
             for result in elements_page_dto.results
-            if result.element_def_id == definition_element.id
+            if result.aggregate_id == aggregate_dto.id
         )
 
         new_child_element = await ac.put_json(
-            f"/api/datasheets/{datasheet_dto.id}/element/{element.element_def_id}/{element.child_element_reference}",
+            f"/api/datasheets/{datasheet_dto.id}/elements/{element.id}",
             datasheet_element_child_json,
             unwrap_with=DatasheetElementDto,
         )
 
         datasheet_element_child = await ac.get_json(
-            f"/api/datasheets/{datasheet_dto.id}/element/{element.element_def_id}/{element.child_element_reference}",
+            f"/api/datasheets/{datasheet_dto.id}/elements/{element.id}",
             unwrap_with=DatasheetElementDto,
         )
 
@@ -66,7 +66,7 @@ async def test_datasheet(ac, db_helper: DbFixtureHelper):
     async def instanciate_collection_element(
         datasheet_dto: DatasheetDto,
         datasheet_element_page: PageDto[DatasheetElementDto],
-        definition_element: DatasheetDefinitionElement,
+        definition_element: Aggregate,
     ):
 
         element = next(
@@ -106,16 +106,14 @@ async def test_datasheet(ac, db_helper: DbFixtureHelper):
 
     definition = db.get_only_one(ProjectDefinition)
     collection_element = db.get_only_one_matching(
-        DatasheetDefinitionElement, lambda e: e.name == "collection_element"
+        Aggregate, lambda e: e.name == "collection_element"
     )
     single_element = db.get_only_one_matching(
-        DatasheetDefinitionElement, lambda n: n.name == "single_element"
+        Aggregate, lambda n: n.name == "single_element"
     )
     datasheet_dto = await create_datasheet(ac, definition)
     elements_page_dto = await get_paginated_datasheet_elements(datasheet_dto)
-    assert_all_definition_where_impemented(
-        db.all(DatasheetDefinitionElement), elements_page_dto.results
-    )
+    assert_all_definition_where_impemented(db.all(Aggregate), elements_page_dto.results)
 
     await update_single_instance_datasheet_element(
         datasheet_dto, elements_page_dto, single_element

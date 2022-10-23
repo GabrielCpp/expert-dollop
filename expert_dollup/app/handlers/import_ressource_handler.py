@@ -115,20 +115,20 @@ import_method_by_model_id: Dict[str, ImportationMethod] = {
         get_method=lambda u: u.import_datasheet_elements,
         backfill_user_fields=fill_original_owner_organization_id,
     ),
-    "aggregation": ImportationMethod(
-        dto=AggregationDto,
-        domain=Aggregation,
-        get_method=lambda u: u.import_aggregations,
+    "aggregate_collections": ImportationMethod(
+        dto=AggregateCollectionDto,
+        domain=AggregateCollection,
+        get_method=lambda u: u.import_collections,
+    ),
+    "aggregates": ImportationMethod(
+        dto=AggregateDto,
+        domain=Aggregate,
+        get_method=lambda u: u.import_aggregates,
     ),
     "/api/translation": ImportationMethod(
         dto=TranslationDto,
         domain=Translation,
         get_method=lambda u: u.import_translations,
-    ),
-    "/api/datasheet_definition_element": ImportationMethod(
-        dto=DatasheetDefinitionElementDto,
-        domain=DatasheetDefinitionElement,
-        get_method=lambda u: u.import_datasheet_definition_elements,
     ),
     "/api/project_definition": ImportationMethod(
         dto=ProjectDefinitionDto,

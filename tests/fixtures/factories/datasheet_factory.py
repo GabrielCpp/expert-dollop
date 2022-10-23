@@ -15,6 +15,7 @@ from expert_dollup.core.units.node_value_validation import (
 )
 from ..fake_db_helpers import FakeDb
 from .helpers import make_uuid
+from .domains import *
 
 DEFAULT_VALUE_MAPPING = {
     int: INT_JSON_SCHEMA,
@@ -38,10 +39,10 @@ class FormulaLike(Protocol):
 @dataclass
 class CustomDatasheetInstancePackage:
     project_definition: ProjectDefinition
-    datasheet_definition_elements: List[DatasheetDefinitionElement]
     datasheet: Datasheet
     datasheet_elements: List[DatasheetElement]
     aggregations: List[Aggregation]
+    aggregates: List[Aggregate]
     translations: List[Translation]
 
 
@@ -100,16 +101,16 @@ class ElementSeed:
 
 
 @dataclass
-class LabelSeed:
+class AggregateSeed:
     name: str
-    attributes: Dict[str, LabelAttributeUnion]
+    attributes: Dict[str, AggregateAttribute]
 
     @property
     def id(self) -> UUID:
         return make_uuid(self.name)
 
 
-class CollectionSeed:
+class AggregateCollectionSeed:
     def __init__(
         self,
         label_count: int,
@@ -121,10 +122,10 @@ class CollectionSeed:
         self.translation_seed = {}
         self._name: Optional[str] = None
         self._translations = translations
-        self.label_seeds: List[LabelSeed] = []
+        self.label_seeds: List[AggregateSeed] = []
 
     @property
-    def attributes_schema(self) -> Dict[str, LabelAttributeSchemaUnion]:
+    def attributes_schema(self) -> Dict[str, AggregateAttributeSchema]:
         return {
             name: StaticProperty(DEFAULT_VALUE_MAPPING[property_type])
             if property_type in DEFAULT_VALUE_MAPPING
@@ -165,7 +166,7 @@ class CollectionSeed:
     def backfill(self, name: str, datasheet_seed: "DatasheetSeed"):
         self._name = name
         self.label_seeds = [
-            LabelSeed(
+            AggregateSeed(
                 name=f"{name}_label_{index}",
                 attributes={
                     name: DEFAULT_VALUE_GENERATOR[property_type](index)
@@ -225,7 +226,7 @@ class CollectionSeed:
 class DatasheetSeed:
     properties: Dict[str, PropertyTypeUnion]
     element_seeds: Dict[str, ElementSeed]
-    collection_seeds: Dict[str, CollectionSeed]
+    collection_seeds: Dict[str, AggregateCollectionSeed]
     locales: List[str] = field(default_factory=lambda: ["fr-CA", "en-US"])
     name: str = "test"
     formulas: Optional[List[FormulaLike]] = None
@@ -267,27 +268,6 @@ class DatasheetInstanceFactory:
             creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
         )
 
-        datasheet_definition_elements = [
-            DatasheetDefinitionElement(
-                id=element_seed.id,
-                unit_id=element_seed.unit_id,
-                is_collection=element_seed.is_collection,
-                project_definition_id=project_definition.id,
-                ordinal=index,
-                name=element_seed.name,
-                default_properties={
-                    name: DatasheetDefinitionElementProperty(
-                        is_readonly=False,
-                        value=element_seed.seed_value(property_type, index),
-                    )
-                    for name, property_type in datasheet_seed.properties.items()
-                },
-                tags=element_seed.tags,
-                creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
-            )
-            for index, element_seed in enumerate(datasheet_seed.element_seeds.values())
-        ]
-
         datasheet_elements = [
             DatasheetElement(
                 datasheet_id=datasheet.id,
@@ -325,6 +305,35 @@ class DatasheetInstanceFactory:
             for collection_seed in datasheet_seed.collection_seeds.values()
         ]
 
+        aggregations.append(
+            AggregationFactory(
+                is_abstract=True,
+                aggregates=[
+                    AggregateFactory(
+                        id=element_seed.id,
+                        unit_id=element_seed.unit_id,
+                        is_collection=element_seed.is_collection,
+                        project_definition_id=project_definition.id,
+                        ordinal=index,
+                        name=element_seed.name,
+                        attributes={
+                            name: AggregateAttribute(
+                                name=name,
+                                is_readonly=False,
+                                value=element_seed.seed_value(property_type, index),
+                            )
+                            for name, property_type in datasheet_seed.properties.items()
+                        },
+                        tags=element_seed.tags,
+                        creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000),
+                    )
+                    for index, element_seed in enumerate(
+                        datasheet_seed.element_seeds.values()
+                    )
+                ],
+            )
+        )
+
         translations: List[Translation] = []
 
         for element_seed in datasheet_seed.element_seeds.values():
@@ -333,12 +342,18 @@ class DatasheetInstanceFactory:
         for collection_seed in datasheet_seed.collection_seeds.values():
             translations.extend(collection_seed.translations)
 
+        aggregates = [
+            aggregate
+            for aggregate in aggregation.aggregates
+            for aggregation in aggregations
+        ]
+
         return CustomDatasheetInstancePackage(
             project_definition=project_definition,
             datasheet=datasheet,
-            datasheet_definition_elements=datasheet_definition_elements,
             datasheet_elements=datasheet_elements,
             aggregations=aggregations,
+            aggregates=aggregates,
             translations=translations,
         )
 
@@ -350,7 +365,6 @@ class DatasheetInstanceFactory:
     def __call__(self, db: FakeDb) -> None:
         db.add(self.package.project_definition)
         db.add(self.package.datasheet)
-        db.add_all(self.package.datasheet_definition_elements)
         db.add_all(self.package.datasheet_elements)
         db.add_all(self.package.aggregations)
         db.add_all(self.package.translations)

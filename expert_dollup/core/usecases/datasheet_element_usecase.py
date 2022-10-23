@@ -1,11 +1,9 @@
 from uuid import UUID, uuid4
-from typing import Dict
-from expert_dollup.core.domains.project_definition import ProjectDefinition
-from expert_dollup.core.exceptions import ValidationError, InvalidUsageError
-from expert_dollup.core.domains import *
+from typing import Dict, List
 from expert_dollup.shared.database_services import DatabaseContext
-from expert_dollup.infra.validators.schema_validator import SchemaValidator
 from expert_dollup.shared.starlette_injection import Clock
+from expert_dollup.core.exceptions import ValidationError
+from expert_dollup.core.domains import *
 
 
 class DatasheetElementUseCase:

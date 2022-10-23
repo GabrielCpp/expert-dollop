@@ -2,7 +2,7 @@ from uuid import UUID
 from typing import Dict, Optional, List
 from datetime import datetime
 from expert_dollup.shared.starlette_injection import CamelModel
-from ..dynamic_primitive import PrimitiveUnionDto
+from ..dynamic_primitive import PrimitiveWithReferenceUnionDto
 
 
 class AttributeDto(CamelModel):
@@ -34,7 +34,7 @@ class DatasheetElementImportDto(CamelModel):
     datasheet_id: UUID
     element_def_id: UUID
     child_element_reference: UUID
-    attributes: Dict[str, PrimitiveUnionDto]
+    attributes: Dict[str, PrimitiveWithReferenceUnionDto]
     original_datasheet_id: UUID
     original_owner_organization_id: UUID
     creation_date_utc: datetime

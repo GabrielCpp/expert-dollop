@@ -1,6 +1,11 @@
 from typing import List
 from uuid import UUID, uuid4
-from expert_dollup.shared.database_services import Page, Paginator, Repository
+from expert_dollup.shared.database_services import (
+    Page,
+    Paginator,
+    Repository,
+    DatabaseContext,
+)
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.core.utils import authorization_factory
 from expert_dollup.core.domains import *
@@ -9,23 +14,33 @@ from expert_dollup.core.domains import *
 class DatasheetUseCase:
     def __init__(
         self,
-        ressource_service: Repository[Ressource],
-        datasheet_service: Repository[Datasheet],
-        datasheet_element_service: Repository[DatasheetElement],
         datasheet_element_paginator: Paginator[DatasheetElement],
+        db_context: DatabaseContext,
         clock: Clock,
     ):
-        self.ressource_service = ressource_service
-        self.datasheet_service = datasheet_service
-        self.datasheet_element_service = datasheet_element_service
+
         self.datasheet_element_paginator = datasheet_element_paginator
+        self.db_context = db_context
         self.clock = clock
 
     async def find_by_id(self, datasheet_id: UUID) -> Datasheet:
-        return await self.datasheet_service.find_by_id(datasheet_id)
+        return await self.db_context.find_by_id(Datasheet, datasheet_id)
+
+    async def add(self, datasheet: Datasheet, user: User) -> Datasheet:
+        ressource = authorization_factory.allow_access_to(datasheet, user)
+        await self.db_context.insert(Ressource, ressource)
+        await self.db_context.insert(Datasheet, datasheet)
+
+    async def delete_by_id(self, datasheet_id: UUID) -> None:
+        await self.db_context.delete_by(
+            DatasheetElement, DatasheetElementFilter(datasheet_id=datasheet_id)
+        )
+        await self.db_context.delete_by_id(Datasheet, datasheet_id)
 
     async def clone(self, target: CloningDatasheet, user: User):
-        datasheet = await self.datasheet_service.find_by_id(target.target_datasheet_id)
+        datasheet = await self.db_context.find_by_id(
+            Datasheet, target.target_datasheet_id
+        )
         cloned_datasheet = Datasheet(
             id=uuid4(),
             name=datasheet.name,
@@ -72,49 +87,30 @@ class DatasheetUseCase:
         )
 
         await self.add(cloned_datasheet, user)
-        await self.datasheet_element_service.insert_many(cloned_elements)
-
+        await self.db_context.insert_many(DatasheetElement, cloned_elements)
         return cloned_datasheet
 
-    async def add(self, datasheet: Datasheet, user: User) -> Datasheet:
-        await self.ressource_service.insert(
-            authorization_factory.allow_access_to(datasheet, user)
-        )
-        await self.datasheet_service.insert(datasheet)
-
     async def add_filled_datasheet(self, datasheet: Datasheet, user: User) -> Datasheet:
-        await self.ressource_service.insert(
-            authorization_factory.allow_access_to(datasheet, user)
+        collection = await self.db_context.find_by_id(
+            AggregateCollection, datasheet.abstract_collection_id
         )
-        await self.datasheet_service.insert(datasheet)
-        definition_elements = await self.datasheet_definition_element_service.find_by(
-            DatasheetDefinitionElementFilter(
-                project_definition_id=datasheet.project_definition_id
-            )
-        )
-
         elements = [
             DatasheetElement(
+                id=uuid4(),
                 datasheet_id=datasheet.id,
-                element_def_id=definition_element.id,
-                child_element_reference=uuid4(),
+                aggregate_id=aggregate.id,
                 ordinal=0,
-                properties={
-                    name: default_property.value
-                    for name, default_property in definition_element.default_properties.items()
-                },
+                attributes=[
+                    Attribute(name=attribute.name, value=attribute.value)
+                    for attribute in aggregate.attributes.values()
+                ],
                 original_datasheet_id=datasheet.id,
                 original_owner_organization_id=user.organization_id,
                 creation_date_utc=self.clock.utcnow(),
             )
-            for definition_element in definition_elements
+            for aggregate in collection.aggregates
         ]
 
-        await self.datasheet_element_service.insert_many(elements)
+        await self.add(datasheet, user)
+        await self.db_context.insert_many(DatasheetElement, elements)
         return datasheet
-
-    async def delete_by_id(self, datasheet_id: UUID) -> None:
-        await self.datasheet_element_service.delete_by(
-            DatasheetElementFilter(datasheet_id=datasheet_id)
-        )
-        await self.datasheet_service.delete_by_id(datasheet_id)

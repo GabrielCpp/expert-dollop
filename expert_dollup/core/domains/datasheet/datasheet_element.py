@@ -48,7 +48,7 @@ class NewDatasheetElement:
 
 
 @dataclass
-class DatasheetElementUpdateDto(NewDatasheetElement):
+class DatasheetElementUpdate(NewDatasheetElement):
     id: UUID
 
 

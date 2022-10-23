@@ -1,91 +1,72 @@
 from expert_dollup.core.domains import *
 from ..fake_db_helpers import FakeDb
-from ..factories_domain import *
+from .domains import *
 
 
 class SimpleDatasheetDef:
     def __call__(self, db: FakeDb) -> None:
-        project_definition = ProjectDefinitionFactory(
-            properties={
-                "price": ElementPropertySchema(
-                    value_validator={
-                        "type": "number",
-                        "minimum": -100000,
-                        "maximum": 100000,
-                    }
-                ),
-                "conversion_factor": ElementPropertySchema(
-                    value_validator={
-                        "type": "number",
-                        "minimum": -100000,
-                        "maximum": 100000,
-                    }
-                ),
-                "lost": ElementPropertySchema(
-                    value_validator={
-                        "type": "number",
-                        "minimum": -100000,
-                        "maximum": 100000,
-                    }
-                ),
-            }
-        )
+        project_definition = ProjectDefinitionFactory()
         db.add(project_definition)
         db.add(
-            DatasheetDefinitionElementFactory(
+            AggregateCollectionFactory(
+                name="datasheet",
+                is_abstract=True,
+                attributes_schema={
+                    "price": AggregateAttributeSchema(
+                        name="price", details=DecimalFieldConfig()
+                    ),
+                    "conversion_factor": AggregateAttributeSchema(
+                        name="conversion_factor", details=DecimalFieldConfig()
+                    ),
+                    "lost": AggregateAttributeSchema(
+                        name="lost", details=DecimalFieldConfig()
+                    ),
+                },
+            )
+        )
+        db.add(
+            AggregateFactory(
                 project_definition_id=project_definition.id,
                 unit_id="cube_meter",
                 is_collection=False,
                 ordinal=0,
                 name="concrete_mpa",
-                default_properties={
-                    "price": DatasheetDefinitionElementProperty(
-                        is_readonly=False, value=148.0
-                    ),
-                    "conversion_factor": DatasheetDefinitionElementProperty(
+                attributes={
+                    "price": AggregateAttribute(is_readonly=False, value=148.0),
+                    "conversion_factor": AggregateAttribute(
                         is_readonly=False, value=35.328
                     ),
-                    "lost": DatasheetDefinitionElementProperty(
-                        is_readonly=False, value=0.05
-                    ),
+                    "lost": AggregateAttribute(is_readonly=False, value=0.05),
                 },
                 tags=[],
             ),
-            DatasheetDefinitionElementFactory(
+            AggregateFactory(
                 project_definition_id=project_definition.id,
                 unit_id="cube_meter",
                 is_collection=False,
                 ordinal=1,
                 name="concrete_mpa_air",
-                default_properties={
-                    "price": DatasheetDefinitionElementProperty(
-                        is_readonly=False, value=148.0
-                    ),
-                    "conversion_factor": DatasheetDefinitionElementProperty(
+                attributes={
+                    "price": AggregateAttribute(is_readonly=False, value=148.0),
+                    "conversion_factor": AggregateAttribute(
                         is_readonly=False, value=35.328
                     ),
-                    "lost": DatasheetDefinitionElementProperty(
-                        is_readonly=False, value=0.05
-                    ),
+                    "lost": AggregateAttribute(is_readonly=False, value=0.05),
                 },
                 tags=[],
             ),
-            DatasheetDefinitionElement(
+            AggregateFactory(
                 project_definition_id=project_definition.id,
                 unit_id="square_foot",
                 is_collection=True,
                 ordinal=2,
                 name="tile_wall_ceramic",
                 default_properties={
-                    "price": DatasheetDefinitionElementProperty(
-                        is_readonly=False, value=4.0
-                    ),
-                    "conversion_factor": DatasheetDefinitionElementProperty(
+                    "price": AggregateAttribute(is_readonly=False, value=4.0),
+                    "conversion_factor": AggregateAttribute(
                         is_readonly=False, value=1.0
                     ),
-                    "lost": DatasheetDefinitionElementProperty(
-                        is_readonly=False, value=0.05
-                    ),
+                    "lost": AggregateAttribute(is_readonly=False, value=0.05),
                 },
                 tags=[],
             ),

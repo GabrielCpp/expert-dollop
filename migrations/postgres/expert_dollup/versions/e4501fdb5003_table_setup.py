@@ -167,7 +167,7 @@ def create_datasheet_tables():
     )
 
     op.create_table(
-        "datasheet_definition_label_collection",
+        "aggregation_collection",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column("project_definition_id", postgresql.UUID(), nullable=False),
         Column("name", String, nullable=False),

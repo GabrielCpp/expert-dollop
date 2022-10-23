@@ -7,31 +7,18 @@ from expert_dollup.infra.expert_dollup_db import *
 
 @pytest.mark.asyncio
 async def test_datasheet_definition(ac):
-    async def create_datasheet_definition():
-        new_definition = NewDefinitionDtoFactory()
-        definition_dto = await ac.post_json(
-            "/api/definitions", new_definition, unwrap_with=ProjectDefinitionDto
-        )
-        assert definition_dto.name == new_definition.name
-        return definition_dto
-
-    async def create_datasheet_definition_element(
-        definition_dto: ProjectDefinitionDto,
+    async def create_aggregate_dto(
+        definition_dto: ProjectDefinitionDto, collection_dto: AggregateCollectionDto
     ):
-        definition_element_dto = await ac.post_json(
-            f"/api/definitions/{definition_dto.id}/datasheet_elements",
-            DatasheetDefinitionElementDtoFactory(
-                project_definition_id=definition_dto.id
-            ),
-            unwrap_with=DatasheetDefinitionElementDto,
+        aggregate_dto = await ac.post_json(
+            f"/api/definitions/{definition_dto.id}/collections/{collection_dto.id}/aggregates",
+            NewAggregateDtoFactory(),
+            unwrap_with=AggregateDto,
         )
 
-        return definition_element_dto
+        return aggregate_dto
 
-    async def get_datasheet_definition(
-        definition_dto: ProjectDefinitionDto,
-        definition_element_dto: DatasheetDefinitionElementDto,
-    ):
+    async def get_datasheet_definition(definition_dto: ProjectDefinitionDto):
         datasheet_definition_returned = await ac.get_json(
             f"/api/definitions/{definition_dto.id}",
             unwrap_with=ProjectDefinitionDto,
@@ -40,31 +27,30 @@ async def test_datasheet_definition(ac):
 
     async def get_datasheet_definition_element(
         definition_dto: ProjectDefinitionDto,
-        definition_element_dto: DatasheetDefinitionElementDto,
+        collection_dto: AggregateCollection,
+        aggregate_dto: AggregateDto,
     ):
         element_definition = await ac.get_json(
-            f"/api/definitions/{definition_dto.id}/datasheet_elements/{definition_element_dto.id}",
-            unwrap_with=DatasheetDefinitionElementDto,
+            f"/api/definitions/{definition_dto.id}/collections/{collection_dto.id}/aggregates/{aggregate_dto.id}",
+            unwrap_with=AggregateDto,
         )
         assert definition_element_dto == element_definition
 
-    async def delete_datasheet_definition_element(
+    async def delete_aggregate_element(
         definition_dto: ProjectDefinitionDto,
-        definition_element_dto: DatasheetDefinitionElementDto,
+        collection_dto: AggregateCollection,
+        aggregate_dto: AggregateDto,
     ):
         await ac.delete_json(
-            f"/api/definitions/{definition_dto.id}/datasheet_elements/{definition_element_dto.id}"
+            f"/api/definitions/{definition_dto.id}/collections/{collection_dto.id}/aggregates/{aggregate_dto.id}"
         )
 
         await ac.get_json(
-            f"/api/definitions/{definition_dto.id}/datasheet_elements/{definition_element_dto.id}",
+            f"/api/definitions/{definition_dto.id}/collections/{collection_dto.id}/aggregates/{aggregate_dto.id}",
             expected_status_code=404,
         )
 
-    async def check_datasheet_definition_is_gone(
-        definition_dto: ProjectDefinitionDto,
-        definition_element_dto: DatasheetDefinitionElementDto,
-    ):
+    async def check_aggregate_is_gone(definition_dto: ProjectDefinitionDto):
         await ac.delete_json(f"/api/definitions/{definition_dto.id}")
         await ac.get_json(
             f"/api/definitions/{definition_dto.id}", expected_status_code=404
@@ -72,12 +58,15 @@ async def test_datasheet_definition(ac):
 
     await ac.login_super_user()
 
-    definition_dto = await create_datasheet_definition()
-    definition_element_dto = await create_datasheet_definition_element(definition_dto)
-    await get_datasheet_definition(definition_dto, definition_element_dto)
-    await get_datasheet_definition_element(definition_dto, definition_element_dto)
-    await delete_datasheet_definition_element(definition_dto, definition_element_dto)
-    await check_datasheet_definition_is_gone(definition_dto, definition_element_dto)
+    definition_dto = await create_definition(ac, NewDefinitionDtoFactory())
+    collection_dto = await create_collection(
+        ac, definition_dto, NewAggregateCollectionDtoFactory(is_abstract=True)
+    )
+    aggregate_dto = await create_aggregate_dto(definition_dto, collection_dto)
+    await get_datasheet_definition(definition_dto)
+    await get_datasheet_definition_element(definition_dto, aggregate_dto)
+    await delete_aggregate_element(definition_dto, aggregate_dto)
+    await check_aggregate_is_gone(definition_dto)
 
 
 @pytest.mark.asyncio

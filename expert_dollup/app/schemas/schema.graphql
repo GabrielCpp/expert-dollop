@@ -5,18 +5,17 @@ type Unit {
 }
 
 type AggregateAttribute {
-    name: str
-    isReadonly: bool
-    value: PrimitiveWithReferenceUnion
+  name: String!
+  isReadonly: Boolean!
+  value: PrimitiveWithReferenceUnion!
 }
 
 type Aggregate {
-    id: String!
-    ordinal: Int!
-    name: String!
-    is_extendable: Boolean!
-    attributes: [AggregateAttribute!]!
-
+  id: String!
+  ordinal: Int!
+  name: String!
+  is_extendable: Boolean!
+  attributes: [AggregateAttribute!]!
 }
 
 enum NodeType {
@@ -29,7 +28,7 @@ enum NodeType {
 }
 
 type NodeReferenceConfig {
-   node_type: NodeType!
+  node_type: NodeType!
 }
 
 union AttributeDetailsUnion =
@@ -41,47 +40,40 @@ union AttributeDetailsUnion =
   | AggregateReferenceConfig
   | NodeReferenceConfig
 
-
 type AggregateAttributeSchema {
-    name: String!
-    details: AttributeDetailsUnion!
+  name: String!
+  details: AttributeDetailsUnion!
 }
 
-interface AggregateCollection {
-    id: String!
-    projectDefinitionId: String!
-    name: String!
-    isAbstract: Boolean!
-    attributesSchema: [AggregateAttributeSchema!]!
+type AggregateCollection {
+  id: String!
+  projectDefinitionId: String!
+  name: String!
+  isAbstract: Boolean!
+  attributesSchema: [AggregateAttributeSchema!]!
 }
 
-type CollectionDetails implements AggregateCollection {
-    id: String!
-    projectDefinitionId: String!
-    name: String!
-    isAbstract: Boolean!
-    attributesSchema: [AggregateAttributeSchema!]!
+type InstanceAttributeSchema {
+  name: String!
+  isReadonly: Boolean!
 }
 
-type Aggregation implements AggregateCollection {
-    id: String!
-    projectDefinitionId: String!
-    name: String!
-    isAbstract: Boolean!
-    attributesSchema: [AggregateAttributeSchema!]!
-    aggregates: [Aggregate!]!
+type InstanceSchema {
+  id: ID!
+  isExtendable: Boolean!
+  attributesSchema: [InstanceAttributeSchema!]!
 }
 
 type Attribute {
-    name: str
-    value: PrimitiveWithReferenceUnion
+  name: String!
+  value: PrimitiveWithReferenceUnion
 }
 
 type DatasheetElement {
   id: ID!
   datasheetId: String!
   aggregateId: String!
-  aggregate: Aggregate!
+  schema: InstanceSchema!
   attributes: [Attribute!]!
   originalDatasheetId: String!
   originalOwnerOrganizationId: String!
@@ -145,6 +137,10 @@ type StaticChoiceOption {
 type StaticChoiceFieldConfig {
   options: [StaticChoiceOption!]!
   selected: String!
+}
+
+type AggregateReferenceConfig {
+  fromCollection: String!
 }
 
 type CollapsibleContainerFieldConfig {
@@ -392,15 +388,9 @@ type ProjectDefinitionNodeTree {
 type ProjectDefinition {
   id: ID!
   name: String!
-  rootSections(): ProjectDefinitionNodeTree!
-  rootSectionContainers(
-    rootSectionId: ID!
-  ): ProjectDefinitionNodeTree!
+  rootSections: ProjectDefinitionNodeTree!
+  rootSectionContainers(rootSectionId: ID!): ProjectDefinitionNodeTree!
   formContent(formId: ID!): ProjectDefinitionNodeTree!
-  elementsDefinition(
-    first: Int!
-    after: String
-  ): DatasheetDefinitionElementConnection
 }
 
 type ProjectDefinitionEdge {
@@ -639,8 +629,13 @@ type Query {
   findFormula(projectDefinitionId: ID!, formulaId: ID!): Formula
 
   # Aggregates
-  findDefinitionAggregateCollections(projectDefinitionId: ID!): [AggregateCollection!]!
-  findAggregation(projectDefinitionId: ID!, collectionId: ID!): Aggregation!
+  findDefinitionAggregateCollections(
+    projectDefinitionId: ID!
+  ): [AggregateCollection!]!
+  findAggregation(
+    projectDefinitionId: ID!
+    collectionId: ID!
+  ): AggregateCollection!
 
   # Datasheet
   findDatasheet(id: ID!): Datasheet!

@@ -228,21 +228,6 @@ class ReportFactory(factory.Factory):
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
-class DatasheetDefinitionElementFactory(factory.Factory):
-    class Meta:
-        model = DatasheetDefinitionElement
-
-    id = factory.Faker("pyuuid4")
-    unit_id: str
-    is_collection: bool
-    project_definition_id = factory.Faker("pyuuid4")
-    ordinal: int
-    name: str
-    default_properties = factory.Dict({})
-    tags = factory.List([factory.Faker("pyuuid4")])
-    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
-
-
 class AggregateFactory(factory.Factory):
     class Meta:
         model = Aggregate
@@ -263,18 +248,6 @@ class AggregateCollectionFactory(factory.Factory):
     name = factory.Sequence(lambda n: f"label_collection_{n}")
     is_abstract = False
     attributes_schema = factory.Dict({})
-
-
-class AggregationFactory(factory.Factory):
-    class Meta:
-        model = Aggregation
-
-    id = factory.Faker("pyuuid4")
-    project_definition_id = factory.Faker("pyuuid4")
-    name = factory.Sequence(lambda n: f"label_collection_{n}")
-    is_abstract = False
-    attributes_schema = factory.Dict({})
-    aggregates = factory.List([])
 
 
 class TranslationFactory(factory.Factory):

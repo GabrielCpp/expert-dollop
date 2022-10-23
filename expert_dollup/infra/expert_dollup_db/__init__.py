@@ -24,6 +24,7 @@ from .node_config_dao import (
     DecimalFieldConfigDao,
     IntFieldConfigDao,
     AggregateReferenceConfigDao,
+    NodeReferenceConfigDao,
 )
 
 ROOT_LEVEL = 0
@@ -267,15 +268,17 @@ class AggregateAttributeDao(BaseModel):
 
 
 class AggregateDao(BaseModel):
+    class Meta:
+        pk = "id"
+
+    class Config:
+        title = "aggregate"
+
     id: UUID
     ordinal: int
     name: str
     is_extendable: bool
     attributes: List[AggregateAttributeDao]
-
-
-class NodeReferenceConfigDao(BaseModel):
-    node_type: str
 
 
 class AggregateAttributeSchemaDao(BaseModel):
@@ -295,14 +298,13 @@ class AggregateCollectionDao(BaseModel):
         pk = "id"
 
     class Config:
-        title = "datasheet_definition_aggregate_collection"
+        title = "aggregate_collection"
 
     id: UUID
     project_definition_id: UUID
     name: str = Field(max_length=64)
     is_abstract: bool = False
     attributes_schema: List[AggregateAttributeSchemaDao]
-    aggregates: List[AggregateDao]
 
 
 class DatasheetDao(BaseModel):

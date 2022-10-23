@@ -9,22 +9,9 @@ from .project_definition_node import (
     StringFieldConfig,
     BoolFieldConfig,
     AggregateReferenceConfig,
+    NodeReferenceConfig,
 )
 from .aggregate import Aggregate
-
-
-class NodeType(Enum):
-    FORMULA = "FORMULA"
-    FIELD = "FORMULA"
-    SECTION = "SECTION"
-    FORM = "FORM"
-    SUB_SECTION = "SUB_SECTION"
-    ROOT_SECTION = "ROOT_SECTION"
-
-
-@dataclass
-class NodeReferenceConfig:
-    node_type: NodeType
 
 
 @dataclass
@@ -50,7 +37,8 @@ class AggregateCollection:
 
 
 @dataclass
-class Aggregation(AggregateCollection):
+class Aggregation:
+    collection: AggregateCollection
     aggregates: List[Aggregate] = field(default_factory=list)
 
 

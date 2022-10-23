@@ -50,6 +50,10 @@ class CollapsibleContainerFieldConfigDao(BaseModel):
     is_collapsible: bool
 
 
+class NodeReferenceConfigDao(BaseModel):
+    node_type: str
+
+
 FieldDetailsUnionDao: TypeAlias = Union[
     StaticNumberFieldConfigDao,
     DecimalFieldConfigDao,
@@ -58,6 +62,8 @@ FieldDetailsUnionDao: TypeAlias = Union[
     StaticChoiceFieldConfigDao,
     CollapsibleContainerFieldConfigDao,
     BoolFieldConfigDao,
+    NodeReferenceConfigDao,
+    AggregateReferenceConfigDao,
     None,
 ]
 

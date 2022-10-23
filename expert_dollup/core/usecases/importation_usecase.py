@@ -4,7 +4,6 @@ from expert_dollup.shared.database_services import DatabaseContext
 from expert_dollup.core.utils.ressource_permissions import authorization_factory
 from expert_dollup.core.domains import *
 from .datasheet_usecase import DatasheetUseCase
-from .datasheet_definition_element_usecase import DatasheetDefinitionElementUseCase
 from .project_definition_usecase import ProjectDefinitonUseCase
 from .project_definition_node_usecase import ProjectDefinitionNodeUseCase
 from .formula_usecase import FormulaUseCase
@@ -18,7 +17,6 @@ class ImportationUseCase:
         mapper: Mapper,
         db_context: DatabaseContext,
         datasheet_use_case: DatasheetUseCase,
-        datasheet_definition_element_use_case: DatasheetDefinitionElementUseCase,
         project_definiton_use_case: ProjectDefinitonUseCase,
         project_definition_node_use_case: ProjectDefinitionNodeUseCase,
         formula_use_case: FormulaUseCase,
@@ -28,9 +26,6 @@ class ImportationUseCase:
         self.mapper = mapper
         self.db_context = db_context
         self.datasheet_use_case = datasheet_use_case
-        self.datasheet_definition_element_use_case = (
-            datasheet_definition_element_use_case
-        )
         self.project_definiton_use_case = project_definiton_use_case
         self.project_definition_node_use_case = project_definition_node_use_case
         self.formula_use_case = formula_use_case
@@ -57,11 +52,10 @@ class ImportationUseCase:
             assert len(elements) == 0, f"element id exists {element} -> {elements}"
             await self.db_context.insert(DatasheetElement, datasheet_element)
 
-    async def import_aggregations(self, user: User, aggregations: List[Aggregation]):
-        await self.db_context.insert_many(Aggregation, aggregations)
-
-    async def import_labels(self, user: User, labels: List[Label]):
-        await self.db_context.insert_many(Label, labels)
+    async def import_collections(
+        self, user: User, collections: List[AggregateCollection]
+    ):
+        await self.db_context.insert_many(AggregateCollection, collections)
 
     async def import_translations(self, user: User, translations: List[Translation]):
         seen = {}
@@ -86,16 +80,6 @@ class ImportationUseCase:
         ]
 
         await self.db_context.insert_many(Translation, dedup_translations)
-
-    async def import_datasheet_definition_elements(
-        self,
-        user: User,
-        datasheet_definition_elements: List[DatasheetDefinitionElement],
-    ):
-        for datasheet_definition_element in datasheet_definition_elements:
-            await self.datasheet_definition_element_use_case.add(
-                datasheet_definition_element
-            )
 
     async def import_project_definitions(
         self, user: User, project_definitions: List[ProjectDefinition]

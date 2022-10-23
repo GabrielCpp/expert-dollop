@@ -69,6 +69,7 @@ class ReportStructure:
 class ReportDefinition:
     id: UUID
     project_definition_id: UUID
+    from_aggregate_collection_id: UUID
     name: str
     structure: ReportStructure
     distributable: bool

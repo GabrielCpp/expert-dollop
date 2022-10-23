@@ -5,11 +5,7 @@ from collections import defaultdict
 from itertools import islice
 from dataclasses import dataclass
 from hashlib import sha256
-from expert_dollup.shared.database_services import (
-    JsonSerializer,
-    Repository,
-    Plucker,
-)
+from expert_dollup.shared.database_services import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.exceptions import ReportGenerationError, RessourceNotFound
 from expert_dollup.core.object_storage import ObjectStorage
@@ -29,15 +25,11 @@ class ReportCache:
 class ReportRowCache:
     def __init__(
         self,
-        project_definition_service: Repository[ProjectDefinition],
-        datasheet_definition_element_service: Repository[DatasheetDefinitionElement],
-        aggregation_service: Repository[Aggregation],
+        db_context: DatabaseContext,
         formula_plucker: Plucker[Formula],
         report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
     ):
-        self.project_definition_service = project_definition_service
-        self.datasheet_definition_element_service = datasheet_definition_element_service
-        self.aggregation_service = aggregation_service
+        self.db_context = db_context
         self.formula_plucker = formula_plucker
         self.report_def_row_cache = report_def_row_cache
 
@@ -73,13 +65,23 @@ class ReportRowCache:
     async def _build_report_cache(
         self, report_definition: ReportDefinition
     ) -> ReportCache:
-        project_definition = await self.project_definition_service.find_by_id(
-            report_definition.project_definition_id
+        project_definition = await self.db_context.find_by_id(
+            ProjectDefinition, report_definition.project_definition_id
         )
 
-        aggregations = await self.aggregation_service.find_by(
-            AggregateCollectionFilter(project_definition_id=project_definition.id)
+        collections = await self.db_context.find_by(
+            AggregateCollection,
+            AggregateCollectionFilter(project_definition_id=project_definition.id),
         )
+
+        aggregations = [
+            Aggregation(collection=collection) for collection in collections
+        ]
+
+        for aggregation in aggregations:
+            aggregation.aggregates = await self.db_context.find_by(
+                Aggregate, AggregateFilter(collection_id=aggregation.collection.id)
+            )
 
         aggregation_by_id: Dict[UUID, List[Aggregate]] = {}
         aggregates_by_id: Dict[UUID, Aggregate] = {}
@@ -119,14 +121,11 @@ class ReportRowCache:
         self, cache: ReportCache
     ) -> ReportRowsCache:
         selection_alias = cache.report_definition.structure.datasheet_selection_alias
-        elements = await self.datasheet_definition_element_service.find_by(
-            DatasheetDefinitionElementFilter(
-                project_definition_id=cache.project_definition.id
-            )
-        )
-
+        aggregation_id = cache.report_definition.from_aggregate_collection_id
+        aggregation = cache.aggregation_by_id[aggregation_id]
         report_buckets: ReportRowsCache = [
-            {selection_alias: element.report_dict} for element in elements
+            {selection_alias: aggregate.report_dict}
+            for aggregate in aggregation.aggregates
         ]
 
         return report_buckets

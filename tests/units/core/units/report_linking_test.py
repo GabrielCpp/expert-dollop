@@ -25,7 +25,7 @@ class ReportSeed:
     datasheet_fixture: CustomDatasheetInstancePackage
     project_fixture: CustomProjectInstancePackage
     report_definition: ReportDefinition
-    element_def: DatasheetDefinitionElement
+    aggregate: Aggregate
     datasheet_element: DatasheetElement
     formula: Formula
 
@@ -42,15 +42,15 @@ def report_seed() -> ReportSeed:
         project_definition_id=project_fixture.project_definition.id
     )
 
-    element_def = next(
+    aggregate = next(
         datasheet_definition_element
-        for datasheet_definition_element in datasheet_fixture.datasheet_definition_elements
+        for datasheet_definition_element in datasheet_fixture.aggregates
         if datasheet_definition_element.name == "concrete"
     )
     datasheet_element = next(
         datasheet_element
         for datasheet_element in datasheet_fixture.datasheet_elements
-        if datasheet_element.element_def_id == element_def.id
+        if datasheet_element.aggregate_id == aggregate.id
     )
 
     formula = next(
@@ -62,7 +62,7 @@ def report_seed() -> ReportSeed:
         datasheet_fixture=datasheet_fixture,
         project_fixture=project_fixture,
         report_definition=report_definition,
-        element_def=element_def,
+        aggregate=aggregate,
         datasheet_element=datasheet_element,
         formula=formula,
     )
@@ -72,7 +72,7 @@ def report_seed() -> ReportSeed:
 async def test_given_row_cache_should_produce_correct_report(
     report_seed: ReportSeed, logger_factory
 ):
-    element_def = report_seed.element_def
+    aggregate = report_seed.aggregate
     datasheet_element = report_seed.datasheet_element
     formula = report_seed.formula
     project_fixture = report_seed.project_fixture
@@ -80,7 +80,7 @@ async def test_given_row_cache_should_produce_correct_report(
     report_definition = report_seed.report_definition
     report_rows_cache = [
         {
-            "abstractproduct": element_def.report_dict,
+            "abstractproduct": aggregate.report_dict,
             "datasheet_element": datasheet_element.report_dict,
             "formula": formula.report_dict,
             "stage": {"name": "show_concrete"},
@@ -88,7 +88,7 @@ async def test_given_row_cache_should_produce_correct_report(
                 "id": UUID("6524c49c-93e7-0606-4d62-1ac982d40027"),
                 "name": "floor_label_0",
                 "ordinal": 0,
-                "datasheet_element": element_def.id,
+                "datasheet_element": aggregate.id,
                 "formula": formula.id,
             },
         }
@@ -113,7 +113,7 @@ async def test_given_row_cache_should_produce_correct_report(
                     ReportRow(
                         node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
                         formula_id=UUID("f1f1e0ff-2344-48bc-e757-8c9dcd3c671e"),
-                        element_def_id=UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
+                        aggregate_id=UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
                         child_reference_id=datasheet_element.child_element_reference,
                         columns=[
                             ComputedValue(
@@ -148,7 +148,7 @@ async def test_given_row_cache_should_produce_correct_report(
                                 "name": "concrete",
                                 "price": Decimal("1.01"),
                                 "factor": Decimal("1.01"),
-                                "element_def_id": UUID(
+                                "aggregate_id": UUID(
                                     "00ecf6d0-6f00-c4bb-2902-4057469a3f3d"
                                 ),
                                 "child_element_reference": datasheet_element.child_element_reference,

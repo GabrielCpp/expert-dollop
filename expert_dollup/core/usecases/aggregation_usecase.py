@@ -1,11 +1,14 @@
 from uuid import UUID
+from typing import List
 from expert_dollup.shared.database_services import Repository
 from expert_dollup.shared.starlette_injection import IdProvider
 from expert_dollup.core.domains import *
 
 
 class AggregationUseCase:
-    def __init__(self, repository: Repository[Aggregation], id_provider: IdProvider):
+    def __init__(
+        self, repository: Repository[AggregateCollection], id_provider: IdProvider
+    ):
         self.repository = repository
         self.id_provider = id_provider
 
@@ -53,16 +56,3 @@ class AggregationUseCase:
                 id=collection_id, project_definition_id=project_definition_id
             )
         )
-
-    async def replace_aggregates(
-        self,
-        project_definition_id: UUID,
-        collection_id: UUID,
-        aggregates: List[Aggregate],
-    ) -> None:
-        pass
-
-    async def get_aggregates(
-        self, project_definition_id: UUID, collection_id: UUID
-    ) -> List[Aggregate]:
-        pass

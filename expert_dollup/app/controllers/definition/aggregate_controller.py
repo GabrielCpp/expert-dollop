@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from uuid import UUID
+from typing import List
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *

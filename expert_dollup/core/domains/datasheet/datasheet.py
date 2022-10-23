@@ -8,14 +8,14 @@ from ..definition.aggregate import AggregateAttribute
 
 
 @dataclass
-class AggregateAttributeSchema:
+class InstanceAttributeSchema:
     is_readonly: bool
 
 
 @dataclass
-class AggregateSchema:
+class InstanceSchema:
     is_extendable: bool
-    attributes_schema: Dict[str, AggregateAttributeSchema]
+    attributes_schema: Dict[str, InstanceAttributeSchema]
 
 
 @dataclass
@@ -23,10 +23,10 @@ class Datasheet:
     id: UUID
     name: str
     project_definition_id: UUID
-    from_abstract_collection: UUID
+    abstract_collection_id: UUID
     from_datasheet_id: UUID
     attributes_schema: Dict[str, AggregateAttributeSchema]
-    instances_schema: Dict[UUID, AggregateSchema]
+    instances_schema: Dict[UUID, InstanceSchema]
     creation_date_utc: datetime
 
 
@@ -40,6 +40,6 @@ class DatasheetFilter(QueryFilter):
     id: Optional[UUID]
     name: Optional[str]
     project_definition_id: Optional[UUID]
-    from_abstract_collection: Optional[UUID]
+    abstract_collection_id: Optional[UUID]
     from_datasheet_id: Optional[UUID]
     creation_date_utc: Optional[datetime]

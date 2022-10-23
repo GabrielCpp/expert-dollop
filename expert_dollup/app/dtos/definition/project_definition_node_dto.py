@@ -1,5 +1,6 @@
 from uuid import UUID
 from typing import Optional, List, Union, Dict, get_args
+from enum import Enum
 from typing_extensions import TypeAlias
 from expert_dollup.shared.starlette_injection import CamelModel
 from decimal import Decimal
@@ -12,6 +13,8 @@ from expert_dollup.core.domains import (
     StaticChoiceFieldConfig,
     CollapsibleContainerFieldConfig,
     StaticNumberFieldConfig,
+    AggregateReferenceConfig,
+    NodeReferenceConfig,
 )
 from ..dynamic_primitive import (
     IntFieldValueDto,
@@ -22,6 +25,23 @@ from ..dynamic_primitive import (
     JsonSchemaDto,
     PrimitiveWithNoneUnionDto,
 )
+
+
+class NodeTypeDto(Enum):
+    FORMULA = "FORMULA"
+    FIELD = "FORMULA"
+    SECTION = "SECTION"
+    FORM = "FORM"
+    SUB_SECTION = "SUB_SECTION"
+    ROOT_SECTION = "ROOT_SECTION"
+
+
+class NodeReferenceConfigDto(CamelModel):
+    node_type: NodeTypeDto
+
+
+class AggregateReferenceConfigDto(CamelModel):
+    from_collection: str
 
 
 class IntFieldConfigDto(CamelModel):
@@ -42,10 +62,6 @@ class StringFieldConfigDto(CamelModel):
 
 class BoolFieldConfigDto(CamelModel):
     enabled: bool
-
-
-class AggregateReferenceConfigDto(CamelModel):
-    from_collection: str
 
 
 class StaticChoiceOptionDto(CamelModel):
@@ -77,6 +93,8 @@ FieldDetailsUnionDto: TypeAlias = Union[
     StringFieldConfigDto,
     IntFieldConfigDto,
     BoolFieldConfigDto,
+    AggregateReferenceConfigDto,
+    NodeReferenceConfigDto,
     None,
 ]
 
@@ -89,6 +107,8 @@ config_type_lookup_map = {
     StaticChoiceFieldConfigDto: "StaticChoiceFieldConfig",
     CollapsibleContainerFieldConfigDto: "CollapsibleContainerFieldConfig",
     StaticNumberFieldConfigDto: "StaticNumberFieldConfig",
+    AggregateReferenceConfigDto: "AggregateReferenceConfig",
+    NodeReferenceConfigDto: "NodeReferenceConfig",
     type(None): "null",
 }
 
@@ -102,6 +122,8 @@ field_details_to_domain_map = {
     StaticChoiceFieldConfigDto: StaticChoiceFieldConfig,
     CollapsibleContainerFieldConfigDto: CollapsibleContainerFieldConfig,
     StaticNumberFieldConfigDto: StaticNumberFieldConfig,
+    AggregateReferenceConfigDto: AggregateReferenceConfig,
+    NodeReferenceConfigDto: NodeReferenceConfig,
     type(None): type(None),
 }
 

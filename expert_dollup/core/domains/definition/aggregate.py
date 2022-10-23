@@ -36,3 +36,9 @@ class Aggregate:
             "ordinal": self.ordinal,
             "name": self.name,
         }
+
+
+class AggregateFilterFilter(QueryFilter):
+    id: Optional[UUID]
+    ordinal: Optional[int]
+    name: Optional[str]

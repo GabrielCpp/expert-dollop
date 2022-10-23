@@ -1,6 +1,10 @@
 from decimal import Decimal
 from expert_dollup.core.domains import *
-from ..factories.datasheet_factory import DatasheetSeed, ElementSeed, CollectionSeed
+from ..factories.datasheet_factory import (
+    DatasheetSeed,
+    ElementSeed,
+    AggregateCollectionSeed,
+)
 
 
 def make_base_datasheet(project_seed):
@@ -20,7 +24,7 @@ def make_base_datasheet(project_seed):
             ),
         },
         collection_seeds={
-            "datasheetelement_binding": CollectionSeed(
+            "datasheetelement_binding": AggregateCollectionSeed(
                 label_count=10,
                 schemas={
                     "formula": FormulaAggregate("*"),
@@ -31,7 +35,7 @@ def make_base_datasheet(project_seed):
                     "datasheet_element": DatasheetAggregate("*"),
                 },
             ),
-            "substage": CollectionSeed(
+            "substage": AggregateCollectionSeed(
                 label_count=10,
                 schemas={
                     "formula": FormulaAggregate("*"),
@@ -42,7 +46,7 @@ def make_base_datasheet(project_seed):
                     "datasheet_element": DatasheetAggregate("*"),
                 },
             ),
-            "stage": CollectionSeed(
+            "stage": AggregateCollectionSeed(
                 label_count=5,
                 schemas={
                     "localisation": str,
@@ -51,13 +55,13 @@ def make_base_datasheet(project_seed):
                     "floor": CollectionAggregate("floor"),
                 },
             ),
-            "orderformcategory": CollectionSeed(
+            "orderformcategory": AggregateCollectionSeed(
                 label_count=3,
                 schemas={"worksection": CollectionAggregate("worksection")},
             ),
-            "worksection": CollectionSeed(label_count=3),
-            "productcategory": CollectionSeed(label_count=3),
-            "floor": CollectionSeed(label_count=3),
+            "worksection": AggregateCollectionSeed(label_count=3),
+            "productcategory": AggregateCollectionSeed(label_count=3),
+            "floor": AggregateCollectionSeed(label_count=3),
         },
         formulas=project_seed.formulas,
     )

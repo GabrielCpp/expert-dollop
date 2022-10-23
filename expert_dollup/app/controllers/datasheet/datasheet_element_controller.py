@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, Query
 from uuid import UUID
 from typing import Optional, Dict, List
 from expert_dollup.shared.database_services import Paginator
-from expert_dollup.core.usecases import DatasheetElementUseCase
 from expert_dollup.shared.starlette_injection import *
+from expert_dollup.core.usecases import DatasheetElementUseCase
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *
 
@@ -16,6 +16,23 @@ async def find_datasheet_elements(
     limit: int = Query(alias="limit", default=100),
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     handler: PageHandlerProxy = Depends(Inject(PageHandlerProxy)),
+    paginator=Depends(Inject(Paginator[DatasheetElement])),
+    user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:get"])),
+):
+    return await handler.use_paginator(paginator).handle(
+        DatasheetElementDto,
+        DatasheetElementFilter(datasheet_id=datasheet_id),
+        limit,
+        next_page_token,
+    )
+
+
+@router.get("/datasheets/{datasheet_id}/elements")
+async def find_paginated_datasheet_elements(
+    datasheet_id: UUID,
+    limit: int = Query(alias="limit", default=100),
+    next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
+    handler=Depends(Inject(PageHandlerProxy)),
     paginator=Depends(Inject(Paginator[DatasheetElement])),
     user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:get"])),
 ):

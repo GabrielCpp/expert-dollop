@@ -29,7 +29,7 @@ TYPE_TO_SCHEMA = {
 }
 
 
-def make_schema(node_definition: ProjectDefinitionNode) -> Optional[JsonSchema]:
+def make_schema(node_definition: ProjectDefinitionNode) -> Optional[dict]:
     TYPE_TO_SCHEMA.get(type(node_definition.field_details))
     make_it = TYPE_TO_SCHEMA.get(type(node_definition.field_details))
 

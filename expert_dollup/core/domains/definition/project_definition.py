@@ -3,12 +3,6 @@ from typing import Optional, Dict
 from uuid import UUID
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
-from .project_definition_node import JsonSchema
-
-
-@dataclass
-class ElementPropertySchema:
-    value_validator: JsonSchema
 
 
 @dataclass

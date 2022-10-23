@@ -20,13 +20,12 @@ from .project_definition_node_dto import (
     TriggerDto,
     TranslationConfigDto,
     CoreDefinitionNodeDto,
-)
-from .aggregate_collection_dto import (
     NodeTypeDto,
     NodeReferenceConfigDto,
+)
+from .aggregate_collection_dto import (
     AggregateAttributeSchemaDto,
     AggregateCollectionDto,
-    AggregationDto,
     NewAggregateCollectionDto,
 )
 from .aggregate_dto import AggregateAttributeDto, AggregateDto, NewAggregateDto

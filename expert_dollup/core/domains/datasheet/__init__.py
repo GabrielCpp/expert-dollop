@@ -4,4 +4,6 @@ from .datasheet_element import (
     DatasheetElementFilter,
     DatasheetElementPluckFilter,
     NewDatasheetElement,
+    DatasheetElementUpdate,
+    Attribute,
 )

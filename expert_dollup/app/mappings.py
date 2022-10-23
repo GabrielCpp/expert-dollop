@@ -43,6 +43,12 @@ primitive_with_reference_union_dto_mappings = RevervibleUnionMapping(
     },
 )
 
+field_details_union_dto_mappings = RevervibleUnionMapping(
+    FieldDetailsUnionDto,
+    FieldDetailsUnion,
+    field_details_to_domain_map,
+)
+
 
 def map_project_definition_from_dto(
     src: ProjectDefinitionDto, mapper: Mapper
@@ -200,13 +206,6 @@ def map_trigger_to_dto(src: Trigger, mapper: Mapper) -> TriggerDto:
         target_type_id=src.target_type_id,
         params=dict(src.params),
     )
-
-
-field_details_union_dto_mappings = RevervibleUnionMapping(
-    FieldDetailsUnionDto,
-    FieldDetailsUnion,
-    field_details_to_domain_map,
-)
 
 
 def map_collapsible_container_field_config_from_dto(
@@ -594,51 +593,6 @@ def map_formula_to_expression_dto(src: Formula, mapper: Mapper) -> FormulaExpres
     )
 
 
-def map_datasheet_definition_element_to_dto(
-    src: DatasheetDefinitionElement, mapper: Mapper
-) -> DatasheetDefinitionElementDto:
-    return DatasheetDefinitionElementDto(
-        id=src.id,
-        unit_id=src.unit_id,
-        is_collection=src.is_collection,
-        name=src.name,
-        project_definition_id=src.project_definition_id,
-        ordinal=src.ordinal,
-        default_properties=[
-            DatasheetDefinitionElementPropertyDto(
-                name=name,
-                is_readonly=prop.is_readonly,
-                value=mapper.map(prop.value, primitive_union_dto_mappings.to_origin),
-            )
-            for name, prop in src.default_properties.items()
-        ],
-        tags=src.tags,
-        creation_date_utc=src.creation_date_utc,
-    )
-
-
-def map_datasheet_definition_element_from_dto(
-    src: DatasheetDefinitionElementDto, mapper: Mapper
-) -> DatasheetDefinitionElement:
-    return DatasheetDefinitionElement(
-        id=src.id,
-        unit_id=src.unit_id,
-        name=src.name,
-        is_collection=src.is_collection,
-        project_definition_id=src.project_definition_id,
-        ordinal=src.ordinal,
-        default_properties={
-            prop.name: DatasheetDefinitionElementProperty(
-                is_readonly=prop.is_readonly,
-                value=mapper.map(prop.value, primitive_union_dto_mappings.to_origin),
-            )
-            for prop in src.default_properties
-        },
-        tags=src.tags,
-        creation_date_utc=src.creation_date_utc,
-    )
-
-
 def map_aggregate_collection_from_dto(
     src: AggregateCollectionDto, mapper: Mapper
 ) -> AggregateCollection:
@@ -667,31 +621,33 @@ def map_aggregate_collection_to_dto(
     )
 
 
-def map_aggregation_from_dto(src: AggregationDto, mapper: Mapper) -> Aggregation:
-    return Aggregation(
-        id=src.id,
-        project_definition_id=src.project_definition_id,
+def map_new_aggregate_collection_from_dto(
+    src: NewAggregateCollectionDto, mapper: Mapper
+) -> NewAggregateCollection:
+    return NewAggregateCollection(
         name=src.name,
         is_abstract=src.is_abstract,
         attributes_schema=mapper.map_many(
             src.attributes_schema, AggregateAttributeSchema
         ),
-        aggregates=mapper.map_many(src.attributes_schema, Aggregate),
     )
 
 
-def map_aggregation_collection_to_dto(
-    src: AggregateCollection, mapper: Mapper
-) -> AggregationDto:
-    return AggregationDto(
-        id=src.id,
-        project_definition_id=src.project_definition_id,
+def map_aggregate_attribute_schema_from_dto(
+    src: AggregateAttributeSchemaDto, mapper: Mapper
+) -> AggregateAttributeSchema:
+    return AggregateAttributeSchema(
         name=src.name,
-        is_abstract=src.is_abstract,
-        attributes_schema=mapper.map_many(
-            src.attributes_schema, AggregateAttributeSchemaDto
-        ),
-        aggregates=mapper.map_many(src.attributes_schema, AggregateDto),
+        details=mapper.map(src.details, field_details_union_dto_mappings.from_origin),
+    )
+
+
+def map_aggregate_attributeschema__to_dto(
+    src: AggregateAttributeSchema, mapper: Mapper
+) -> AggregateAttributeSchemaDto:
+    return AggregateAttributeSchemaDto(
+        name=src.name,
+        details=mapper.map(src.details, field_details_union_dto_mappings.to_origin),
     )
 
 

@@ -113,30 +113,6 @@ class FormulaExpressionDtoFactory(factory.Factory):
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
-class DatasheetDefinitionElementDtoFactory(factory.Factory):
-    class Meta:
-        model = DatasheetDefinitionElementDto
-
-    id = factory.Faker("pyuuid4")
-    unit_id = "inch"
-    is_collection = False
-    project_definition_id = factory.Faker("pyuuid4")
-    ordinal = factory.Sequence(lambda n: n)
-    tags = factory.LazyFunction(lambda: [])
-    name = factory.Sequence(lambda n: f"field_name{n}")
-    default_properties = factory.Dict(
-        {
-            "conversion_factor": DatasheetDefinitionElementPropertyDto(
-                is_readonly=True, value=IntFieldValueDto(integer=2)
-            ),
-            "lost": DatasheetDefinitionElementPropertyDto(
-                is_readonly=True, value=IntFieldValueDto(integer=2)
-            ),
-        }
-    )
-    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
-
-
 class NewAggregateCollectionDtoFactory(factory.Factory):
     class Meta:
         model = NewAggregateCollectionDto
@@ -155,18 +131,6 @@ class AggregateCollectionDtoFactory(factory.Factory):
     name = factory.Sequence(lambda n: f"aggregate_collection_{n}")
     is_abstract = False
     attributes_schema = factory.List([])
-
-
-class AggregationDtoFactory(factory.Factory):
-    class Meta:
-        model = AggregationDto
-
-    id = factory.Faker("pyuuid4")
-    project_definition_id = factory.Faker("pyuuid4")
-    name = factory.Sequence(lambda n: f"label_collection_{n}")
-    is_abstract = False
-    attributes_schema = factory.List([])
-    aggregates = factory.List([])
 
 
 class NewAggregateDtoFactory(factory.Factory):

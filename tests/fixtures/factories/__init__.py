@@ -9,8 +9,8 @@ from .project_instance_factory import (
 from .datasheet_factory import (
     DatasheetInstanceFactory,
     DatasheetSeed,
-    CollectionSeed,
-    LabelSeed,
+    AggregateCollectionSeed,
+    AggregateSeed,
     ElementSeed,
 )
 
@@ -21,3 +21,5 @@ from .simple_datasheet_def import SimpleDatasheetDef
 from .project_trigger import ProjectWithTrigger
 from .super_user import SuperUser
 from .grant_ressource_permissions import GrantRessourcePermissions
+from .domains import *
+from .dtos import *

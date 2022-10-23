@@ -48,6 +48,23 @@ primitive_with_reference_union_dao_mappings = RevervibleUnionMapping(
     },
 )
 
+field_details_to_domain_map = RevervibleUnionMapping(
+    FieldDetailsUnionDao,
+    FieldDetailsUnion,
+    {
+        IntFieldConfigDao: IntFieldConfig,
+        DecimalFieldConfigDao: DecimalFieldConfig,
+        StringFieldConfigDao: StringFieldConfig,
+        BoolFieldConfigDao: BoolFieldConfig,
+        StaticChoiceFieldConfigDao: StaticChoiceFieldConfig,
+        CollapsibleContainerFieldConfigDao: CollapsibleContainerFieldConfig,
+        StaticNumberFieldConfigDao: StaticNumberFieldConfig,
+        AggregateReferenceConfigDao: AggregateReferenceConfig,
+        NodeReferenceConfigDao: NodeReferenceConfig,
+        type(None): type(None),
+    },
+)
+
 
 def get_display_query_id(global_id: UUID, path: List[UUID]) -> UUID:
     display_query_internal_id: UUID = global_id
@@ -81,118 +98,144 @@ def map_project_definition_to_dao(
     )
 
 
-def map_field_details_union_from_dao(
-    src: FieldDetailsUnionDao, mapper: Mapper
-) -> FieldDetailsUnion:
-    if src is None:
-        return None
+def map_int_field_config_to_dao(
+    src: IntFieldConfig, mapper: Mapper
+) -> IntFieldConfigDao:
+    return IntFieldConfigDao(unit=src.unit, integer=src.default_value)
 
-    assert isinstance(
-        src,
-        (
-            IntFieldConfigDao,
-            DecimalFieldConfigDao,
-            StringFieldConfigDao,
-            BoolFieldConfigDao,
-            StaticChoiceFieldConfigDao,
-            CollapsibleContainerFieldConfigDao,
-            StaticNumberFieldConfigDao,
-        ),
+
+def map_int_field_config_from_dao(
+    src: IntFieldConfigDao, mapper: Mapper
+) -> IntFieldConfig:
+    return IntFieldConfig(unit=src.unit, default_value=src.integer)
+
+
+def map_decimal_field_config_to_dao(
+    src: DecimalFieldConfig, mapper: Mapper
+) -> DecimalFieldConfigDao:
+    return DecimalFieldConfigDao(
+        unit=src.unit, precision=src.precision, numeric=src.default_value
     )
 
-    if isinstance(src, IntFieldConfigDao):
-        return IntFieldConfig(unit=src.unit, default_value=src.integer)
 
-    if isinstance(src, DecimalFieldConfigDao):
-        return DecimalFieldConfig(
-            unit=src.unit, precision=src.precision, default_value=src.numeric
-        )
-
-    if isinstance(src, StringFieldConfigDao):
-        return StringFieldConfig(transforms=src.transforms, default_value=src.text)
-
-    if isinstance(src, BoolFieldConfigDao):
-        return BoolFieldConfig(default_value=src.enabled)
-
-    if isinstance(src, StaticChoiceFieldConfigDao):
-        return StaticChoiceFieldConfig(
-            options=[
-                StaticChoiceOption(
-                    id=option.id,
-                    label=option.label,
-                    help_text=option.help_text,
-                )
-                for option in src.options
-            ],
-            default_value=src.selected,
-        )
-
-    if isinstance(src, CollapsibleContainerFieldConfigDao):
-        return CollapsibleContainerFieldConfig(is_collapsible=src.is_collapsible)
-
-    if isinstance(src, StaticNumberFieldConfigDao):
-        return StaticNumberFieldConfig(
-            pass_to_translation=src.pass_to_translation,
-            precision=src.precision,
-            unit=src.unit,
-        )
-
-
-def map_field_details_union_to_dao(
-    src: FieldDetailsUnion, mapper: Mapper
-) -> FieldDetailsUnionDao:
-    if src is None:
-        return None
-
-    assert isinstance(
-        src,
-        (
-            IntFieldConfig,
-            DecimalFieldConfig,
-            StringFieldConfig,
-            BoolFieldConfig,
-            StaticChoiceFieldConfig,
-            CollapsibleContainerFieldConfig,
-            StaticNumberFieldConfig,
-        ),
+def map_decimal_field_config_from_dao(
+    src: DecimalFieldConfigDao, mapper: Mapper
+) -> DecimalFieldConfig:
+    return DecimalFieldConfig(
+        unit=src.unit, precision=src.precision, default_value=src.numeric
     )
 
-    if isinstance(src, IntFieldConfig):
-        return IntFieldConfigDao(unit=src.unit, integer=src.default_value)
 
-    if isinstance(src, DecimalFieldConfig):
-        return DecimalFieldConfigDao(
-            unit=src.unit, precision=src.precision, numeric=src.default_value
-        )
+def map_string_field_config_to_dao(
+    src: DecimalFieldConfig, mapper: Mapper
+) -> DecimalFieldConfigDao:
+    return StringFieldConfigDao(transforms=src.transforms, text=src.default_value)
 
-    if isinstance(src, StringFieldConfig):
-        return StringFieldConfigDao(transforms=src.transforms, text=src.default_value)
 
-    if isinstance(src, BoolFieldConfig):
-        return BoolFieldConfigDao(enabled=src.default_value)
+def map_string_field_config_from_dao(
+    src: DecimalFieldConfigDao, mapper: Mapper
+) -> DecimalFieldConfig:
+    return StringFieldConfig(transforms=src.transforms, default_value=src.text)
 
-    if isinstance(src, StaticChoiceFieldConfig):
-        return StaticChoiceFieldConfigDao(
-            options=[
-                StaticChoiceOptionDao(
-                    id=option.id,
-                    label=option.label,
-                    help_text=option.help_text,
-                )
-                for option in src.options
-            ],
-            selected=src.default_value,
-        )
 
-    if isinstance(src, CollapsibleContainerFieldConfig):
-        return CollapsibleContainerFieldConfigDao(is_collapsible=src.is_collapsible)
+def map_bool_field_config_to_dao(
+    src: BoolFieldConfig, mapper: Mapper
+) -> BoolFieldConfigDao:
+    return BoolFieldConfigDao(enabled=src.default_value)
 
-    if isinstance(src, StaticNumberFieldConfig):
-        return StaticNumberFieldConfigDao(
-            pass_to_translation=src.pass_to_translation,
-            precision=src.precision,
-            unit=src.unit,
-        )
+
+def map_bool_field_config_from_dao(
+    src: BoolFieldConfigDao, mapper: Mapper
+) -> BoolFieldConfig:
+    return BoolFieldConfig(default_value=src.enabled)
+
+
+def map_static_choice_field_config_to_dao(
+    src: StaticChoiceFieldConfig, mapper: Mapper
+) -> StaticChoiceFieldConfigDao:
+    return StaticChoiceFieldConfigDao(
+        options=[
+            StaticChoiceOption(
+                id=option.id,
+                label=option.label,
+                help_text=option.help_text,
+            )
+            for option in src.options
+        ],
+        selected=src.default_value,
+    )
+
+
+def map_static_choice_field_config_from_dao(
+    src: StaticChoiceFieldConfigDao, mapper: Mapper
+) -> StaticChoiceFieldConfig:
+    return StaticChoiceFieldConfig(
+        options=[
+            StaticChoiceOption(
+                id=option.id,
+                label=option.label,
+                help_text=option.help_text,
+            )
+            for option in src.options
+        ],
+        default_value=src.selected,
+    )
+
+
+def map_collapsible_container_field_config_to_dao(
+    src: CollapsibleContainerFieldConfig, mapper: Mapper
+) -> CollapsibleContainerFieldConfigDao:
+    return CollapsibleContainerFieldConfigDao(is_collapsible=src.is_collapsible)
+
+
+def map_collapsible_container_field_config_from_dao(
+    src: CollapsibleContainerFieldConfigDao, mapper: Mapper
+) -> CollapsibleContainerFieldConfig:
+    return CollapsibleContainerFieldConfig(is_collapsible=src.is_collapsible)
+
+
+def map_static_number_field_config_to_dao(
+    src: StaticNumberFieldConfig, mapper: Mapper
+) -> StaticNumberFieldConfigDao:
+    return StaticNumberFieldConfigDao(
+        pass_to_translation=src.pass_to_translation,
+        precision=src.precision,
+        unit=src.unit,
+    )
+
+
+def map_static_number_field_config_from_dao(
+    src: StaticNumberFieldConfigDao, mapper: Mapper
+) -> StaticNumberFieldConfig:
+    return StaticNumberFieldConfig(
+        pass_to_translation=src.pass_to_translation,
+        precision=src.precision,
+        unit=src.unit,
+    )
+
+
+def map_aggregate_reference_config_to_dao(
+    src: AggregateReferenceConfig, mapper: Mapper
+) -> AggregateReferenceConfigDao:
+    return AggregateReferenceConfigDao(from_collection=src.from_collection)
+
+
+def map_aggregate_reference_config_from_dao(
+    src: AggregateReferenceConfigDao, mapper: Mapper
+) -> AggregateReferenceConfig:
+    return AggregateReferenceConfig(from_collection=src.from_collection)
+
+
+def map_node_reference_config_to_dao(
+    src: NodeReferenceConfig, mapper: Mapper
+) -> NodeReferenceConfigDao:
+    return NodeReferenceConfigDao(node_type=str(src.node_type))
+
+
+def map_node_reference_config_from_dao(
+    src: NodeReferenceConfigDao, mapper: Mapper
+) -> NodeReferenceConfig:
+    return NodeReferenceConfig(node_type=NodeType(src.node_type))
 
 
 def map_project_definition_node_to_dao(
@@ -228,7 +271,7 @@ def map_project_definition_node_to_dao(
             ],
             meta=NodeMetaConfigDao(is_visible=src.meta.is_visible),
             field_details=mapper.map(
-                src.field_details, FieldDetailsUnionDao, FieldDetailsUnion
+                src.field_details, field_details_to_domain_map.to_origin
             ),
         ),
     )
@@ -258,7 +301,7 @@ def map_project_definition_node_from_dao(
         ],
         meta=NodeMetaConfig(is_visible=src.config.meta.is_visible),
         field_details=mapper.map(
-            src.config.field_details, FieldDetailsUnion, FieldDetailsUnionDao
+            src.config.field_details, field_details_to_domain_map.from_origin
         ),
         path=split_uuid_path(src.path),
         creation_date_utc=src.creation_date_utc,
@@ -696,63 +739,69 @@ def map_formula_instance_from_dao(src: UnitInstanceDao, mapper: Mapper) -> UnitI
     )
 
 
-def map_element_property_schema_to_dao(
-    src: ElementPropertySchema, mapper: Mapper
-) -> ElementPropertySchemaDao:
-    return ElementPropertySchemaDao(value_validator=src.value_validator)
-
-
-def map_element_property_schema_from_dao(
-    src: ElementPropertySchemaDao, mapper: Mapper
-) -> ElementPropertySchema:
-    return ElementPropertySchema(value_validator=src.value_validator)
-
-
-def map_datasheet_definition_element_filter(
-    src: DatasheetDefinitionElementFilter, mapper: Mapper
-) -> dict:
-    return map_dict_keys(
-        src.args,
-        {
-            "id": ("id", None),
-            "unit_id": ("unit_id", None),
-            "is_collection": ("is_collection", None),
-            "project_definition_id": ("project_definition_id", None),
-            "ordinal": ("ordinal", None),
-            "tags": ("tags", None),
-            "creation_date_utc": ("creation_date_utc", None),
-        },
-    )
-
-
-def map_datasheet_definition_label_collection_from_dao(
-    src: AggregateCollectionDao, mapper: Mapper
-) -> Aggregation:
-    return Aggregation(
-        id=src.id,
-        project_definition_id=src.project_definition_id,
-        name=src.name,
-        is_abstract=src.is_abstract,
-        attributes_schema={
-            schema.name: mapper.map(schema, AggregateAttributeSchema)
-            for schema in src.attributes_schema
-        },
-        aggregates=mapper.map_many(src.aagregates, Aggregate),
-    )
-
-
-def map_datasheet_definition_label_collection_to_dao(
-    src: Aggregation, mapper: Mapper
+def map_aggregate_collection_to_dao(
+    src: AggregateCollection, mapper: Mapper
 ) -> AggregateCollectionDao:
     return AggregateCollectionDao(
         id=src.id,
         project_definition_id=src.project_definition_id,
         name=src.name,
-        attributes_schema=[
-            mapper.map(schema, AggregateAttributeSchemaDao)
-            for schema in src.attributes_schema.values()
-        ],
-        aggregates=mapper.map_many(src.aagregates, AggregateDao),
+        is_abstract=src.is_abstract,
+        attributes_schema=mapper.map_many(
+            src.attributes_schema, AggregateAttributeSchemaDao
+        ),
+    )
+
+
+def map_aggregate_collection_from_dao(
+    src: AggregateCollectionDao, mapper: Mapper
+) -> AggregateCollection:
+    return AggregateCollection(
+        id=src.id,
+        project_definition_id=src.project_definition_id,
+        name=src.name,
+        is_abstract=src.is_abstract,
+        attributes_schema=mapper.map_many(
+            src.attributes_schema, AggregateAttributeSchema
+        ),
+    )
+
+
+def map_aggregate_attribute_schema_from_dao(
+    src: AggregateAttributeSchemaDao, mapper: Mapper
+) -> AggregateAttributeSchema:
+    return AggregateAttributeSchema(
+        name=src.name,
+        details=mapper.map(src.details, field_details_to_domain_map.from_origin),
+    )
+
+
+def map_aggregate_attributeschema_to_dao(
+    src: AggregateAttributeSchema, mapper: Mapper
+) -> AggregateAttributeSchemaDao:
+    return AggregateAttributeSchemaDao(
+        name=src.name,
+        details=mapper.map(src.details, field_details_to_domain_map.to_origin),
+    )
+
+
+def map_aggregate_to_dao(src: Aggregate, mapper: Mapper) -> AggregateDao:
+    return AggregateDao(
+        id=src.id,
+        ordinal=src.ordinal,
+        name=src.name,
+        is_extendable=src.is_extendable,
+        attributes=mapper.map_values(src.attributes, AggregateAttributeDao),
+    )
+
+
+def map_aggregate_from_dao(src: AggregateDao, mapper: Mapper) -> Aggregate:
+    return Aggregate(
+        id=src.id,
+        label_collection_id=src.label_collection_id,
+        ordinal=src.ordinal,
+        name=src.name,
+        attributes=mapper.map_values(src.attributes, AggregateAttribute),
     )
 
 
@@ -777,26 +826,6 @@ def map_aggregate_attribute_to_dao(
         value=mapper.map(
             src.value, primitive_with_reference_union_dao_mappings.to_origin
         ),
-    )
-
-
-def map_aggregate_to_dao(src: Aggregate, mapper: Mapper) -> AggregateDao:
-    return AggregateDao(
-        id=src.id,
-        ordinal=src.ordinal,
-        name=src.name,
-        is_extendable=src.is_extendable,
-        attributes=mapper.map_values(src.attributes, AggregateAttributeDao),
-    )
-
-
-def map_aggregate_from_dao(src: AggregateDao, mapper: Mapper) -> Aggregate:
-    return Aggregate(
-        id=src.id,
-        label_collection_id=src.label_collection_id,
-        ordinal=src.ordinal,
-        name=src.name,
-        attributes=mapper.map_values(src.attributes, AggregateAttribute),
     )
 
 
@@ -1159,16 +1188,6 @@ def map_label_collection_filter(src: AggregateCollectionFilter, mapper: Mapper) 
             "id": ("id", None),
             "project_definition_id": ("project_definition_id", None),
             "name": ("name", None),
-        },
-    )
-
-
-def map_label_filter(src: LabelFilter, mapper: Mapper) -> dict:
-    return map_dict_keys(
-        src.args,
-        {
-            "id": ("id", None),
-            "label_collection_id": ("label_collection_id", None),
         },
     )
 

@@ -1,7 +1,7 @@
 from expert_dollup.shared.starlette_injection import CamelModel
 from uuid import UUID
 from typing import Optional
-from .project_definition_node_dto import ProjectDefinitionNodeDto
+from .definition import ProjectDefinitionNodeDto
 
 
 class ProjectNodeMetaStateDto(CamelModel):

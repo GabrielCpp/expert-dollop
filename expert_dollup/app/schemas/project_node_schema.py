@@ -1,13 +1,13 @@
 from uuid import UUID
 from typing import Any, Optional
+from pydantic import parse_obj_as
 from ariadne import ObjectType, QueryType, convert_kwargs_to_snake_case
 from ariadne.types import GraphQLResolveInfo
 from expert_dollup.shared.starlette_injection import *
-from expert_dollup.app.controllers.project.project_node import *
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
+from expert_dollup.app.controllers.project.project_node_controller import *
 from .types import query, mutation
-from pydantic import parse_obj_as
 
 
 @query.field("findProjectRootSections")

@@ -7,7 +7,24 @@ from enum import Enum
 from expert_dollup.shared.database_services import QueryFilter
 from decimal import Decimal
 
-JsonSchema = dict
+
+class NodeType(Enum):
+    FORMULA = "FORMULA"
+    FIELD = "FORMULA"
+    SECTION = "SECTION"
+    FORM = "FORM"
+    SUB_SECTION = "SUB_SECTION"
+    ROOT_SECTION = "ROOT_SECTION"
+
+
+@dataclass
+class NodeReferenceConfig:
+    node_type: NodeType
+
+
+@dataclass
+class AggregateReferenceConfig:
+    from_collection: str
 
 
 @dataclass
@@ -27,11 +44,6 @@ class DecimalFieldConfig:
 class StringFieldConfig:
     transforms: List[str]
     default_value: str
-
-
-@dataclass
-class AggregateReferenceConfig:
-    from_collection: str
 
 
 @dataclass
@@ -98,6 +110,8 @@ FieldDetailsUnion: TypeAlias = Union[
     BoolFieldConfig,
     CollapsibleContainerFieldConfig,
     StaticNumberFieldConfig,
+    AggregateReferenceConfig,
+    NodeReferenceConfig,
     None,
 ]
 

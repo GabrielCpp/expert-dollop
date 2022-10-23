@@ -16,7 +16,7 @@ from .types import query, supplied_item
 @inject_graphql_route(get_project_distributables, ["project_id"])
 @convert_kwargs_to_snake_case
 async def resolve_find_distributable(
-    parent: DatasheetDefinitionElementDto,
+    parent,
     info: GraphQLResolveInfo,
     project_id: str,
     get_project_distributables: callable,
@@ -30,7 +30,7 @@ async def resolve_find_distributable(
 )
 @convert_kwargs_to_snake_case
 async def resolve_default_properties(
-    parent: DatasheetDefinitionElementDto,
+    parent,
     info: GraphQLResolveInfo,
     project_id: str,
     report_definition_id: str,

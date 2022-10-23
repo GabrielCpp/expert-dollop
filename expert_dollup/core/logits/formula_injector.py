@@ -4,9 +4,8 @@ from uuid import UUID
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cached_property
-from expert_dollup.core.domains.project_node import ProjectNode
-from expert_dollup.core.domains import UnitInstance, PrimitiveWithNoneUnion, ProjectNode
 import expert_dollup.core.logits.formula_processor as formula_processor
+from expert_dollup.core.domains import *
 
 
 @dataclass

@@ -1,5 +1,5 @@
 from expert_dollup.core.domains import *
-from ..factories_domain import *
+from .domains import *
 from ..fake_db_helpers import FakeDb
 from .field_config_factory import FieldConfigFactory
 
