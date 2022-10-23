@@ -4,7 +4,8 @@ from .project_usecase import ProjectUseCase
 from .translation_usecase import TranslationUseCase
 from .project_node_usecase import ProjectNodeUseCase
 from .formula_usecase import FormulaUseCase
-from .aggregation_usecase import AggregationUseCase
+from .collection_usecase import CollectionUseCase
+from .aggregate_usecase import AggregateUseCase
 from .datasheet_usecase import DatasheetUseCase
 from .datasheet_element_usecase import DatasheetElementUseCase
 from .report_definition_usecase import ReportDefinitionUseCase

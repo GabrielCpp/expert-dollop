@@ -12,6 +12,7 @@ class AggregateAttributeDto(CamelModel):
 
 class AggregateDto(CamelModel):
     id: UUID
+    project_definition_id: UUID
     collection_id: UUID
     ordinal: int
     name: str

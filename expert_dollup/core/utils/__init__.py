@@ -8,4 +8,4 @@ from .path_transform import (
     list_str_to_uuid,
 )
 from .ressource_permissions import authorization_factory
-from .helpers import create_id_dict, map_id_to_object
+from .helpers import create_id_dict, map_id_to_object, by_names, by_ids

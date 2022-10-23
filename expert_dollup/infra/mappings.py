@@ -127,14 +127,14 @@ def map_decimal_field_config_from_dao(
 
 
 def map_string_field_config_to_dao(
-    src: DecimalFieldConfig, mapper: Mapper
-) -> DecimalFieldConfigDao:
+    src: StringFieldConfig, mapper: Mapper
+) -> StringFieldConfigDao:
     return StringFieldConfigDao(transforms=src.transforms, text=src.default_value)
 
 
 def map_string_field_config_from_dao(
-    src: DecimalFieldConfigDao, mapper: Mapper
-) -> DecimalFieldConfig:
+    src: StringFieldConfigDao, mapper: Mapper
+) -> StringFieldConfig:
     return StringFieldConfig(transforms=src.transforms, default_value=src.text)
 
 
@@ -747,9 +747,10 @@ def map_aggregate_collection_to_dao(
         project_definition_id=src.project_definition_id,
         name=src.name,
         is_abstract=src.is_abstract,
-        attributes_schema=mapper.map_many(
-            src.attributes_schema, AggregateAttributeSchemaDao
-        ),
+        attributes_schema=[
+            mapper.map(attribute_schema, AggregateAttributeSchemaDao)
+            for attribute_schema in src.attributes_schema.values()
+        ],
     )
 
 
@@ -761,9 +762,12 @@ def map_aggregate_collection_from_dao(
         project_definition_id=src.project_definition_id,
         name=src.name,
         is_abstract=src.is_abstract,
-        attributes_schema=mapper.map_many(
-            src.attributes_schema, AggregateAttributeSchema
-        ),
+        attributes_schema={
+            attribute_schema.name: mapper.map(
+                attribute_schema, AggregateAttributeSchema
+            )
+            for attribute_schema in src.attributes_schema
+        },
     )
 
 
@@ -788,20 +792,30 @@ def map_aggregate_attributeschema_to_dao(
 def map_aggregate_to_dao(src: Aggregate, mapper: Mapper) -> AggregateDao:
     return AggregateDao(
         id=src.id,
+        project_definition_id=src.project_definition_id,
+        collection_id=src.collection_id,
         ordinal=src.ordinal,
         name=src.name,
         is_extendable=src.is_extendable,
-        attributes=mapper.map_values(src.attributes, AggregateAttributeDao),
+        attributes=[
+            mapper.map(attribute, AggregateAttributeDao)
+            for attribute in src.attributes.values()
+        ],
     )
 
 
 def map_aggregate_from_dao(src: AggregateDao, mapper: Mapper) -> Aggregate:
     return Aggregate(
         id=src.id,
-        label_collection_id=src.label_collection_id,
+        project_definition_id=src.project_definition_id,
+        collection_id=src.collection_id,
         ordinal=src.ordinal,
         name=src.name,
-        attributes=mapper.map_values(src.attributes, AggregateAttribute),
+        is_extendable=src.is_extendable,
+        attributes={
+            attribute.name: mapper.map(attribute, AggregateAttribute)
+            for attribute in src.attributes
+        },
     )
 
 
@@ -820,7 +834,7 @@ def map_aggregate_attribute_from_dao(
 def map_aggregate_attribute_to_dao(
     src: AggregateAttribute, mapper: Mapper
 ) -> AggregateAttributeDao:
-    return AggregateAttribute(
+    return AggregateAttributeDao(
         name=src.name,
         is_readonly=src.is_readonly,
         value=mapper.map(
@@ -877,7 +891,6 @@ def map_datasheet_to_dao(src: Datasheet, mapper: Mapper) -> DatasheetDao:
     return DatasheetDao(
         id=src.id,
         name=src.name,
-        is_staged=src.is_staged,
         project_definition_id=src.project_definition_id,
         from_datasheet_id=src.from_datasheet_id,
         creation_date_utc=src.creation_date_utc,
@@ -888,7 +901,6 @@ def map_datasheet_from_dao(src: DatasheetDao, mapper: Mapper) -> Datasheet:
     return Datasheet(
         id=src.id,
         name=src.name,
-        is_staged=src.is_staged,
         project_definition_id=src.project_definition_id,
         from_datasheet_id=src.from_datasheet_id,
         creation_date_utc=src.creation_date_utc,
@@ -899,13 +911,13 @@ def map_datasheet_element_to_dao(
     src: DatasheetElement, mapper: Mapper
 ) -> DatasheetElementDao:
     return DatasheetElementDao(
+        id=src.id,
         datasheet_id=src.datasheet_id,
-        element_def_id=src.element_def_id,
-        child_element_reference=src.child_element_reference,
+        aggregate_id=src.aggregate_id,
         ordinal=src.ordinal,
-        properties=mapper.map_dict_values(
-            src.properties, primitive_union_dao_mappings.to_origin
-        ),
+        attributes=[
+            mapper.map(attribute, AttributeDao) for attribute in src.attributes
+        ],
         original_datasheet_id=src.original_datasheet_id,
         original_owner_organization_id=src.original_owner_organization_id,
         creation_date_utc=src.creation_date_utc,
@@ -916,13 +928,11 @@ def map_datasheet_element_from_dao(
     src: DatasheetElementDao, mapper: Mapper
 ) -> DatasheetElement:
     return DatasheetElement(
+        id=src.id,
         datasheet_id=src.datasheet_id,
-        element_def_id=src.element_def_id,
-        child_element_reference=src.child_element_reference,
+        aggregate_id=src.aggregate_id,
         ordinal=src.ordinal,
-        properties=mapper.map_dict_values(
-            src.properties, primitive_union_dao_mappings.from_origin
-        ),
+        attributes=[mapper.map(attribute, Attribute) for attribute in src.attributes],
         original_datasheet_id=src.original_datasheet_id,
         original_owner_organization_id=src.original_owner_organization_id,
         creation_date_utc=src.creation_date_utc,
@@ -950,7 +960,6 @@ def map_datasheet_filter_to_dict(src: DatasheetFilter, mapper: Mapper) -> dict:
         {
             "id": ("id", None),
             "name": ("name", None),
-            "is_staged": ("is_staged", None),
             "project_definition_id": ("project_definition_id", None),
             "from_datasheet_id": ("from_datasheet_id", None),
             "creation_date_utc": ("creation_date_utc", None),
@@ -1411,4 +1420,35 @@ def map_distributable_item_to_dao(
         columns=mapper.map_many(src.columns, ComputedValueDao),
         obsolete=src.obsolete,
         creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_aggregate_filter_to_dict(src: AggregateFilter, mapper: Mapper) -> dict:
+    return map_dict_keys(
+        src.args,
+        {
+            "id": ("id", None),
+            "project_definition_id": ("project_definition_id", None),
+            "collection_id": ("collection_id", None),
+            "ordinal": ("ordinal", None),
+            "name": ("name", None),
+        },
+    )
+
+
+def map_attribute_from_dao(src: AttributeDao, mapper: Mapper) -> Attribute:
+    return Attribute(
+        name=src.name,
+        value=mapper.map(
+            src.value, primitive_with_reference_union_dao_mappings.from_origin
+        ),
+    )
+
+
+def map_attribute_to_dao(src: Attribute, mapper: Mapper) -> AttributeDao:
+    return AttributeDao(
+        name=src.name,
+        value=mapper.map(
+            src.value, primitive_with_reference_union_dao_mappings.to_origin
+        ),
     )

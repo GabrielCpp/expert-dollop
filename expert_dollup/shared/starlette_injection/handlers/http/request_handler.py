@@ -10,7 +10,6 @@ class RequestHandler:
     async def do_handle(
         self,
         usecase,
-        query_dto,
         result_mapping: Optional[MappingChain] = None,
         **kwargs: Dict[str, MappingChain]
     ):

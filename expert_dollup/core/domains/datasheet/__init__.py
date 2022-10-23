@@ -1,4 +1,11 @@
-from .datasheet import Datasheet, DatasheetFilter, CloningDatasheet
+from .datasheet import (
+    Datasheet,
+    DatasheetFilter,
+    CloningDatasheet,
+    NewDatasheet,
+    InstanceSchema,
+    InstanceAttributeSchema,
+)
 from .datasheet_element import (
     DatasheetElement,
     DatasheetElementFilter,

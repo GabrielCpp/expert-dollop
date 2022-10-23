@@ -47,21 +47,18 @@ async def find_datasheet_by_id(
 
 @router.post("/datasheets")
 async def add_datasheet(
-    datasheet: NewDatasheetDto,
-    usecase=Depends(Inject(DatasheetUseCase)),
+    new_datasheet: NewDatasheetDto,
+    usecase: DatasheetUseCase = Depends(Inject(DatasheetUseCase)),
     handler=Depends(Inject(RequestHandler)),
     user=Depends(CanPerformRequired(["datasheet:create"])),
 ):
-    return await handler.forward_mapped(
+    return await handler.do_handle(
         usecase.add_filled_datasheet,
-        dict(datasheet=datasheet, user=user),
-        MappingChain(out_dto=DatasheetDto),
-        {
-            "datasheet": MappingChain(
-                dto=NewDatasheetDto,
-                domain=Datasheet,
-            ),
-        },
+        MappingChain(dto=DatasheetDto),
+        user=user,
+        new_datasheet=MappingChain(
+            dto=NewDatasheetDto, domain=NewDatasheet, value=new_datasheet
+        ),
     )
 
 

@@ -654,6 +654,8 @@ def map_aggregate_attributeschema__to_dto(
 def map_aggregate_from_dto(src: AggregateDto, mapper: Mapper) -> Aggregate:
     return Aggregate(
         id=src.id,
+        project_definition_id=src.project_definition_id,
+        collection_id=src.collection_id,
         ordinal=src.ordinal,
         name=src.name,
         is_extendable=src.is_extendable,
@@ -667,6 +669,8 @@ def map_aggregate_from_dto(src: AggregateDto, mapper: Mapper) -> Aggregate:
 def map_aggregate_to_dto(src: Aggregate, mapper: Mapper) -> AggregateDto:
     return AggregateDto(
         id=src.id,
+        project_definition_id=src.project_definition_id,
+        collection_id=src.collection_id,
         ordinal=src.ordinal,
         name=src.name,
         is_extendable=src.is_extendable,
@@ -674,6 +678,15 @@ def map_aggregate_to_dto(src: Aggregate, mapper: Mapper) -> AggregateDto:
             mapper.map(attribute, AggregateAttributeDto)
             for attribute in src.attributes.values()
         ],
+    )
+
+
+def map_new_aggregate_from_dto(src: NewAggregateDto, mapper: Mapper) -> NewAggregate:
+    return NewAggregate(
+        ordinal=src.ordinal,
+        name=src.name,
+        is_extendable=src.is_extendable,
+        attributes=mapper.map_many(src.attributes, AggregateAttribute),
     )
 
 
@@ -697,17 +710,11 @@ def map_aggregate_attribute_from_dto(
     )
 
 
-def map_new_datasheet_from_dto(src: NewDatasheetDto, mapper: Mapper) -> Datasheet:
-    datasheet_id = uuid4()
-    return Datasheet(
-        id=datasheet_id,
+def map_new_datasheet_from_dto(src: NewDatasheetDto, mapper: Mapper) -> NewDatasheet:
+    return NewDatasheet(
         name=src.name,
-        is_staged=src.is_staged,
         project_definition_id=src.project_definition_id,
-        from_datasheet_id=datasheet_id
-        if src.from_datasheet_id is None
-        else src.from_datasheet_id,
-        creation_date_utc=mapper.get(Clock).utcnow(),
+        abstract_collection_id=src.abstract_collection_id,
     )
 
 
@@ -715,7 +722,6 @@ def map_datasheet_import_from_dto(src: DatasheetImportDto, mapper: Mapper) -> Da
     return Datasheet(
         id=src.id,
         name=src.name,
-        is_staged=False,
         project_definition_id=src.project_definition_id,
         from_datasheet_id=src.id,
         creation_date_utc=mapper.get(Clock).utcnow(),
@@ -726,9 +732,27 @@ def map_datasheet_to_dto(src: Datasheet, mapper: Mapper) -> DatasheetDto:
     return DatasheetDto(
         id=src.id,
         name=src.name,
-        is_staged=src.is_staged,
         project_definition_id=src.project_definition_id,
+        abstract_collection_id=src.abstract_collection_id,
         from_datasheet_id=src.from_datasheet_id,
+        attributes_schema=[
+            mapper.map(attribute_schema, AggregateAttributeSchemaDto)
+            for attribute_schema in src.attributes_schema.values()
+        ],
+        instances_schema=[
+            InstanceSchemaDto(
+                id=id,
+                is_extendable=instance_schema.is_extendable,
+                attributes_schema=[
+                    InstanceAttributeSchemaDto(
+                        name=name,
+                        is_readonly=attribute_schema.is_readonly,
+                    )
+                    for name, attribute_schema in instance_schema.attributes_schema.items()
+                ],
+            )
+            for id, instance_schema in src.instances_schema.items()
+        ],
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -737,12 +761,10 @@ def map_datasheet_element_import_from_dto(
     src: DatasheetElementImportDto, mapper: Mapper
 ) -> DatasheetElement:
     return DatasheetElement(
+        id=src.id,
         datasheet_id=src.datasheet_id,
-        element_def_id=src.element_def_id,
-        child_element_reference=src.child_element_reference,
-        properties=mapper.map_dict_values(
-            src.properties, primitive_union_dto_mappings.from_origin
-        ),
+        aggregate_id=src.aggregate_id,
+        attributes=[mapper.map(attribute, Attribute) for attribute in src.attributes],
         ordinal=0,
         original_datasheet_id=src.original_datasheet_id,
         original_owner_organization_id=src.original_owner_organization_id,
@@ -754,12 +776,13 @@ def map_datasheet_element_to_dto(
     src: DatasheetElement, mapper: Mapper
 ) -> DatasheetElementDto:
     return DatasheetElementDto(
+        id=src.id,
         datasheet_id=src.datasheet_id,
-        element_def_id=src.element_def_id,
-        child_element_reference=src.child_element_reference,
-        properties=mapper.map_dict_values(
-            src.properties, primitive_union_dto_mappings.to_origin
-        ),
+        aggregate_id=src.aggregate_id,
+        ordinal=src.ordinal,
+        attributes=[
+            mapper.map(attribute, AttributeDto) for attribute in src.attributes
+        ],
         original_datasheet_id=src.original_datasheet_id,
         original_owner_organization_id=src.original_owner_organization_id,
         creation_date_utc=src.creation_date_utc,
@@ -779,6 +802,24 @@ def map_datasheet_element_from_dto(
         ),
         original_datasheet_id=src.original_datasheet_id,
         creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_attribute_to_dto(src: Attribute, mapper: Mapper) -> AttributeDto:
+    return AttributeDto(
+        name=src.name,
+        value=mapper.map(
+            src.value, primitive_with_reference_union_dto_mappings.to_origin
+        ),
+    )
+
+
+def map_attribute_from_dto(src: AttributeDto, mapper: Mapper) -> Attribute:
+    return Attribute(
+        name=src.name,
+        value=mapper.map(
+            src.value, primitive_with_reference_union_dto_mappings.from_origin
+        ),
     )
 
 

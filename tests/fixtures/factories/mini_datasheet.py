@@ -1,5 +1,6 @@
 from decimal import Decimal
 from expert_dollup.core.domains import *
+from expert_dollup.core.utils import by_names
 from ..fake_db_helpers import FakeDb
 from .domains import *
 
@@ -15,11 +16,20 @@ class MiniDatasheet:
         collection = db.add(
             AggregateCollectionFactory(
                 project_definition_id=project_definition.id,
+                is_abstract=True,
                 name="abstract_product",
-                attributes_schema={
-                    "conversion_factor": DecimalFieldConfig(),
-                    "lost": DecimalFieldConfig(),
-                },
+                attributes_schema=by_names(
+                    [
+                        AggregateAttributeSchemaFactory(
+                            name="conversion_factor",
+                            details=DecimalFieldConfigFactory(),
+                        ),
+                        AggregateAttributeSchemaFactory(
+                            name="lost",
+                            details=DecimalFieldConfigFactory(),
+                        ),
+                    ]
+                ),
             )
         )
 
@@ -36,40 +46,44 @@ class MiniDatasheet:
         )
 
         db.add(
-            Aggregate(
-                unit_id="inch",
-                is_collection=False,
+            AggregateFactory(
+                is_extendable=False,
                 project_definition_id=project_definition.id,
                 ordinal=0,
+                collection_id=collection.id,
                 name="single_element",
-                attributes={
-                    "conversion_factor": AggregateAttribute(
-                        name="conversion_factor", is_readonly=True, value=Decimal(2)
-                    ),
-                    "lost": AggregateAttribute(
-                        name="lost", is_readonly=False, value=Decimal(1)
-                    ),
-                },
-                tags=[str(aggregate_a.id)],
+                attributes=by_names(
+                    [
+                        AggregateAttributeFactory(
+                            name="conversion_factor", is_readonly=True, value=Decimal(2)
+                        ),
+                        AggregateAttributeFactory(
+                            name="lost", is_readonly=False, value=Decimal(1)
+                        ),
+                    ]
+                ),
             )
         )
 
         db.add(
-            Aggregate(
-                unit_id="inch",
-                is_collection=True,
+            AggregateFactory(
+                is_extendable=True,
                 project_definition_id=project_definition.id,
                 ordinal=0,
+                collection_id=collection.id,
                 name="collection_element",
-                attributes={
-                    "conversion_factor": AggregateAttribute(
-                        name="conversion_factor", is_readonly=True, value=Decimal("1.5")
-                    ),
-                    "lost": AggregateAttribute(
-                        name="lost", is_readonly=False, value=Decimal(0)
-                    ),
-                },
-                tags=[aggregate_b.id],
+                attributes=by_names(
+                    [
+                        AggregateAttributeFactory(
+                            name="conversion_factor",
+                            is_readonly=True,
+                            value=Decimal("1.5"),
+                        ),
+                        AggregateAttributeFactory(
+                            name="lost", is_readonly=False, value=Decimal(0)
+                        ),
+                    ]
+                ),
             )
         )
 

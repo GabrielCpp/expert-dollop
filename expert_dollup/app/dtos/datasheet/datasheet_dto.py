@@ -7,11 +7,6 @@ from ..definition.aggregate_dto import AggregateAttributeDto
 from ..definition.aggregate_collection_dto import AggregateAttributeSchemaDto
 
 
-class NewDatasheetDto(CamelModel):
-    name: str
-    abstract_collection_id: UUID
-
-
 class CloningDatasheetDto(CamelModel):
     clone_name: str
     target_datasheet_id: UUID
@@ -37,6 +32,12 @@ class DatasheetDto(CamelModel):
     attributes_schema: List[AggregateAttributeSchemaDto]
     instances_schema: List[InstanceSchemaDto]
     creation_date_utc: datetime
+
+
+class NewDatasheetDto(CamelModel):
+    name: str
+    project_definition_id: UUID
+    abstract_collection_id: UUID
 
 
 class DatasheetImportDto(CamelModel):

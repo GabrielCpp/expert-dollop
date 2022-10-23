@@ -154,11 +154,10 @@ class AggregateDtoFactory(factory.Factory):
     attributes = factory.List([])
 
 
-class DatasheetDtoFactory(factory.Factory):
+class NewDatasheetDtoFactory(factory.Factory):
     class Meta:
         model = NewDatasheetDto
 
     name = factory.Sequence(lambda n: f"datasheet{n}")
-    is_staged = False
     project_definition_id = factory.Faker("pyuuid4")
-    from_datasheet_id = None
+    abstract_collection_id = factory.Faker("pyuuid4")

@@ -1,11 +1,6 @@
 from typing import List
 from uuid import UUID, uuid4
-from expert_dollup.shared.database_services import (
-    Page,
-    Paginator,
-    Repository,
-    DatabaseContext,
-)
+from expert_dollup.shared.database_services import *
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.core.utils import authorization_factory
 from expert_dollup.core.domains import *
@@ -90,9 +85,41 @@ class DatasheetUseCase:
         await self.db_context.insert_many(DatasheetElement, cloned_elements)
         return cloned_datasheet
 
-    async def add_filled_datasheet(self, datasheet: Datasheet, user: User) -> Datasheet:
+    async def add_filled_datasheet(
+        self, new_datasheet: NewDatasheet, user: User
+    ) -> Datasheet:
+        datasheet_id = uuid4()
         collection = await self.db_context.find_by_id(
-            AggregateCollection, datasheet.abstract_collection_id
+            AggregateCollection, new_datasheet.abstract_collection_id
+        )
+        aggregates = await self.db_context.find_by(
+            Aggregate,
+            AggregateFilter(
+                project_definition_id=new_datasheet.project_definition_id,
+                collection_id=new_datasheet.abstract_collection_id,
+            ),
+        )
+
+        datasheet = Datasheet(
+            id=datasheet_id,
+            project_definition_id=new_datasheet.project_definition_id,
+            abstract_collection_id=new_datasheet.abstract_collection_id,
+            name=new_datasheet.name,
+            from_datasheet_id=datasheet_id,
+            attributes_schema=collection.attributes_schema,
+            instances_schema={
+                aggregate.id: InstanceSchema(
+                    is_extendable=aggregate.is_extendable,
+                    attributes_schema={
+                        attribute.name: InstanceAttributeSchema(
+                            is_readonly=attribute.is_readonly
+                        )
+                        for attribute in aggregate.attributes.values()
+                    },
+                )
+                for aggregate in aggregates
+            },
+            creation_date_utc=self.clock.utcnow(),
         )
         elements = [
             DatasheetElement(
@@ -108,7 +135,7 @@ class DatasheetUseCase:
                 original_owner_organization_id=user.organization_id,
                 creation_date_utc=self.clock.utcnow(),
             )
-            for aggregate in collection.aggregates
+            for aggregate in aggregates
         ]
 
         await self.add(datasheet, user)

@@ -5,7 +5,7 @@ from .aggregate_collection import (
     Aggregation,
     AggregateCollectionFilter,
 )
-from .aggregate import AggregateAttribute, Aggregate, AggregateFilterFilter
+from .aggregate import AggregateAttribute, Aggregate, AggregateFilter, NewAggregate
 from .formula import (
     Formula,
     FormulaExpression,

@@ -1,7 +1,8 @@
 import factory
-from factory import SubFactory
+from factory import SubFactory, fuzzy
 from expert_dollup.core.domains import *
 from datetime import timezone
+from decimal import Decimal
 
 
 class ProjectDefinitionFactory(factory.Factory):
@@ -228,15 +229,57 @@ class ReportFactory(factory.Factory):
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
-class AggregateFactory(factory.Factory):
+class IntFieldConfigFactory(factory.Factory):
     class Meta:
-        model = Aggregate
+        model = IntFieldConfig
 
-    id = factory.Faker("pyuuid4")
-    ordinal = factory.Sequence(lambda n: n)
-    name = factory.Sequence(lambda n: f"label_{n}")
-    is_extendable = False
-    attributes = factory.List([])
+    unit = None
+    default_value = factory.Faker("pyint")
+
+
+class DecimalFieldConfigFactory(factory.Factory):
+    class Meta:
+        model = DecimalFieldConfig
+
+    unit = "inch"
+    precision = 3
+    default_value = factory.Faker("pydecimal")
+
+
+class StringFieldConfigFactory(factory.Factory):
+    class Meta:
+        model = StringFieldConfig
+
+    transforms = ["trim"]
+    default_value = factory.Faker("word")
+
+
+class BoolFieldConfigFactory(factory.Factory):
+    class Meta:
+        model = BoolFieldConfig
+
+    default_value = factory.Faker("pybool")
+
+
+class StaticChoiceOptionFactory(factory.Factory):
+    class Meta:
+        model = StaticChoiceOption
+
+    id = factory.Faker("unique_name_id")
+    label = factory.Faker("underscored_name")
+    help_text = factory.Faker("underscored_name")
+
+
+class StaticChoiceFieldConfigFactory(factory.Factory):
+    class Meta:
+        model = StaticChoiceFieldConfig
+
+    options = factory.RelatedFactoryList(
+        StaticChoiceOptionFactory, size=lambda: factory.fuzzy.FuzzyInteger(0, 3).fuzz()
+    )
+    default_value = factory.LazyAttribute(
+        lambda o: o.options[factory.fuzzy.FuzzyInteger(0, len(o.options)).fuzz()].id
+    )
 
 
 class AggregateCollectionFactory(factory.Factory):
@@ -248,6 +291,43 @@ class AggregateCollectionFactory(factory.Factory):
     name = factory.Sequence(lambda n: f"label_collection_{n}")
     is_abstract = False
     attributes_schema = factory.Dict({})
+
+
+class AggregateAttributeSchemaFactory(factory.Factory):
+    class Meta:
+        model = AggregateAttributeSchema
+
+    name = factory.Sequence(lambda n: f"attribute_{n}")
+    details = factory.SubFactory(IntFieldConfigFactory)
+
+
+class AggregateFactory(factory.Factory):
+    class Meta:
+        model = Aggregate
+
+    id = factory.Faker("pyuuid4")
+    project_definition_id = factory.Faker("pyuuid4")
+    collection_id = factory.Faker("pyuuid4")
+    ordinal = factory.Sequence(lambda n: n)
+    name = factory.Sequence(lambda n: f"label_{n}")
+    is_extendable = False
+    attributes = factory.Dict({})
+
+
+class AggregateAttributeFactory(factory.Factory):
+    class Meta:
+        model = AggregateAttribute
+
+    name = factory.Faker("underscored_name")
+    is_readonly = factory.Faker("pybool")
+    value = fuzzy.FuzzyChoice(
+        [
+            fuzzy.FuzzyChoice([True, False]),
+            fuzzy.FuzzyInteger(0),
+            fuzzy.FuzzyDecimal(0),
+        ],
+        lambda x: x.fuzz(),
+    )
 
 
 class TranslationFactory(factory.Factory):

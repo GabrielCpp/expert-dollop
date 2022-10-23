@@ -3,7 +3,7 @@ from uuid import UUID
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *
-from expert_dollup.core.usecases import AggregationUseCase
+from expert_dollup.core.usecases import CollectionUseCase
 
 router = APIRouter()
 
@@ -12,7 +12,7 @@ router = APIRouter()
 async def get_label_collection_by_id(
     project_definition_id: UUID,
     collection_id: UUID,
-    usecase: AggregationUseCase = Depends(Inject(AggregationUseCase)),
+    usecase: CollectionUseCase = Depends(Inject(CollectionUseCase)),
     handler: RequestHandler = Depends(Inject(RequestHandler)),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:update"])
@@ -30,7 +30,7 @@ async def get_label_collection_by_id(
 async def add_aggregate_collection(
     project_definition_id: UUID,
     new_aggregate_collection: NewAggregateCollectionDto,
-    usecase: AggregationUseCase = Depends(Inject(AggregationUseCase)),
+    usecase: CollectionUseCase = Depends(Inject(CollectionUseCase)),
     handler: RequestHandler = Depends(Inject(RequestHandler)),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:update"])
@@ -52,7 +52,7 @@ async def add_aggregate_collection(
 async def update_aggregate_collection(
     project_definition_id: UUID,
     new_aggregate_collection: NewAggregateCollectionDto,
-    usecase: AggregationUseCase = Depends(Inject(AggregationUseCase)),
+    usecase: CollectionUseCase = Depends(Inject(CollectionUseCase)),
     handler: RequestHandler = Depends(Inject(RequestHandler)),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:update"])
@@ -75,7 +75,7 @@ async def update_aggregate_collection(
 async def delete_aggregate_collection_by_id(
     project_definition_id: UUID,
     collection_id: UUID,
-    usecase=Depends(Inject(AggregationUseCase)),
+    usecase=Depends(Inject(CollectionUseCase)),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:update"])
     ),

@@ -15,7 +15,7 @@ class InstanceAttributeSchema:
 @dataclass
 class InstanceSchema:
     is_extendable: bool
-    attributes_schema: Dict[str, InstanceAttributeSchema]
+    attributes_schema: Dict[UUID, InstanceAttributeSchema]
 
 
 @dataclass
@@ -28,6 +28,13 @@ class Datasheet:
     attributes_schema: Dict[str, AggregateAttributeSchema]
     instances_schema: Dict[UUID, InstanceSchema]
     creation_date_utc: datetime
+
+
+@dataclass
+class NewDatasheet:
+    name: str
+    project_definition_id: UUID
+    abstract_collection_id: UUID
 
 
 @dataclass

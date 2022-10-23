@@ -275,6 +275,8 @@ class AggregateDao(BaseModel):
         title = "aggregate"
 
     id: UUID
+    project_definition_id: UUID
+    collection_id: UUID
     ordinal: int
     name: str
     is_extendable: bool
@@ -316,7 +318,6 @@ class DatasheetDao(BaseModel):
 
     id: UUID
     name: str = Field(max_length=64)
-    is_staged: bool
     project_definition_id: UUID
     from_datasheet_id: Optional[UUID]
     creation_date_utc: datetime

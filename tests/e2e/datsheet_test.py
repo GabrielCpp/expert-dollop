@@ -11,20 +11,12 @@ def assert_all_definition_where_impemented(aggregates, results):
     implementations = defaultdict(int)
 
     for result in results:
-        implementations[result.element_def_id] += 1
+        implementations[result.aggregate_id] += 1
 
     assert len(aggregates) > 0
     for aggregate in aggregates:
         assert aggregate.id in implementations
         assert implementations.get(aggregate.id) == 1
-
-
-async def create_datasheet(ac, definition: ProjectDefinition):
-    datasheet = DatasheetDtoFactory(project_definition_id=definition.id)
-    datasheet_dto = await ac.post_json(
-        "/api/datasheets", datasheet, unwrap_with=DatasheetDto
-    )
-    return datasheet_dto
 
 
 @pytest.mark.asyncio
@@ -111,7 +103,17 @@ async def test_datasheet(ac, db_helper: DbFixtureHelper):
     single_element = db.get_only_one_matching(
         Aggregate, lambda n: n.name == "single_element"
     )
-    datasheet_dto = await create_datasheet(ac, definition)
+    abstract_product = db.get_only_one_matching(
+        AggregateCollection, lambda e: e.name == "abstract_product"
+    )
+    print(abstract_product)
+    datasheet_dto = await create_datasheet(
+        ac,
+        NewDatasheetDtoFactory(
+            project_definition_id=definition.id,
+            abstract_collection_id=abstract_product.id,
+        ),
+    )
     elements_page_dto = await get_paginated_datasheet_elements(datasheet_dto)
     assert_all_definition_where_impemented(db.all(Aggregate), elements_page_dto.results)
 

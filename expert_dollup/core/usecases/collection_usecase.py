@@ -3,9 +3,10 @@ from typing import List
 from expert_dollup.shared.database_services import Repository
 from expert_dollup.shared.starlette_injection import IdProvider
 from expert_dollup.core.domains import *
+from expert_dollup.core.utils import by_names
 
 
-class AggregationUseCase:
+class CollectionUseCase:
     def __init__(
         self, repository: Repository[AggregateCollection], id_provider: IdProvider
     ):
@@ -29,7 +30,7 @@ class AggregationUseCase:
             project_definition_id=project_definition_id,
             name=new_aggregate_collection.name,
             is_abstract=new_aggregate_collection.is_abstract,
-            attributes_schema=new_aggregate_collection.attributes_schema,
+            attributes_schema=by_names(new_aggregate_collection.attributes_schema),
         )
         await self.repository.insert(aggregate_collection)
         return aggregate_collection

@@ -114,7 +114,13 @@ class IntegratedTestClient(TestClient):
         if unwrap_with is None:
             return response
 
-        result = parse_obj_as(unwrap_with, response.json())
+        json_payload = response.json()
+
+        try:
+            result = parse_obj_as(unwrap_with, json_payload)
+        except Exception:
+            print(json_payload)
+            raise
 
         if callable(after):
             after(result)

@@ -17,6 +17,8 @@ class AggregateAttribute:
 @dataclass
 class Aggregate:
     id: UUID
+    project_definition_id: UUID
+    collection_id: UUID
     ordinal: int
     name: str
     is_extendable: bool
@@ -38,7 +40,17 @@ class Aggregate:
         }
 
 
-class AggregateFilterFilter(QueryFilter):
+@dataclass
+class NewAggregate:
+    ordinal: int
+    name: str
+    is_extendable: bool
+    attributes: List[AggregateAttribute]
+
+
+class AggregateFilter(QueryFilter):
     id: Optional[UUID]
+    project_definition_id: Optional[UUID]
+    collection_id: Optional[UUID]
     ordinal: Optional[int]
     name: Optional[str]

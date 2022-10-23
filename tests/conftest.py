@@ -28,16 +28,29 @@ class PyUUIDProvider(faker.providers.BaseProvider):
         return UUID(hexs)
 
 
+class UniqueNameIdProvider(faker.providers.BaseProvider):
+    def unique_name_id(self) -> UUID:
+        hexs = self.hexify("^" * 32)
+        return "n" + hexs
+
+
 class WordStringProvider(faker.providers.lorem.Provider):
     def words_str(self) -> UUID:
+        return " ".join(self.words())
+
+
+class UnderscoredNameProvider(faker.providers.lorem.Provider):
+    def underscored_name(self) -> UUID:
         return " ".join(self.words())
 
 
 load_dotenv(".env")
 reseed_random(1)
 Faker.add_provider(PyUUIDProvider)
+Faker.add_provider(UniqueNameIdProvider)
 Faker.add_provider(DateTimeProvider)
 Faker.add_provider(WordStringProvider)
+Faker.add_provider(UnderscoredNameProvider)
 
 
 @pytest.fixture
