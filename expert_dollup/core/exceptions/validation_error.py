@@ -14,3 +14,11 @@ class ValidationError(DetailedError):
     def __init__(self, path, error, **props):
         props.update(dict(path=path, error=error))
         DetailedError.__init__(self, "Validation error", **props)
+
+    @property
+    def message(self):
+        return str(self)
+
+    @property
+    def errors(self):
+        return [self.props["error"]]

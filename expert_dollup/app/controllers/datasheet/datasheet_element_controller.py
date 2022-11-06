@@ -14,14 +14,23 @@ router = APIRouter()
 async def find_datasheet_elements(
     datasheet_id: UUID,
     limit: int = Query(alias="limit", default=100),
+    aggregate_id: UUID = Query(alias="aggregate_id", default=None),
     next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
     handler: PageHandlerProxy = Depends(Inject(PageHandlerProxy)),
     paginator=Depends(Inject(Paginator[DatasheetElement])),
     user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:get"])),
 ):
+    query_filter = (
+        DatasheetElementFilter(datasheet_id=datasheet_id)
+        if aggregate_id is None
+        else DatasheetElementFilter(
+            datasheet_id=datasheet_id, aggregate_id=aggregate_id
+        )
+    )
+
     return await handler.use_paginator(paginator).handle(
         DatasheetElementDto,
-        DatasheetElementFilter(datasheet_id=datasheet_id),
+        query_filter,
         limit,
         next_page_token,
     )
@@ -74,8 +83,30 @@ async def update_datasheet_element_properties(
         MappingChain(domain=DatasheetElement, dto=DatasheetElementDto),
         datasheet_id=datasheet_id,
         datasheet_element_id=datasheet_element_id,
+        user=user,
         replacement=MappingChain(
             value=replacement, dto=NewDatasheetElementDto, domain=NewDatasheetElement
+        ),
+    )
+
+
+@router.patch("/datasheets/{datasheet_id}/elements/{datasheet_element_id}/values")
+async def patch_datasheet_element_values(
+    datasheet_id: UUID,
+    datasheet_element_id: UUID,
+    attributes: List[AttributeDto],
+    request_handler: RequestHandler = Depends(Inject(RequestHandler)),
+    usecase: DatasheetElementUseCase = Depends(Inject(DatasheetElementUseCase)),
+    user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:update"])),
+):
+    return await request_handler.do_handle(
+        usecase.update_values,
+        MappingChain(domain=DatasheetElement, dto=DatasheetElementDto),
+        datasheet_id=datasheet_id,
+        datasheet_element_id=datasheet_element_id,
+        user=user,
+        attributes=MappingChain(
+            dto=List[AttributeDto], domain=List[Attribute], value=attributes
         ),
     )
 
@@ -95,26 +126,6 @@ async def add_datasheet_element(
         user=user,
         new_element=MappingChain(
             value=new_element, domain=NewDatasheetElement, dto=NewDatasheetElementDto
-        ),
-    )
-
-
-@router.put("/datasheets/{datasheet_id}/elements")
-async def batch_update_datasheet_elements_attributes(
-    datasheet_id: UUID,
-    updates: List[DatasheetElementUpdateDto],
-    usecase: DatasheetElementUseCase = Depends(Inject(DatasheetElementUseCase)),
-    handler: RequestHandler = Depends(Inject(RequestHandler)),
-    user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:update"])),
-):
-    return await handler.do_handle(
-        usecase.batch_update_values,
-        MappingChain(dto=List[DatasheetElementUpdateDto]),
-        datasheet_id=datasheet_id,
-        updates=MappingChain(
-            value=updates,
-            dto=List[DatasheetElementUpdateDto],
-            domain=List[DatasheetElementUpdate],
         ),
     )
 

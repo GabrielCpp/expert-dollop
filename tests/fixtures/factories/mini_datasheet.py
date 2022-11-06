@@ -22,7 +22,9 @@ class MiniDatasheet:
                     [
                         AggregateAttributeSchemaFactory(
                             name="conversion_factor",
-                            details=DecimalFieldConfigFactory(),
+                            details=DecimalFieldConfigFactory(
+                                default_value=Decimal("1.1")
+                            ),
                         ),
                         AggregateAttributeSchemaFactory(
                             name="lost",

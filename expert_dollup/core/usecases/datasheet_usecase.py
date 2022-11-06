@@ -33,53 +33,51 @@ class DatasheetUseCase:
         await self.db_context.delete_by_id(Datasheet, datasheet_id)
 
     async def clone(self, target: CloningDatasheet, user: User):
-        datasheet = await self.db_context.find_by_id(
-            Datasheet, target.target_datasheet_id
-        )
+        datasheet = await self.find_by_id(target.target_datasheet_id)
         cloned_datasheet = Datasheet(
             id=uuid4(),
-            name=datasheet.name,
-            is_staged=datasheet.is_staged,
             project_definition_id=datasheet.project_definition_id,
-            from_datasheet_id=target.target_datasheet_id,
+            abstract_collection_id=datasheet.abstract_collection_id,
+            name=target.clone_name,
+            from_datasheet_id=datasheet.id,
+            attributes_schema=datasheet.attributes_schema,
+            instances_schema=datasheet.instances_schema,
             creation_date_utc=self.clock.utcnow(),
         )
 
-        page = Page[DatasheetElement]()
-        cloned_elements: List[DatasheetElement] = []
+        query_filter = DatasheetElementFilter(datasheet_id=target.target_datasheet_id)
+        page = await self.datasheet_element_paginator.find_page(query_filter, 500)
+        cloned_elements: List[DatasheetElement] = [
+            DatasheetElement(
+                id=uuid4(),
+                datasheet_id=cloned_datasheet.id,
+                aggregate_id=result.aggregate_id,
+                ordinal=result.ordinal,
+                attributes=result.attributes,
+                original_datasheet_id=result.original_datasheet_id,
+                original_owner_organization_id=user.organization_id,
+                creation_date_utc=self.clock.utcnow(),
+            )
+            for result in page.results
+        ]
 
         while len(page.results) == page.limit:
             page = await self.datasheet_element_paginator.find_page(
-                DatasheetElementFilter(
-                    datasheet_id=datasheet_clone_target.target_datasheet_id
-                ),
-                page.limit,
-                page.next_page_token,
+                query_filter, page.limit, page.next_page_token
             )
             cloned_elements.extend(
-                [
-                    DatasheetElement(
-                        datasheet_id=cloned_datasheet.id,
-                        element_def_id=result.element_def_id,
-                        child_element_reference=uuid4(),
-                        ordinal=result.ordinal,
-                        properties=result.properties,
-                        original_datasheet_id=result.original_datasheet_id,
-                        original_owner_organization_id=user.organization_id,
-                        creation_date_utc=self.clock.utcnow(),
-                    )
-                    for result in page.results
-                ]
+                DatasheetElement(
+                    id=uuid4(),
+                    datasheet_id=cloned_datasheet.id,
+                    aggregate_id=result.aggregate_id,
+                    ordinal=result.ordinal,
+                    attributes=result.attributes,
+                    original_datasheet_id=result.original_datasheet_id,
+                    original_owner_organization_id=user.organization_id,
+                    creation_date_utc=self.clock.utcnow(),
+                )
+                for result in page.results
             )
-
-        cloned_datasheet = Datasheet(
-            id=uuid4(),
-            name=datasheet_clone_target.clone_name,
-            is_staged=datasheet.is_staged,
-            project_definition_id=datasheet.project_definition_id,
-            from_datasheet_id=datasheet.from_datasheet_id,
-            creation_date_utc=self.clock.utcnow(),
-        )
 
         await self.add(cloned_datasheet, user)
         await self.db_context.insert_many(DatasheetElement, cloned_elements)
@@ -88,7 +86,6 @@ class DatasheetUseCase:
     async def add_filled_datasheet(
         self, new_datasheet: NewDatasheet, user: User
     ) -> Datasheet:
-        datasheet_id = uuid4()
         collection = await self.db_context.find_by_id(
             AggregateCollection, new_datasheet.abstract_collection_id
         )
@@ -99,28 +96,7 @@ class DatasheetUseCase:
                 collection_id=new_datasheet.abstract_collection_id,
             ),
         )
-
-        datasheet = Datasheet(
-            id=datasheet_id,
-            project_definition_id=new_datasheet.project_definition_id,
-            abstract_collection_id=new_datasheet.abstract_collection_id,
-            name=new_datasheet.name,
-            from_datasheet_id=datasheet_id,
-            attributes_schema=collection.attributes_schema,
-            instances_schema={
-                aggregate.id: InstanceSchema(
-                    is_extendable=aggregate.is_extendable,
-                    attributes_schema={
-                        attribute.name: InstanceAttributeSchema(
-                            is_readonly=attribute.is_readonly
-                        )
-                        for attribute in aggregate.attributes.values()
-                    },
-                )
-                for aggregate in aggregates
-            },
-            creation_date_utc=self.clock.utcnow(),
-        )
+        datasheet = self._make_datasheet(collection, aggregates, new_datasheet)
         elements = [
             DatasheetElement(
                 id=uuid4(),
@@ -140,4 +116,32 @@ class DatasheetUseCase:
 
         await self.add(datasheet, user)
         await self.db_context.insert_many(DatasheetElement, elements)
+        return datasheet
+
+    def _make_datasheet(
+        self,
+        collection: AggregateCollection,
+        aggregates: List[Aggregate],
+        new_datasheet: NewDatasheet,
+    ) -> Datasheet:
+        datasheet_id = uuid4()
+        datasheet = Datasheet(
+            id=datasheet_id,
+            project_definition_id=new_datasheet.project_definition_id,
+            abstract_collection_id=new_datasheet.abstract_collection_id,
+            name=new_datasheet.name,
+            from_datasheet_id=datasheet_id,
+            attributes_schema=collection.attributes_schema,
+            instances_schema={
+                aggregate.id: InstanceSchema(
+                    is_extendable=aggregate.is_extendable,
+                    attributes_schema={
+                        id: attribute for id, attribute in aggregate.attributes.items()
+                    },
+                )
+                for aggregate in aggregates
+            },
+            creation_date_utc=self.clock.utcnow(),
+        )
+
         return datasheet

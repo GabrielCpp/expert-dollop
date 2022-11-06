@@ -62,6 +62,16 @@ class FakeDb:
         assert len(results) == 1
         return results[0]
 
+    def get_by_name(self, object_type: Type[Domain], name: str) -> Domain:
+        objects = self.collections[object_type]
+        results = [
+            matching_object
+            for matching_object in objects
+            if matching_object.name == name
+        ]
+        assert len(results) == 1
+        return results[0]
+
     def add(self, *args: Domain) -> Union[Domain, List[Domain]]:
         if len(args) == 0:
             raise Exception("Add at lead one object")

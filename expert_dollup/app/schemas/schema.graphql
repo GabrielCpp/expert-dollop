@@ -53,15 +53,10 @@ type AggregateCollection {
   attributesSchema: [AggregateAttributeSchema!]!
 }
 
-type InstanceAttributeSchema {
-  name: String!
-  isReadonly: Boolean!
-}
-
 type InstanceSchema {
   id: ID!
   isExtendable: Boolean!
-  attributesSchema: [InstanceAttributeSchema!]!
+  attributesSchema: [AggregateAttribute!]!
 }
 
 type Attribute {

@@ -37,7 +37,7 @@ class DbAgnotistQueryBuilder(QueryBuilder):
         return self
 
     def construct(self, name, *ops) -> QueryBuilder:
-        self._constructs[name].append(ops)
+        self._constructs[name].extend(ops)
         return self
 
     def apply(self, builder: callable, *args, **kargs) -> QueryBuilder:

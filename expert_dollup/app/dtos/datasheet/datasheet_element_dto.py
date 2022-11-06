@@ -23,6 +23,7 @@ class DatasheetElementDto(CamelModel):
 
 class NewDatasheetElementDto(CamelModel):
     aggregate_id: UUID
+    ordinal: int
     attributes: List[AttributeDto]
 
 

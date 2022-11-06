@@ -137,6 +137,13 @@ def bind_custom_repositories(builder: InjectorBuilder) -> None:
         ),
     )
 
+    builder.add_factory(
+        DatasheetElementRepository,
+        DatasheetElementInternalRepository,
+        repository=TypedInjection.make_type_name(InternalRepository, DatasheetElement),
+        mapper=Mapper,
+    )
+
 
 def bind_validators(builder: InjectorBuilder) -> None:
     builder.add_singleton(SchemaValidator, SchemaValidator)

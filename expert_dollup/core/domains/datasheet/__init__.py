@@ -4,7 +4,6 @@ from .datasheet import (
     CloningDatasheet,
     NewDatasheet,
     InstanceSchema,
-    InstanceAttributeSchema,
 )
 from .datasheet_element import (
     DatasheetElement,

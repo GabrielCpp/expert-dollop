@@ -892,7 +892,16 @@ def map_datasheet_to_dao(src: Datasheet, mapper: Mapper) -> DatasheetDao:
         id=src.id,
         name=src.name,
         project_definition_id=src.project_definition_id,
+        abstract_collection_id=src.abstract_collection_id,
         from_datasheet_id=src.from_datasheet_id,
+        attributes_schema={
+            name: mapper.map(attribute_schema, AggregateAttributeSchemaDao)
+            for name, attribute_schema in src.attributes_schema.items()
+        },
+        instances_schema={
+            str(id): mapper.map(instance_schema, InstanceSchemaDao)
+            for id, instance_schema in src.instances_schema.items()
+        },
         creation_date_utc=src.creation_date_utc,
     )
 
@@ -902,8 +911,41 @@ def map_datasheet_from_dao(src: DatasheetDao, mapper: Mapper) -> Datasheet:
         id=src.id,
         name=src.name,
         project_definition_id=src.project_definition_id,
+        abstract_collection_id=src.abstract_collection_id,
         from_datasheet_id=src.from_datasheet_id,
+        attributes_schema={
+            name: mapper.map(attribute_schema, AggregateAttributeSchema)
+            for name, attribute_schema in src.attributes_schema.items()
+        },
+        instances_schema={
+            UUID(id): mapper.map(instance_schema, InstanceSchema)
+            for id, instance_schema in src.instances_schema.items()
+        },
         creation_date_utc=src.creation_date_utc,
+    )
+
+
+def map_instance_schema_from_dao(
+    src: InstanceSchemaDao, mapper: Mapper
+) -> InstanceSchema:
+    return InstanceSchema(
+        is_extendable=src.is_extendable,
+        attributes_schema={
+            name: mapper.map(attribute_schema, AggregateAttribute)
+            for name, attribute_schema in src.attributes_schema.items()
+        },
+    )
+
+
+def map_instance_schema_to_dao(
+    src: InstanceSchema, mapper: Mapper
+) -> InstanceSchemaDao:
+    return InstanceSchemaDao(
+        is_extendable=src.is_extendable,
+        attributes_schema={
+            name: mapper.map(attribute_schema, AggregateAttributeDao)
+            for name, attribute_schema in src.attributes_schema.items()
+        },
     )
 
 
@@ -915,9 +957,10 @@ def map_datasheet_element_to_dao(
         datasheet_id=src.datasheet_id,
         aggregate_id=src.aggregate_id,
         ordinal=src.ordinal,
-        attributes=[
-            mapper.map(attribute, AttributeDao) for attribute in src.attributes
-        ],
+        attributes={
+            attribute.name: mapper.map(attribute, AttributeDao)
+            for attribute in src.attributes
+        },
         original_datasheet_id=src.original_datasheet_id,
         original_owner_organization_id=src.original_owner_organization_id,
         creation_date_utc=src.creation_date_utc,
@@ -932,7 +975,9 @@ def map_datasheet_element_from_dao(
         datasheet_id=src.datasheet_id,
         aggregate_id=src.aggregate_id,
         ordinal=src.ordinal,
-        attributes=[mapper.map(attribute, Attribute) for attribute in src.attributes],
+        attributes=[
+            mapper.map(attribute, Attribute) for attribute in src.attributes.values()
+        ],
         original_datasheet_id=src.original_datasheet_id,
         original_owner_organization_id=src.original_owner_organization_id,
         creation_date_utc=src.creation_date_utc,
@@ -945,10 +990,12 @@ def map_datasheet_element_filter_to_dict(
     return map_dict_keys(
         src.args,
         {
+            "id": ("id", None),
             "datasheet_id": ("datasheet_id", None),
-            "element_def_id": ("element_def_id", None),
-            "child_element_reference": ("child_element_reference", None),
+            "aggregate_id": ("aggregate_id", None),
             "ordinal": ("ordinal", None),
+            "original_datasheet_id": ("original_datasheet_id", None),
+            "original_owner_organization_id": ("original_owner_organization_id", None),
             "creation_date_utc": ("creation_date_utc", None),
         },
     )

@@ -4,15 +4,18 @@ from expert_dollup.shared.database_services import DatabaseContext
 from expert_dollup.shared.starlette_injection import Clock
 from expert_dollup.core.exceptions import ValidationError
 from expert_dollup.core.domains import *
+from expert_dollup.core.repositories import DatasheetElementRepository
 
 
 class DatasheetElementUseCase:
     def __init__(
         self,
         db_context: DatabaseContext,
+        datasheet_element_repository: DatasheetElementRepository,
         clock: Clock,
     ):
         self.db_context = db_context
+        self.datasheet_element_repository = datasheet_element_repository
         self.clock = clock
 
     async def find(
@@ -26,14 +29,12 @@ class DatasheetElementUseCase:
             ),
         )
 
-    async def count(
-        self, datasheet_id: UUID, datasheet_element_id: UUID
-    ) -> DatasheetElement:
+    async def count(self, datasheet_id: UUID, aggregate_id: UUID) -> DatasheetElement:
         collection_size = await self.db_context.count(
             DatasheetElement,
             DatasheetElementFilter(
                 datasheet_id=datasheet_id,
-                element_def_id=datasheet_element_id,
+                aggregate_id=aggregate_id,
             ),
         )
         return collection_size
@@ -43,8 +44,9 @@ class DatasheetElementUseCase:
         datasheet_id: UUID,
         datasheet_element_id: UUID,
         replacement: NewDatasheetElement,
+        user: User,
     ) -> DatasheetElement:
-        datasheet = await self.db_context.find_by_id(Datashet, datasheet_id)
+        datasheet = await self.db_context.find_by_id(Datasheet, datasheet_id)
         self._validate_datasheet_element_properties(replacement, datasheet)
 
         element = await self.find(datasheet_id, datasheet_element_id)
@@ -54,12 +56,23 @@ class DatasheetElementUseCase:
             aggregate_id=element.aggregate_id,
             ordinal=replacement.ordinal,
             attributes=replacement.attributes,
-            original_datasheet_id=replacement.original_datasheet_id,
-            original_owner_organization_id=replacement.original_owner_organization_id,
+            original_datasheet_id=datasheet_id,
+            original_owner_organization_id=user.organization_id,
             creation_date_utc=element.creation_date_utc,
         )
-        await self.db_context.upserts([new_element])
+        await self.db_context.upserts(DatasheetElement, [new_element])
         return new_element
+
+    async def update_values(
+        self,
+        datasheet_id: UUID,
+        datasheet_element_id: UUID,
+        attributes: List[Attribute],
+        user: User,
+    ) -> DatasheetElement:
+        return await self.datasheet_element_repository.update_values(
+            datasheet_id, datasheet_element_id, attributes
+        )
 
     async def add(
         self, datasheet_id: UUID, new_element: NewDatasheetElement, user: User
@@ -73,10 +86,10 @@ class DatasheetElementUseCase:
             )
 
         aggregate_schema = datasheet.instances_schema[new_element.aggregate_id]
-        if not aggregate_schema.is_collection:
+        if not aggregate_schema.is_extendable:
             raise InvalidUsageError("Non collection element cannot be instanciated.")
 
-        collection_size = await self.count(datasheet_id, datasheet_element_id)
+        collection_size = await self.count(datasheet_id, new_element.aggregate_id)
         new_element = DatasheetElement(
             id=uuid4(),
             datasheet_id=datasheet_id,
@@ -87,36 +100,25 @@ class DatasheetElementUseCase:
             original_datasheet_id=datasheet_id,
             creation_date_utc=self.clock.utcnow(),
         )
-        await self.datasheet_element_service.insert(new_element)
+        await self.db_context.insert(DatasheetElement, new_element)
 
         return new_element
-
-    async def batch_update_values(
-        self, datasheet_id: UUID, updates: List[DatasheetElementUpdate]
-    ) -> List[DatasheetElement]:
-        datasheet = await self.db_context.find_by_id(Datasheet, datasheet_id)
-        for update in updates:
-            self._validate_datasheet_element_properties(update, datasheet)
-
-        # TODO: finish the update
-
-        self.db_context.upserts(DatsheetElement, domains)
 
     async def delete(self, datasheet_id: UUID, datasheet_element_id: UUID) -> None:
         datasheet = await self.db_context.find_by_id(Datasheet, datasheet_id)
         element = await self.find(datasheet_id, datasheet_element_id)
         aggregate_schema = datasheet.instances_schema[element.aggregate_id]
 
-        if not aggregate_schema.is_collection:
+        if not aggregate_schema.is_extendable:
             raise ValidationError.generic(
                 "Non collection element cannot be instanciated."
             )
 
-        collection_size = await self.count(datasheet_id, datasheet_element_id)
+        collection_size = await self.count(datasheet_id, element.aggregate_id)
         if collection_size <= 1:
             raise ValidationError.generic("Cannot delete all items of collection")
 
-        await self.db_context.delete_by_id(DatasheetElement, element_id)
+        await self.db_context.delete_by_id(DatasheetElement, datasheet_element_id)
 
     def _validate_datasheet_element_properties(
         self, replacement: DatasheetElementUpdate, datasheet: Datasheet

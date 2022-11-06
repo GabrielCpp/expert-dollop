@@ -4,7 +4,6 @@ from .datasheet_dto import (
     DatasheetDto,
     DatasheetImportDto,
     InstanceSchemaDto,
-    InstanceAttributeSchemaDto,
 )
 from .datasheet_element_dto import (
     DatasheetElementDto,

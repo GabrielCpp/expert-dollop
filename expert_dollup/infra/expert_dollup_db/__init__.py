@@ -295,6 +295,11 @@ class AggregateAttributeSchemaDao(BaseModel):
     ]
 
 
+class InstanceSchemaDao(BaseModel):
+    is_extendable: bool
+    attributes_schema: Dict[str, AggregateAttributeDao]
+
+
 class AggregateCollectionDao(BaseModel):
     class Meta:
         pk = "id"
@@ -319,7 +324,10 @@ class DatasheetDao(BaseModel):
     id: UUID
     name: str = Field(max_length=64)
     project_definition_id: UUID
+    abstract_collection_id: UUID
     from_datasheet_id: Optional[UUID]
+    attributes_schema: Dict[str, AggregateAttributeSchemaDao]
+    instances_schema: Dict[str, InstanceSchemaDao]
     creation_date_utc: datetime
 
 
@@ -339,7 +347,7 @@ class DatasheetElementDao(BaseModel):
     datasheet_id: UUID
     aggregate_id: UUID
     ordinal: int
-    attributes: List[AttributeDao]
+    attributes: Dict[str, AttributeDao]
     original_datasheet_id: UUID
     original_owner_organization_id: UUID
     creation_date_utc: datetime

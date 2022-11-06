@@ -161,3 +161,12 @@ class NewDatasheetDtoFactory(factory.Factory):
     name = factory.Sequence(lambda n: f"datasheet{n}")
     project_definition_id = factory.Faker("pyuuid4")
     abstract_collection_id = factory.Faker("pyuuid4")
+
+
+class NewDatasheetElementDtoFactory(factory.Factory):
+    class Meta:
+        model = NewDatasheetElementDto
+
+    aggregate_id = factory.Faker("pyuuid4")
+    ordinal = 0
+    attributes = factory.List([])

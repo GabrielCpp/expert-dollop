@@ -235,6 +235,21 @@ class QueryCompiler:
 
         return {"$and": conditions}
 
+    async def build_construct(
+        self, collection, builder: DbAgnotistQueryBuilder
+    ) -> Optional[dict]:
+        if "find_one_and_update" in builder._constructs:
+            from pymongo import ReturnDocument
+
+            update_params = builder._constructs["find_one_and_update"]
+            result = await collection.find_one_and_update(
+                *update_params, return_document=ReturnDocument.AFTER
+            )
+
+            return result
+
+        raise Exception("no construct match")
+
     def compile_query(self, builder: DbAgnotistQueryBuilder):
         selections = None
         query_filter = self.build_filter(builder)
@@ -428,6 +443,10 @@ class MongoCollection(InternalRepository[Domain]):
 
     def unpack_query(self, query_filter: QueryFilter) -> dict:
         return self._table_details.unfold_query(query_filter, self._mapper)
+
+    async def apply_construct(self, builder: QueryBuilder) -> Optional[Domain]:
+        doc = await self._query_compiler.build_construct(self._collection, builder)
+        return self._db_mapping.map_record_to_domain(doc)
 
     def _dao_to_dict(self, model: BaseModel) -> dict:
         document = self._query_compiler.simplify(model)

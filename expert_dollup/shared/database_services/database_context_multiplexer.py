@@ -80,4 +80,4 @@ class DatabaseContextMultiplexer(DatabaseContext):
     async def count(
         self, domain_type: Type[Domain], query_filter: Optional[WhereFilter] = None
     ) -> int:
-        return await self.get_repository(domain_type).has(query_filter)
+        return await self.get_repository(domain_type).count(query_filter)

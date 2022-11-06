@@ -65,7 +65,7 @@ async def add_datasheet(
 @router.post("/datasheets/{target_datasheet_id}/clone")
 async def clone_datasheet(
     datasheet_target: CloningDatasheetDto,
-    usecase=Depends(Inject(DatasheetUseCase)),
+    usecase: DatasheetUseCase = Depends(Inject(DatasheetUseCase)),
     handler: RequestHandler = Depends(Inject(RequestHandler)),
     user=Depends(
         CanPerformOnRequired(
@@ -73,16 +73,13 @@ async def clone_datasheet(
         )
     ),
 ):
-    return await handler.forward_mapped(
+    return await handler.do_handle(
         usecase.clone,
-        dict(datasheet_clone_target=datasheet_target, user=user),
-        MappingChain(out_dto=DatasheetDto),
-        {
-            "datasheet_clone_target": MappingChain(
-                dto=CloningDatasheetDto,
-                domain=CloningDatasheet,
-            ),
-        },
+        MappingChain(dto=DatasheetDto),
+        user=user,
+        target=MappingChain(
+            dto=CloningDatasheetDto, domain=CloningDatasheet, value=datasheet_target
+        ),
     )
 
 

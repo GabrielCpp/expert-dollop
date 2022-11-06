@@ -40,7 +40,7 @@ class RequestHandler:
 
             if getattr(out_type, "__origin__", None) is list:
                 return self.mapper.map_many(
-                    result,
+                    src.value,
                     out_type.__args__[0],
                     in_type and in_type.__args__[0],
                 )

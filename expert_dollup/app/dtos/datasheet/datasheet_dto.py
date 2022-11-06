@@ -12,15 +12,10 @@ class CloningDatasheetDto(CamelModel):
     target_datasheet_id: UUID
 
 
-class InstanceAttributeSchemaDto(CamelModel):
-    name: str
-    is_readonly: bool
-
-
 class InstanceSchemaDto(CamelModel):
     id: UUID
     is_extendable: bool
-    attributes_schema: List[InstanceAttributeSchemaDto]
+    attributes_schema: List[AggregateAttributeDto]
 
 
 class DatasheetDto(CamelModel):

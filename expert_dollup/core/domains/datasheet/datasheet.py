@@ -8,14 +8,9 @@ from ..definition.aggregate import AggregateAttribute
 
 
 @dataclass
-class InstanceAttributeSchema:
-    is_readonly: bool
-
-
-@dataclass
 class InstanceSchema:
     is_extendable: bool
-    attributes_schema: Dict[UUID, InstanceAttributeSchema]
+    attributes_schema: Dict[UUID, AggregateAttribute]
 
 
 @dataclass

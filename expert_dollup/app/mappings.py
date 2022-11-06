@@ -696,7 +696,9 @@ def map_aggregate_attribute_to_dto(
     return AggregateAttributeDto(
         name=src.name,
         is_readonly=src.is_readonly,
-        value=mapper.map(src, primitive_with_reference_union_dto_mappings.to_origin),
+        value=mapper.map(
+            src.value, primitive_with_reference_union_dto_mappings.to_origin
+        ),
     )
 
 
@@ -706,7 +708,9 @@ def map_aggregate_attribute_from_dto(
     return AggregateAttribute(
         name=src.name,
         is_readonly=src.is_readonly,
-        value=mapper.map(src, primitive_with_reference_union_dto_mappings.from_origin),
+        value=mapper.map(
+            src.value, primitive_with_reference_union_dto_mappings.from_origin
+        ),
     )
 
 
@@ -744,10 +748,7 @@ def map_datasheet_to_dto(src: Datasheet, mapper: Mapper) -> DatasheetDto:
                 id=id,
                 is_extendable=instance_schema.is_extendable,
                 attributes_schema=[
-                    InstanceAttributeSchemaDto(
-                        name=name,
-                        is_readonly=attribute_schema.is_readonly,
-                    )
+                    mapper.map(attribute_schema, AggregateAttributeDto)
                     for name, attribute_schema in instance_schema.attributes_schema.items()
                 ],
             )
@@ -1182,4 +1183,14 @@ def map_new_definition_dto(src: NewDefinitionDto, mapper: Mapper) -> ProjectDefi
         id=mapper.get(IdProvider).uuid4(),
         creation_date_utc=mapper.get(Clock).utcnow(),
         name=src.name,
+    )
+
+
+def map_new_datasheet_element_from_dto(
+    src: NewDatasheetElementDto, mapper: Mapper
+) -> NewDatasheetElement:
+    return NewDatasheetElement(
+        aggregate_id=src.aggregate_id,
+        ordinal=src.ordinal,
+        attributes=mapper.map_many(src.attributes, Attribute),
     )

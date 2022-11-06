@@ -146,6 +146,10 @@ class InternalRepository(Repository[Domain]):
     def unpack_query(self, query: QueryFilter) -> dict:
         pass
 
+    @abstractmethod
+    async def apply_construct(self, builder: QueryBuilder) -> Optional[Domain]:
+        pass
+
 
 @dataclass
 class RepositoryMetadata:
