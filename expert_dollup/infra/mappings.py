@@ -155,7 +155,7 @@ def map_static_choice_field_config_to_dao(
 ) -> StaticChoiceFieldConfigDao:
     return StaticChoiceFieldConfigDao(
         options=[
-            StaticChoiceOption(
+            StaticChoiceOptionDao(
                 id=option.id,
                 label=option.label,
                 help_text=option.help_text,
@@ -1267,7 +1267,7 @@ def map_report_row_filter(src: ReportRowFilter, mapper: Mapper) -> dict:
             "report_def_id": ("report_def_id", None),
             "datasheet_id": ("datasheet_id", None),
             "element_id": ("element_id", None),
-            "child_reference_id": ("child_reference_id", None),
+            "element_id": ("element_id", None),
         },
     )
 
@@ -1278,7 +1278,7 @@ def map_datasheet_element_pluck_filter(
     return map_dict_keys(
         src.args,
         {
-            "element_def_ids": ("element_def_id", None),
+            "element_def_ids": ("aggregate_id", None),
             "child_element_references": ("child_element_reference", None),
         },
     )
@@ -1357,8 +1357,8 @@ def map_report_row_to_dao(src: ReportRow, mapper: Mapper) -> ReportRowDao:
     return ReportRowDao(
         node_id=src.node_id,
         formula_id=src.formula_id,
-        element_def_id=src.element_def_id,
-        child_reference_id=src.child_reference_id,
+        aggregate_id=src.aggregate_id,
+        element_id=src.element_id,
         columns=mapper.map_many(src.columns, ComputedValueDao),
         row=map_report_rows_dict_to_dao(src.row, mapper),
     )
@@ -1368,8 +1368,8 @@ def map_report_row_from_dao(src: ReportRowDao, mapper: Mapper) -> ReportRow:
     return ReportRow(
         node_id=src.node_id,
         formula_id=src.formula_id,
-        element_def_id=src.element_def_id,
-        child_reference_id=src.child_reference_id,
+        aggregate_id=src.aggregate_id,
+        element_id=src.element_id,
         columns=mapper.map_many(src.columns, ComputedValue),
         row=map_report_rows_dict_from_dao(src.row, mapper),
     )
@@ -1436,8 +1436,8 @@ def map_distributable_item_from_dao(
         formula_id=src.formula_id,
         supplied_item=SuppliedItem(
             datasheet_id=src.supplied_item.datasheet_id,
-            element_def_id=src.supplied_item.element_def_id,
-            child_reference_id=src.supplied_item.child_reference_id,
+            aggregate_id=src.supplied_item.aggregate_id,
+            element_id=src.supplied_item.element_id,
             organization_id=src.supplied_item.organization_id,
         ),
         distribution_ids=src.distribution_ids,
@@ -1458,8 +1458,8 @@ def map_distributable_item_to_dao(
         formula_id=src.formula_id,
         supplied_item=SuppliedItemDao(
             datasheet_id=src.supplied_item.datasheet_id,
-            element_def_id=src.supplied_item.element_def_id,
-            child_reference_id=src.supplied_item.child_reference_id,
+            aggregate_id=src.supplied_item.aggregate_id,
+            element_id=src.supplied_item.element_id,
             organization_id=src.supplied_item.organization_id,
         ),
         distribution_ids=src.distribution_ids,

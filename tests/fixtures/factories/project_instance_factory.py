@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 from decimal import Decimal
 from expert_dollup.core.domains import *
+from .domains import *
 from .helpers import make_uuid
 from ..fake_db_helpers import FakeDb
 
@@ -304,7 +305,6 @@ class ProjectInstanceFactory:
         project_definition = ProjectDefinition(
             id=make_uuid(project_name),
             name=project_name,
-            properties={},
             creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000, timezone.utc),
         )
 
@@ -313,9 +313,11 @@ class ProjectInstanceFactory:
             name=project_name,
             is_staged=False,
             project_definition_id=project_definition.id,
-            datasheet_id=datasheet_id,
             creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000, timezone.utc),
         )
+
+        if not datasheet_id is None:
+            project.datasheet_id = datasheet_id
 
         definition_nodes = [
             ProjectDefinitionNode(

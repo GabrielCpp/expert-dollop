@@ -109,7 +109,7 @@ class UnitInstance:
 @dataclass
 class UnitInstanceElement:
     project_id: UUID
-    element_def_id: UUID
+    aggregate_id: UUID
     formula_id: UUID
     node_id: UUID
     datasheet_element_reference: UUID

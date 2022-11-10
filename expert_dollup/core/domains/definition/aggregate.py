@@ -33,10 +33,10 @@ class Aggregate:
     @property
     def report_dict(self) -> dict:
         return {
-            **self.attributes,
             "id": self.id,
             "ordinal": self.ordinal,
             "name": self.name,
+            "is_collection": self.is_extendable,
         }
 
 

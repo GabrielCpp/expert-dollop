@@ -33,7 +33,7 @@ class DatasheetElementUpdateDto(NewDatasheetElementDto):
 
 class DatasheetElementImportDto(CamelModel):
     datasheet_id: UUID
-    element_def_id: UUID
+    aggregate_id: UUID
     child_element_reference: UUID
     attributes: Dict[str, PrimitiveWithReferenceUnionDto]
     original_datasheet_id: UUID

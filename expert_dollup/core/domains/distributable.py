@@ -12,8 +12,8 @@ ColumnLabel = str
 @dataclass
 class SuppliedItem:
     datasheet_id: UUID
-    element_def_id: UUID
-    child_reference_id: UUID
+    aggregate_id: UUID
+    element_id: UUID
     organization_id: UUID
 
 
@@ -37,7 +37,7 @@ class DistributableItem:
             [
                 self.node_id.hex,
                 self.formula_id.hex,
-                self.supplied_item.element_def_id.hex,
+                self.supplied_item.aggregate_id.hex,
             ]
         )
 

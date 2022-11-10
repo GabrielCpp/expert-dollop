@@ -166,6 +166,7 @@ class ReportDefinitionFactory(factory.Factory):
 
     id = factory.Faker("pyuuid4")
     project_definition_id = factory.Faker("pyuuid4")
+    from_aggregate_collection_id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"report_name_{n}")
     structure = factory.SubFactory(ReportStructureFactory)
     distributable = False
@@ -186,8 +187,8 @@ class ReportRowFactory(factory.Factory):
 
     node_id = factory.Faker("pyuuid4")
     formula_id = factory.Faker("pyuuid4")
-    element_def_id = factory.Faker("pyuuid4")
-    child_reference_id = factory.Faker("pyuuid4")
+    aggregate_id = factory.Faker("pyuuid4")
+    element_id = factory.Faker("pyuuid4")
     columns = factory.List([SubFactory(ComputedValueFactory) for _ in range(3)])
     row = factory.Dict({})
 
@@ -383,3 +384,17 @@ class UserFactory(factory.Factory):
     email = factory.Sequence(lambda n: f"user{n}@example.com")
     permissions = factory.List([])
     organization_id = factory.Faker("pyuuid4")
+
+
+class DatasheetFactory(factory.Factory):
+    class Meta:
+        model = Datasheet
+
+    id = factory.Faker("pyuuid4")
+    name = factory.Sequence(lambda n: f"name{n}")
+    project_definition_id = factory.Faker("pyuuid4")
+    abstract_collection_id = factory.Faker("pyuuid4")
+    from_datasheet_id = factory.Faker("pyuuid4")
+    attributes_schema = factory.Dict({})
+    instances_schema = factory.Dict({})
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)

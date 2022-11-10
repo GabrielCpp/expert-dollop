@@ -35,7 +35,9 @@ def report_seed() -> ReportSeed:
     project_seed = make_base_project_seed()
     project_fixture = ProjectInstanceFactory.build(project_seed)
     datasheet_fixture = DatasheetInstanceFactory.build(
-        make_base_datasheet(project_seed), project_fixture.project_definition
+        make_base_datasheet(project_seed),
+        project_fixture.project_definition,
+        project_fixture.project.datasheet_id,
     )
 
     report_definition = ReportDefinitionFactory(
@@ -114,7 +116,7 @@ async def test_given_row_cache_should_produce_correct_report(
                         node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
                         formula_id=UUID("f1f1e0ff-2344-48bc-e757-8c9dcd3c671e"),
                         aggregate_id=UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
-                        child_reference_id=datasheet_element.child_element_reference,
+                        element_id=datasheet_element.id,
                         columns=[
                             ComputedValue(
                                 label="stage", value="show_concrete", unit="unit"
@@ -135,14 +137,12 @@ async def test_given_row_cache_should_produce_correct_report(
                         row={
                             "abstractproduct": {
                                 "id": UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
-                                "unit_id": "m",
                                 "is_collection": False,
                                 "ordinal": 1,
                                 "name": "concrete",
                             },
                             "datasheet_element": {
                                 "id": UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
-                                "unit_id": "m",
                                 "is_collection": False,
                                 "ordinal": 1,
                                 "name": "concrete",
@@ -151,10 +151,8 @@ async def test_given_row_cache_should_produce_correct_report(
                                 "aggregate_id": UUID(
                                     "00ecf6d0-6f00-c4bb-2902-4057469a3f3d"
                                 ),
-                                "child_element_reference": datasheet_element.child_element_reference,
-                                "original_datasheet_id": UUID(
-                                    "0fc7fe86-ab22-a17d-6037-9fccc7d7f8f8"
-                                ),
+                                "element_id": datasheet_element.id,
+                                "original_datasheet_id": datasheet_fixture.datasheet.id,
                             },
                             "formula": {
                                 "formula_id": UUID(

@@ -23,8 +23,8 @@ class ComputedValue:
 class ReportRow:
     node_id: UUID
     formula_id: UUID
-    element_def_id: UUID
-    child_reference_id: UUID
+    aggregate_id: UUID
+    element_id: UUID
     columns: List[ComputedValue]
     row: ReportRowDict
 
@@ -69,4 +69,4 @@ class ReportRowFilter(QueryFilter):
     report_def_id: Optional[UUID]
     datasheet_id: Optional[UUID]
     element_id: Optional[UUID]
-    child_reference_id: Optional[UUID]
+    element_id: Optional[UUID]

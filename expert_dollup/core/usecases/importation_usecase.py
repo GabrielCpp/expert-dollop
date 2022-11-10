@@ -44,7 +44,7 @@ class ImportationUseCase:
                 DatasheetElement,
                 DatasheetElementFilter(
                     datasheet_id=datasheet_element.datasheet_id,
-                    element_def_id=datasheet_element.element_def_id,
+                    aggregate_id=datasheet_element.aggregate_id,
                     child_element_reference=datasheet_element.child_element_reference,
                 ),
             )

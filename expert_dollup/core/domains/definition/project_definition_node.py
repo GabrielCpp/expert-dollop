@@ -10,19 +10,19 @@ from decimal import Decimal
 
 class NodeType(Enum):
     FORMULA = "FORMULA"
-    FIELD = "FORMULA"
+    FIELD = "FIELD"
     SECTION = "SECTION"
     FORM = "FORM"
     SUB_SECTION = "SUB_SECTION"
     ROOT_SECTION = "ROOT_SECTION"
 
 
-@dataclass
+@dataclass(frozen=True, eq=True)
 class NodeReferenceConfig:
     node_type: NodeType
 
 
-@dataclass
+@dataclass(frozen=True, eq=True)
 class AggregateReferenceConfig:
     from_collection: str
 

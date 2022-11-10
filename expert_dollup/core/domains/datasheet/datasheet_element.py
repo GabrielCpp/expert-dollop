@@ -27,15 +27,15 @@ class DatasheetElement:
     @property
     def key(self) -> str:
         return ".".join(
-            [self.datasheet_id, self.element_def_id, self.child_element_reference]
+            [self.datasheet_id, self.aggregate_id, self.child_element_reference]
         )
 
     @property
     def report_dict(self) -> dict:
         return {
             **self.attributes,
-            "element_def_id": self.element_def_id,
-            "child_element_reference": self.child_element_reference,
+            "aggregate_id": self.aggregate_id,
+            "element_id": self.id,
             "original_datasheet_id": self.original_datasheet_id,
         }
 

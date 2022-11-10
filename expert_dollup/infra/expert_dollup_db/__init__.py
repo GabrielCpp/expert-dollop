@@ -426,8 +426,8 @@ class ComputedValueDao(BaseModel):
 
 class SuppliedItemDao(BaseModel):
     datasheet_id: UUID
-    element_def_id: UUID
-    child_reference_id: UUID
+    aggregate_id: UUID
+    element_id: UUID
     organization_id: UUID
 
 

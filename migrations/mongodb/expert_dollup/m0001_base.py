@@ -46,7 +46,7 @@ async def create_datasheet_tables(db):
     await db.create_collection("datasheet_definition_element")
     await db.create_collection("datasheet")
     datasheet_element = await db.create_collection("datasheet_element")
-    await datasheet_element.create_index("element_def_id")
+    await datasheet_element.create_index("aggregate_id")
     await datasheet_element.create_index("original_datasheet_id")
 
 

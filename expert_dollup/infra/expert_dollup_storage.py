@@ -46,8 +46,8 @@ ReportRowsCacheDao = List[ReportRowDictDao]
 class ReportRowDao(BaseModel):
     node_id: UUID
     formula_id: UUID
-    element_def_id: UUID
-    child_reference_id: UUID
+    aggregate_id: UUID
+    element_id: UUID
     columns: List[ComputedValueDao]
     row: ReportRowDictDao
 

@@ -16,8 +16,8 @@ class ComputedValueDto(CamelModel):
 class ReportRowDto(CamelModel):
     node_id: UUID
     formula_id: UUID
-    element_def_id: UUID
-    child_reference_id: UUID
+    aggregate_id: UUID
+    element_id: UUID
     columns: List[ComputedValueDto]
     row: ReportRowDictDto
 
@@ -25,8 +25,8 @@ class ReportRowDto(CamelModel):
 class MinimalReportRowDto(CamelModel):
     node_id: UUID
     formula_id: UUID
-    element_def_id: UUID
-    child_reference_id: UUID
+    aggregate_id: UUID
+    element_id: UUID
     columns: List[ComputedValueDto]
 
 

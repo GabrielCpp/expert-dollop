@@ -163,8 +163,8 @@ class JoinFormulaUnitInstances(JoinStep):
         return group_by_key(formula_instances, lambda x: x.formula_id)
 
     def apply(self, row: ReportRowDict) -> List[ReportRowDict]:
-        element_def_id = self.element_attribute.get(row)
-        assert isinstance(element_def_id, UUID)
+        aggregate_id = self.element_attribute.get(row)
+        assert isinstance(aggregate_id, UUID)
         formula_id = self.formula_attribute.get(row)
         assert isinstance(formula_id, UUID)
 
@@ -186,8 +186,8 @@ class DatasheetElementInstanceAssignation(MutateStep):
         self.datasheet_selection_alias = structure.datasheet_selection_alias
 
     def apply(self, row: ReportRowDict) -> None:
-        element_def_id = self.element_attribute.get(row)
-        element_dict = self.elements_by_id[element_def_id].report_dict
+        aggregate_id = self.element_attribute.get(row)
+        element_dict = self.elements_by_id[aggregate_id].report_dict
         element_def_dict = row[self.datasheet_selection_alias]
         row[self.datasheet_bucket_name] = {**element_def_dict, **element_dict}
 
@@ -338,10 +338,10 @@ class ReportBuilder:
             ReportRow(
                 node_id=row[FORMULA_BUCKET_NAME]["node_id"],
                 formula_id=formula_attribute.get(row),
-                element_def_id=element_attribute.get(row),
-                child_reference_id=self.linking_data.datasheet_elements_by_id[
+                aggregate_id=element_attribute.get(row),
+                element_id=self.linking_data.datasheet_elements_by_id[
                     element_attribute.get(row)
-                ].child_element_reference,
+                ].id,
                 columns=[
                     ComputedValue(
                         label=column.name,
@@ -462,23 +462,17 @@ class ReportLinking:
         project_details: ProjectDetails,
     ) -> Tuple[ReportRowsCache, LinkingData]:
 
-        rows, injector, datasheet_elements = await gather(
-            self.report_row_cache_builder.refresh_cache(report_definition),
-            self.formula_resolver.compute_all_project_formula(
-                project_details.id, project_details.project_definition_id
-            ),
-            self.datasheet_element_service.find_by(
-                DatasheetElementFilter(
-                    datasheet_id=project_details.datasheet_id,
-                    ordinal=0,
-                )
-            ),
+        rows = await self.report_row_cache_builder.refresh_cache(report_definition)
+        injector = await self.formula_resolver.compute_all_project_formula(
+            project_details.id, project_details.project_definition_id
         )
-
-        datasheet_elements_by_id = {
-            datasheet_element.element_def_id: datasheet_element
-            for datasheet_element in datasheet_elements
-        }
+        elements = await self.datasheet_element_service.find_by(
+            DatasheetElementFilter(
+                datasheet_id=project_details.datasheet_id,
+                ordinal=0,
+            )
+        )
+        datasheet_elements_by_id = {e.aggregate_id: e for e in elements}
 
         return rows, LinkingData(
             report_definition=report_definition,

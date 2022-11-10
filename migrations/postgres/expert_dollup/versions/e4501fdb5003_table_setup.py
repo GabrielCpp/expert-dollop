@@ -219,7 +219,7 @@ def create_datasheet_tables():
     op.create_table(
         "datasheet_element",
         Column("datasheet_id", postgresql.UUID(), nullable=False, primary_key=True),
-        Column("element_def_id", postgresql.UUID(), nullable=False, primary_key=True),
+        Column("aggregate_id", postgresql.UUID(), nullable=False, primary_key=True),
         Column(
             "child_element_reference",
             postgresql.UUID(),
@@ -236,7 +236,7 @@ def create_datasheet_tables():
     op.create_index(
         op.f("ix_datasheet_element_abstract_element_id"),
         "datasheet_element",
-        ["element_def_id"],
+        ["aggregate_id"],
     )
 
     op.create_index(

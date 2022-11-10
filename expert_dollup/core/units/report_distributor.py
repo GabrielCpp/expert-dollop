@@ -32,9 +32,9 @@ class ReportDistributor:
                     formula_id=row.formula_id,
                     supplied_item=SuppliedItem(
                         datasheet_id=report.datasheet_id,
-                        element_def_id=row.element_def_id,
-                        child_reference_id=row.child_reference_id,
-                        organization_id=organization_by_ids[row.child_reference_id],
+                        aggregate_id=row.aggregate_id,
+                        element_id=row.element_id,
+                        organization_id=organization_by_ids[row.element_id],
                     ),
                     distribution_ids=[],
                     summary=stage.summary,
@@ -81,7 +81,7 @@ class ReportDistributor:
 
         for stage in report.stages:
             for row in stage.rows:
-                reference_ids.append(row.child_reference_id)
+                reference_ids.append(row.element_id)
 
         return reference_ids
 

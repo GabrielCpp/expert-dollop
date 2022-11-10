@@ -795,7 +795,7 @@ def map_datasheet_element_from_dto(
 ) -> DatasheetElement:
     return DatasheetElement(
         datasheet_id=src.datasheet_id,
-        element_def_id=src.element_def_id,
+        aggregate_id=src.aggregate_id,
         child_element_reference=src.child_element_reference,
         original_owner_organization_id=src.original_owner_organization_id,
         properties=mapper.map_dict_values(
@@ -982,8 +982,8 @@ def map_report_row_to_dto(src: ReportRow, mapper: Mapper) -> ReportRowDto:
     return ReportRowDto(
         node_id=src.node_id,
         formula_id=src.formula_id,
-        element_def_id=src.element_def_id,
-        child_reference_id=src.child_reference_id,
+        aggregate_id=src.aggregate_id,
+        element_id=src.element_id,
         columns=mapper.map_many(src.columns, ComputedValueDto),
         row={
             name: {
@@ -1089,8 +1089,8 @@ def map_minimal_report_row_dto(src: ReportRow, mapper: Mapper) -> MinimalReportR
     return MinimalReportRowDto(
         node_id=src.node_id,
         formula_id=src.formula_id,
-        element_def_id=src.element_def_id,
-        child_reference_id=src.child_reference_id,
+        aggregate_id=src.aggregate_id,
+        element_id=src.element_id,
         columns=mapper.map_many(src.columns, ComputedValueDto),
     )
 
@@ -1146,8 +1146,8 @@ def map_distributable_item_to_dto(
 def map_supplied_item_to_dto(src: SuppliedItem, mapper: Mapper) -> SuppliedItemDto:
     return SuppliedItemDto(
         datasheet_id=src.datasheet_id,
-        element_def_id=src.element_def_id,
-        child_reference_id=src.child_reference_id,
+        aggregate_id=src.aggregate_id,
+        element_id=src.element_id,
         organization_id=src.organization_id,
     )
 
