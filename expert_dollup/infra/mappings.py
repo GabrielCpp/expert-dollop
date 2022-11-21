@@ -1237,7 +1237,9 @@ def map_report_join_to_dao(src: ReportJoin, mapper: Mapper) -> ReportJoinDao:
     )
 
 
-def map_label_collection_filter(src: AggregateCollectionFilter, mapper: Mapper) -> dict:
+def map_aggregate_collection_filter(
+    src: AggregateCollectionFilter, mapper: Mapper
+) -> dict:
     return map_dict_keys(
         src.args,
         {

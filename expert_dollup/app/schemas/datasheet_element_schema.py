@@ -10,8 +10,8 @@ from expert_dollup.app.dtos import *
 from .types import datasheet_element
 
 
-@inject_graphql_route(find_datasheet_by_id)
 @datasheet_element.field("schema")
+@inject_graphql_route(find_datasheet_by_id)
 @convert_kwargs_to_snake_case
 async def resolve_element_definition(
     parent: DatasheetElement, info: GraphQLResolveInfo, find_datasheet_element: callable

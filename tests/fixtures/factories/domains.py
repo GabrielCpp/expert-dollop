@@ -289,7 +289,7 @@ class AggregateCollectionFactory(factory.Factory):
 
     id = factory.Faker("pyuuid4")
     project_definition_id = factory.Faker("pyuuid4")
-    name = factory.Sequence(lambda n: f"label_collection_{n}")
+    name = factory.Sequence(lambda n: f"aggregate_collection_{n}")
     is_abstract = False
     attributes_schema = factory.Dict({})
 

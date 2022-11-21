@@ -64,4 +64,8 @@ paginations = [
         default_page_encoder=FieldTokenEncoder("name", str, str, ""),
         for_domain=Union[ProjectDefinitionNode, Formula],
     ),
+    PaginationDetails(
+        default_page_encoder=FieldTokenEncoder("name", str, str, ""),
+        for_domain=Aggregate,
+    ),
 ]

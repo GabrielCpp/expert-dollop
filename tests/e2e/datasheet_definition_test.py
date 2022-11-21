@@ -50,7 +50,7 @@ async def test_datasheet_definition(ac):
 
 
 @pytest.mark.asyncio
-async def test_label_collection(ac, db_helper: DbFixtureHelper):
+async def test_aggregate_collection(ac, db_helper: DbFixtureHelper):
     db = await db_helper.load_fixtures(
         SuperUser(), MiniDatasheet(), GrantRessourcePermissions()
     )

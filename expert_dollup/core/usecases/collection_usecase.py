@@ -13,7 +13,14 @@ class CollectionUseCase:
         self.repository = repository
         self.id_provider = id_provider
 
-    async def find(self, project_definition_id: UUID, collection_id: UUID):
+    async def all(self, project_definition_id: UUID):
+        return await self.repository.find_by(
+            AggregateCollectionFilter(project_definition_id=project_definition_id)
+        )
+
+    async def find(
+        self, project_definition_id: UUID, collection_id: UUID
+    ) -> AggregateCollection:
         return await self.repository.find_one_by(
             AggregateCollectionFilter(
                 id=collection_id, project_definition_id=project_definition_id
@@ -39,14 +46,16 @@ class CollectionUseCase:
         self,
         project_definition_id: UUID,
         collection_id: UUID,
-        new_aggregate_collection: NewAggregateCollection,
+        collection: NewAggregateCollection,
     ) -> AggregateCollection:
         aggregate_collection = AggregateCollection(
             id=collection_id,
             project_definition_id=project_definition_id,
-            name=new_aggregate_collection.name,
-            is_abstract=new_aggregate_collection.is_abstract,
-            attributes_schema=new_aggregate_collection.attributes_schema,
+            name=collection.name,
+            is_abstract=collection.is_abstract,
+            attributes_schema=by_names(
+                collection.attributes_schema,
+            ),
         )
         await self.repository.upserts([aggregate_collection])
         return aggregate_collection

@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.get("/datasheets/{datasheet_id}/elements")
-async def find_datasheet_elements(
+async def find_paginated_datasheet_elements(
     datasheet_id: UUID,
     limit: int = Query(alias="limit", default=100),
     aggregate_id: UUID = Query(alias="aggregate_id", default=None),
@@ -36,27 +36,10 @@ async def find_datasheet_elements(
     )
 
 
-@router.get("/datasheets/{datasheet_id}/elements")
-async def find_paginated_datasheet_elements(
-    datasheet_id: UUID,
-    limit: int = Query(alias="limit", default=100),
-    next_page_token: Optional[str] = Query(alias="nextPageToken", default=None),
-    handler=Depends(Inject(PageHandlerProxy)),
-    paginator=Depends(Inject(Paginator[DatasheetElement])),
-    user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:get"])),
-):
-    return await handler.use_paginator(paginator).handle(
-        DatasheetElementDto,
-        DatasheetElementFilter(datasheet_id=datasheet_id),
-        limit,
-        next_page_token,
-    )
-
-
-@router.get("/datasheets/{datasheet_id}/elements/{datasheet_element_id}")
+@router.get("/datasheets/{datasheet_id}/elements/{element_id}")
 async def find_datasheet_element(
     datasheet_id: UUID,
-    datasheet_element_id: UUID,
+    element_id: UUID,
     request_handler: RequestHandler = Depends(Inject(RequestHandler)),
     usecase: DatasheetElementUseCase = Depends(Inject(DatasheetElementUseCase)),
     user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:get"])),
@@ -64,15 +47,15 @@ async def find_datasheet_element(
     return await request_handler.do_handle(
         usecase.find,
         MappingChain(domain=DatasheetElement, dto=DatasheetElementDto),
-        datasheet_element_id=datasheet_element_id,
         datasheet_id=datasheet_id,
+        element_id=element_id,
     )
 
 
-@router.put("/datasheets/{datasheet_id}/elements/{datasheet_element_id}")
+@router.put("/datasheets/{datasheet_id}/elements/{element_id}")
 async def update_datasheet_element_properties(
     datasheet_id: UUID,
-    datasheet_element_id: UUID,
+    element_id: UUID,
     replacement: NewDatasheetElementDto,
     request_handler: RequestHandler = Depends(Inject(RequestHandler)),
     usecase: DatasheetElementUseCase = Depends(Inject(DatasheetElementUseCase)),
@@ -82,7 +65,7 @@ async def update_datasheet_element_properties(
         usecase.update,
         MappingChain(domain=DatasheetElement, dto=DatasheetElementDto),
         datasheet_id=datasheet_id,
-        datasheet_element_id=datasheet_element_id,
+        datasheet_element_id=element_id,
         user=user,
         replacement=MappingChain(
             value=replacement, dto=NewDatasheetElementDto, domain=NewDatasheetElement
@@ -90,10 +73,10 @@ async def update_datasheet_element_properties(
     )
 
 
-@router.patch("/datasheets/{datasheet_id}/elements/{datasheet_element_id}/values")
+@router.patch("/datasheets/{datasheet_id}/elements/{element_id}/values")
 async def patch_datasheet_element_values(
     datasheet_id: UUID,
-    datasheet_element_id: UUID,
+    element_id: UUID,
     attributes: List[AttributeDto],
     request_handler: RequestHandler = Depends(Inject(RequestHandler)),
     usecase: DatasheetElementUseCase = Depends(Inject(DatasheetElementUseCase)),
@@ -103,7 +86,7 @@ async def patch_datasheet_element_values(
         usecase.update_values,
         MappingChain(domain=DatasheetElement, dto=DatasheetElementDto),
         datasheet_id=datasheet_id,
-        datasheet_element_id=datasheet_element_id,
+        datasheet_element_id=element_id,
         user=user,
         attributes=MappingChain(
             dto=List[AttributeDto], domain=List[Attribute], value=attributes
@@ -130,11 +113,11 @@ async def add_datasheet_element(
     )
 
 
-@router.delete("/datasheets/{datasheet_id}/elements/{datasheet_element_id}")
+@router.delete("/datasheets/{datasheet_id}/elements/{element_id}")
 async def delete_datasheet_element_from_collection(
     datasheet_id: UUID,
-    datasheet_element_id: UUID,
+    element_id: UUID,
     usecase: DatasheetElementUseCase = Depends(Inject(DatasheetElementUseCase)),
     user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:delete"])),
 ):
-    await usecase.delete(datasheet_id, datasheet_element_id)
+    await usecase.delete(datasheet_id, element_id)

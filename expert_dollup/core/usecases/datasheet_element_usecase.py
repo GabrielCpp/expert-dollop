@@ -18,13 +18,11 @@ class DatasheetElementUseCase:
         self.datasheet_element_repository = datasheet_element_repository
         self.clock = clock
 
-    async def find(
-        self, datasheet_id: UUID, datasheet_element_id: UUID
-    ) -> DatasheetElement:
+    async def find(self, datasheet_id: UUID, element_id: UUID) -> DatasheetElement:
         return await self.db_context.find_one_by(
             DatasheetElement,
             DatasheetElementFilter(
-                id=datasheet_element_id,
+                id=element_id,
                 datasheet_id=datasheet_id,
             ),
         )

@@ -131,6 +131,16 @@ field_details_from_domain = {v: k for k, v in field_details_to_domain_map.items(
 
 assert len(get_args(FieldDetailsUnionDto)) == len(field_details_to_domain_map)
 
+attribute_details_union = {
+    IntFieldConfigDto: "IntFieldConfig",
+    DecimalFieldConfigDto: "DecimalFieldConfig",
+    StringFieldConfigDto: "StringFieldConfig",
+    BoolFieldConfigDto: "BoolFieldConfig",
+    StaticChoiceFieldConfigDto: "StaticChoiceFieldConfig",
+    AggregateReferenceConfigDto: "AggregateReferenceConfig",
+    NodeReferenceConfigDto: "NodeReferenceConfig",
+}
+
 
 class TranslationConfigDto(CamelModel):
     help_text_name: str

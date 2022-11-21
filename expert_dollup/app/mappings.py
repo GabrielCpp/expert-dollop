@@ -616,7 +616,7 @@ def map_aggregate_collection_to_dto(
         name=src.name,
         is_abstract=src.is_abstract,
         attributes_schema=mapper.map_many(
-            src.attributes_schema, AggregateAttributeSchemaDto
+            src.attributes_schema.values(), AggregateAttributeSchemaDto
         ),
     )
 

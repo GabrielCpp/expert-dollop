@@ -11,6 +11,10 @@ class QueryFilter:
 
         self._args = kwargs
 
+    def put(self, name, value):
+        setattr(self, name, value)
+        self._args[name] = value
+
     @property
     def args(self) -> dict:
         assert not self._args is None

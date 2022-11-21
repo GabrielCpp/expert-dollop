@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Query
+from typing import List
 from uuid import UUID
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
@@ -9,13 +10,47 @@ router = APIRouter()
 
 
 @router.get("/definitions/{project_definition_id}/collections/{collection_id}")
-async def get_label_collection_by_id(
+async def find_aggregate_collection_by_id(
     project_definition_id: UUID,
     collection_id: UUID,
     usecase: CollectionUseCase = Depends(Inject(CollectionUseCase)),
     handler: RequestHandler = Depends(Inject(RequestHandler)),
     user=Depends(
-        CanPerformOnRequired("project_definition_id", ["project_definition:update"])
+        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
+    ),
+):
+    return await handler.do_handle(
+        usecase.find,
+        MappingChain(dto=AggregateCollectionDto),
+        project_definition_id=project_definition_id,
+        collection_id=collection_id,
+    )
+
+
+@router.get("/definitions/{project_definition_id}/collections")
+async def get_aggregate_collections(
+    project_definition_id: UUID,
+    usecase: CollectionUseCase = Depends(Inject(CollectionUseCase)),
+    handler: RequestHandler = Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
+    ),
+):
+    return await handler.do_handle(
+        usecase.all,
+        MappingChain(dto=List[AggregateCollectionDto]),
+        project_definition_id=project_definition_id,
+    )
+
+
+@router.get("/definitions/{project_definition_id}/collections/{collection_id}")
+async def get_aggregate_collection_by_id(
+    project_definition_id: UUID,
+    collection_id: UUID,
+    usecase: CollectionUseCase = Depends(Inject(CollectionUseCase)),
+    handler: RequestHandler = Depends(Inject(RequestHandler)),
+    user=Depends(
+        CanPerformOnRequired("project_definition_id", ["project_definition:get"])
     ),
 ):
     return await handler.do_handle(
@@ -51,6 +86,7 @@ async def add_aggregate_collection(
 @router.put("/definitions/{project_definition_id}/collections/{collection_id}")
 async def update_aggregate_collection(
     project_definition_id: UUID,
+    collection_id: UUID,
     new_aggregate_collection: NewAggregateCollectionDto,
     usecase: CollectionUseCase = Depends(Inject(CollectionUseCase)),
     handler: RequestHandler = Depends(Inject(RequestHandler)),
@@ -63,9 +99,9 @@ async def update_aggregate_collection(
         MappingChain(dto=AggregateCollectionDto),
         project_definition_id=project_definition_id,
         collection_id=collection_id,
-        new_aggregate_collection=MappingChain(
+        collection=MappingChain(
             dto=NewAggregateCollectionDto,
-            domain=AggregateCollection,
+            domain=NewAggregateCollection,
             value=new_aggregate_collection,
         ),
     )

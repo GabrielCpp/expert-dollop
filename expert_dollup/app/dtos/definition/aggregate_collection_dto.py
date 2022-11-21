@@ -9,6 +9,7 @@ from .project_definition_node_dto import (
     BoolFieldConfigDto,
     AggregateReferenceConfigDto,
     NodeReferenceConfigDto,
+    TranslationConfigDto,
 )
 from .aggregate_dto import AggregateDto
 
@@ -23,6 +24,10 @@ class AggregateAttributeSchemaDto(CamelModel):
         AggregateReferenceConfigDto,
         NodeReferenceConfigDto,
     ]
+
+    @property
+    def translations(self):
+        return TranslationConfigDto(help_text_name=f"{name}_help_text", label={name})
 
 
 class AggregateCollectionDto(CamelModel):

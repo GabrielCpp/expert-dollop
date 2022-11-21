@@ -1,4 +1,5 @@
 scalar JsonSchema
+scalar UUID
 
 type Unit {
   id: ID!
@@ -10,12 +11,37 @@ type AggregateAttribute {
   value: PrimitiveWithReferenceUnion!
 }
 
-type Aggregate {
-  id: String!
-  ordinal: Int!
+input AggregateAttributeInput {
   name: String!
-  is_extendable: Boolean!
+  isReadonly: Boolean!
+  value: FieldValueInput!
+}
+
+type Aggregate {
+  id: ID!
+  projectDefinitionId: String!
+  collectionId: String!
+  name: String!
+  ordinal: Int!
+  isExtendable: Boolean!
   attributes: [AggregateAttribute!]!
+}
+
+type AggregateConnection {
+  edges: [AggregateEdge!]!
+  pageInfo: PageInfo!
+}
+
+type AggregateEdge {
+  node: Aggregate!
+  cursor: String!
+}
+
+input AggregateInput {
+  name: String!
+  ordinal: Int!
+  isExtendable: Boolean!
+  attributes: [AggregateAttributeInput!]!
 }
 
 enum NodeType {
@@ -28,7 +54,11 @@ enum NodeType {
 }
 
 type NodeReferenceConfig {
-  node_type: NodeType!
+  nodeType: NodeType!
+}
+
+input NodeReferenceConfigInput {
+  nodeType: NodeType!
 }
 
 union AttributeDetailsUnion =
@@ -40,9 +70,36 @@ union AttributeDetailsUnion =
   | AggregateReferenceConfig
   | NodeReferenceConfig
 
+enum AttributeDetailsEnum {
+  INT_FIELD_CONFIG
+  DECIMAL_FIELD_CONFIG
+  STRING_FIELD_CONFIG
+  BOOL_FIELD_CONFIG
+  STATIC_CHOICE_FIELD_CONFIG
+  AGGREGATE_REFERENCE_CONFIG
+  NODE_REFERENCE_CONFIG
+}
+
+input AttributeDetailsUnionInput {
+  kind: AttributeDetailsEnum!
+  int: IntFieldConfigInput
+  decimal: DecimalFieldConfigInput
+  string: StringFieldConfigInput
+  bool: BoolFieldConfigInput
+  staticChoice: StaticChoiceFieldConfigInput
+  aggregateReference: AggregateReferenceConfigInput
+  nodeReference: NodeReferenceConfigInput
+}
+
 type AggregateAttributeSchema {
   name: String!
+  translations: TranslationConfig!
   details: AttributeDetailsUnion!
+}
+
+input AggregateAttributeSchemaInput {
+  name: String!
+  details: AttributeDetailsUnionInput!
 }
 
 type AggregateCollection {
@@ -51,6 +108,13 @@ type AggregateCollection {
   name: String!
   isAbstract: Boolean!
   attributesSchema: [AggregateAttributeSchema!]!
+  translated: [Translation!]!
+}
+
+input AggregateCollectionInput {
+  name: String!
+  isAbstract: Boolean!
+  attributesSchema: [AggregateAttributeSchemaInput!]!
 }
 
 type InstanceSchema {
@@ -135,6 +199,10 @@ type StaticChoiceFieldConfig {
 }
 
 type AggregateReferenceConfig {
+  fromCollection: String!
+}
+
+input AggregateReferenceConfigInput {
   fromCollection: String!
 }
 
@@ -308,11 +376,16 @@ input BoolFieldValueInput {
   enabled: Boolean!
 }
 
+input ReferenceFieldValueInput {
+  uuid: String!
+}
+
 enum FieldValueType {
   INT_FIELD_VALUE
   DECIMAL_FIELD_VALUE
   STRING_FIELD_VALUE
   BOOL_FIELD_VALUE
+  REFERENCE_FIELD_VALUE
 }
 
 input FieldValueInput {
@@ -321,6 +394,7 @@ input FieldValueInput {
   decimal: DecimalFieldValueInput
   string: StringFieldValueInput
   bool: BoolFieldValueInput
+  reference: ReferenceFieldValueInput
 }
 
 input ProjectDefinitionNodeCreationInput {
@@ -440,7 +514,6 @@ type ProjectNode {
 type ProjectDetails {
   id: ID!
   name: String!
-  isStaged: Boolean
   projectDefinitionId: String!
   projectDefinition: ProjectDefinition!
   datasheetId: String!
@@ -612,6 +685,24 @@ type Query {
   currentUser: User
   units: [Unit!]!
 
+  # Aggregates
+  findAggregates(
+    projectDefinitionId: ID!
+    collectionId: ID!
+    query: String!
+    first: Int!
+    after: String
+  ): AggregateConnection!
+
+  # Aggregates collection
+  findAggregateCollection(
+    projectDefinitionId: ID!
+    collectionId: ID!
+  ): AggregateCollection!
+  findDefinitionAggregateCollections(
+    projectDefinitionId: ID!
+  ): [AggregateCollection!]!
+
   # ProjectDefinition
   findDefinitionFormulaFieldMix(
     projectDefinitionId: ID!
@@ -622,15 +713,6 @@ type Query {
 
   # Formula
   findFormula(projectDefinitionId: ID!, formulaId: ID!): Formula
-
-  # Aggregates
-  findDefinitionAggregateCollections(
-    projectDefinitionId: ID!
-  ): [AggregateCollection!]!
-  findAggregation(
-    projectDefinitionId: ID!
-    collectionId: ID!
-  ): AggregateCollection!
 
   # Datasheet
   findDatasheet(id: ID!): Datasheet!
@@ -732,6 +814,39 @@ type Mutation {
 
   # ProjectDefinition
   addProjectDefinition(definitionInput: DefinitionInput!): ProjectDefinition!
+
+  # Aggregate Collection
+  addAggregateCollection(
+    projectDefinitionId: ID!
+    collection: AggregateCollectionInput!
+  ): AggregateCollection!
+  updateAggregateCollection(
+    projectDefinitionId: ID!
+    collectionId: ID!
+    collection: AggregateCollectionInput!
+  ): AggregateCollection!
+  deleteAggregateCollection(
+    projectDefinitionId: ID!
+    collectionId: ID!
+  ): String!
+
+  # Aggregate
+  addAggregate(
+    projectDefinitionId: ID!
+    collectionId: ID!
+    aggregate: AggregateInput!
+  ): Aggregate!
+  updateAggregate(
+    projectDefinitionId: ID!
+    collectionId: ID!
+    aggregateId: ID!
+    replacement: AggregateInput!
+  ): Aggregate!
+  deleteAggregate(
+    projectDefinitionId: ID!
+    collectionId: ID!
+    aggregateId: ID!
+  ): String!
 
   # ProjectDefinitionNode
   addProjectDefinitionNode(

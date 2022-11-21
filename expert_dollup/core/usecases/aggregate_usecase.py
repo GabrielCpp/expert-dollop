@@ -35,3 +35,24 @@ class AggregateUseCase:
         )
         await self.db_context.insert(Aggregate, aggregate)
         return aggregate
+
+    async def update(
+        self,
+        project_definition_id: UUID,
+        collection_id: UUID,
+        aggregate_id: UUID,
+        replacement: NewAggregate,
+    ) -> Aggregate:
+        aggregate = Aggregate(
+            id=aggregate_id,
+            project_definition_id=project_definition_id,
+            collection_id=collection_id,
+            ordinal=replacement.ordinal,
+            name=replacement.name,
+            is_extendable=replacement.is_extendable,
+            attributes={
+                attribute.name: attribute for attribute in replacement.attributes
+            },
+        )
+        await self.db_context.upserts(Aggregate, [aggregate])
+        return aggregate

@@ -22,6 +22,7 @@ from .project_definition_node_dto import (
     CoreDefinitionNodeDto,
     NodeTypeDto,
     NodeReferenceConfigDto,
+    attribute_details_union,
 )
 from .aggregate_collection_dto import (
     AggregateAttributeSchemaDto,
