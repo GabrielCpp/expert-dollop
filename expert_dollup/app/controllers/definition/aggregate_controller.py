@@ -145,3 +145,5 @@ async def delete_collection_aggregate(
             project_definition_id=project_definition_id,
         )
     )
+
+    return aggregate_id

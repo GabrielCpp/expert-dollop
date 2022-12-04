@@ -57,7 +57,6 @@ class TranslationDtoFactory(factory.Factory):
     class Meta:
         model = TranslationDto
 
-    id = factory.Faker("pyuuid4")
     ressource_id = factory.Faker("pyuuid4")
     scope = factory.Faker("pyuuid4")
     locale = "fr-CA"
@@ -66,12 +65,10 @@ class TranslationDtoFactory(factory.Factory):
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
-class TranslationInputDtoFactory(factory.Factory):
+class NewTranslationDtoFactory(factory.Factory):
     class Meta:
-        model = TranslationInputDto
+        model = NewTranslationDto
 
-    id = factory.Faker("pyuuid4")
-    ressource_id = factory.Faker("pyuuid4")
     scope = factory.Faker("pyuuid4")
     locale = "fr-CA"
     name = factory.Sequence(lambda n: f"hello{n}")
@@ -141,6 +138,7 @@ class NewAggregateDtoFactory(factory.Factory):
     name = factory.Sequence(lambda n: f"label_{n}")
     is_extendable = False
     attributes = factory.List([])
+    translated = factory.List([])
 
 
 class AggregateDtoFactory(factory.Factory):

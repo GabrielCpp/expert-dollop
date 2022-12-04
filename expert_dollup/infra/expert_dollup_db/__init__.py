@@ -228,7 +228,7 @@ class ProjectNodeMetaDao(BaseModel):
 
 class TranslationDao(BaseModel):
     class Meta:
-        pk = ("ressource_id", "scope", "locale", "name")
+        pk = ("ressource_id", "locale", "name")
         options = {
             "firestore": {
                 "collection_count": True,
@@ -241,13 +241,13 @@ class TranslationDao(BaseModel):
     class Config:
         title = "translation"
 
-    id: UUID
     ressource_id: UUID
     locale: str = Field(min_length=5, max_length=5)
-    scope: UUID
     name: str = Field(max_length=64)
+    scope: UUID
     value: str
     creation_date_utc: datetime
+    cursor: str
 
 
 class SettingDao(BaseModel):

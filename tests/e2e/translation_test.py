@@ -8,15 +8,18 @@ from ..fixtures import *
 async def test_should_be_able_to_scan_translations(
     ac, db_helper: DbFixtureHelper, mapper
 ):
-    db = await db_helper.load_fixtures(SuperUser(), SimpleProject())
+    db = await db_helper.load_fixtures(
+        SuperUser(), SimpleProject(), GrantRessourcePermissions()
+    )
     await ac.login_super_user()
-    project_definition = db.get_only_one(ProjectDefinition)
 
+    definition = db.get_only_one(ProjectDefinition)
     translations = await AsyncCursor.all(
         ac,
-        f"/api/translations/{project_definition.id}/en-US",
+        f"/api/definitions/{definition.id}/translations",
         unwrap_with=bind_page_dto(TranslationDto),
-        after=make_sorter(lambda c: (c.name, c.id)),
+        after=make_sorter(lambda c: (c.name, c.locale, c.ressource_id)),
+        params={"locale": "en-US"},
     )
 
     expectd_en_translations = sorted(
@@ -28,7 +31,7 @@ async def test_should_be_able_to_scan_translations(
             ],
             TranslationDto,
         ),
-        key=lambda c: (c.name, c.id),
+        key=lambda c: (c.name, c.locale, c.ressource_id),
     )
 
     assert len(translations) == len(expectd_en_translations)

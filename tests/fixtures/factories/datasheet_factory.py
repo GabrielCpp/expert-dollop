@@ -88,7 +88,6 @@ class ElementSeed:
         self._name = name
         self.translations = [
             Translation(
-                id=make_uuid(f"t_{locale.lower()}_element_{name}"),
                 ressource_id=datasheet_seed.id,
                 locale=locale,
                 scope=self.id,
@@ -151,7 +150,6 @@ class AggregateCollectionSeed:
             for name, label in translations_for_locale.items():
                 translations.append(
                     Translation(
-                        id=make_uuid(label),
                         ressource_id=self.id,
                         locale=locale,
                         scope=make_uuid(name),

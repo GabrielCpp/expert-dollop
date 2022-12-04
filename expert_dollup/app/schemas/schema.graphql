@@ -22,6 +22,7 @@ type Aggregate {
   projectDefinitionId: String!
   collectionId: String!
   name: String!
+  translated: [Translation!]!
   ordinal: Int!
   isExtendable: Boolean!
   attributes: [AggregateAttribute!]!
@@ -42,6 +43,7 @@ input AggregateInput {
   ordinal: Int!
   isExtendable: Boolean!
   attributes: [AggregateAttributeInput!]!
+  translated: [TranslationInput!]!
 }
 
 enum NodeType {
@@ -780,7 +782,6 @@ input TranslationInput {
 }
 
 input TranslationUpdateInput {
-  id: ID!
   ressourceId: String!
   scope: String!
   locale: String!

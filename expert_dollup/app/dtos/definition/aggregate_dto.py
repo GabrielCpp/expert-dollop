@@ -2,6 +2,7 @@ from uuid import UUID
 from typing import List
 from expert_dollup.shared.starlette_injection import CamelModel
 from ..dynamic_primitive import PrimitiveWithReferenceUnionDto
+from ..translation_dto import FieldTranslationDto
 
 
 class AggregateAttributeDto(CamelModel):
@@ -25,3 +26,4 @@ class NewAggregateDto(CamelModel):
     name: str
     is_extendable: bool
     attributes: List[AggregateAttributeDto]
+    translated: List[FieldTranslationDto]

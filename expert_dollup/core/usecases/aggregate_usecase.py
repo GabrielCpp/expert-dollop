@@ -3,6 +3,7 @@ from typing import List
 from expert_dollup.shared.database_services import *
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
+from .translation_usecase import TranslationUseCase
 
 
 class AggregateUseCase:
@@ -34,6 +35,10 @@ class AggregateUseCase:
             },
         )
         await self.db_context.insert(Aggregate, aggregate)
+        await self.upsert_translations(
+            project_definition_id, aggregate.id, new_aggregate.translated
+        )
+
         return aggregate
 
     async def update(
@@ -55,4 +60,27 @@ class AggregateUseCase:
             },
         )
         await self.db_context.upserts(Aggregate, [aggregate])
+        await self.upsert_translations(
+            project_definition_id, aggregate_id, replacement.translated
+        )
         return aggregate
+
+    async def upsert_translations(
+        self,
+        ressource_id: UUID,
+        scope: UUID,
+        new_translations: List[NewTranslation],
+    ):
+        translations = [
+            Translation(
+                ressource_id=ressource_id,
+                locale=new_translation.locale,
+                scope=scope,
+                name=new_translation.name,
+                value=new_translation.value,
+                creation_date_utc=self.clock.utcnow(),
+            )
+            for new_translation in new_translations
+        ]
+
+        await self.db_context.upserts(Translation, translations)

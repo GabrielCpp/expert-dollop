@@ -7,7 +7,7 @@ from expert_dollup.core.domains import *
 from expert_dollup.app.controllers.datasheet.datasheet_controller import *
 from expert_dollup.app.controllers.definition.aggregate_collection_controller import *
 from expert_dollup.app.dtos import *
-from expert_dollup.app.controllers.translation import *
+from expert_dollup.app.controllers.translations_controller import *
 from .types import query, mutation, aggregate_collection
 
 

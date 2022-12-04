@@ -483,23 +483,25 @@ def map_project_node_tree_to_dto(
     )
 
 
-def map_translation_input_from_dto(
-    src: TranslationInputDto, mapper: Mapper
-) -> Translation:
-    return Translation(
-        id=src.id,
-        ressource_id=src.ressource_id,
+def map_field_translation_from_dto(
+    src: FieldTranslationDto, mapper: Mapper
+) -> FieldTranslation:
+    return FieldTranslation(locale=src.locale, name=src.name, value=src.value)
+
+
+def map_new_translation_from_dto(
+    src: NewTranslationDto, mapper: Mapper
+) -> NewTranslation:
+    return NewTranslation(
         locale=src.locale,
         name=src.name,
         scope=src.scope,
         value=src.value,
-        creation_date_utc=mapper.get(Clock).utcnow(),
     )
 
 
 def map_translation_from_dto(src: TranslationDto, mapper: Mapper) -> Translation:
     return Translation(
-        id=src.id,
         ressource_id=src.ressource_id,
         locale=src.locale,
         name=src.name,
@@ -511,31 +513,12 @@ def map_translation_from_dto(src: TranslationDto, mapper: Mapper) -> Translation
 
 def map_translation_to_dto(src: Translation, mapper: Mapper) -> TranslationDto:
     return TranslationDto(
-        id=src.id,
         ressource_id=src.ressource_id,
         locale=src.locale,
         name=src.name,
         scope=src.scope,
         value=src.value,
         creation_date_utc=src.creation_date_utc,
-    )
-
-
-def map_translation_id_from_dto(src: TranslationIdDto, mapper: Mapper) -> TranslationId:
-    return TranslationId(
-        ressource_id=src.ressource_id,
-        locale=src.locale,
-        scope=src.scope,
-        name=src.name,
-    )
-
-
-def map_translation_id_to_dto(src: TranslationId, mapper: Mapper) -> TranslationIdDto:
-    return TranslationDto(
-        ressource_id=src.ressource_id,
-        locale=src.locale,
-        scope=src.scope,
-        name=src.name,
     )
 
 
@@ -687,6 +670,7 @@ def map_new_aggregate_from_dto(src: NewAggregateDto, mapper: Mapper) -> NewAggre
         name=src.name,
         is_extendable=src.is_extendable,
         attributes=mapper.map_many(src.attributes, AggregateAttribute),
+        translated=mapper.map_many(src.translated, FieldTranslation),
     )
 
 

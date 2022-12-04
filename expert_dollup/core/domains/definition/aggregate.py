@@ -5,6 +5,7 @@ from typing_extensions import TypeAlias
 from decimal import Decimal
 from expert_dollup.shared.database_services import QueryFilter
 from ..values_union import PrimitiveWithReferenceUnion
+from ..translation import FieldTranslation
 
 
 @dataclass
@@ -46,6 +47,7 @@ class NewAggregate:
     name: str
     is_extendable: bool
     attributes: List[AggregateAttribute]
+    translated: List[FieldTranslation]
 
 
 class AggregateFilter(QueryFilter):

@@ -178,7 +178,7 @@ def create_datasheet_tables():
         "datasheet_definition_label",
         Column("id", postgresql.UUID(), nullable=False, primary_key=True),
         Column(
-            "label_collection_id",
+            "aggregate_collection_id",
             postgresql.UUID(),
             nullable=False,
         ),
@@ -188,9 +188,9 @@ def create_datasheet_tables():
     )
 
     op.create_index(
-        op.f("ix_datasheet_definition_label_label_collection_id"),
+        op.f("ix_datasheet_definition_label_aggregate_collection_id"),
         "datasheet_definition_label",
-        ["label_collection_id"],
+        ["aggregate_collection_id"],
     )
 
     op.create_table(

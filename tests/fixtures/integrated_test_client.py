@@ -119,7 +119,6 @@ class IntegratedTestClient(TestClient):
         try:
             result = parse_obj_as(unwrap_with, json_payload)
         except Exception:
-            print(json_payload)
             raise
 
         if callable(after):

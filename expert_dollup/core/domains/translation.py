@@ -7,7 +7,6 @@ from expert_dollup.shared.database_services import QueryFilter
 
 @dataclass
 class Translation:
-    id: UUID
     ressource_id: UUID
     locale: str
     scope: UUID
@@ -17,21 +16,28 @@ class Translation:
 
 
 @dataclass
+class NewTranslation:
+    locale: str
+    name: str
+    scope: UUID
+    value: str
+
+
+@dataclass
+class FieldTranslation:
+    locale: str
+    name: str
+    value: str
+
+
+@dataclass
 class TranslationId:
     ressource_id: UUID
     locale: str
-    scope: UUID
     name: str
 
 
-@dataclass(init=False)
-class TranslationRessourceLocaleQuery(QueryFilter):
-    ressource_id: UUID
-    locale: str
-
-
 class TranslationFilter(QueryFilter):
-    id: Optional[UUID]
     ressource_id: Optional[UUID]
     locale: Optional[str]
     scope: Optional[UUID]

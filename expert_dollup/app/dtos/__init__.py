@@ -11,7 +11,7 @@ from .dynamic_primitive import (
 )
 from .definition import *
 from .project_dto import ProjectDetailsDto, ProjectDetailsInputDto
-from .translation_dto import TranslationDto, TranslationIdDto, TranslationInputDto
+from .translation_dto import TranslationDto, NewTranslationDto, FieldTranslationDto
 from .project_node_dto import (
     ProjectNodeDto,
     ProjectNodeCollectionTargetDto,

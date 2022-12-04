@@ -91,10 +91,15 @@ class AuthJWT(AuthService[User]):
             )
 
         for permission in permissions:
-            if permission.startswith("*"):
-                permission = ressource.kind + permission[1:]
+            if permission.startswith("*:"):
+                suffix = permission[1:]
 
-            if not permission in ressource.permissions:
+                if (
+                    len(ressource.permissions) > 0
+                    and any(p.endswith(suffix) for p in ressource.permissions) == False
+                ):
+                    self._raise_permission_missing(suffix)
+            elif not permission in ressource.permissions:
                 self._raise_permission_missing(permission)
 
         return user

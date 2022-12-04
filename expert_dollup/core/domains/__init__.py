@@ -1,7 +1,8 @@
 from .translation import (
     Translation,
+    NewTranslation,
+    FieldTranslation,
     TranslationId,
-    TranslationRessourceLocaleQuery,
     TranslationFilter,
     TranslationPluckFilter,
 )

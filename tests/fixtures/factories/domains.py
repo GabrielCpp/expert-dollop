@@ -335,7 +335,6 @@ class TranslationFactory(factory.Factory):
     class Meta:
         model = Translation
 
-    id = factory.Faker("pyuuid4")
     ressource_id = factory.Faker("pyuuid4")
     locale = "fr-CA"
     scope = factory.Faker("pyuuid4")

@@ -1,4 +1,5 @@
 from typing import Any, List, Tuple
+from base64 import b64encode
 
 
 def strip_tree_traces(elements: List[Tuple[Any, List[int]]]):
@@ -13,3 +14,7 @@ def get_from(d: dict, name: Any):
     result = d[name]
     assert not result is None, f"{name} not in dict"
     return result
+
+
+def encode_cursor(cursor: str) -> str:
+    return b64encode(cursor.encode("ascii")).decode("ascii")

@@ -13,6 +13,13 @@ from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_storage import *
 
 
+from datetime import datetime
+
+
+def build_cursor(d: datetime, *args: str) -> str:
+    return "_".join([d.isoformat(sep="T", timespec="auto"), *args])
+
+
 primitive_with_none_union_dao_mappings = RevervibleUnionMapping(
     PrimitiveWithNoneUnionDao,
     PrimitiveWithNoneUnion,
@@ -486,7 +493,6 @@ def map_ressource_to_dao(src: Ressource, mapper: Mapper) -> RessourceDao:
 
 def map_translation_from_dao(src: TranslationDao, mapper: Mapper) -> Translation:
     return Translation(
-        id=src.id,
         ressource_id=src.ressource_id,
         locale=src.locale,
         scope=src.scope,
@@ -498,20 +504,23 @@ def map_translation_from_dao(src: TranslationDao, mapper: Mapper) -> Translation
 
 def map_translation_to_dao(src: Translation, mapper: Mapper) -> TranslationDao:
     return TranslationDao(
-        id=src.id,
         ressource_id=src.ressource_id,
         locale=src.locale,
         scope=src.scope,
         name=src.name,
         value=src.value,
         creation_date_utc=src.creation_date_utc,
+        cursor=build_cursor(
+            src.creation_date_utc,
+            str(src.ressource_id),
+            src.locale,
+            src.name,
+        ),
     )
 
 
 def map_translation_id_to_dict(src: TranslationId, mapper: Mapper) -> dict:
-    return dict(
-        ressource_id=src.ressource_id, scope=src.scope, locale=src.locale, name=src.name
-    )
+    return dict(ressource_id=src.ressource_id, locale=src.locale, name=src.name)
 
 
 def map_project_definition_node_filter_to_dict(
@@ -1014,23 +1023,10 @@ def map_datasheet_filter_to_dict(src: DatasheetFilter, mapper: Mapper) -> dict:
     )
 
 
-def map_translation_ressource_locale_query_to_dict(
-    src: TranslationRessourceLocaleQuery, mapper: Mapper
-) -> dict:
-    return map_dict_keys(
-        src.args,
-        {
-            "ressource_id": ("ressource_id", None),
-            "locale": ("locale", None),
-        },
-    )
-
-
 def map_translation_filter(src: TranslationFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
         {
-            "id": ("id", None),
             "ressource_id": ("ressource_id", None),
             "locale": ("locale", None),
             "scope": ("scope", None),

@@ -47,7 +47,6 @@ class AuthorizationFactory:
             ProjectDefinition: RessourceAuthorization(
                 "project_definition", COMMON_ACTIONS
             ),
-            Translation: RessourceAuthorization("translation", COMMON_ACTIONS),
             Datasheet: RessourceAuthorization(
                 "datasheet", set_of(*COMMON_ACTIONS, "clone")
             ),

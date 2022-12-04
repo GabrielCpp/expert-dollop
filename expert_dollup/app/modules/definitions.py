@@ -58,7 +58,8 @@ paginations = [
         for_domain=ReportDefinition,
     ),
     PaginationDetails(
-        default_page_encoder=FieldTokenEncoder("id"), for_domain=Translation
+        default_page_encoder=FieldTokenEncoder("cursor", str, str, ""),
+        for_domain=Translation,
     ),
     PaginationDetails(
         default_page_encoder=FieldTokenEncoder("name", str, str, ""),

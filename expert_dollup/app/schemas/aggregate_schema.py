@@ -5,8 +5,9 @@ from ariadne.types import GraphQLResolveInfo
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.controllers.definition.aggregate_controller import *
+from expert_dollup.app.controllers.translations_controller import *
 from expert_dollup.app.dtos import *
-from .types import query, mutation
+from .types import query, mutation, aggregate
 
 
 @query.field("findAggregates")
@@ -114,3 +115,17 @@ async def resolve_delete_aggregate(
     return await delete_collection_aggregate(
         info, UUID(project_definition_id), UUID(collection_id), UUID(aggregate_id)
     )
+
+
+@aggregate.field("translated")
+@inject_graphql_route(find_translation_in_scope, ["ressource_id", "scope"])
+@convert_kwargs_to_snake_case
+async def resolve_aggregate_translated(
+    parent: AggregateDto,
+    info: GraphQLResolveInfo,
+    find_translation_in_scope: callable,
+):
+    translations = await find_translation_in_scope(
+        info, parent.project_definition_id, parent.id
+    )
+    return translations

@@ -4,7 +4,6 @@ from datetime import datetime
 
 
 class TranslationDto(CamelModel):
-    id: UUID
     ressource_id: UUID
     locale: str
     scope: UUID
@@ -12,18 +11,19 @@ class TranslationDto(CamelModel):
     value: str
     creation_date_utc: datetime
 
+    @property
+    def id(self):
+        return "_".join([str(self.ressource_id), self.locale, self.name])
 
-class TranslationInputDto(CamelModel):
-    id: UUID
-    ressource_id: UUID
+
+class NewTranslationDto(CamelModel):
     locale: str
-    scope: UUID
     name: str
+    scope: UUID
     value: str
 
 
-class TranslationIdDto(CamelModel):
-    ressource_id: UUID
+class FieldTranslationDto(CamelModel):
     locale: str
-    scope: UUID
     name: str
+    value: str

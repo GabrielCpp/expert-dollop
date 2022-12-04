@@ -27,6 +27,7 @@ graphql_uuid = ScalarType("UUID")
 supplied_item = ObjectType("SuppliedItem")
 project_node_meta = ObjectType("ProjectNodeMeta")
 aggregate_collection = ObjectType("AggregateCollection")
+aggregate = ObjectType("Aggregate")
 
 
 def define_union_type(name: str, mapping: Dict[Type, str]) -> UnionType:
@@ -58,6 +59,7 @@ types = [
     supplied_item,
     static_choice_option,
     aggregate_collection,
+    aggregate,
 ]
 
 
