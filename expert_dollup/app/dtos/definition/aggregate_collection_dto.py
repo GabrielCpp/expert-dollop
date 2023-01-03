@@ -27,7 +27,9 @@ class AggregateAttributeSchemaDto(CamelModel):
 
     @property
     def translations(self):
-        return TranslationConfigDto(help_text_name=f"{name}_help_text", label={name})
+        return TranslationConfigDto(
+            help_text_name=f"{self.name}_help_text", label=self.name
+        )
 
 
 class AggregateCollectionDto(CamelModel):

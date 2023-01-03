@@ -74,6 +74,25 @@ class ReportEvaluationContext:
                 **e.props,
             ) from e
 
+    def evaluate_columns(self, expression, columns):
+        try:
+            return self.expression_evaluator.evaluate(
+                expression,
+                {
+                    "columns": columns,
+                    "round_number": round_number,
+                    "sum": sum,
+                    "injector": self.injector,
+                },
+            )
+        except AstEvaluationError as e:
+            raise ReportGenerationError(
+                f"Error while evaluating expression",
+                expression=expression,
+                columns=columns,
+                **e.props,
+            ) from e
+
     def evaluate(self, expression, scope):
         try:
             return self.expression_evaluator.evaluate(
@@ -236,6 +255,7 @@ class GroupedColumnProjection(ProjectionStep):
     ):
         self.evaluation_context = evaluation_context
         report_definition = linking_data.report_definition
+        self.having_expression = report_definition.structure.having
         footprint_columns = {
             g.attribute_name
             for g in report_definition.structure.group_by
@@ -285,7 +305,11 @@ class GroupedColumnProjection(ProjectionStep):
                     column.expression, current_row, rows
                 )
 
-            if columns["cost"] != 0:
+            if not bool(
+                self.evaluation_context.evaluate_columns(
+                    self.having_expression, columns
+                )
+            ):
                 new_rows.append(current_row)
 
         return new_rows

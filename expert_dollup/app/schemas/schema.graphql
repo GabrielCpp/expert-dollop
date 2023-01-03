@@ -557,22 +557,43 @@ type ProjectNodeTree {
   roots: [ProjectNodeTreeTypeNode!]!
 }
 
+type ReportJoin {
+  fromBucket: AttributeBucket!
+  onCollection: AttributeBucket!
+  alias: String!
+}
+
 type AttributeBucket {
   bucketName: String!
   attributeName: String!
 }
 
+union ReportUnitUnion = Unit | AttributeBucket
+
 type ReportComputation {
+  label: AttributeBucket
   name: String!
   expression: String!
+  unit: ReportUnitUnion
   isVisible: Boolean!
-  unitId: String
+}
+
+type Selection {
+  fromCollectionId: String!
+  fromAlias: String!
+  joinsCache: [ReportJoin!]!
+  formulaAttribute: AttributeBucket!
+  datasheetAttribute: AttributeBucket!
 }
 
 type ReportDefinitionStructure {
-  formulaAttribute: AttributeBucket!
-  datasheetAttribute: AttributeBucket!
+  selection: Selection!
   columns: [ReportComputation!]!
+  groupBy: [AttributeBucket!]!
+  having: String!
+  orderBy: [AttributeBucket!]!
+  stageSummary: ReportComputation!
+  reportSummary: [ReportComputation!]!
 }
 
 type ReportDefinition {
@@ -763,6 +784,8 @@ type Query {
     first: Int!
     after: String
   ): FormulaConnection!
+
+  # Reports
   findReportDefinitions(projectDefinitionId: ID!): [ReportDefinition!]!
   findReportDefinition(reportDefinitionId: ID!): ReportDefinition!
   findProjectReport(projectId: ID!, reportDefinitionId: ID!): Report!
