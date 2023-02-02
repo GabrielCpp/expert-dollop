@@ -855,7 +855,7 @@ def map_report_structure_from_dto(
         datasheet_selection_alias=src.datasheet_selection_alias,
         formula_attribute=mapper.map(src.formula_attribute, AttributeBucket),
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucket),
-        stage_summary=mapper.map(src.stage_summary, StageSummary),
+        stage_summary=mapper.map(src.stage_summary, ReportComputation),
         report_summary=mapper.map_many(src.report_summary, ReportComputation),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoin),
         columns=mapper.map_many(src.columns, ReportComputation),
@@ -871,7 +871,7 @@ def map_report_structure_to_dto(
         datasheet_selection_alias=src.datasheet_selection_alias,
         formula_attribute=mapper.map(src.formula_attribute, AttributeBucketDto),
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucketDto),
-        stage_summary=mapper.map(src.stage_summary, StageSummaryDto),
+        stage_summary=mapper.map(src.stage_summary, ReportComputationDto),
         report_summary=mapper.map_many(src.report_summary, ReportComputationDto),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoinDto),
         columns=mapper.map_many(src.columns, ReportComputationDto),
@@ -880,15 +880,19 @@ def map_report_structure_to_dto(
     )
 
 
-def map_stage_grouping_to_dto(src: StageSummary, mapper: Mapper) -> StageSummaryDto:
-    return StageSummaryDto(
+def map_stage_grouping_to_dto(
+    src: ReportComputation, mapper: Mapper
+) -> ReportComputationDto:
+    return ReportComputationDto(
         label=mapper.map(src.label, AttributeBucketDto),
         summary=mapper.map(src.summary, ReportComputationDto),
     )
 
 
-def map_stage_grouping_from_dto(src: StageSummaryDto, mapper: Mapper) -> StageSummary:
-    return StageSummary(
+def map_stage_grouping_from_dto(
+    src: ReportComputationDto, mapper: Mapper
+) -> ReportComputation:
+    return ReportComputation(
         label=mapper.map(src.label, AttributeBucket),
         summary=mapper.map(src.summary, ReportComputation),
     )

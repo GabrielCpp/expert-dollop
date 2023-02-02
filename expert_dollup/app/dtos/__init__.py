@@ -42,7 +42,6 @@ from .report_definition_dto import (
     ReportStructureDto,
     AttributeBucketDto,
     ReportJoinDto,
-    StageSummaryDto,
     ReportComputationDto,
 )
 from .measure_unit_dto import MeasureUnitDto

@@ -32,16 +32,23 @@ class ProjectDefinitionNodeFactory(factory.Factory):
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
-class ReportJoinFactory(factory.Factory):
+class ReportRowKeyFactory(factory.Factory):
     class Meta:
-        model = ReportJoin
+        model = ReportRowKey
 
-    from_object_name = factory.Sequence(lambda n: f"from_object_{n}")
-    from_property_name = factory.Sequence(lambda n: f"from_property_{n}")
-    to_object_name = factory.Sequence(lambda n: f"to_object_name_{n}")
-    to_property_name = factory.Sequence(lambda n: f"to_property_name_{n}")
-    alias_name = factory.Sequence(lambda n: f"alias_name_{n}")
-    is_inner_join = True
+    project_definition_id = factory.Faker("pyuuid4")
+    report_definition_id = factory.Faker("pyuuid4")
+
+
+class ReportComputationFactory(factory.Factory):
+    class Meta:
+        model = ReportComputation
+
+    name = factory.Sequence(lambda n: f"property_{n}")
+    expression = factory.Sequence(lambda n: f"property_{n}*2+1")
+    label = None
+    unit = "unit"
+    is_visible = True
 
 
 class AttributeBucketFactory(factory.Factory):
@@ -52,38 +59,30 @@ class AttributeBucketFactory(factory.Factory):
     attribute_name = "attribute"
 
 
-class ReportComputationFactory(factory.Factory):
+class ReportJoinFactory(factory.Factory):
     class Meta:
-        model = ReportComputation
+        model = ReportJoin
 
-    name = factory.Sequence(lambda n: f"property_{n}")
-    expression = factory.Sequence(lambda n: f"property_{n}*2+1")
-    unit = "unit"
-    is_visible = True
-
-
-class StageSummaryFactory(factory.Factory):
-    class Meta:
-        model = StageSummary
-
-    label = factory.SubFactory(
+    from_object = factory.SubFactory(
         AttributeBucketFactory,
-        bucket_name="columns",
-        attribute_name="stage",
+        bucket_name="sources",
+        attribute_name="id",
     )
-
-    summary = factory.SubFactory(
-        ReportComputationFactory,
-        name="total",
-        expression="sum(row['columns']['cost'] for row in rows)",
+    on_object = factory.SubFactory(
+        AttributeBucketFactory,
+        bucket_name="targets",
+        attribute_name="id",
     )
+    alias = factory.Sequence(lambda n: f"alias_name_{n}")
 
 
-class ReportStructureFactory(factory.Factory):
+class SelectionFactory(factory.Factory):
     class Meta:
-        model = ReportStructure
+        model = Selection
 
-    datasheet_selection_alias = "abstractproduct"
+    from_collection_id = factory.Faker("pyuuid4")
+    from_alias = "abstractproduct"
+    joins_cache = factory.List([])
     formula_attribute = factory.SubFactory(
         AttributeBucketFactory, bucket_name="substage", attribute_name="formula"
     )
@@ -92,8 +91,13 @@ class ReportStructureFactory(factory.Factory):
         bucket_name="substage",
         attribute_name="datasheet_element",
     )
-    stage_summary = factory.SubFactory(StageSummaryFactory)
-    joins_cache = factory.List([])
+
+
+class ReportStructureFactory(factory.Factory):
+    class Meta:
+        model = ReportStructure
+
+    selection = factory.SubFactory(SelectionFactory)
     columns = factory.List(
         [
             factory.SubFactory(
@@ -139,6 +143,7 @@ class ReportStructureFactory(factory.Factory):
             ),
         ]
     )
+    having = ""
     order_by = factory.List(
         [
             factory.SubFactory(
@@ -147,6 +152,16 @@ class ReportStructureFactory(factory.Factory):
                 attribute_name="ordinal",
             )
         ]
+    )
+    stage_summary = factory.SubFactory(
+        ReportComputationFactory,
+        name="total",
+        expression="sum(row['columns']['cost'] for row in rows)",
+        label=factory.SubFactory(
+            AttributeBucketFactory,
+            bucket_name="columns",
+            attribute_name="stage",
+        ),
     )
     report_summary = factory.List(
         [
@@ -166,10 +181,9 @@ class ReportDefinitionFactory(factory.Factory):
 
     id = factory.Faker("pyuuid4")
     project_definition_id = factory.Faker("pyuuid4")
-    from_aggregate_collection_id = factory.Faker("pyuuid4")
-    name = factory.Sequence(lambda n: f"report_name_{n}")
+    name = factory.Faker("name")
     structure = factory.SubFactory(ReportStructureFactory)
-    distributable = False
+    distributable = factory.Faker("random_element", elements=[True, False])
 
 
 class ComputedValueFactory(factory.Factory):

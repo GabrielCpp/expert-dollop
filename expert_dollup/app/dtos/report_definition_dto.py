@@ -46,13 +46,9 @@ class AttributeBucketDto(CamelModel):
 class ReportComputationDto(CamelModel):
     name: str
     expression: str
+    label: Optional[AttributeBucketDto]
     unit: Union[StrictStr, AttributeBucketDto, None] = None
     is_visible: bool = True
-
-
-class StageSummaryDto(CamelModel):
-    label: AttributeBucketDto
-    summary: ReportComputationDto
 
 
 class ReportStructureDto(CamelModel):
@@ -63,7 +59,7 @@ class ReportStructureDto(CamelModel):
     columns: List[ReportComputationDto]
     group_by: List[AttributeBucketDto]
     order_by: List[AttributeBucketDto]
-    stage_summary: StageSummaryDto
+    stage_summary: ReportComputationDto
     report_summary: List[ReportComputationDto]
 
 

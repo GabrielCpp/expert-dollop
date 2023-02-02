@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from asyncio import gather
 from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.logits import FormulaInjector
-from .formula_resolver import FormulaResolver
+from ..formula_resolver import FormulaResolver
 from .report_row_cache import ReportRowCache
 from expert_dollup.core.exceptions import (
     ReportGenerationError,
@@ -109,19 +109,23 @@ class ReportEvaluationContext:
 
 class JoinStep(ABC):
     @abstractmethod
-    def apply(self, row: ReportRowDict) -> List[ReportRowDict]:
+    def apply(
+        self, evaluator: ReportEvaluationContext, row: ReportRowDict
+    ) -> List[ReportRowDict]:
         pass
 
 
 class MutateStep(ABC):
     @abstractmethod
-    def apply(self, row: ReportRowDict) -> None:
+    def apply(self, evaluator: ReportEvaluationContext, row: ReportRowDict) -> None:
         pass
 
 
 class ProjectionStep(ABC):
     @abstractmethod
-    def apply(self, rows: List[ReportRowDict]) -> List[ReportRowDict]:
+    def apply(
+        self, evaluator: ReportEvaluationContext, rows: List[ReportRowDict]
+    ) -> List[ReportRowDict]:
         pass
 
 
@@ -133,55 +137,52 @@ class ReportGeneration:
 
     def apply_steps(
         self,
+        evaluator: ReportEvaluationContext,
         rows: List[ReportRowDict],
     ) -> List[ReportRowDict]:
         for join_step in self.join_steps:
             new_rows: List[ReportRowDict] = []
 
             for row in rows:
-                step_rows = join_step.apply(row)
+                step_rows = join_step.apply(evaluator, row)
                 new_rows.extend(step_rows)
 
             rows = new_rows
 
         for mutate_step in self.mutate_steps:
             for row in rows:
-                mutate_step.apply(row)
+                mutate_step.apply(evaluator, row)
 
         for projection_step in self.projection_steps:
-            rows = projection_step.apply(rows)
+            rows = projection_step.apply(evaluator, rows)
 
         return rows
 
 
 class JoinFormulaUnitInstances(JoinStep):
-    def __init__(self, linking_data: LinkingData):
-        report_definition = linking_data.report_definition
-        self.element_attribute = report_definition.structure.datasheet_attribute
-        self.formula_attribute = report_definition.structure.formula_attribute
-        self.unit_instances_by_def_id = (
-            JoinFormulaUnitInstances.get_unit_instances_by_def_id(
-                linking_data.unit_instances
-            )
+    def __init__(
+        self,
+        selection: Selection,
+        unit_instances: UnitInstanceCache,
+    ):
+        self.element_attribute = selection.datasheet_attribute
+        self.formula_attribute = selection.formula_attribute
+        self.unit_instances_by_def_id: Dict[UUID, UnitInstanceCache] = group_by_key(
+            (
+                unit_instance
+                for unit_instance in unit_instances
+                if not unit_instance.formula_id is None
+                and (
+                    not isinstance(unit_instance.result, Decimal)
+                    or unit_instance.result > 0
+                )
+            ),
+            lambda x: x.formula_id,
         )
 
-    @staticmethod
-    def get_unit_instances_by_def_id(
-        unit_instances: UnitInstanceCache,
-    ) -> Dict[UUID, UnitInstanceCache]:
-        formula_instances = [
-            unit_instance
-            for unit_instance in unit_instances
-            if not unit_instance.formula_id is None
-            and (
-                not isinstance(unit_instance.result, Decimal)
-                or unit_instance.result > 0
-            )
-        ]
-
-        return group_by_key(formula_instances, lambda x: x.formula_id)
-
-    def apply(self, row: ReportRowDict) -> List[ReportRowDict]:
+    def apply(
+        self, evaluator: ReportEvaluationContext, row: ReportRowDict
+    ) -> List[ReportRowDict]:
         aggregate_id = self.element_attribute.get(row)
         assert isinstance(aggregate_id, UUID)
         formula_id = self.formula_attribute.get(row)
@@ -197,14 +198,17 @@ class JoinFormulaUnitInstances(JoinStep):
 
 
 class DatasheetElementInstanceAssignation(MutateStep):
-    def __init__(self, linking_data: LinkingData):
-        structure = linking_data.report_definition.structure
-        self.element_attribute = structure.datasheet_attribute
-        self.datasheet_bucket_name = structure.datasheet_attribute.attribute_name
-        self.elements_by_id = linking_data.datasheet_elements_by_id
-        self.datasheet_selection_alias = structure.datasheet_selection_alias
+    def __init__(
+        self,
+        selection: Selection,
+        datasheet_elements_by_id: Dict[UUID, DatasheetElement],
+    ):
+        self.element_attribute = selection.datasheet_attribute
+        self.datasheet_bucket_name = selection.datasheet_attribute.attribute_name
+        self.datasheet_selection_alias = selection.from_alias
+        self.elements_by_id = datasheet_elements_by_id
 
-    def apply(self, row: ReportRowDict) -> None:
+    def apply(self, evaluator: ReportEvaluationContext, row: ReportRowDict) -> None:
         aggregate_id = self.element_attribute.get(row)
         element_dict = self.elements_by_id[aggregate_id].report_dict
         element_def_dict = row[self.datasheet_selection_alias]
@@ -213,37 +217,34 @@ class DatasheetElementInstanceAssignation(MutateStep):
 
 class GroupDigestAssignation(MutateStep):
     def __init__(
-        self, linking_data: LinkingData, evaluation_context: ReportEvaluationContext
+        self,
+        columns: List[ReportComputation],
+        group_by: List[AttributeBucket],
     ):
-        self.evaluation_context = evaluation_context
-        self.structure = linking_data.report_definition.structure
+        self.group_by = group_by
         footprint_columns = {
-            g.attribute_name
-            for g in self.structure.group_by
-            if g.bucket_name == COLUMNS_BUCKET_NAME
+            g.attribute_name for g in group_by if g.bucket_name == COLUMNS_BUCKET_NAME
         }
 
         self.first_pass_columns = (
-            self.structure.columns
+            columns
             if len(footprint_columns) == 0
             else [
                 column
-                for column in self.structure.columns
+                for column in columns
                 if column.name in footprint_columns or not column.is_visible
             ]
         )
 
-    def apply(self, row: ReportRowDict) -> None:
+    def apply(self, evaluator: ReportEvaluationContext, row: ReportRowDict) -> None:
         columns: ReportDefinitionColumnDict = {}
         row[COLUMNS_BUCKET_NAME] = columns
 
         for column in self.first_pass_columns:
-            columns[column.name] = self.evaluation_context.evaluate_row(
-                column.expression, row, None
-            )
+            columns[column.name] = evaluator.evaluate_row(column.expression, row, None)
 
         group_id = "/".join(
-            attribute_bucket.get(row) for attribute_bucket in self.structure.group_by
+            attribute_bucket.get(row) for attribute_bucket in self.group_by
         )
 
         row[INTERNAL_BUCKET_NAME] = {"group_digest": group_id}
@@ -251,23 +252,22 @@ class GroupDigestAssignation(MutateStep):
 
 class GroupedColumnProjection(ProjectionStep):
     def __init__(
-        self, linking_data: LinkingData, evaluation_context: ReportEvaluationContext
+        self,
+        columns: List[ReportComputation],
+        group_by: List[AttributeBucket],
+        having: str,
     ):
-        self.evaluation_context = evaluation_context
-        report_definition = linking_data.report_definition
-        self.having_expression = report_definition.structure.having
+        self.having_expression = having
         footprint_columns = {
-            g.attribute_name
-            for g in report_definition.structure.group_by
-            if g.bucket_name == COLUMNS_BUCKET_NAME
+            g.attribute_name for g in group_by if g.bucket_name == COLUMNS_BUCKET_NAME
         }
 
         first_pass_columns = (
-            report_definition.structure.columns
+            columns
             if len(footprint_columns) == 0
             else [
                 column
-                for column in report_definition.structure.columns
+                for column in columns
                 if column.name in footprint_columns or not column.is_visible
             ]
         )
@@ -281,7 +281,7 @@ class GroupedColumnProjection(ProjectionStep):
             if len(footprint_columns) == 0
             else [
                 column
-                for column in report_definition.structure.columns
+                for column in columns
                 if not column.name in first_pass_column_names
             ]
         )
@@ -289,7 +289,9 @@ class GroupedColumnProjection(ProjectionStep):
         if len(self.second_pass_column) == 0:
             raise Exception("Group by require at least one aggregate")
 
-    def apply(self, rows: List[ReportRowDict]) -> List[ReportRowDict]:
+    def apply(
+        self, evaluator: ReportEvaluationContext, rows: List[ReportRowDict]
+    ) -> List[ReportRowDict]:
         new_rows: List[ReportRowDict] = []
         rows_by_group = group_by_key(
             rows, lambda x: x[INTERNAL_BUCKET_NAME]["group_digest"]
@@ -301,30 +303,26 @@ class GroupedColumnProjection(ProjectionStep):
             rows = [row for row in grouped_rows]
 
             for column in self.second_pass_column:
-                columns[column.name] = self.evaluation_context.evaluate_row(
+                columns[column.name] = evaluator.evaluate_row(
                     column.expression, current_row, rows
                 )
 
-            if not bool(
-                self.evaluation_context.evaluate_columns(
-                    self.having_expression, columns
-                )
-            ):
+            if not bool(evaluator.evaluate_columns(self.having_expression, columns)):
                 new_rows.append(current_row)
 
         return new_rows
 
 
 class RowOrdering(ProjectionStep):
-    def __init__(self, linking_data: LinkingData):
-        self.structure = linking_data.report_definition.structure
+    def __init__(self, order_by: List[AttributeBucket]):
+        self.order_by: List[AttributeBucket] = order_by
 
     def get_row_order_tuple(self, row: ReportRowDict) -> list:
-        return [
-            attribute_bucket.get(row) for attribute_bucket in self.structure.order_by
-        ]
+        return [attribute_bucket.get(row) for attribute_bucket in self.order_by]
 
-    def apply(self, rows: List[ReportRowDict]) -> List[ReportRowDict]:
+    def apply(
+        self, evaluator: ReportEvaluationContext, rows: List[ReportRowDict]
+    ) -> List[ReportRowDict]:
         rows.sort(key=self.get_row_order_tuple)
 
         for index, row in enumerate(rows):
@@ -346,10 +344,10 @@ class ReportBuilder:
 
     def build(self, rows: List[ReportRowDict]) -> Report:
         formula_attribute = (
-            self.linking_data.report_definition.structure.formula_attribute
+            self.linking_data.report_definition.structure.selection.formula_attribute
         )
         element_attribute = (
-            self.linking_data.report_definition.structure.datasheet_attribute
+            self.linking_data.report_definition.structure.selection.datasheet_attribute
         )
         stage_summary = self.linking_data.report_definition.structure.stage_summary
         report_summary = self.linking_data.report_definition.structure.report_summary
@@ -392,12 +390,12 @@ class ReportBuilder:
                 ],
                 summary=ComputedValue(
                     value=self.evaluation_context.evaluate_row(
-                        stage_summary.summary.expression,
+                        stage_summary.expression,
                         None,
                         rows,
                     ),
                     label=label,
-                    unit=get_unit(rows[0], stage_summary.summary.unit),
+                    unit=get_unit(rows[0], stage_summary.unit),
                 ),
             )
             for label, rows in report_rows_by_stage.items()
@@ -464,19 +462,30 @@ class ReportLinking:
         evaluation_context = ReportEvaluationContext(
             self.expression_evaluator, linking_data.injector
         )
+
+        selection = report_definition.structure.selection
+        structure = report_definition.structure
         report_generation = ReportGeneration(
-            join_steps=[JoinFormulaUnitInstances(linking_data)],
+            join_steps=[
+                JoinFormulaUnitInstances(selection, linking_data.unit_instances)
+            ],
             mutate_steps=[
-                DatasheetElementInstanceAssignation(linking_data),
-                GroupDigestAssignation(linking_data, evaluation_context),
+                DatasheetElementInstanceAssignation(
+                    selection, linking_data.datasheet_elements_by_id
+                ),
+                GroupDigestAssignation(structure.columns, structure.group_by),
             ],
             projection_steps=[
-                GroupedColumnProjection(linking_data, evaluation_context),
-                RowOrdering(linking_data),
+                GroupedColumnProjection(
+                    structure.columns,
+                    structure.group_by,
+                    structure.having,
+                ),
+                RowOrdering(structure.order_by),
             ],
         )
 
-        rows = report_generation.apply_steps(rows)
+        rows = report_generation.apply_steps(evaluation_context, rows)
         return ReportBuilder(self.clock, linking_data, evaluation_context).build(rows)
 
     @log_execution_time_async

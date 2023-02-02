@@ -16,18 +16,6 @@ class ReportRowKey:
 
 
 @dataclass
-class ReportJoin:
-    from_object_name: str
-    from_property_name: str
-    join_on_collection: str
-    join_on_attribute: str
-    alias_name: str
-    warn_about_idle_items: bool = True
-    same_cardinality: bool = False
-    allow_dicard_element: bool = False
-
-
-@dataclass
 class AttributeBucket:
     bucket_name: str
     attribute_name: str
@@ -40,14 +28,16 @@ class AttributeBucket:
 class ReportComputation:
     name: str
     expression: str
+    label: Optional[AttributeBucket] = None
     unit: Union[str, AttributeBucket, None] = None
     is_visible: bool = True
 
 
 @dataclass
-class StageSummary:
-    label: AttributeBucket
-    summary: ReportComputation
+class ReportJoin:
+    from_object: AttributeBucket
+    on_object: AttributeBucket
+    alias: str
 
 
 @dataclass
@@ -66,7 +56,7 @@ class ReportStructure:
     group_by: List[AttributeBucket]
     having: str
     order_by: List[AttributeBucket]
-    stage_summary: StageSummary
+    stage_summary: ReportComputation
     report_summary: List[ReportComputation]
 
 

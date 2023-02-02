@@ -376,11 +376,6 @@ class ReportComputationDao(BaseModel):
     is_visible: bool
 
 
-class StageSummaryDao(BaseModel):
-    label: AttributeBucketDao
-    summary: ReportComputationDao
-
-
 class ReportStructureDao(BaseModel):
     datasheet_selection_alias: str
     formula_attribute: AttributeBucketDao
@@ -389,7 +384,7 @@ class ReportStructureDao(BaseModel):
     columns: List[ReportComputationDao]
     group_by: List[AttributeBucketDao]
     order_by: List[AttributeBucketDao]
-    stage_summary: StageSummaryDao
+    stage_summary: ReportComputationDao
     report_summary: List[ReportComputationDao]
 
 

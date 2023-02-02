@@ -56,8 +56,8 @@ from .report_definition import (
     ReportRowKey,
     ReportDefinitionColumnDict,
     ReportDefinitionFilter,
-    StageSummary,
     ReportComputation,
+    Selection,
 )
 from .project_definition_tree import (
     ProjectDefinitionNodeTree,

@@ -1126,7 +1126,7 @@ def map_report_structure_from_dao(
         datasheet_selection_alias=src.datasheet_selection_alias,
         formula_attribute=mapper.map(src.formula_attribute, AttributeBucket),
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucket),
-        stage_summary=mapper.map(src.stage_summary, StageSummary),
+        stage_summary=mapper.map(src.stage_summary, ReportComputation),
         report_summary=mapper.map_many(src.report_summary, ReportComputation),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoin),
         columns=mapper.map_many(src.columns, ReportComputation),
@@ -1142,26 +1142,12 @@ def map_report_structure_to_dao(
         datasheet_selection_alias=src.datasheet_selection_alias,
         formula_attribute=mapper.map(src.formula_attribute, AttributeBucketDao),
         datasheet_attribute=mapper.map(src.datasheet_attribute, AttributeBucketDao),
-        stage_summary=mapper.map(src.stage_summary, StageSummaryDao),
+        stage_summary=mapper.map(src.stage_summary, ReportComputationyDao),
         report_summary=mapper.map_many(src.report_summary, ReportComputationDao),
         joins_cache=mapper.map_many(src.joins_cache, ReportJoinDao),
         columns=mapper.map_many(src.columns, ReportComputationDao),
         group_by=mapper.map_many(src.group_by, AttributeBucketDao),
         order_by=mapper.map_many(src.order_by, AttributeBucketDao),
-    )
-
-
-def map_stage_grouping_from_dao(src: StageSummaryDao, mapper: Mapper) -> StageSummary:
-    return StageSummary(
-        label=mapper.map(src.label, AttributeBucket),
-        summary=mapper.map(src.summary, ReportComputation),
-    )
-
-
-def map_stage_grouping_to_dao(src: StageSummary, mapper: Mapper) -> StageSummaryDao:
-    return StageSummaryDao(
-        label=mapper.map(src.label, AttributeBucketDao),
-        summary=mapper.map(src.summary, ReportComputationDao),
     )
 
 
