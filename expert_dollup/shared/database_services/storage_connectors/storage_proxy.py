@@ -1,7 +1,7 @@
-from typing import Callable
-from typing import Dict, Type, Callable
+from typing import Dict, Type, Callable, Optional
 from pathlib import Path
-from .storage_client import StorageClient
+from .storage_client import StorageClient, BlobItem
+from ..page import Page
 
 
 class StorageProxy(StorageClient):
@@ -28,6 +28,26 @@ class StorageProxy(StorageClient):
             self._forward_exception(e)
 
         return result
+
+    async def delete(self, path: str) -> None:
+        try:
+            await self._impl_client.delete(path)
+        except Exception as e:
+            self._forward_exception(e)
+
+    async def list_by_page(
+        self, path: str, page_token: Optional[str] = None
+    ) -> Page[BlobItem]:
+        try:
+            return await self._impl_client.list_by_page(path, page)
+        except Exception as e:
+            self._forward_exception(e)
+
+    async def exists(self, path: str) -> bool:
+        try:
+            return await self._impl_client.exists(path)
+        except Exception as e:
+            self._forward_exception(e)
 
     @property
     def namespace_prefix(self) -> Path:

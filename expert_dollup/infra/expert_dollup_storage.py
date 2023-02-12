@@ -12,7 +12,7 @@ from .expert_dollup_db import (
     FormulaDependencyGraphDao,
     ComputedValueDao,
 )
-from .storage_connectors.storage_client import StorageClient
+from expert_dollup.shared.database_services import StorageClient
 
 
 class ExpertDollupStorage(StorageClient):

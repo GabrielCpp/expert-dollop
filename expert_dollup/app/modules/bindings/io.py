@@ -3,7 +3,6 @@ from typing import Union
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.shared.database_services import *
 from expert_dollup.shared.automapping import *
-from expert_dollup.infra.storage_connectors import *
 from expert_dollup.infra.expert_dollup_storage import ExpertDollupStorage
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
