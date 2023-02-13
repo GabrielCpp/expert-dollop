@@ -17,7 +17,6 @@ from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 from ..batch_helper import batch
 from ..collection_element_mapping import CollectionElementMapping
-from ..db_agnotist_query_builder import DbAgnotistQueryBuilder
 from ..simplifier import Simplifier
 from ..adapter_interfaces import (
     InternalRepository,
@@ -136,25 +135,25 @@ class QueryCompiler:
     def __init__(self, collection: AsyncCollectionReference):
         self.collection = collection
 
-    def compile_query(self, builder: DbAgnotistQueryBuilder):
+    def compile_query(self, builder: QueryBuilder):
         query = self.collection
 
-        if not builder._selections is None:
-            has_one_item = len(builder._selections) == 1
+        if not builder.selections is None:
+            has_one_item = len(builder.selections) == 1
 
-            if has_one_item and builder._selections[0] == "1":
+            if has_one_item and builder.selections[0] == "1":
                 query = query.select(["__name__"])
-            elif has_one_item and builder._selections[0] == "*":
+            elif has_one_item and builder.selections[0] == "*":
                 pass
             else:
-                query = query.select(builder._selections)
+                query = query.select(builder.selections)
 
-        for (column_name, op, value) in builder._wheres:
+        for (column_name, op, value) in builder.wheres:
             apply_op = SUPPORTED_OPS[op]
             query = apply_op(column_name, Simplifier.simplify(value), query)
 
-        if not builder._orders is None:
-            for name, direction in builder._orders:
+        if not builder.orders is None:
+            for name, direction in builder.orders:
                 query = query.order_by(
                     name,
                     direction=Query.DESCENDING
@@ -162,8 +161,8 @@ class QueryCompiler:
                     else Query.ASCENDING,
                 )
 
-        if not builder._max_records is None:
-            query = query.limit(builder._max_records)
+        if not builder.limit_value is None:
+            query = query.limit(builder.limit_value)
 
         return query
 
@@ -367,8 +366,11 @@ class FirestoreCollection(InternalRepository[Domain]):
         id = self._build_id_from_pk(pk_id)
         await self._collection.document(id).delete()
 
-    def get_builder(self) -> QueryBuilder:
-        return DbAgnotistQueryBuilder()
+    async def execute(self, builder: QueryBuilder) -> Union[Domain, List[Domain], None]:
+        pass
+
+    async def build_query(self, query_filter: QueryFilter) -> QueryBuilder:
+        return self._build_query(query_filter)
 
     async def fetch_all_records(
         self,
@@ -476,7 +478,7 @@ class FirestoreCollection(InternalRepository[Domain]):
         return self._query_compiler.build_count_key_id(d, keys_set)
 
     def _build_query(self, builder: WhereFilter):
-        if isinstance(builder, DbAgnotistQueryBuilder):
+        if isinstance(builder, QueryBuilder):
             return self._query_compiler.compile_query(builder)
 
         query = self._query_compiler.collection

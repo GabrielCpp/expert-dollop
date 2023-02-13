@@ -18,36 +18,7 @@ from urllib.parse import urlparse
 from expert_dollup.shared.automapping import Mapper
 from .page import Page
 from .query_filter import QueryFilter
-
-
-class QueryBuilder(ABC):
-    @abstractmethod
-    def select(self, *names: str) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def limit(self, limit: int) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def orderby(self, *orders) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def where(self, *ops) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def construct(self, name, *ops) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def apply(self, builder: callable, *args, **kargs) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def clone(self) -> "QueryBuilder":
-        pass
+from .query_builder import QueryBuilder
 
 
 Domain = TypeVar("Domain")
@@ -120,12 +91,16 @@ class Repository(ABC, Generic[Domain]):
     async def count(self, query_filter: Optional[WhereFilter] = None) -> int:
         pass
 
-
-class InternalRepository(Repository[Domain]):
     @abstractmethod
-    def get_builder(self) -> QueryBuilder:
+    async def execute(self, builder: QueryBuilder) -> Union[Domain, List[Domain], None]:
         pass
 
+    @abstractmethod
+    def build_query(self, query: QueryFilter) -> QueryBuilder:
+        pass
+
+
+class InternalRepository(Repository[Domain]):
     @abstractmethod
     async def fetch_all_records(
         self,
@@ -140,14 +115,6 @@ class InternalRepository(Repository[Domain]):
 
     @abstractmethod
     def map_domain_to_dao(self, domain: Domain) -> BaseModel:
-        pass
-
-    @abstractmethod
-    def unpack_query(self, query: QueryFilter) -> dict:
-        pass
-
-    @abstractmethod
-    async def apply_construct(self, builder: QueryBuilder) -> Optional[Domain]:
         pass
 
 
@@ -243,7 +210,7 @@ def create_connection(connection_string: str, **kwargs) -> DbConnection:
 
             DbConnection._REGISTRY["mongodb"] = MongoConnection
             DbConnection._REGISTRY["mongodb+srv"] = MongoConnection
-        except:
+        except ImportError:
             pass
 
     build_connection = DbConnection._REGISTRY.get(scheme)

@@ -1,6 +1,7 @@
 from typing import Callable, Optional, TypeVar, Sequence, List
 from uuid import UUID
 from .adapter_interfaces import QueryFilter, InternalRepository
+from .query_builder import QueryBuilder
 from .batch_helper import batch
 from .plucker import Plucker
 
@@ -49,14 +50,17 @@ class PluckQuery(Plucker[Domain]):
     ):
         ressource_dict = {}
 
-        if not ressource_filter is None:
-            ressource_dict = self._repository.unpack_query(ressource_filter)
+        base_filter = (
+            QueryBuilder()
+            if not ressource_filter is None
+            else self._repository.build_query(ressource_filter)
+        )
 
         for ids_batch in batch(ids, self._batch_size):
             pluck_filter = build_pluck_filter(ids_batch)
-            pluck_filter_dict = self._repository.unpack_query(pluck_filter)
+            pluck_filter_dict = self._repository.build_query(pluck_filter)
 
-            query = self._repository.get_builder()
+            query = base_filter.clone()
 
             for name, value in ressource_dict.items():
                 query = query.where(name, "==", value)

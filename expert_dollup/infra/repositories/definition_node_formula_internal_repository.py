@@ -14,7 +14,7 @@ class DefinitionNodeFormulaInternalRepository(RepositoryProxy):
 
     def make_node_query(self, definition_id: UUID, name: str) -> QueryBuilder:
         query = (
-            self._repository.get_builder()
+            QueryBuilder()
             .where("project_definition_id", "==", definition_id)
             .where("level", "==", FIELD_LEVEL)
         )

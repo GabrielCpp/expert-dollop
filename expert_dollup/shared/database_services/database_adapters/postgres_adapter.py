@@ -34,7 +34,6 @@ from ..exceptions import RecordNotFound
 from ..batch_helper import batch
 from ..json_serializer import JsonSerializer
 from ..collection_element_mapping import CollectionElementMapping
-from ..db_agnotist_query_builder import DbAgnotistQueryBuilder
 
 NoneType = type(None)
 
@@ -232,8 +231,8 @@ class QueryCompiler:
     def compile_query(builder, table):
         query = (
             table.select()
-            if builder._selections is None
-            else select([getattr(table.c, name) for name in builder._selections])
+            if builder.selections is None
+            else select([getattr(table.c, name) for name in builder.selections])
         )
 
         where_filter = QueryCompiler.build_where_filter(builder, table)
@@ -241,18 +240,18 @@ class QueryCompiler:
         if not where_filter is None:
             query = query.where(where_filter)
 
-        if not builder._orders is None:
+        if not builder.orders is None:
             ordering = []
 
-            for column_name, direction in builder._orders:
+            for column_name, direction in builder.orders:
                 assert direction in ("desc", "asc")
                 apply_order = desc if direction == "desc" else asc
                 ordering.append(apply_order(getattr(table.c, column_name)))
 
             query = query.order_by(*ordering)
 
-        if not builder._max_records is None:
-            query = query.limit(builder._max_records)
+        if not builder.limit_value is None:
+            query = query.limit(builder.limit_value)
 
         return query
 
@@ -260,7 +259,7 @@ class QueryCompiler:
     def build_where_filter(builder, table):
         where_filter = None
 
-        for (column_name, op, value) in builder._wheres:
+        for (column_name, op, value) in builder.wheres:
             apply_op = SUPPORTED_OPS[op]
             operator = apply_op(getattr(table.c, column_name), value)
 
@@ -429,10 +428,13 @@ class PostgresTableService(InternalRepository[Domain]):
         query = self._table.update().where(where_filter).values(update_fields)
         await self._execute(query)
 
-    # Internal api
+    def build_query(self, query_filter: QueryFilter) -> QueryBuilder:
+        return self._build_query(query_filter)
 
-    def get_builder(self) -> QueryBuilder:
-        return DbAgnotistQueryBuilder()
+    async def execute(self, builder: QueryBuilder) -> Union[Domain, List[Domain], None]:
+        pass
+
+    # Internal api
 
     async def fetch_all_records(
         self,
@@ -471,13 +473,13 @@ class PostgresTableService(InternalRepository[Domain]):
         return self._db_mapping.map_domain_to_dao(domain)
 
     def _build_query(self, builder: WhereFilter):
-        if isinstance(builder, DbAgnotistQueryBuilder):
+        if isinstance(builder, QueryBuilder):
             return QueryCompiler.compile_query(builder, self._table)
 
         return self._table.select().where(self._build_filter(builder))
 
     def _build_filter(self, builder: WhereFilter):
-        if isinstance(builder, DbAgnotistQueryBuilder):
+        if isinstance(builder, QueryBuilder):
             return QueryCompiler.build_where_filter(builder, self._table)
 
         filter_fields = self._mapper.map(builder, dict, builder.__class__)

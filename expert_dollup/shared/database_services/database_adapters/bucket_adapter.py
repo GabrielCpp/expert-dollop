@@ -3,7 +3,6 @@ from typing import Callable
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 from ..collection_element_mapping import CollectionElementMapping
-from ..db_agnotist_query_builder import DbAgnotistQueryBuilder
 from ..adapter_interfaces import (
     InternalRepository,
     QueryBuilder,
@@ -192,9 +191,6 @@ class BucketCollection(InternalRepository[Domain]):
 
     # Extended api
 
-    def get_builder(self) -> QueryBuilder:
-        return DbAgnotistQueryBuilder()
-
     async def fetch_all_records(
         self,
         builder: WhereFilter,
@@ -223,10 +219,10 @@ class BucketCollection(InternalRepository[Domain]):
     def map_domain_to_dao(self, domain: Domain) -> BaseModel:
         return self._db_mapping.map_domain_to_dao(domain)
 
-    def unpack_query(self, query_filter: QueryFilter) -> dict:
+    def build_query(self, query_filter: QueryFilter) -> QueryBuilder:
         raise NotImplementedError()
 
-    async def apply_construct(self, builder: QueryBuilder) -> Optional[Domain]:
+    async def execute(self, builder: QueryBuilder) -> Optional[Domain]:
         raise NotImplementedError()
 
     async def _write(self, document: dict):

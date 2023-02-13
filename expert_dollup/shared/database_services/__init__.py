@@ -27,7 +27,6 @@ from .collection_element_mapping import (
 from .user_ressource_paginator import UserRessourcePaginator, UserRessourceQuery
 from .database_context import DatabaseContext
 from .database_context_multiplexer import DatabaseContextMultiplexer
-from .aggregate_loader import AggregateLoader
 from .pluck_query import PluckQuery
 from .plucker import Plucker
 from .storage_connectors import *

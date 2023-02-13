@@ -18,6 +18,7 @@ from typing import (
     Any,
     Awaitable,
     get_args,
+    Union,
 )
 from dataclasses import dataclass
 from urllib.parse import urlparse
@@ -26,7 +27,6 @@ from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 from ..batch_helper import batch
 from ..collection_element_mapping import CollectionElementMapping
-from ..db_agnotist_query_builder import DbAgnotistQueryBuilder
 from ..adapter_interfaces import (
     InternalRepository,
     QueryBuilder,
@@ -216,7 +216,7 @@ class QueryCompiler:
         conditions = []
 
         if isinstance(builder, QueryBuilder):
-            for (column_name, op, value) in builder._wheres:
+            for (column_name, op, value) in builder.wheres:
                 apply_op = SUPPORTED_OPS[op]
                 simplified_value = self.simplify(value)
                 condition = apply_op(column_name, simplified_value)
@@ -236,12 +236,12 @@ class QueryCompiler:
         return {"$and": conditions}
 
     async def build_construct(
-        self, collection, builder: DbAgnotistQueryBuilder
+        self, collection, builder: QueryBuilder
     ) -> Optional[dict]:
-        if "find_one_and_update" in builder._constructs:
+        if "find_one_and_update" in builder.constructs:
             from pymongo import ReturnDocument
 
-            update_params = builder._constructs["find_one_and_update"]
+            update_params = builder.constructs["find_one_and_update"]
             result = await collection.find_one_and_update(
                 *update_params, return_document=ReturnDocument.AFTER
             )
@@ -250,19 +250,19 @@ class QueryCompiler:
 
         raise Exception("no construct match")
 
-    def compile_query(self, builder: DbAgnotistQueryBuilder):
+    def compile_query(self, builder: QueryBuilder):
         selections = None
         query_filter = self.build_filter(builder)
         orders = {}
 
-        if not builder._selections is None:
+        if not builder.selections is None:
             selections = {}
 
-            for selection in builder._selections:
+            for selection in builder.selections:
                 selections[selection] = 1
 
-        if not builder._orders is None:
-            for name, direction in builder._orders:
+        if not builder.orders is None:
+            for name, direction in builder.orders:
                 orders[name] = DESCENDING if direction == "desc" else ASCENDING
 
         query = self._collection.find(
@@ -272,8 +272,8 @@ class QueryCompiler:
             selections,
         )
 
-        if not builder._max_records is None:
-            query = query.limit(builder._max_records)
+        if not builder.limit_value is None:
+            query = query.limit(builder.limit_value)
 
         return query
 
@@ -406,10 +406,11 @@ class MongoCollection(InternalRepository[Domain]):
         document_id = self._table_details.build_id_from_pk(self._mapper, pk_id)
         await self._collection.delete_many({"_id": document_id})
 
-    # Extended api
+    async def execute(self, builder: QueryBuilder) -> Union[Domain, List[Domain], None]:
+        doc = await self._query_compiler.build_construct(self._collection, builder)
+        return self._db_mapping.map_record_to_domain(doc)
 
-    def get_builder(self) -> QueryBuilder:
-        return DbAgnotistQueryBuilder()
+    # Extended api
 
     async def fetch_all_records(
         self,
@@ -441,12 +442,8 @@ class MongoCollection(InternalRepository[Domain]):
     def map_domain_to_dao(self, domain: Domain) -> BaseModel:
         return self._db_mapping.map_domain_to_dao(domain)
 
-    def unpack_query(self, query_filter: QueryFilter) -> dict:
+    def build_query(self, query_filter: QueryFilter) -> QueryBuilder:
         return self._table_details.unfold_query(query_filter, self._mapper)
-
-    async def apply_construct(self, builder: QueryBuilder) -> Optional[Domain]:
-        doc = await self._query_compiler.build_construct(self._collection, builder)
-        return self._db_mapping.map_record_to_domain(doc)
 
     def _dao_to_dict(self, model: BaseModel) -> dict:
         document = self._query_compiler.simplify(model)

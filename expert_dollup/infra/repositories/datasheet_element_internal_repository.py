@@ -21,7 +21,7 @@ class DatasheetElementInternalRepository(RepositoryProxy):
         datasheet_element_id: UUID,
         attributes: List[Attribute],
     ) -> DatasheetElement:
-        builder = self._repository.get_builder().construct(
+        builder = QueryBuilder().construct(
             "find_one_and_update",
             {
                 "_id": str(datasheet_element_id),
@@ -36,5 +36,5 @@ class DatasheetElementInternalRepository(RepositoryProxy):
             },
         )
 
-        result = await self._repository.apply_construct(builder)
+        result = await self._repository.execute(builder)
         return result

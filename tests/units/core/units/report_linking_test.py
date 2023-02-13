@@ -5,7 +5,7 @@ from decimal import Decimal
 from uuid import UUID
 from expert_dollup.core.logits import FormulaInjector, FrozenUnit
 from expert_dollup.shared.starlette_injection.clock_provider import StaticClock
-from expert_dollup.shared.database_services import Repository, Plucker
+from expert_dollup.shared.database_services import Repository
 from tests.fixtures.factories.datasheet_factory import CustomDatasheetInstancePackage
 from tests.fixtures.factories.project_instance_factory import (
     CustomProjectInstancePackage,

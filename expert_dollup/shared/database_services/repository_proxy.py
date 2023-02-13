@@ -69,3 +69,9 @@ class RepositoryProxy(Repository[Domain]):
 
     async def count(self, query_filter: Optional[WhereFilter] = None) -> int:
         return await self._impl.count(query_filter)
+
+    def build_query(self, query_filter: QueryFilter) -> QueryBuilder:
+        return self._impl.build_query(query_filter)
+
+    async def execute(self, builder: QueryBuilder) -> Union[Domain, List[Domain], None]:
+        return await self._impl.execute(builder)

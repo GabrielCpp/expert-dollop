@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 from uuid import uuid4, UUID
 from expert_dollup.core.units import ReportDistributor
 from expert_dollup.core.domains import *
-from expert_dollup.shared.database_services import DatabaseContext, Plucker
+from expert_dollup.shared.database_services import DatabaseContext
 from tests.fixtures.mock_interface_utils import StrictInterfaceSetup, AsyncMock
 from ....fixtures import *
 

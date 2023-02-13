@@ -3,7 +3,7 @@ from uuid import UUID
 from decimal import Decimal
 from tests.fixtures.mock_interface_utils import StrictInterfaceSetup
 from expert_dollup.core.object_storage import ObjectStorage
-from expert_dollup.shared.database_services import Repository, Plucker
+from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.repositories import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.units import *
