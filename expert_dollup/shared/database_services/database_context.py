@@ -13,15 +13,11 @@ class DatabaseContext(ABC):
         pass
 
     @abstractmethod
-    def bind_query(self, query_type: Union[ABC, Type[Query]]) -> Query:
-        pass
-
-    @abstractmethod
     async def insert(self, domain_type: Type[Domain], domain: Domain):
         pass
 
     @abstractmethod
-    async def insert_many(self, domain_type: Type[Domain], domains: List[Domain]):
+    async def inserts(self, domain_type: Type[Domain], domains: List[Domain]):
         pass
 
     @abstractmethod
@@ -29,9 +25,7 @@ class DatabaseContext(ABC):
         pass
 
     @abstractmethod
-    async def find_all(
-        self, domain_type: Type[Domain], limit: int = 1000
-    ) -> List[Domain]:
+    async def all(self, domain_type: Type[Domain], limit: int = 1000) -> List[Domain]:
         pass
 
     @abstractmethod
@@ -47,7 +41,7 @@ class DatabaseContext(ABC):
         pass
 
     @abstractmethod
-    async def find_by_id(self, domain_type: Type[Domain], pk_id: Id) -> Domain:
+    async def find(self, domain_type: Type[Domain], pk_id: Id) -> Domain:
         pass
 
     @abstractmethod
@@ -55,7 +49,7 @@ class DatabaseContext(ABC):
         pass
 
     @abstractmethod
-    async def delete_by_id(self, domain_type: Type[Domain], pk_id: Id):
+    async def delete(self, domain_type: Type[Domain], pk_id: Id):
         pass
 
     @abstractmethod
@@ -81,4 +75,10 @@ class DatabaseContext(ABC):
     async def count(
         self, domain_type: Type[Domain], query_filter: Optional[WhereFilter] = None
     ) -> int:
+        pass
+
+    @abstractmethod
+    async def execute(
+        self, domain_type: Type[Domain], builder: WhereFilter
+    ) -> Union[Domain, List[Domain], None]:
         pass

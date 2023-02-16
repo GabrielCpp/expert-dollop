@@ -2,7 +2,7 @@ from typing import Dict, List
 from uuid import UUID, uuid4
 from expert_dollup.core.domains import *
 from expert_dollup.shared.starlette_injection import Clock
-from expert_dollup.shared.database_services import DatabaseContext, Plucker
+from expert_dollup.shared.database_services import DatabaseContext
 
 
 class ReportDistributor:
@@ -88,13 +88,11 @@ class ReportDistributor:
     async def _get_organization_id_by_child_reference(
         self, datasheet_id: UUID, child_reference_ids: List[UUID]
     ):
-        datasheet_element_plucker: Plucker[
-            DatasheetElement
-        ] = self.database_context.bind_query(Plucker[DatasheetElement])
-        report_datasheet_elements = await datasheet_element_plucker.pluck_subressources(
-            DatasheetElementFilter(datasheet_id=datasheet_id),
-            lambda ids: DatasheetElementPluckFilter(child_element_references=ids),
-            child_reference_ids,
+        report_datasheet_elements = await self.database_context.execute(
+            DatasheetElement,
+            DatasheetElementPluckFilter(
+                datasheet_id=datasheet_id, child_element_references=child_reference_ids
+            ),
         )
         organization_by_ids = {
             element.child_element_reference: element.original_owner_organization_id

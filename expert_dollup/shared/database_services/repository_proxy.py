@@ -34,14 +34,14 @@ class RepositoryProxy(Repository[Domain]):
     async def insert(self, domain: Domain):
         return await self._impl.insert(domain)
 
-    async def insert_many(self, domains: List[Domain]):
-        return await self._impl.insert_many(domains)
+    async def inserts(self, domains: List[Domain]):
+        return await self._impl.inserts(domains)
 
     async def upserts(self, domains: List[Domain]) -> None:
         await self._impl.upserts(domains)
 
-    async def find_all(self, limit: int = 1000) -> List[Domain]:
-        return await self._impl.find_all(limit)
+    async def all(self, limit: int = 1000) -> List[Domain]:
+        return await self._impl.all(limit)
 
     async def find_by(self, query_filter: WhereFilter) -> List[Domain]:
         return await self._impl.find_by(query_filter)
@@ -49,14 +49,14 @@ class RepositoryProxy(Repository[Domain]):
     async def find_one_by(self, query_filter: WhereFilter) -> Domain:
         return await self._impl.find_one_by(query_filter)
 
-    async def find_by_id(self, pk_id: Id) -> Domain:
-        return await self._impl.find_by_id(pk_id)
+    async def find(self, pk_id: Id) -> Domain:
+        return await self._impl.find(pk_id)
 
     async def delete_by(self, query_filter: WhereFilter):
         return await self._impl.delete_by(query_filter)
 
-    async def delete_by_id(self, pk_id: Id):
-        return await self._impl.delete_by_id(pk_id)
+    async def delete(self, pk_id: Id):
+        return await self._impl.delete(pk_id)
 
     async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):
         return await self._impl.update(value_filter, query_filter)
@@ -70,8 +70,5 @@ class RepositoryProxy(Repository[Domain]):
     async def count(self, query_filter: Optional[WhereFilter] = None) -> int:
         return await self._impl.count(query_filter)
 
-    def build_query(self, query_filter: QueryFilter) -> QueryBuilder:
-        return self._impl.build_query(query_filter)
-
-    async def execute(self, builder: QueryBuilder) -> Union[Domain, List[Domain], None]:
+    async def execute(self, builder: WhereFilter) -> Union[Domain, List[Domain], None]:
         return await self._impl.execute(builder)

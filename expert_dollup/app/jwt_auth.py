@@ -79,7 +79,7 @@ class AuthJWT(AuthService[User]):
         user = await self.can_perform_required(request, user_permissions)
 
         try:
-            ressource = await self.ressource_service.find_by_id(
+            ressource = await self.ressource_service.find(
                 RessourceId(ressource_id, user.organization_id)
             )
         except RecordNotFound:
@@ -110,7 +110,7 @@ class AuthJWT(AuthService[User]):
         oauth_id = self.authentification_required(request).get("sub")
 
         try:
-            user = await self.user_service.find_by_id(oauth_id)
+            user = await self.user_service.find(oauth_id)
         except RecordNotFound:
             self._deny_access(reason="user not found", oauth_id=oauth_id)
 

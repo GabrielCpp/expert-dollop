@@ -55,7 +55,7 @@ class ImportationUseCase:
     async def import_collections(
         self, user: User, collections: List[AggregateCollection]
     ):
-        await self.db_context.insert_many(AggregateCollection, collections)
+        await self.db_context.inserts(AggregateCollection, collections)
 
     async def import_translations(self, user: User, translations: List[Translation]):
         seen = {}
@@ -79,7 +79,7 @@ class ImportationUseCase:
             in seen
         ]
 
-        await self.db_context.insert_many(Translation, dedup_translations)
+        await self.db_context.inserts(Translation, dedup_translations)
 
     async def import_project_definitions(
         self, user: User, project_definitions: List[ProjectDefinition]
@@ -101,7 +101,7 @@ class ImportationUseCase:
     async def import_measure_units(
         self, user: User, project_definition_nodes: List[MeasureUnit]
     ):
-        await self.db_context.insert_many(MeasureUnit, project_definition_nodes)
+        await self.db_context.inserts(MeasureUnit, project_definition_nodes)
 
     async def import_report_definition(
         self, user: User, report_definitions: List[ReportDefinition]
@@ -115,7 +115,7 @@ class ImportationUseCase:
     async def import_project_node_metas(
         self, user: User, project_node_metas: List[ProjectNodeMeta]
     ):
-        await self.db_context.insert_many(ProjectNodeMeta, project_node_metas)
+        await self.db_context.inserts(ProjectNodeMeta, project_node_metas)
 
     async def import_projects_details(
         self, user: User, projects_details: List[ProjectDetails]

@@ -1,4 +1,4 @@
-from typing import Type, TypeVar, List, Any, Optional, Type
+from typing import Type, TypeVar, List, Any, Optional, Type, Union
 from .injector_interface import InjectorProtocol
 from .database_context import DatabaseContext
 from .adapter_interfaces import Repository, WhereFilter, QueryFilter
@@ -23,22 +23,17 @@ class DatabaseContextMultiplexer(DatabaseContext):
 
         return collection_service
 
-    def bind_query(self, query_type: Type[Query]) -> Query:
-        return self.injector.get(query_type)
-
     async def insert(self, domain_type: Type[Domain], domain: Domain):
         return await self.get_repository(domain_type).insert(domain)
 
-    async def insert_many(self, domain_type: Type[Domain], domains: List[Domain]):
-        return await self.get_repository(domain_type).insert_many(domains)
+    async def inserts(self, domain_type: Type[Domain], domains: List[Domain]):
+        return await self.get_repository(domain_type).inserts(domains)
 
     async def upserts(self, domain_type: Type[Domain], domains: List[Domain]) -> None:
         return await self.get_repository(domain_type).upserts(domains)
 
-    async def find_all(
-        self, domain_type: Type[Domain], limit: int = 1000
-    ) -> List[Domain]:
-        return await self.get_repository(domain_type).find_all(limit)
+    async def all(self, domain_type: Type[Domain], limit: int = 1000) -> List[Domain]:
+        return await self.get_repository(domain_type).all(limit)
 
     async def find_by(
         self, domain_type: Type[Domain], query_filter: WhereFilter
@@ -50,14 +45,14 @@ class DatabaseContextMultiplexer(DatabaseContext):
     ) -> Domain:
         return await self.get_repository(domain_type).find_one_by(query_filter)
 
-    async def find_by_id(self, domain_type: Type[Domain], pk_id: Id) -> Domain:
-        return await self.get_repository(domain_type).find_by_id(pk_id)
+    async def find(self, domain_type: Type[Domain], pk_id: Id) -> Domain:
+        return await self.get_repository(domain_type).find(pk_id)
 
     async def delete_by(self, domain_type: Type[Domain], query_filter: WhereFilter):
         return await self.get_repository(domain_type).delete_by(query_filter)
 
-    async def delete_by_id(self, domain_type: Type[Domain], pk_id: Id):
-        return await self.get_repository(domain_type).delete_by_id(pk_id)
+    async def delete(self, domain_type: Type[Domain], pk_id: Id):
+        return await self.get_repository(domain_type).delete(pk_id)
 
     async def update(
         self,
@@ -81,3 +76,8 @@ class DatabaseContextMultiplexer(DatabaseContext):
         self, domain_type: Type[Domain], query_filter: Optional[WhereFilter] = None
     ) -> int:
         return await self.get_repository(domain_type).count(query_filter)
+
+    async def execute(
+        self, domain_type: Type[Domain], query_filter: WhereFilter
+    ) -> Union[Domain, List[Domain], None]:
+        return await self.get_repository(domain_type).execute(query_filter)

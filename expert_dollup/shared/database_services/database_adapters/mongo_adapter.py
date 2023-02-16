@@ -35,6 +35,7 @@ from ..adapter_interfaces import (
     RepositoryMetadata,
 )
 from ..simplifier import Simplifier
+from ..query_reflector import queries
 
 
 def build_count_key_id(d, keys: Set[str]):
@@ -322,7 +323,7 @@ class MongoCollection(InternalRepository[Domain]):
         document = self._db_mapping.map_domain_to_dict(domain)
         await self._collection.insert_one(document)
 
-    async def insert_many(self, domains: List[Domain]):
+    async def inserts(self, domains: List[Domain]):
         dicts = self._db_mapping.map_many_domain_to_dict(domains)
         for dicts_batch in batch(dicts, BATCH_SIZE):
             await self._collection.insert_many(dicts_batch)
@@ -348,7 +349,7 @@ class MongoCollection(InternalRepository[Domain]):
 
             await self._collection.bulk_write(operations, ordered=False)
 
-    async def find_all(self, limit: int = 1000) -> List[Domain]:
+    async def all(self, limit: int = 1000) -> List[Domain]:
         results = []
 
         async for doc in self._collection.find().limit(limit):
@@ -371,7 +372,7 @@ class MongoCollection(InternalRepository[Domain]):
 
         raise RecordNotFound()
 
-    async def find_by_id(self, pk_id: Id) -> Domain:
+    async def find(self, pk_id: Id) -> Domain:
         document_id = self._table_details.build_id_from_pk(self._mapper, pk_id)
         doc = await self._collection.find_one({"_id": document_id})
 
@@ -402,11 +403,16 @@ class MongoCollection(InternalRepository[Domain]):
         compiled_filter = self._query_compiler.build_filter(query_filter)
         await self._collection.delete_many(compiled_filter)
 
-    async def delete_by_id(self, pk_id: Id):
+    async def delete(self, pk_id: Id):
         document_id = self._table_details.build_id_from_pk(self._mapper, pk_id)
         await self._collection.delete_many({"_id": document_id})
 
-    async def execute(self, builder: QueryBuilder) -> Union[Domain, List[Domain], None]:
+    async def execute(self, builder: WhereFilter) -> Union[Domain, List[Domain], None]:
+        handle = queries.get_executor(builder)
+
+        if not handle is None:
+            return await handle(self._mapper, self, builder)
+
         doc = await self._query_compiler.build_construct(self._collection, builder)
         return self._db_mapping.map_record_to_domain(doc)
 
@@ -441,9 +447,6 @@ class MongoCollection(InternalRepository[Domain]):
 
     def map_domain_to_dao(self, domain: Domain) -> BaseModel:
         return self._db_mapping.map_domain_to_dao(domain)
-
-    def build_query(self, query_filter: QueryFilter) -> QueryBuilder:
-        return self._table_details.unfold_query(query_filter, self._mapper)
 
     def _dao_to_dict(self, model: BaseModel) -> dict:
         document = self._query_compiler.simplify(model)

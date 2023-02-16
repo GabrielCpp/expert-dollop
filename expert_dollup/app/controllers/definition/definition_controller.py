@@ -38,7 +38,7 @@ async def find_project_definition(
     ),
 ):
     return await handler.handle(
-        usecase.find_by_id,
+        usecase.find,
         project_definition_id,
         MappingChain(out_dto=ProjectDefinitionDto),
     )
@@ -93,4 +93,4 @@ async def delete_project_definition(
         CanPerformOnRequired("project_definition_id", ["project_definition:delete"])
     ),
 ):
-    await usecase.delete_by_id(project_definition_id)
+    await usecase.delete(project_definition_id)

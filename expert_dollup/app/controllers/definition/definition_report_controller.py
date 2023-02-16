@@ -32,7 +32,7 @@ async def get_report_definition(
     handler=Depends(Inject(RequestHandler)),
 ):
     return await handler.handle(
-        service.find_by_id,
+        service.find,
         report_definition_id,
         MappingChain(
             domain=ReportDefinition,

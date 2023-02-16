@@ -44,7 +44,7 @@ class DatasheetElementUseCase:
         replacement: NewDatasheetElement,
         user: User,
     ) -> DatasheetElement:
-        datasheet = await self.db_context.find_by_id(Datasheet, datasheet_id)
+        datasheet = await self.db_context.find(Datasheet, datasheet_id)
         self._validate_datasheet_element_properties(replacement, datasheet)
 
         element = await self.find(datasheet_id, datasheet_element_id)
@@ -75,7 +75,7 @@ class DatasheetElementUseCase:
     async def add(
         self, datasheet_id: UUID, new_element: NewDatasheetElement, user: User
     ) -> DatasheetElement:
-        datasheet = await self.db_context.find_by_id(Datasheet, datasheet_id)
+        datasheet = await self.db_context.find(Datasheet, datasheet_id)
         self._validate_datasheet_element_properties(new_element, datasheet)
 
         if not new_element.aggregate_id in datasheet.instances_schema:
@@ -103,7 +103,7 @@ class DatasheetElementUseCase:
         return new_element
 
     async def delete(self, datasheet_id: UUID, datasheet_element_id: UUID) -> None:
-        datasheet = await self.db_context.find_by_id(Datasheet, datasheet_id)
+        datasheet = await self.db_context.find(Datasheet, datasheet_id)
         element = await self.find(datasheet_id, datasheet_element_id)
         aggregate_schema = datasheet.instances_schema[element.aggregate_id]
 
@@ -116,7 +116,7 @@ class DatasheetElementUseCase:
         if collection_size <= 1:
             raise ValidationError.generic("Cannot delete all items of collection")
 
-        await self.db_context.delete_by_id(DatasheetElement, datasheet_element_id)
+        await self.db_context.delete(DatasheetElement, datasheet_element_id)
 
     def _validate_datasheet_element_properties(
         self, replacement: DatasheetElementUpdate, datasheet: Datasheet

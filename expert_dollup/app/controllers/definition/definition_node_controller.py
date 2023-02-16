@@ -22,7 +22,7 @@ async def find_project_definition_node(
     ),
 ):
     return await handler.handle(
-        usecase.find_by_id, id, MappingChain(out_dto=ProjectDefinitionNodeDto)
+        usecase.find, id, MappingChain(out_dto=ProjectDefinitionNodeDto)
     )
 
 
@@ -98,7 +98,7 @@ async def delete_project_definition_node(
         CanPerformOnRequired("project_definition_id", ["project_definition:delete"])
     ),
 ):
-    await usecase.delete_by_id(node_id)
+    await usecase.delete(node_id)
 
 
 @router.get("/definitions/{project_definition_id}/nodes")

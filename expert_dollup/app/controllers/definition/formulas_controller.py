@@ -40,7 +40,7 @@ async def find_formula_by_id(
     ),
 ):
     return await handler.handle(
-        usecase.find_by_id,
+        usecase.find,
         formula_id,
         MappingChain(out_dto=FormulaExpressionDto),
     )
@@ -76,7 +76,7 @@ async def remove_formula(
         CanPerformOnRequired("project_definition_id", ["project_definition:delete"])
     ),
 ):
-    return await usecase.delete_by_id(formula_id, remove_recursively)
+    return await usecase.delete(formula_id, remove_recursively)
 
 
 @router.post("/projects/{project_id}/formula_cache")

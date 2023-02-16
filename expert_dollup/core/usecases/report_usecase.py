@@ -22,8 +22,8 @@ class ReportUseCase:
     async def get_report(
         self, project_id: UUID, report_definition_id: UUID, save_report: bool = False
     ) -> Report:
-        project_details = await self.project_service.find_by_id(project_id)
-        report_definition = await self.report_definition_service.find_by_id(
+        project_details = await self.project_service.find(project_id)
+        report_definition = await self.report_definition_service.find(
             report_definition_id
         )
         report = await self.report_linking.link_report(

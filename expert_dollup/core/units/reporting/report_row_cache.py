@@ -26,11 +26,9 @@ class ReportRowCache:
     def __init__(
         self,
         db_context: DatabaseContext,
-        formula_plucker: Plucker[Formula],
         report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
     ):
         self.db_context = db_context
-        self.formula_plucker = formula_plucker
         self.report_def_row_cache = report_def_row_cache
 
     async def refresh_cache(
@@ -65,7 +63,7 @@ class ReportRowCache:
     async def _build_report_cache(
         self, report_definition: ReportDefinition
     ) -> ReportCache:
-        project_definition = await self.db_context.find_by_id(
+        project_definition = await self.db_context.find(
             ProjectDefinition, report_definition.project_definition_id
         )
 
@@ -143,8 +141,8 @@ class ReportRowCache:
             formula_id = report_bucket[collection_name][attribute_name]
             formula_ids.add(formula_id)
 
-        formulas = await self.formula_plucker.plucks(
-            lambda ids: FormulaPluckFilter(ids=ids), formula_ids
+        formulas = await self.db_context.execute(
+            Formula, FormulaPluckFilter(ids=formula_ids)
         )
         formulas_by_id = {formula.id: formula for formula in formulas}
 

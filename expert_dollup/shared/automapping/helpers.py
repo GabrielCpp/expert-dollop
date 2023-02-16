@@ -48,6 +48,7 @@ def map_dict_keys(
     args: dict,
     mapping: Dict[str, Tuple[str, Union[None, Callable[[Any], Any]]]],
     type_of: Optional[str] = None,
+    ignore_extra_key=True,
 ) -> dict:
     mapped_args = {}
 
@@ -55,7 +56,7 @@ def map_dict_keys(
         if key in mapping:
             (mapped_key, map_value) = mapping[key]
             mapped_args[mapped_key] = value if map_value is None else map_value(value)
-        else:
+        elif ignore_extra_key is False:
             raise KeyError(f"Key '{key}' not in mapping")
 
     if not type_of is None:

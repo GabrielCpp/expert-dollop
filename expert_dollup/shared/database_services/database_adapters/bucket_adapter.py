@@ -112,7 +112,7 @@ class BucketCollection(InternalRepository[Domain]):
         document = self._db_mapping.map_domain_to_dict(domain)
         await self._write(document)
 
-    async def insert_many(self, domains: List[Domain]):
+    async def inserts(self, domains: List[Domain]):
         documents = self._db_mapping.map_many_domain_to_dict(domains)
         await self._writes(documents)
 
@@ -137,7 +137,7 @@ class BucketCollection(InternalRepository[Domain]):
         documents = self._db_mapping.map_many_domain_to_dict(domains)
         await self._writes(documents)
 
-    async def find_all(self, limit: int = 1000) -> List[Domain]:
+    async def all(self, limit: int = 1000) -> List[Domain]:
         results = await self._list("", limit)
         domains = self._db_mapping.map_many_record_to_domain(results)
         return domains
@@ -156,7 +156,7 @@ class BucketCollection(InternalRepository[Domain]):
 
         raise RecordNotFound()
 
-    async def find_by_id(self, pk_id: Id) -> Domain:
+    async def find(self, pk_id: Id) -> Domain:
         doc = await self._read(pk_id)
 
         if doc is None:
@@ -186,7 +186,7 @@ class BucketCollection(InternalRepository[Domain]):
         async for result in self._stream(prefix):
             await self._client.delete(result.key)
 
-    async def delete_by_id(self, pk_id: Id):
+    async def delete(self, pk_id: Id):
         await self._client.delete(pk_id)
 
     # Extended api
@@ -219,10 +219,7 @@ class BucketCollection(InternalRepository[Domain]):
     def map_domain_to_dao(self, domain: Domain) -> BaseModel:
         return self._db_mapping.map_domain_to_dao(domain)
 
-    def build_query(self, query_filter: QueryFilter) -> QueryBuilder:
-        raise NotImplementedError()
-
-    async def execute(self, builder: QueryBuilder) -> Optional[Domain]:
+    async def execute(self, builder: WhereFilter) -> Optional[Domain]:
         raise NotImplementedError()
 
     async def _write(self, document: dict):

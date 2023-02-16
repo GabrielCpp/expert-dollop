@@ -332,7 +332,7 @@ class PostgresTableService(InternalRepository[Domain]):
 
         await self._execute(query)
 
-    async def insert_many(self, domains: List[Domain]):
+    async def inserts(self, domains: List[Domain]):
         dicts = self._db_mapping.map_many_domain_to_dict(domains)
 
         for dicts_batch in batch(dicts, BATCH_SIZE):
@@ -356,7 +356,7 @@ class PostgresTableService(InternalRepository[Domain]):
 
             await self._execute(query=query)
 
-    async def find_all(self, limit: int = 1000) -> List[Domain]:
+    async def all(self, limit: int = 1000) -> List[Domain]:
         query = self._table.select().limit(limit)
         records = await self._fetch_all(query=query)
         results = self._db_mapping.map_many_record_to_domain(records)
@@ -395,7 +395,7 @@ class PostgresTableService(InternalRepository[Domain]):
         count = await self._fetch_val(query=query)
         return count
 
-    async def delete_by_id(self, pk_id: Id):
+    async def delete(self, pk_id: Id):
         where_filter = self._build_id_filter(pk_id)
         query = self._table.delete().where(where_filter)
         await self._execute(query=query)
@@ -411,7 +411,7 @@ class PostgresTableService(InternalRepository[Domain]):
         value = await self._fetch_one(query=query)
         return not value is None
 
-    async def find_by_id(self, pk_id: Id) -> Domain:
+    async def find(self, pk_id: Id) -> Domain:
         where_filter = self._build_id_filter(pk_id)
         query = self._table.select().where(where_filter)
         record = await self._fetch_one(query=query)
@@ -428,11 +428,8 @@ class PostgresTableService(InternalRepository[Domain]):
         query = self._table.update().where(where_filter).values(update_fields)
         await self._execute(query)
 
-    def build_query(self, query_filter: QueryFilter) -> QueryBuilder:
-        return self._build_query(query_filter)
-
     async def execute(self, builder: QueryBuilder) -> Union[Domain, List[Domain], None]:
-        pass
+        raise NotImplementedError()
 
     # Internal api
 

@@ -21,7 +21,7 @@ async def find_translation(
 ):
 
     return await handler.do_handle(
-        usecase.find_by_id,
+        usecase.find,
         MappingChain(dto=TranslationDto, domain=Translation),
         ressource_id=ressource_id,
         locale=locale,
@@ -96,7 +96,7 @@ async def delete_translation(
     usecase: TranslationUseCase = Depends(Inject(TranslationUseCase)),
     user=Depends(CanPerformOnRequired("ressource_id", "project_definition:update")),
 ):
-    await usecase.delete_by_id(ressource_id=ressource_id, locale=locale, name=name)
+    await usecase.delete(ressource_id=ressource_id, locale=locale, name=name)
 
 
 @router.get("/translations/{ressource_id}")

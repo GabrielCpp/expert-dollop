@@ -25,7 +25,7 @@ async def get_organization_by_id(
     jwt_dict: dict = Depends(AuthenticationRequired()),
 ):
     return await handler.handle(
-        service.find_by_id,
+        service.find,
         organization_id,
         MappingChain(out_dto=OrganizationDto),
     )

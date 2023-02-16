@@ -29,19 +29,19 @@ class ProjectDefinitionNodeUseCase:
     async def add(self, domain: ProjectDefinitionNode) -> ProjectDefinitionNode:
         await self._ensure_node_is_valid(domain)
         await self.project_definition_node_repository.insert(domain)
-        return await self.find_by_id(domain.id)
+        return await self.find(domain.id)
 
-    async def delete_by_id(self, id: UUID) -> None:
+    async def delete(self, id: UUID) -> None:
         await self.project_definition_node_repository.delete_child_of(id)
-        await self.project_definition_node_repository.delete_by_id(id)
+        await self.project_definition_node_repository.delete(id)
 
     async def update(self, domain: ProjectDefinitionNode) -> None:
         await self._ensure_node_is_valid(domain)
         await self.project_definition_node_repository.upserts([domain])
         return domain
 
-    async def find_by_id(self, id: UUID) -> ProjectDefinitionNode:
-        result = await self.project_definition_node_repository.find_by_id(id)
+    async def find(self, id: UUID) -> ProjectDefinitionNode:
+        result = await self.project_definition_node_repository.find(id)
         return result
 
     async def find_project_nodes(

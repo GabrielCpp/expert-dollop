@@ -3,7 +3,12 @@ from uuid import UUID
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from typing import List, Optional, Dict, Union
-from expert_dollup.shared.database_services import QueryFilter
+from expert_dollup.shared.database_services import (
+    QueryFilter,
+    queries,
+    Pluck,
+    PluckSubRessource,
+)
 from ..values_union import PrimitiveWithNoneUnion
 
 
@@ -131,11 +136,9 @@ class FormulaFilter(QueryFilter):
     expression: Optional[str]
 
 
-class FormulaPluckFilter(QueryFilter):
+@queries.register_child_of(Pluck)
+@queries.register_child_of(PluckSubRessource)
+class FormulaPluckFilter(FormulaFilter):
     ids: Optional[List[UUID]]
     names: Optional[List[str]]
     attached_to_type_ids: Optional[UUID]
-
-
-class FormulaCachePluckFilter(QueryFilter):
-    formula_ids: List[UUID]

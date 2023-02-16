@@ -1,7 +1,12 @@
 from dataclasses import dataclass
 from typing import List, Optional
 from uuid import UUID
-from expert_dollup.shared.database_services import QueryFilter
+from expert_dollup.shared.database_services import (
+    QueryFilter,
+    queries,
+    PluckSubRessource,
+    Pluck,
+)
 from ..values_union import PrimitiveWithNoneUnion
 
 
@@ -35,6 +40,12 @@ class ProjectNodeFilter(QueryFilter):
     display_query_internal_id: Optional[UUID]
 
 
+@dataclass
+class FieldUpdate:
+    node_id: UUID
+    value: PrimitiveWithNoneUnion
+
+
 class ProjectNodeValues(QueryFilter):
     id: Optional[UUID]
     project_id: Optional[UUID]
@@ -46,12 +57,8 @@ class ProjectNodeValues(QueryFilter):
     display_query_internal_id: Optional[UUID]
 
 
-@dataclass
-class FieldUpdate:
-    node_id: UUID
-    value: PrimitiveWithNoneUnion
-
-
-class NodePluckFilter(QueryFilter):
+@queries.register_child_of(Pluck)
+@queries.register_child_of(PluckSubRessource)
+class NodePluckFilter(ProjectNodeValues):
     ids: Optional[List[UUID]]
     type_ids: Optional[List[UUID]]

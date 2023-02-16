@@ -24,7 +24,7 @@ class DistributableUseCase:
         self.report_storage = report_storage
 
     async def distributable_reports(self, project_id: UUID) -> List[ReportDefinition]:
-        project_details = await self.project_service.find_by_id(project_id)
+        project_details = await self.project_service.find(project_id)
         report_definitions = await self.report_definition_service.find_by(
             ReportDefinitionFilter(
                 project_definition_id=project_details.project_definition_id,
@@ -52,8 +52,8 @@ class DistributableUseCase:
     async def update_distributable(
         self, project_id: UUID, report_definition_id: UUID
     ) -> DistributableUpdate:
-        project_details = await self.project_service.find_by_id(project_id)
-        report_definition = await self.report_definition_service.find_by_id(
+        project_details = await self.project_service.find(project_id)
+        report_definition = await self.report_definition_service.find(
             report_definition_id
         )
         report_key = ReportKey(

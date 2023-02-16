@@ -37,7 +37,7 @@ class MapProjectNodeMetaImportToDomain:
             assert model.project_id == project_id
 
         if not project_id in self.node_by_project_id:
-            project = await self.db_context.find_by_id(ProjectDetails, project_id)
+            project = await self.db_context.find(ProjectDetails, project_id)
             definitions = await self.db_context.find_by(
                 ProjectDefinitionNode,
                 ProjectDefinitionNodeFilter(

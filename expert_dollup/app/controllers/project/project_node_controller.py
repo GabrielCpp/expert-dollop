@@ -24,7 +24,7 @@ async def get_project_node(
     user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     return await handler.handle(
-        usecase.find_by_id, node_id, MappingChain(out_dto=ProjectNodeDto)
+        usecase.find, node_id, MappingChain(out_dto=ProjectNodeDto)
     )
 
 

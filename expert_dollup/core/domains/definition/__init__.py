@@ -14,7 +14,6 @@ from .formula import (
     UnitInstanceCache,
     FormulaFilter,
     FormulaPluckFilter,
-    FormulaCachePluckFilter,
     FormulaDependencyGraph,
     FormulaDependency,
     AstNode,

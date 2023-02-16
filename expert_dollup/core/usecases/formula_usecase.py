@@ -21,8 +21,8 @@ class FormulaUseCase:
         self.project_service = project_service
         self.formula_instance_service = formula_instance_service
 
-    async def find_by_id(self, formula_id: UUID) -> Formula:
-        return await self.formula_service.find_by_id(formula_id)
+    async def find(self, formula_id: UUID) -> Formula:
+        return await self.formula_service.find(formula_id)
 
     async def add(self, formula_expression: FormulaExpression) -> Formula:
         if await self.formula_service.has(formula_expression.id):
@@ -35,13 +35,13 @@ class FormulaUseCase:
 
     async def add_many(self, formula_expressions: List[FormulaExpression]):
         formulas = await self.formula_resolver.parse_many(formula_expressions)
-        await self.formula_service.insert_many(formulas)
+        await self.formula_service.inserts(formulas)
 
-    async def delete_by_id(self, formula_id: UUID, remove_recursively: bool):
-        await self.formula_service.find_by_id(formula_id)
+    async def delete(self, formula_id: UUID, remove_recursively: bool):
+        await self.formula_service.find(formula_id)
 
     async def compute_project_formulas(self, project_id) -> UnitInstanceCache:
-        project_details = await self.project_service.find_by_id(project_id)
+        project_details = await self.project_service.find(project_id)
         injector = await self.formula_resolver.compute_all_project_formula(
             project_id, project_details.project_definition_id
         )

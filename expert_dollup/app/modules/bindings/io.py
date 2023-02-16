@@ -148,15 +148,6 @@ def bind_validators(builder: InjectorBuilder) -> None:
     builder.add_singleton(SchemaValidator, SchemaValidator)
 
 
-def bind_queries(builder: InjectorBuilder) -> None:
-    for metadata in expert_dollup_metadatas:
-        builder.add_factory(
-            TypedInjection.make_type_name(Plucker, metadata.domain),
-            PluckQuery,
-            repository=TypedInjection.make_type_name(Repository, metadata.domain),
-        )
-
-
 def bind_paginators(builder: InjectorBuilder) -> None:
     for pagination_details in paginations:
         builder.add_factory(
@@ -206,5 +197,4 @@ def bind_io_modules(builder: InjectorBuilder) -> None:
     bind_providers(builder)
     bind_validators(builder)
     bind_ressource_engines(builder)
-    bind_queries(builder)
     bind_paginators(builder)

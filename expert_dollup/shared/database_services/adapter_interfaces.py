@@ -42,7 +42,7 @@ class Repository(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
-    async def insert_many(self, domains: List[Domain]):
+    async def inserts(self, domains: List[Domain]):
         pass
 
     @abstractmethod
@@ -50,7 +50,7 @@ class Repository(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
-    async def find_all(self, limit: int = 1000) -> List[Domain]:
+    async def all(self, limit: int = 1000) -> List[Domain]:
         pass
 
     @abstractmethod
@@ -62,7 +62,7 @@ class Repository(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
-    async def find_by_id(self, pk_id: Id) -> Domain:
+    async def find(self, pk_id: Id) -> Domain:
         pass
 
     @abstractmethod
@@ -70,7 +70,7 @@ class Repository(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
-    async def delete_by_id(self, pk_id: Id):
+    async def delete(self, pk_id: Id):
         pass
 
     @abstractmethod
@@ -92,11 +92,7 @@ class Repository(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
-    async def execute(self, builder: QueryBuilder) -> Union[Domain, List[Domain], None]:
-        pass
-
-    @abstractmethod
-    def build_query(self, query: QueryFilter) -> QueryBuilder:
+    async def execute(self, builder: WhereFilter) -> Union[Domain, List[Domain], None]:
         pass
 
 

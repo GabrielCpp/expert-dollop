@@ -18,22 +18,22 @@ class DatasheetUseCase:
         self.db_context = db_context
         self.clock = clock
 
-    async def find_by_id(self, datasheet_id: UUID) -> Datasheet:
-        return await self.db_context.find_by_id(Datasheet, datasheet_id)
+    async def find(self, datasheet_id: UUID) -> Datasheet:
+        return await self.db_context.find(Datasheet, datasheet_id)
 
     async def add(self, datasheet: Datasheet, user: User) -> Datasheet:
         ressource = authorization_factory.allow_access_to(datasheet, user)
         await self.db_context.insert(Ressource, ressource)
         await self.db_context.insert(Datasheet, datasheet)
 
-    async def delete_by_id(self, datasheet_id: UUID) -> None:
+    async def delete(self, datasheet_id: UUID) -> None:
         await self.db_context.delete_by(
             DatasheetElement, DatasheetElementFilter(datasheet_id=datasheet_id)
         )
-        await self.db_context.delete_by_id(Datasheet, datasheet_id)
+        await self.db_context.delete(Datasheet, datasheet_id)
 
     async def clone(self, target: CloningDatasheet, user: User):
-        datasheet = await self.find_by_id(target.target_datasheet_id)
+        datasheet = await self.find(target.target_datasheet_id)
         cloned_datasheet = Datasheet(
             id=uuid4(),
             project_definition_id=datasheet.project_definition_id,
@@ -80,13 +80,13 @@ class DatasheetUseCase:
             )
 
         await self.add(cloned_datasheet, user)
-        await self.db_context.insert_many(DatasheetElement, cloned_elements)
+        await self.db_context.inserts(DatasheetElement, cloned_elements)
         return cloned_datasheet
 
     async def add_filled_datasheet(
         self, new_datasheet: NewDatasheet, user: User
     ) -> Datasheet:
-        collection = await self.db_context.find_by_id(
+        collection = await self.db_context.find(
             AggregateCollection, new_datasheet.abstract_collection_id
         )
         aggregates = await self.db_context.find_by(
@@ -115,7 +115,7 @@ class DatasheetUseCase:
         ]
 
         await self.add(datasheet, user)
-        await self.db_context.insert_many(DatasheetElement, elements)
+        await self.db_context.inserts(DatasheetElement, elements)
         return datasheet
 
     def _make_datasheet(

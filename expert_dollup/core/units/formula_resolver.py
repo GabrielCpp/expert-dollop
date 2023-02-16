@@ -291,10 +291,8 @@ class FormulaResolver:
             for formula_node in formula.dependency_graph.nodes:
                 field_depencies.add(formula_node.target_type_id)
 
-        nodes = await self.project_node_service.pluck_subressources(
-            ProjectNodeFilter(project_id=project_id),
-            lambda ids: NodePluckFilter(type_ids=ids),
-            list(field_depencies),
+        nodes = await self.project_node_service.execute(
+            NodePluckFilter(project_id=project_id, type_ids=list(field_depencies))
         )
         unit_instances = self.unit_instance_builder.build_with_fields(
             staged_formulas, nodes

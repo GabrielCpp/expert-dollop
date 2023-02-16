@@ -24,14 +24,14 @@ class ProjectDefinitonUseCase:
         await self.db_context.insert(ProjectDefinition, domain)
         return domain
 
-    async def delete_by_id(self, id: UUID) -> None:
-        definition = await self.db_context.find_by_id(ProjectDefinition, id)
-        await self.db_context.delete_by_id(ProjectDefinition, id)
+    async def delete(self, id: UUID) -> None:
+        definition = await self.db_context.find(ProjectDefinition, id)
+        await self.db_context.delete(ProjectDefinition, id)
         await self.db_context.delete_by(Ressource, RessourceFilter(id=id))
 
     async def update(self, domain: ProjectDefinition) -> ProjectDefinition:
         await self.db_context.upserts(ProjectDefinition, [domain])
         return domain
 
-    async def find_by_id(self, id: UUID) -> ProjectDefinition:
-        return await self.db_context.find_by_id(ProjectDefinition, id)
+    async def find(self, id: UUID) -> ProjectDefinition:
+        return await self.db_context.find(ProjectDefinition, id)

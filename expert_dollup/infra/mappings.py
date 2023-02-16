@@ -1,6 +1,7 @@
 from typing import List
 from uuid import UUID
 from expert_dollup.shared.starlette_injection import Clock
+from expert_dollup.shared.database_services import *
 from expert_dollup.shared.automapping import (
     Mapper,
     map_dict_keys,
@@ -578,27 +579,6 @@ def map_project_node_filter_to_dict(src: ProjectNodeFilter, mapper: Mapper) -> d
     )
 
 
-def map_project_node_values_to_dict(src: ProjectNodeValues, mapper: Mapper) -> dict:
-    return map_dict_keys(
-        src.args,
-        {
-            "id": ("id", None),
-            "project_id": ("project_id", None),
-            "type_id": ("type_id", None),
-            "path": ("path", join_uuid_path),
-            "value": (
-                "value",
-                lambda x: mapper.map(
-                    x, primitive_with_none_union_dao_mappings.to_origin
-                ),
-            ),
-            "label": ("label", None),
-            "level": ("level", None),
-            "display_query_internal_id": ("display_query_internal_id", None),
-        },
-    )
-
-
 def map_project_node_meta_filter_to_dict(
     src: ProjectNodeMetaFilter, mapper: Mapper
 ) -> dict:
@@ -993,23 +973,6 @@ def map_datasheet_element_from_dao(
     )
 
 
-def map_datasheet_element_filter_to_dict(
-    src: DatasheetElementFilter, mapper: Mapper
-) -> dict:
-    return map_dict_keys(
-        src.args,
-        {
-            "id": ("id", None),
-            "datasheet_id": ("datasheet_id", None),
-            "aggregate_id": ("aggregate_id", None),
-            "ordinal": ("ordinal", None),
-            "original_datasheet_id": ("original_datasheet_id", None),
-            "original_owner_organization_id": ("original_owner_organization_id", None),
-            "creation_date_utc": ("creation_date_utc", None),
-        },
-    )
-
-
 def map_datasheet_filter_to_dict(src: DatasheetFilter, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
@@ -1069,8 +1032,8 @@ def map_formula_filter(src: FormulaFilter, mapper: Mapper) -> dict:
     )
 
 
-def map_fomula_pluck_filter(src: FormulaPluckFilter, mapper: Mapper) -> dict:
-    return map_dict_keys(
+def map_fomula_pluck_filter(src: FormulaPluckFilter, mapper: Mapper) -> Pluck:
+    pluck_filter = map_dict_keys(
         src.args,
         {
             "ids": ("id", None),
@@ -1079,11 +1042,96 @@ def map_fomula_pluck_filter(src: FormulaPluckFilter, mapper: Mapper) -> dict:
         },
     )
 
+    if len(pluck_filter) != 1:
+        raise Exception(
+            f"Pluck filter must be applied on one key {pluck_filter.keys()}"
+        )
 
-def map_node_pluck_filter(src: NodePluckFilter, mapper: Mapper) -> dict:
+    return Pluck(
+        name=next(iter(pluck_filter.keys())),
+        ids=next(iter(pluck_filter.values())),
+    )
+
+
+def map_fomula_pluck_subresource_filter(
+    src: FormulaPluckFilter, mapper: Mapper
+) -> PluckSubRessource:
+    pluck_filter = map_dict_keys(
+        src.args,
+        {
+            "ids": ("id", None),
+            "names": ("name", None),
+            "attached_to_type_ids": ("attached_to_type_id", None),
+        },
+    )
+
+    if len(pluck_filter) != 1:
+        raise Exception(
+            f"Pluck filter must be applied on one key {pluck_filter.keys()}"
+        )
+
+    return PluckSubRessource(
+        base=map_formula_filter(src, mapper),
+        name=next(iter(pluck_filter.keys())),
+        ids=next(iter(pluck_filter.values())),
+    )
+
+
+def map_project_node_values_to_dict(src: ProjectNodeValues, mapper: Mapper) -> dict:
     return map_dict_keys(
         src.args,
+        {
+            "id": ("id", None),
+            "project_id": ("project_id", None),
+            "type_id": ("type_id", None),
+            "path": ("path", join_uuid_path),
+            "value": (
+                "value",
+                lambda x: mapper.map(
+                    x, primitive_with_none_union_dao_mappings.to_origin
+                ),
+            ),
+            "label": ("label", None),
+            "level": ("level", None),
+            "display_query_internal_id": ("display_query_internal_id", None),
+        },
+    )
+
+
+def map_node_pluck_filter(src: NodePluckFilter, mapper: Mapper) -> PluckSubRessource:
+    pluck_filter = map_dict_keys(
+        src.args,
         {"ids": ("id", None), "type_ids": ("type_id", None)},
+    )
+
+    if len(pluck_filter) != 1:
+        raise Exception(
+            f"Pluck filter must be applied on one key {pluck_filter.keys()}"
+        )
+
+    return Pluck(
+        name=next(iter(pluck_filter.keys())),
+        ids=next(iter(pluck_filter.values())),
+    )
+
+
+def map_node_pluck_subressource_filter(
+    src: NodePluckFilter, mapper: Mapper
+) -> PluckSubRessource:
+    pluck_filter = map_dict_keys(
+        src.args,
+        {"ids": ("id", None), "type_ids": ("type_id", None)},
+    )
+
+    if len(pluck_filter) != 1:
+        raise Exception(
+            f"Pluck filter must be applied on one key {pluck_filter.keys()}"
+        )
+
+    return PluckSubRessource(
+        base=map_project_node_values_to_dict(src, mapper),
+        name=next(iter(pluck_filter.keys())),
+        ids=next(iter(pluck_filter.values())),
     )
 
 
@@ -1256,15 +1304,65 @@ def map_report_row_filter(src: ReportRowFilter, mapper: Mapper) -> dict:
     )
 
 
-def map_datasheet_element_pluck_filter(
-    src: DatasheetElementPluckFilter, mapper: Mapper
+def map_datasheet_element_filter_to_dict(
+    src: DatasheetElementFilter, mapper: Mapper
 ) -> dict:
     return map_dict_keys(
         src.args,
         {
-            "element_def_ids": ("aggregate_id", None),
-            "child_element_references": ("child_element_reference", None),
+            "id": ("id", None),
+            "datasheet_id": ("datasheet_id", None),
+            "aggregate_id": ("aggregate_id", None),
+            "ordinal": ("ordinal", None),
+            "original_datasheet_id": ("original_datasheet_id", None),
+            "original_owner_organization_id": ("original_owner_organization_id", None),
+            "creation_date_utc": ("creation_date_utc", None),
         },
+    )
+
+
+def map_datasheet_element_pluck_filter(
+    src: DatasheetElementPluckFilter, mapper: Mapper
+) -> Pluck:
+    pluck_filter = map_dict_keys(
+        src.args,
+        {
+            "aggregate_ids": ("aggregate_id", None),
+            "ids": ("id", None),
+        },
+    )
+
+    if len(pluck_filter) != 1:
+        raise Exception(
+            f"Pluck filter must be applied on one key {pluck_filter.keys()}"
+        )
+
+    return Pluck(
+        name=next(iter(pluck_filter.keys())),
+        ids=next(iter(pluck_filter.values())),
+    )
+
+
+def map_datasheet_element_pluck_subressource_filter(
+    src: DatasheetElementPluckFilter, mapper: Mapper
+) -> PluckSubRessource:
+    pluck_filter = map_dict_keys(
+        src.args,
+        {
+            "aggregate_ids": ("aggregate_id", None),
+            "ids": ("id", None),
+        },
+    )
+
+    if len(pluck_filter) != 1:
+        raise Exception(
+            f"Pluck filter must be applied on one key {pluck_filter.keys()}"
+        )
+
+    return PluckSubRessource(
+        base=map_datasheet_element_filter_to_dict(src, mapper),
+        name=next(iter(pluck_filter.keys())),
+        ids=next(iter(pluck_filter.values())),
     )
 
 

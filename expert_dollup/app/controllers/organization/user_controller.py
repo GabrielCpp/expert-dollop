@@ -26,7 +26,7 @@ async def get_current_user(
         return None
 
     try:
-        user = await service.find_by_id(user_dict.get("sub"))
+        user = await service.find(user_dict.get("sub"))
 
         return mapper.map(user, UserDto)
     except RecordNotFound:

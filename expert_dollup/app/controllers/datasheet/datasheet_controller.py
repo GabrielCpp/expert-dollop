@@ -36,7 +36,7 @@ async def find_datasheet_by_id(
     user=Depends((CanPerformOnRequired("datasheet_id", ["datasheet:get"]))),
 ):
     return await handler.handle(
-        usecase.find_by_id,
+        usecase.find,
         datasheet_id,
         MappingChain(
             domain=Datasheet,
@@ -89,4 +89,4 @@ async def delete_datasheet(
     usecase=Depends(Inject(DatasheetUseCase)),
     user=Depends(CanPerformOnRequired("datasheet_id", ["datasheet:delete"])),
 ):
-    await usecase.delete_by_id(datasheet_id)
+    await usecase.delete(datasheet_id)

@@ -281,7 +281,7 @@ class FirestoreCollection(InternalRepository[Domain]):
             doc_id = self._build_id(d)
             await self._collection.document(doc_id).set(d, retry=retry_strategy)
 
-    async def insert_many(self, domains: List[Domain]):
+    async def inserts(self, domains: List[Domain]):
         dicts = self._db_mapping.map_many_domain_to_dict(domains)
         await self._batch_operation(dicts, lambda b, doc_ref, d: b.set(doc_ref, d))
 
@@ -299,7 +299,7 @@ class FirestoreCollection(InternalRepository[Domain]):
             dicts, lambda b, doc_ref, d: b.set(doc_ref, d, merge=True)
         )
 
-    async def find_all(self, limit: int = 1000) -> List[Domain]:
+    async def all(self, limit: int = 1000) -> List[Domain]:
         results = []
 
         async for doc in self._collection.limit(limit).stream():
@@ -326,7 +326,7 @@ class FirestoreCollection(InternalRepository[Domain]):
 
         raise RecordNotFound()
 
-    async def find_by_id(self, pk_id: Id) -> Domain:
+    async def find(self, pk_id: Id) -> Domain:
         document_id = self._build_id_from_pk(pk_id)
         doc = await self._collection.document(document_id).get()
 
@@ -362,15 +362,12 @@ class FirestoreCollection(InternalRepository[Domain]):
             query_filter, lambda b, doc_ref, d: b.delete(doc_ref, d)
         )
 
-    async def delete_by_id(self, pk_id: Id):
+    async def delete(self, pk_id: Id):
         id = self._build_id_from_pk(pk_id)
         await self._collection.document(id).delete()
 
-    async def execute(self, builder: QueryBuilder) -> Union[Domain, List[Domain], None]:
-        pass
-
-    async def build_query(self, query_filter: QueryFilter) -> QueryBuilder:
-        return self._build_query(query_filter)
+    async def execute(self, builder: WhereFilter) -> Union[Domain, List[Domain], None]:
+        raise NotImplementedError()
 
     async def fetch_all_records(
         self,

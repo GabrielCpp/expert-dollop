@@ -18,13 +18,13 @@ class TranslationUseCase:
         self.clock = clock
         self.id_provider = id_provider
 
-    async def find_by_id(
+    async def find(
         self,
         ressource_id: UUID,
         locale: str,
         name: str,
     ) -> Translation:
-        return await self.db_context.find_by_id(
+        return await self.db_context.find(
             Translation, TranslationId(ressource_id, locale, name)
         )
 
@@ -58,13 +58,13 @@ class TranslationUseCase:
         )
         return domain
 
-    async def delete_by_id(
+    async def delete(
         self,
         ressource_id: UUID,
         locale: str,
         name: str,
     ):
-        await self.db_context.delete_by_id(
+        await self.db_context.delete(
             Translation, TranslationId(ressource_id, locale, name)
         )
 
@@ -77,16 +77,14 @@ class TranslationUseCase:
         if locale == "fr":
             locale = "fr-CA"
 
-        ressource = await self.db_context.find_by_id(
+        ressource = await self.db_context.find(
             Ressource,
             RessourceId(id=ressource_id, organization_id=user.organization_id),
         )
 
         if ressource.kind == "project":
-            project_details = await self.db_context.find_by_id(
-                ProjectDetails, ressource_id
-            )
-            datasheet = await self.db_context.find_by_id(
+            project_details = await self.db_context.find(ProjectDetails, ressource_id)
+            datasheet = await self.db_context.find(
                 Datasheet, project_details.datasheet_id
             )
 

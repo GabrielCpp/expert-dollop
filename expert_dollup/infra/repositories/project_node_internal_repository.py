@@ -6,14 +6,7 @@ from expert_dollup.infra.expert_dollup_db import ProjectNodeDao, FIELD_LEVEL
 from expert_dollup.core.utils.path_transform import join_uuid_path
 
 
-class ProjectNodeInternalRepository(
-    RepositoryProxy[ProjectNode], PluckQuery[ProjectNode]
-):
-    def __init__(self, repository: InternalRepository[ProjectNode]):
-        RepositoryProxy.__init__(self, repository)
-        PluckQuery.__init__(self, repository)
-        self._repository = repository
-
+class ProjectNodeInternalRepository(RepositoryProxy[ProjectNode]):
     async def find_children(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None
     ) -> List[ProjectNode]:

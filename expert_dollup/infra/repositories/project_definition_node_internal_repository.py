@@ -44,7 +44,7 @@ class ProjectDefinitionNodeInternalRepository(RepositoryProxy[ProjectDefinitionN
         return count > 0
 
     async def delete_child_of(self, id: UUID):
-        value = await self.find_by_id(id)
+        value = await self.find(id)
         query = (
             QueryBuilder()
             .where("project_definition_id", "==", value.project_definition_id)

@@ -2,13 +2,13 @@ from typing import List, Dict, Sequence
 from uuid import UUID
 from collections import defaultdict
 from decimal import Decimal
-from expert_dollup.shared.database_services import Plucker
 from expert_dollup.core.domains import *
+from expert_dollup.shared.database_services import DatabaseContext
 
 
 class UnitInstanceBuilder:
-    def __init__(self, formula_plucker: Plucker[Formula]):
-        self.formula_plucker = formula_plucker
+    def __init__(self, db_context: DatabaseContext):
+        self.db_context = db_context
 
     async def build(
         self,
@@ -21,10 +21,12 @@ class UnitInstanceBuilder:
         for node in nodes:
             nodes_by_type_id[node.type_id].append(node)
 
-        formulas = await self.formula_plucker.pluck_subressources(
-            FormulaFilter(project_definition_id=project_definition_id),
-            lambda ids: FormulaPluckFilter(attached_to_type_ids=ids),
-            list(nodes_by_type_id.keys()),
+        formulas = await self.db_context.execute(
+            Formula,
+            FormulaPluckFilter(
+                project_definition_id=project_definition_id,
+                attached_to_type_ids=list(nodes_by_type_id.keys()),
+            ),
         )
 
         for formula in formulas:

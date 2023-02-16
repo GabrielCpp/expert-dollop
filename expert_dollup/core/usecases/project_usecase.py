@@ -38,28 +38,28 @@ class ProjectUseCase:
         return project_details
 
     async def clone(self, project_id: UUID, user: User) -> ProjectDetails:
-        project_details = await self.project_service.find_by_id(project_id)
+        project_details = await self.project_service.find(project_id)
         cloned_project = await self.project_builder.clone(project_details, user)
         await self._insert_new_project(cloned_project)
 
         return cloned_project.details
 
-    async def delete_by_id(self, project_id: UUID) -> None:
+    async def delete(self, project_id: UUID) -> None:
         await self.project_node_service.delete_by(
             ProjectNodeFilter(project_id=project_id)
         )
         await self.project_node_meta_service.delete_by(
             ProjectNodeFilter(project_id=project_id)
         )
-        await self.project_service.delete_by_id(project_id)
+        await self.project_service.delete(project_id)
         await self.ressource_service.delete_by(RessourceFilter(id=project_id))
 
-    async def find_by_id(self, id: UUID) -> ProjectDetails:
-        result = await self.project_service.find_by_id(id)
+    async def find(self, id: UUID) -> ProjectDetails:
+        result = await self.project_service.find(id)
         return result
 
     async def _insert_new_project(self, project: Project):
         await self.ressource_service.insert(project.ressource)
         await self.project_service.insert(project.details)
-        await self.project_node_meta_service.insert_many(project.metas)
-        await self.project_node_service.insert_many(project.nodes)
+        await self.project_node_meta_service.inserts(project.metas)
+        await self.project_node_service.inserts(project.nodes)

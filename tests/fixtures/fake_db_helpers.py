@@ -97,7 +97,7 @@ class DbFixtureHelper:
     @staticmethod
     def _insert_many(service, objects):
         async def do_inserts():
-            await service.insert_many(objects)
+            await service.inserts(objects)
 
         return do_inserts
 
@@ -118,7 +118,7 @@ class DbFixtureHelper:
         for domain_type, objects in fake_db.collections.items():
             service_type = Repository[domain_type]
             service = self.injector.get(service_type)
-            await service.insert_many(objects)
+            await service.inserts(objects)
 
         self.db = fake_db
         return fake_db

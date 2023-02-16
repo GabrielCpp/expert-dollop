@@ -21,7 +21,7 @@ class ReportDefinitionUseCase:
         self.report_definition_row_cache_service = report_definition_row_cache_service
 
     async def refresh_cache(self, report_definition_id: UUID) -> None:
-        report_definition = await self.report_definition_service.find_by_id(
+        report_definition = await self.report_definition_service.find(
             report_definition_id
         )
         report_cached_rows = await self.report_row_cache_builder.refresh_cache(

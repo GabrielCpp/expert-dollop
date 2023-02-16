@@ -2,7 +2,12 @@ from uuid import UUID
 from typing import Optional, Dict, List
 from dataclasses import dataclass
 from datetime import datetime
-from expert_dollup.shared.database_services import QueryFilter
+from expert_dollup.shared.database_services import (
+    QueryFilter,
+    queries,
+    Pluck,
+    PluckSubRessource,
+)
 from functools import lru_cache
 from ..values_union import PrimitiveUnion, PrimitiveWithReferenceUnion
 
@@ -62,6 +67,8 @@ class DatasheetElementFilter(QueryFilter):
     creation_date_utc: Optional[datetime]
 
 
-class DatasheetElementPluckFilter(QueryFilter):
+@queries.register_child_of(Pluck)
+@queries.register_child_of(PluckSubRessource)
+class DatasheetElementPluckFilter(DatasheetElementFilter):
     aggregate_ids: List[UUID]
     ids: List[UUID]

@@ -33,8 +33,8 @@ class ProjectNodeUseCase:
 
         return results
 
-    async def find_by_id(self, id: UUID) -> ProjectNode:
-        node = await self.project_node_service.find_by_id(id)
+    async def find(self, id: UUID) -> ProjectNode:
+        node = await self.project_node_service.find(id)
         return node
 
     async def find_by_path(
@@ -46,7 +46,7 @@ class ProjectNodeUseCase:
         return children
 
     async def find_subtree(self, project_id: UUID, path: List[UUID]):
-        node = await self.project_node_service.find_by_id(path[-1])
+        node = await self.project_node_service.find(path[-1])
         children = await self.project_node_service.find_children(project_id, path)
         return [node, *children]
 
@@ -59,7 +59,7 @@ class ProjectNodeUseCase:
     async def find_root_section_nodes(
         self, project_id: UUID, root_section_id: UUID
     ) -> ProjectNodeTree:
-        root_section = await self.project_node_service.find_by_id(root_section_id)
+        root_section = await self.project_node_service.find(root_section_id)
         roots = await self.project_node_service.find_root_section_nodes(
             project_id, root_section_id
         )
@@ -72,7 +72,7 @@ class ProjectNodeUseCase:
     async def find_form_content(
         self, project_id: UUID, form_id: UUID
     ) -> ProjectNodeTree:
-        form = await self.project_node_service.find_by_id(form_id)
+        form = await self.project_node_service.find(form_id)
         roots = await self.project_node_service.find_form_content(project_id, form_id)
         metas = await self.project_node_meta.find_form_content(project_id, form.type_id)
         await self.node_event_dispatcher.update_value_inplace(roots, metas)
@@ -98,7 +98,7 @@ class ProjectNodeUseCase:
         if len(nodes) == 0:
             return
 
-        await self.project_node_service.insert_many(nodes)
+        await self.project_node_service.inserts(nodes)
         project_id = nodes[0].project_id
         definitions = await self.project_node_meta.find_project_defs(project_id)
         definitions_by_id = {definition.id: definition for definition in definitions}
@@ -114,12 +114,12 @@ class ProjectNodeUseCase:
         collection_type_id: UUID,
         parent_node_id: Optional[UUID],
     ) -> List[ProjectNode]:
-        project_details = await self.project_service.find_by_id(project_id)
+        project_details = await self.project_service.find(project_id)
         bounded_node_slice = await self.project_node_slice_builder.build_collection(
             project_details, collection_type_id, parent_node_id
         )
         nodes = [bounded_node.node for bounded_node in bounded_node_slice.bounded_nodes]
-        await self.project_node_service.insert_many(nodes)
+        await self.project_node_service.inserts(nodes)
 
         for bounded_node in bounded_node_slice.bounded_nodes:
             await self.node_event_dispatcher.execute_node_trigger(bounded_node)
@@ -133,7 +133,7 @@ class ProjectNodeUseCase:
             project_id, node_id
         )
         nodes = [bounded_node.node for bounded_node in bounded_node_slice.bounded_nodes]
-        await self.project_node_service.insert_many(nodes)
+        await self.project_node_service.inserts(nodes)
 
         for bounded_node in bounded_node_slice.bounded_nodes:
             await self.node_event_dispatcher.execute_node_trigger(bounded_node)
@@ -145,5 +145,5 @@ class ProjectNodeUseCase:
             ProjectNodeFilter(project_id=project_id, id=node_id)
         )
         await self.project_node_service.remove_collection(node)
-        await self.project_node_service.delete_by_id(node.id)
+        await self.project_node_service.delete(node.id)
         return node
