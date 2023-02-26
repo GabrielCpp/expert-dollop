@@ -704,8 +704,8 @@ def map_staged_formula_from_dao(src: StagedFormulaDao, mapper: Mapper) -> Staged
     )
 
 
-def map_formula_instance_to_dao(src: UnitInstance, mapper: Mapper) -> UnitInstanceDao:
-    return UnitInstanceDao(
+def map_formula_instance_to_dao(src: Unit, mapper: Mapper) -> UnitDao:
+    return UnitDao(
         formula_id=src.formula_id,
         node_id=src.node_id,
         node_path=src.path,
@@ -715,8 +715,8 @@ def map_formula_instance_to_dao(src: UnitInstance, mapper: Mapper) -> UnitInstan
     )
 
 
-def map_formula_instance_from_dao(src: UnitInstanceDao, mapper: Mapper) -> UnitInstance:
-    return UnitInstance(
+def map_formula_instance_from_dao(src: UnitDao, mapper: Mapper) -> Unit:
+    return Unit(
         formula_id=src.formula_id,
         node_id=src.node_id,
         path=src.node_path,

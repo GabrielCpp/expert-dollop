@@ -1,4 +1,4 @@
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Sequence
 from uuid import UUID
 from asyncio import gather
 from expert_dollup.shared.database_services import log_execution_time_async, StopWatch
@@ -8,8 +8,8 @@ from expert_dollup.shared.starlette_injection import *
 from expert_dollup.shared.database_services import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.builders import *
-from expert_dollup.core.logits import *
 from expert_dollup.core.repositories import *
+from expert_dollup.core.units.evaluator import *
 
 
 class FormulaResolver:
@@ -18,14 +18,12 @@ class FormulaResolver:
         formula_service: FormulaRepository,
         project_node_service: ProjectNodeRepository,
         project_definition_node_service: ProjectDefinitionNodeRepository,
-        unit_instance_builder: UnitInstanceBuilder,
         stage_formulas_storage: ObjectStorage[StagedFormulas, StagedFormulasKey],
         logger: LoggerFactory,
     ):
         self.formula_service = formula_service
         self.project_node_service = project_node_service
         self.project_definition_node_service = project_definition_node_service
-        self.unit_instance_builder = unit_instance_builder
         self.stage_formulas_storage = stage_formulas_storage
         self.logger = logger.create(__name__)
 
@@ -226,8 +224,8 @@ class FormulaResolver:
     @log_execution_time_async
     async def compute_all_project_formula(
         self, project_id: UUID, project_definition_id: UUID
-    ) -> FormulaInjector:
-        injector = FormulaInjector()
+    ) -> UnitInjector:
+        injector = UnitInjector()
 
         with StopWatch(self.logger, "Fetching formula data"):
             nodes, staged_formulas = await gather(
@@ -235,29 +233,68 @@ class FormulaResolver:
                 self.get_staged_formulas(project_definition_id),
             )
 
-        formula_by_id = {formula.id: formula for formula in staged_formulas}
-        unit_instances = self.unit_instance_builder.build_with_fields(
-            staged_formulas, nodes
-        )
-
         for node in nodes:
-            injector.add_unit(FieldUnit(node))
-
-        for formula_instance in unit_instances:
-            formula = formula_by_id[formula_instance.formula_id]
-            injector.add_unit(
-                FormulaUnit(
-                    formula_instance,
-                    formula.dependency_graph.dependencies,
-                    formula.final_ast,
-                    injector,
-                )
+            injector.add(
+                Unit(node_id=node.id, path=node.path, name=node.name, value=node.value)
             )
+
+        formula_instances = self.build_with_fields(staged_formulas, nodes)
+        injector.add_all(formula_instances)
 
         with StopWatch(self.logger, "Computing formulas"):
             injector.precompute()
 
         return injector
+
+    def build_with_fields(
+        self, formulas: Sequence[Formula], nodes: List[ProjectNode]
+    ) -> List[Unit]:
+        if len(nodes) == 0 or len(formulas) == 0:
+            return []
+
+        formulas_result: List[Unit] = []
+        parent_node_by_type_id = defaultdict(list)
+        project_id = nodes[0].project_id
+        done_nodes = set()
+        skipped_formulas = set()
+
+        for node in nodes:
+            assert node.project_id == project_id
+            assert len(node.path) == 4
+
+            for index in range(0, len(node.path)):
+                node_id = node.path[index]
+
+                if node_id in done_nodes:
+                    continue
+
+                done_nodes.add(node_id)
+                parent_node_by_type_id[node.type_path[index]].append(
+                    (node_id, [] if index == 0 else node.path[0:index])
+                )
+
+        for formula in formulas:
+            if not formula.attached_to_type_id in parent_node_by_type_id:
+                skipped_formulas.add(formula.attached_to_type_id)
+                continue
+
+            parent_nodes = parent_node_by_type_id[formula.attached_to_type_id]
+
+            for node_id, node_path in parent_nodes:
+                formulas_result.append(
+                    Unit(
+                        node_id=node_id,
+                        path=node_path,
+                        name=formula.name,
+                        calculation_details="<was not calculated yet>",
+                        dependencies=formula.dependency_graph.dependencies,
+                        computation=ComputeFlatAst(formula.final_ast, injector),
+                    )
+                )
+
+        # assert len(skipped_formulas) == 0, f"Missing formulas: {skipped_formulas}"
+
+        return formulas_result
 
     @log_execution_time_async
     async def compute_formula(

@@ -1,5 +1,5 @@
 import ast
-from expert_dollup.core.logits import FormulaVisitor
+from expert_dollup.core.units.evaluator import FormulaVisitor
 
 
 def test_visit_formula_should_find_formula_passed_as_fn_argument():

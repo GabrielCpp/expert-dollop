@@ -4,7 +4,6 @@ from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.builders import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.units import *
-from expert_dollup.core.logits import *
 from expert_dollup.core.repositories import *
 
 

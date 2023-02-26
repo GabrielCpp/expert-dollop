@@ -37,30 +37,6 @@ class FormulaDependencyGraph:
 
 
 @dataclass
-class AstNodeValue:
-    number: Optional[Decimal] = None
-    text: Optional[str] = None
-    enabled: Optional[bool] = None
-
-
-@dataclass
-class AstNode:
-    kind: str
-    values: Dict[str, Union[AstNodeValue, str]] = field(default_factory=dict)
-    properties: Dict[str, int] = field(default_factory=dict)
-    children: Dict[str, List[int]] = field(default_factory=dict)
-
-
-@dataclass
-class FlatAst:
-    nodes: List[AstNode]
-    root_index: int
-
-    def dict(self) -> dict:
-        return asdict(self)
-
-
-@dataclass
 class FormulaExpression:
     id: UUID
     project_definition_id: UUID
@@ -98,7 +74,7 @@ class StagedFormulasKey:
 
 
 @dataclass
-class UnitInstance:
+class Unit:
     formula_id: Optional[UUID]
     node_id: UUID
     path: List[UUID]
@@ -112,7 +88,7 @@ class UnitInstance:
 
 
 @dataclass
-class UnitInstanceElement:
+class UnitElement:
     project_id: UUID
     aggregate_id: UUID
     formula_id: UUID
@@ -120,11 +96,11 @@ class UnitInstanceElement:
     datasheet_element_reference: UUID
 
 
-UnitInstanceCache = List[UnitInstance]
+UnitCache = List[Unit]
 
 
 @dataclass
-class UnitInstanceCacheKey:
+class UnitCacheKey:
     project_id: UUID
 
 

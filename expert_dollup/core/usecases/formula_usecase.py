@@ -12,9 +12,7 @@ class FormulaUseCase:
         formula_service: Repository[Formula],
         formula_resolver: FormulaResolver,
         project_service: Repository[ProjectDetails],
-        formula_instance_service: ObjectStorage[
-            UnitInstanceCache, UnitInstanceCacheKey
-        ],
+        formula_instance_service: ObjectStorage[UnitCache, UnitCacheKey],
     ):
         self.formula_service = formula_service
         self.formula_resolver = formula_resolver
@@ -40,13 +38,13 @@ class FormulaUseCase:
     async def delete(self, formula_id: UUID, remove_recursively: bool):
         await self.formula_service.find(formula_id)
 
-    async def compute_project_formulas(self, project_id) -> UnitInstanceCache:
+    async def compute_project_formulas(self, project_id) -> UnitCache:
         project_details = await self.project_service.find(project_id)
         injector = await self.formula_resolver.compute_all_project_formula(
             project_id, project_details.project_definition_id
         )
         instances = injector.unit_instances
         await self.formula_instance_service.save(
-            UnitInstanceCacheKey(project_id=project_id), instances
+            UnitCacheKey(project_id=project_id), instances
         )
         return instances

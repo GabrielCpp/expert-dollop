@@ -19,7 +19,7 @@ class ExpertDollupStorage(StorageClient):
     pass
 
 
-class UnitInstanceDao(BaseModel):
+class UnitDao(BaseModel):
     formula_id: Optional[UUID]
     node_id: UUID
     node_path: List[UUID]

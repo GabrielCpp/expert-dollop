@@ -2,6 +2,21 @@ import ast
 from typing import Set
 
 
+class SafeguardDivision(ast.NodeTransformer):
+    def visit_BinOp(self, node: ast.BinOp):
+        if isinstance(node.op, ast.Div):
+            return ast.Call(
+                func=ast.Name(id="safe_div", ctx=ast.Load()),
+                args=[
+                    self.generic_visit(node.left),
+                    self.generic_visit(node.right),
+                ],
+                keywords=[],
+            )
+
+        return self.generic_visit(node)
+
+
 class FormulaVisitor(ast.NodeVisitor):
     whithelisted_node = set(
         [

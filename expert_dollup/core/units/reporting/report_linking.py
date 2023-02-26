@@ -6,17 +6,14 @@ from collections import defaultdict
 from dataclasses import dataclass
 from asyncio import gather
 from expert_dollup.shared.database_services import Repository
-from expert_dollup.core.logits import FormulaInjector
-from ..formula_resolver import FormulaResolver
+from ..formula_resolver import FormulaResolver, UnitInjector
 from .report_row_cache import ReportRowCache
-from expert_dollup.core.exceptions import (
-    ReportGenerationError,
-    AstEvaluationError,
-)
+from expert_dollup.core.exceptions import ReportGenerationError
+from expert_dollup.core.units.evaluator import FlatAstEvaluator, AstRuntimeError
 from expert_dollup.core.domains import *
 from expert_dollup.shared.database_services.time_it import log_execution_time_async
 from expert_dollup.shared.starlette_injection import Clock, LoggerFactory
-from .expression_evaluator import ExpressionEvaluator
+
 
 FORMULA_BUCKET_NAME = "formula"
 COLUMNS_BUCKET_NAME = "columns"
@@ -42,21 +39,19 @@ def group_by_key(elements: Iterable, key: Callable[[Any], None]) -> dict:
 class LinkingData:
     report_definition: ReportDefinition
     project_details: ProjectDetails
-    unit_instances: UnitInstanceCache
-    injector: FormulaInjector
+    unit_instances: UnitCache
+    injector: UnitInjector
     datasheet_elements_by_id: Dict[UUID, DatasheetElement]
 
 
 class ReportEvaluationContext:
-    def __init__(
-        self, expression_evaluator: ExpressionEvaluator, injector: FormulaInjector
-    ):
-        self.expression_evaluator = expression_evaluator
+    def __init__(self, evaluator: FlatAstEvaluator, injector: UnitInjector):
+        self.evaluator = evaluator
         self.injector = injector
 
     def evaluate_row(self, expression, row, rows):
         try:
-            return self.expression_evaluator.evaluate(
+            return self.evaluator.evaluate(
                 expression,
                 {
                     "row": row,
@@ -66,7 +61,7 @@ class ReportEvaluationContext:
                     "injector": self.injector,
                 },
             )
-        except AstEvaluationError as e:
+        except AstRuntimeError as e:
             raise ReportGenerationError(
                 f"Error while evaluating expression",
                 expression=expression,
@@ -76,7 +71,7 @@ class ReportEvaluationContext:
 
     def evaluate_columns(self, expression, columns):
         try:
-            return self.expression_evaluator.evaluate(
+            return self.evaluator.evaluate(
                 expression,
                 {
                     "columns": columns,
@@ -85,7 +80,7 @@ class ReportEvaluationContext:
                     "injector": self.injector,
                 },
             )
-        except AstEvaluationError as e:
+        except AstRuntimeError as e:
             raise ReportGenerationError(
                 f"Error while evaluating expression",
                 expression=expression,
@@ -95,11 +90,11 @@ class ReportEvaluationContext:
 
     def evaluate(self, expression, scope):
         try:
-            return self.expression_evaluator.evaluate(
+            return self.evaluator.evaluate(
                 expression,
                 scope,
             )
-        except AstEvaluationError as e:
+        except AstRuntimeError as e:
             raise ReportGenerationError(
                 f"Error while evaluating expression",
                 expression=expression,
@@ -159,15 +154,15 @@ class ReportGeneration:
         return rows
 
 
-class JoinFormulaUnitInstances(JoinStep):
+class JoinFormulaUnits(JoinStep):
     def __init__(
         self,
         selection: Selection,
-        unit_instances: UnitInstanceCache,
+        unit_instances: UnitCache,
     ):
         self.element_attribute = selection.datasheet_attribute
         self.formula_attribute = selection.formula_attribute
-        self.unit_instances_by_def_id: Dict[UUID, UnitInstanceCache] = group_by_key(
+        self.unit_instances_by_def_id: Dict[UUID, UnitCache] = group_by_key(
             (
                 unit_instance
                 for unit_instance in unit_instances
@@ -437,14 +432,14 @@ class ReportLinking:
     def __init__(
         self,
         datasheet_element_service: Repository[DatasheetElement],
-        expression_evaluator: ExpressionEvaluator,
+        evaluator: FlatAstEvaluator,
         report_row_cache_builder: ReportRowCache,
         formula_resolver: FormulaResolver,
         clock: Clock,
         logger: LoggerFactory,
     ):
         self.datasheet_element_service = datasheet_element_service
-        self.expression_evaluator = expression_evaluator
+        self.evaluator = evaluator
         self.report_row_cache_builder = report_row_cache_builder
         self.formula_resolver = formula_resolver
         self.clock = clock
@@ -460,15 +455,13 @@ class ReportLinking:
             report_definition, project_details
         )
         evaluation_context = ReportEvaluationContext(
-            self.expression_evaluator, linking_data.injector
+            self.evaluator, linking_data.injector
         )
 
         selection = report_definition.structure.selection
         structure = report_definition.structure
         report_generation = ReportGeneration(
-            join_steps=[
-                JoinFormulaUnitInstances(selection, linking_data.unit_instances)
-            ],
+            join_steps=[JoinFormulaUnits(selection, linking_data.unit_instances)],
             mutate_steps=[
                 DatasheetElementInstanceAssignation(
                     selection, linking_data.datasheet_elements_by_id

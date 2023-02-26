@@ -262,7 +262,7 @@ class CustomProjectInstancePackage:
     project_definition: ProjectDefinition
     project: ProjectDetails
     formulas: List[Formula]
-    unit_instances: List[UnitInstance]
+    unit_instances: List[Unit]
     definition_nodes: List[ProjectDefinitionNode]
     nodes: List[ProjectNode]
     any_id_to_name: Dict[str, str]
@@ -378,7 +378,7 @@ class ProjectInstanceFactory:
         ]
 
         unit_instances = [
-            UnitInstance(
+            Unit(
                 formula_id=formula_instance.id,
                 node_id=formula_instance.node.id,
                 path=formula_instance.node.path,

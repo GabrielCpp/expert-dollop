@@ -7,9 +7,9 @@ from io import BytesIO
 from expert_dollup.infra.expert_dollup_storage import ExpertDollupStorage
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.domains import (
-    UnitInstance,
-    UnitInstanceCacheKey,
-    UnitInstanceCache,
+    Unit,
+    UnitCacheKey,
+    UnitCache,
 )
 
 
@@ -17,11 +17,11 @@ def read_from(format, f):
     return struct.unpack(format, f.read(struct.calcsize(format)))[0]
 
 
-class UnitInstanceCloudObject(ObjectStorage[UnitInstanceCache, UnitInstanceCacheKey]):
+class UnitCloudObject(ObjectStorage[UnitCache, UnitCacheKey]):
     def __init__(self, storage: ExpertDollupStorage):
         self.storage = storage
 
-    async def load(self, ctx: UnitInstanceCacheKey) -> UnitInstanceCache:
+    async def load(self, ctx: UnitCacheKey) -> UnitCache:
         instances = []
         null_uuid = UUID(int=0)
         path = self.get_url(ctx)
@@ -68,7 +68,7 @@ class UnitInstanceCloudObject(ObjectStorage[UnitInstanceCache, UnitInstanceCache
                     raise Exception(f"Unkown value type {value_type}")
 
                 instances.append(
-                    UnitInstance(
+                    Unit(
                         calculation_details=calculation_details,
                         formula_id=formula_id,
                         name=name,
@@ -80,7 +80,7 @@ class UnitInstanceCloudObject(ObjectStorage[UnitInstanceCache, UnitInstanceCache
 
         return instances
 
-    async def save(self, ctx: UnitInstanceCacheKey, instances: UnitInstanceCache):
+    async def save(self, ctx: UnitCacheKey, instances: UnitCache):
         null_uuid = UUID(int=0)
         outbytes = BytesIO()
 
@@ -131,5 +131,5 @@ class UnitInstanceCloudObject(ObjectStorage[UnitInstanceCache, UnitInstanceCache
         path = self.get_url(ctx)
         await self.storage.upload_binary(path, output_bytes)
 
-    def get_url(self, ctx: UnitInstanceCacheKey) -> str:
+    def get_url(self, ctx: UnitCacheKey) -> str:
         return f"projects/{ctx.project_id}/formula_instance.raw.gzip"

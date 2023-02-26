@@ -14,7 +14,6 @@ from tests.fixtures import *
 @pytest.mark.asyncio
 async def test_given_unit_instances_should_compute_collection(logger_factory):
     project_node_service = StrictInterfaceSetup(ProjectNodeRepository)
-    unit_instance_builder = StrictInterfaceSetup(UnitInstanceBuilder)
     stage_formulas_storage = StrictInterfaceSetup(ObjectStorage)
 
     fixture = ProjectInstanceFactory.build(make_base_project_seed())
@@ -22,7 +21,7 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
     stages_formulas = FormulaResolver.stage_formulas(fixture.formulas)
 
     expected_result = [
-        UnitInstance(
+        Unit(
             formula_id=None,
             node_id=UUID("941055cb-b2bc-0916-4182-4774e576c6eb"),
             path=[
@@ -35,7 +34,7 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
             calculation_details="",
             result=Decimal("5"),
         ),
-        UnitInstance(
+        Unit(
             formula_id=None,
             node_id=UUID("a23ee02f-9bc1-0573-ed61-60ebffc6d4c8"),
             path=[
@@ -48,7 +47,7 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
             calculation_details="",
             result=Decimal("4"),
         ),
-        UnitInstance(
+        Unit(
             formula_id=None,
             node_id=UUID("56969dee-a7d6-7243-b154-fe4c75334aa9"),
             path=[
@@ -61,7 +60,7 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
             calculation_details="",
             result=Decimal("3"),
         ),
-        UnitInstance(
+        Unit(
             formula_id=None,
             node_id=UUID("4303a404-1c3e-7aca-1261-9b6544363a3e"),
             path=[
@@ -74,7 +73,7 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
             calculation_details="",
             result=Decimal("2"),
         ),
-        UnitInstance(
+        Unit(
             formula_id=UUID("f1f1e0ff-2344-48bc-e757-8c9dcd3c671e"),
             node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
             path=[],
@@ -82,7 +81,7 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
             calculation_details="\ntemp1(12) = sum(fieldA)\ntemp2(24) = <fieldB[4303a404-1c3e-7aca-1261-9b6544363a3e], 2> * temp1(12)\n\n<final_result, 24> = temp2(24)",
             result=Decimal("24"),
         ),
-        UnitInstance(
+        Unit(
             formula_id=UUID("b9af5d87-31a6-3603-85d0-1c849c9f4b44"),
             node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
             path=[],
@@ -90,7 +89,7 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
             calculation_details="\ntemp1(6) = sum(sectionA_formula)\ntemp2(12) = <fieldB[4303a404-1c3e-7aca-1261-9b6544363a3e], 2> * temp1(6)\n\n<final_result, 12> = temp2(12)",
             result=Decimal("12"),
         ),
-        UnitInstance(
+        Unit(
             formula_id=UUID("cbaba831-5e3a-aa8b-a7a5-60234fe98b14"),
             node_id=UUID("3951ecfd-e673-f1f3-9618-55470aabd2ca"),
             path=[
@@ -102,7 +101,7 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
             calculation_details="\ntemp1(3) = <fieldA[941055cb-b2bc-0916-4182-4774e576c6eb], 5> - 2\n\n<final_result, 3> = temp1(3)",
             result=Decimal("3"),
         ),
-        UnitInstance(
+        Unit(
             formula_id=UUID("cbaba831-5e3a-aa8b-a7a5-60234fe98b14"),
             node_id=UUID("9cb49761-6037-097e-6769-64645ffd1679"),
             path=[
@@ -114,7 +113,7 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
             calculation_details="\ntemp1(2) = <fieldA[a23ee02f-9bc1-0573-ed61-60ebffc6d4c8], 4> - 2\n\n<final_result, 2> = temp1(2)",
             result=Decimal("2"),
         ),
-        UnitInstance(
+        Unit(
             formula_id=UUID("cbaba831-5e3a-aa8b-a7a5-60234fe98b14"),
             node_id=UUID("ba454054-0eac-b387-bdfa-da917b569de5"),
             path=[
@@ -137,16 +136,15 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
         lambda x: x.get_all_fields(fixture.project.id), returns_async=fields
     )
 
-    unit_instance_builder.setup(
-        lambda x: x.build_with_fields(stages_formulas, fields),
-        returns=fixture.unit_instances,
-    )
+    # unit_instance_builder.setup(
+    #     lambda x: x.build_with_fields(stages_formulas, fields),
+    #     returns=fixture.unit_instances,
+    # )
 
     formula_resolver = FormulaResolver(
         StrictInterfaceSetup(Repository).object,
         project_node_service.object,
         StrictInterfaceSetup(ProjectDefinitionNodeRepository).object,
-        unit_instance_builder.object,
         stage_formulas_storage.object,
         logger_factory,
     )
