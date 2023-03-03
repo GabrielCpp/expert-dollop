@@ -15,9 +15,9 @@ from ..storage_connectors import StorageClient
 
 @dataclass
 class CollectionDetails:
-    serialize: Callable[[dict], bytes]
-    deserialize: Callable[[bytes], dict]
-    get_key: Callable[[dict], str]
+    encode: Callable[[dict], bytes]
+    decode: Callable[[bytes], dict]
+    key_of: Callable[[dict], str]
 
 
 class BucketConnection(DbConnection):
@@ -52,7 +52,7 @@ class BucketConnection(DbConnection):
         for metadata in metadatas:
             _, meta = get_dao(metadata.dao)
             self.collections[metadata.dao] = CollectionDetails(
-                meta.serialize, meta.deserialize, meta.get_key
+                meta.encode, meta.decode, meta.key_of
             )
 
     async def truncate_db(self):
@@ -128,7 +128,7 @@ class BucketCollection(InternalRepository[Domain]):
 
             document = {**original_document, **document_patch}
 
-            if self._object.get_key(document) != result.key:
+            if self._object.key_of(document) != result.key:
                 await self._client.delete(result.key)
 
             await self._write(document)
@@ -223,8 +223,8 @@ class BucketCollection(InternalRepository[Domain]):
         raise NotImplementedError()
 
     async def _write(self, document: dict):
-        key = self._object.get_key(document)
-        data = self._object.serialize(document)
+        key = self._object.key_of(document)
+        data = self._object.encode(document)
         await self._client.upload_binary(key, data)
 
     async def _writes(self, documents: List[dict]):
@@ -237,7 +237,7 @@ class BucketCollection(InternalRepository[Domain]):
         if data is None:
             return None
 
-        return self._object.deserialize(data)
+        return self._object.decode(data)
 
     async def _stream(self, prefix: str):
         next_page_token = None

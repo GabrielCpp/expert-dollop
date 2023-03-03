@@ -9,7 +9,3 @@ from expert_dollup.shared.starlette_injection import DetailedError
 
 class ReportGenerationError(DetailedError):
     pass
-
-
-class AstEvaluationError(DetailedError):
-    pass

@@ -7,6 +7,7 @@ from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.repositories import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.units import *
+from expert_dollup.core.units.evaluator import *
 from expert_dollup.core.builders import *
 from tests.fixtures import *
 
@@ -18,7 +19,11 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
 
     fixture = ProjectInstanceFactory.build(make_base_project_seed())
     fields = [node for node in fixture.nodes if not node.value is None]
-    stages_formulas = FormulaResolver.stage_formulas(fixture.formulas)
+    compiler = ExpressionCompiler.create_simple()
+    stages_formulas = [
+        StagedFormula.from_formula(formula, compiler.compile_to_dict)
+        for formula in fixture.formulas
+    ]
 
     expected_result = [
         Unit(
@@ -146,6 +151,7 @@ async def test_given_unit_instances_should_compute_collection(logger_factory):
         project_node_service.object,
         StrictInterfaceSetup(ProjectDefinitionNodeRepository).object,
         stage_formulas_storage.object,
+        compiler,
         logger_factory,
     )
 

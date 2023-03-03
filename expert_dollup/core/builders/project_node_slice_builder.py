@@ -122,11 +122,4 @@ class ProjectNodeSliceBuilder:
             )
         ]
 
-        unit_instances = await self.unit_instance_builder.build(
-            root_def_node.project_definition_id,
-            [bounded_node.node for bounded_node in bounded_nodes],
-        )
-
-        return BoundedNodeSlice(
-            bounded_nodes=bounded_nodes, unit_instances=unit_instances
-        )
+        return BoundedNodeSlice(bounded_nodes=bounded_nodes)

@@ -169,7 +169,11 @@ class InjectorBuilder:
     def add_factory(
         self, binded_type: ProviderName, to: Type, **kwargs: ProviderName
     ) -> None:
-        mapped_kwargs = self._get_providers(kwargs)
+        try:
+            mapped_kwargs = self._get_providers(kwargs)
+        except AttributeError as e:
+            raise Exception(f"Faile to inject {to} as {e}") from e
+
         setattr(
             self._container,
             InjectorBuilder.infer_name(binded_type),

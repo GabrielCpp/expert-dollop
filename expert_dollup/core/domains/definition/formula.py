@@ -2,7 +2,7 @@ from decimal import Decimal
 from uuid import UUID
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
-from typing import List, Optional, Dict, Union
+from typing import List, Optional, Dict, Union, Callable
 from expert_dollup.shared.database_services import (
     QueryFilter,
     queries,
@@ -64,6 +64,22 @@ class Formula(FormulaExpression):
 class StagedFormula(Formula):
     final_ast: dict
 
+    @staticmethod
+    def from_formula(
+        formula: Formula, compile_to_dict: Callable[[str], dict]
+    ) -> "StagedFormula":
+        return StagedFormula(
+            id=formula.id,
+            project_definition_id=formula.project_definition_id,
+            attached_to_type_id=formula.attached_to_type_id,
+            name=formula.name,
+            expression=formula.expression,
+            dependency_graph=formula.dependency_graph,
+            final_ast=compile_to_dict(formula.expression),
+            path=formula.path,
+            creation_date_utc=formula.creation_date_utc,
+        )
+
 
 StagedFormulas = List[StagedFormula]
 
@@ -74,34 +90,12 @@ class StagedFormulasKey:
 
 
 @dataclass
-class Unit:
-    formula_id: Optional[UUID]
-    node_id: UUID
-    path: List[UUID]
-    name: str
-    calculation_details: str
-    result: PrimitiveWithNoneUnion
-
-    @property
-    def report_dict(self) -> dict:
-        return asdict(self)
-
-
-@dataclass
 class UnitElement:
     project_id: UUID
     aggregate_id: UUID
     formula_id: UUID
     node_id: UUID
     datasheet_element_reference: UUID
-
-
-UnitCache = List[Unit]
-
-
-@dataclass
-class UnitCacheKey:
-    project_id: UUID
 
 
 class FormulaFilter(QueryFilter):

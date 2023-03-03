@@ -25,9 +25,9 @@ class ReturnSignal(Exception):
 
 @dataclass
 class Computation:
+    value: PrimitiveWithNoneUnion = None
     details: str = ""
     index: int = 0
-    value: PrimitiveWithNoneUnion = None
 
     def add(self, result, details) -> str:
         self.index = self.index + 1
@@ -341,7 +341,7 @@ def process_call_node(node: dict, scope: ComputationContext) -> Result:
     fn_node = scope.get_property(node, "fn")
     fn, _ = dispatch(fn_node, scope)
 
-    if fn.__name__ == "_compute_function":
+    if getattr(fn, "__name__", None) == "_compute_function":
         result, details_str = fn(scope, args)
     else:
         args = [a.value for a in args]
@@ -351,8 +351,10 @@ def process_call_node(node: dict, scope: ComputationContext) -> Result:
 
 
 def process_subscript_node(node: dict, scope: ComputationContext) -> Result:
-    value, value_details = dispatch(scope.get_property(node, "value"), scope)
-    index, slice_details = dispatch(scope.get_property(node, "slice"), scope)
+    value_node = scope.get_property(node, "value")
+    value, value_details = dispatch(value_node, scope)
+    slice_node = scope.get_property(node, "slice")
+    index, slice_details = dispatch(slice_node, scope)
     result = value[index]
 
     return result, scope.calc.add(result, f"{value_details}[{slice_details}]")
@@ -412,17 +414,34 @@ def process_return_node(node: dict, scope: ComputationContext) -> Result:
     raise ReturnSignal(return_value, details)
 
 
+def proces_comprehension_node(node: dict, scope: ComputationContext) -> Result:
+    iter_node = scope.get_property(node, "iter")
+    iterable, _ = dispatch(iter_node, scope)
+
+    target_node = scope.get_property(node, "target")
+    target, _ = dispatch(target_node, scope)
+
+    def _next_value():
+        for value in iterable:
+            scope.assign(target, Computation(value))
+            yield value
+
+    return _next_value, "<comphension>"
+
+
 def process_generator_exp_node(node: dict, scope: ComputationContext) -> Result:
-    elements = dispatch(node.generators[0].iter, scope)
-    target = dispatch(node.generators[0].target, scope)
+    generators_nodes = scope.get_children(node, "generators")
+    generators = [dispatch(g, scope) for g in generators_nodes]
     values = []
 
-    for element in elements:
-        scope[target] = element
-        value = dispatch(node.elt, scope)
-        values.append(value)
+    elt_node = scope.get_property(node, "elt")
 
-    return values
+    for gen, _ in generators:
+        for _ in gen():
+            local_value, _ = dispatch(elt_node, scope)
+            values.append(local_value)
+
+    return values, ""
 
 
 def process_assign_node(node: dict, scope: ComputationContext) -> Result:
@@ -491,6 +510,7 @@ AST_NODE_PROCESSOR: Dict[str, Callable[[dict, ComputationContext], Result]] = {
     "Attribute": process_attribute_node,
     "Assign": process_assign_node,
     "BoolOp": process_bool_op_node,
+    "comprehension": proces_comprehension_node,
 }
 
 

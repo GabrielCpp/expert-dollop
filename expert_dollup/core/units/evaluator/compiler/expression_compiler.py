@@ -31,3 +31,6 @@ class ExpressionCompiler:
             transformer.visit(ast_transformed)
 
         return self._serializer.flatify(ast_transformed)
+
+    def compile_to_dict(self, expression: str) -> dict:
+        return self.compile(expression).dict()

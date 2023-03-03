@@ -183,6 +183,15 @@ def add_return(s: AstSerializer, node: ast.Return) -> AstNode:
     return AstNode(kind="Return", properties=properties)
 
 
+def add_comprehension(s: AstSerializer, node: ast.comprehension) -> AstNode:
+    return AstNode(
+        kind="comprehension",
+        values={"is_async": make_number(node.is_async)},
+        properties={"iter": s.serialize(node.iter), "target": s.serialize(node.target)},
+        children={"ifs": [s.serialize(element) for element in node.ifs]},
+    )
+
+
 def add_generator_exp(s: AstSerializer, node: ast.GeneratorExp) -> AstNode:
     return AstNode(
         kind="GeneratorExp",
@@ -287,4 +296,5 @@ FULL_AST_SERIALIZER: TypeSerializerMap = {
     ast.BoolOp: add_bool_op,
     ast.Call: add_complex_call,
     ast.Module: add_module,
+    ast.comprehension: add_comprehension,
 }

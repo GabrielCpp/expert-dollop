@@ -1,6 +1,7 @@
 from typing import List, Dict, Set, Sequence
 from uuid import UUID
 from asyncio import gather
+from collections import defaultdict
 from expert_dollup.shared.database_services import log_execution_time_async, StopWatch
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.exceptions import RessourceNotFound
@@ -19,12 +20,14 @@ class FormulaResolver:
         project_node_service: ProjectNodeRepository,
         project_definition_node_service: ProjectDefinitionNodeRepository,
         stage_formulas_storage: ObjectStorage[StagedFormulas, StagedFormulasKey],
+        compiler: ExpressionCompiler,
         logger: LoggerFactory,
     ):
         self.formula_service = formula_service
         self.project_node_service = project_node_service
         self.project_definition_node_service = project_definition_node_service
         self.stage_formulas_storage = stage_formulas_storage
+        self.compiler = compiler
         self.logger = logger.create(__name__)
 
     async def parse_many(
@@ -169,20 +172,9 @@ class FormulaResolver:
 
         return formula
 
-    @staticmethod
-    def stage_formulas(formulas: List[Formula]) -> StagedFormulas:
+    def stage_formulas(self, formulas: List[Formula]) -> StagedFormulas:
         return [
-            StagedFormula(
-                id=formula.id,
-                project_definition_id=formula.project_definition_id,
-                attached_to_type_id=formula.attached_to_type_id,
-                name=formula.name,
-                expression=formula.expression,
-                dependency_graph=formula.dependency_graph,
-                final_ast=serialize_post_processed_expression(formula.expression),
-                path=formula.path,
-                creation_date_utc=formula.creation_date_utc,
-            )
+            StagedFormula.from_formula(formula, self.compiler.compile_to_dict)
             for formula in formulas
         ]
 
@@ -193,7 +185,7 @@ class FormulaResolver:
             FormulaFilter(project_definition_id=project_definition_id)
         )
 
-        return FormulaResolver.stage_formulas(formulas)
+        return self.stage_formulas(formulas)
 
     async def refresh_staged_formulas_cache(
         self, project_definition_id: UUID
@@ -235,10 +227,15 @@ class FormulaResolver:
 
         for node in nodes:
             injector.add(
-                Unit(node_id=node.id, path=node.path, name=node.name, value=node.value)
+                Unit(
+                    node_id=node.id,
+                    path=node.path,
+                    name=node.type_name,
+                    value=node.value,
+                )
             )
 
-        formula_instances = self.build_with_fields(staged_formulas, nodes)
+        formula_instances = self.build_with_fields(staged_formulas, nodes, injector)
         injector.add_all(formula_instances)
 
         with StopWatch(self.logger, "Computing formulas"):
@@ -247,7 +244,10 @@ class FormulaResolver:
         return injector
 
     def build_with_fields(
-        self, formulas: Sequence[Formula], nodes: List[ProjectNode]
+        self,
+        formulas: Sequence[Formula],
+        nodes: List[ProjectNode],
+        injector=UnitInjector,
     ) -> List[Unit]:
         if len(nodes) == 0 or len(formulas) == 0:
             return []

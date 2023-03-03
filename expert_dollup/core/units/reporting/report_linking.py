@@ -6,14 +6,14 @@ from collections import defaultdict
 from dataclasses import dataclass
 from asyncio import gather
 from expert_dollup.shared.database_services import Repository
-from ..formula_resolver import FormulaResolver, UnitInjector
-from .report_row_cache import ReportRowCache
 from expert_dollup.core.exceptions import ReportGenerationError
 from expert_dollup.core.units.evaluator import FlatAstEvaluator, AstRuntimeError
 from expert_dollup.core.domains import *
 from expert_dollup.shared.database_services.time_it import log_execution_time_async
 from expert_dollup.shared.starlette_injection import Clock, LoggerFactory
-
+from ..formula_resolver import FormulaResolver, UnitInjector
+from .report_row_cache import ReportRowCache
+from ..evaluator import Unit
 
 FORMULA_BUCKET_NAME = "formula"
 COLUMNS_BUCKET_NAME = "columns"
@@ -33,6 +33,9 @@ def group_by_key(elements: Iterable, key: Callable[[Any], None]) -> dict:
         element_by_key[key(element)].append(element)
 
     return element_by_key
+
+
+UnitCache = List[Unit]
 
 
 @dataclass

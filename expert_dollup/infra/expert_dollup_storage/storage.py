@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from uuid import UUID
 from typing import Optional, List, Dict, Union
 from datetime import datetime
-from .expert_dollup_db import (
+from ..expert_dollup_db import (
     PrimitiveUnionDao,
     BoolFieldValueDao,
     IntFieldValueDao,

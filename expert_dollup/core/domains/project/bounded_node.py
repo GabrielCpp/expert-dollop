@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import List
 from .project_node import ProjectNode
-from ..definition.formula import Unit
 from ..definition.project_definition_node import ProjectDefinitionNode
 
 

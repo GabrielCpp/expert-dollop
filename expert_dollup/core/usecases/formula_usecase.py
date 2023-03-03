@@ -1,9 +1,19 @@
 from typing import List
 from uuid import UUID
+from dataclasses import dataclass
 from expert_dollup.core.domains import *
 from expert_dollup.core.object_storage import ObjectStorage
 from expert_dollup.core.units import FormulaResolver
+from expert_dollup.core.units.evaluator import Unit
 from expert_dollup.shared.database_services import Repository
+
+
+@dataclass
+class UnitCacheKey:
+    proejct_id: str
+
+
+UnitCache = List[Unit]
 
 
 class FormulaUseCase:

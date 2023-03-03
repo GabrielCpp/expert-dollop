@@ -173,5 +173,23 @@ def test_compile_complex_expression_with_inner_function():
     fixture = ComplexExpressionWithInnerFunction()
 
     actual = compiler.compile(fixture.expression)
-    print(actual)
+
+    assert actual == fixture.flat_ast
+
+
+def test_compile_complex_expression_with_report_get_room_flor():
+    compiler = ExpressionCompiler.create_complex()
+    fixture = ComplexExpressionWithReportingIfElseSwitch()
+
+    actual = compiler.compile(fixture.expression)
+
+    assert actual == fixture.flat_ast
+
+
+def test_compile_complex_expression_with_sum_generator():
+    compiler = ExpressionCompiler.create_complex()
+    fixture = ComplexExpressionWithSumGenerator()
+
+    actual = compiler.compile(fixture.expression)
+
     assert actual == fixture.flat_ast
