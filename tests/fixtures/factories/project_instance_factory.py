@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 from decimal import Decimal
 from expert_dollup.core.domains import *
+from expert_dollup.core.units.evaluator import Unit
 from .domains import *
 from .helpers import make_uuid
 from ..fake_db_helpers import FakeDb

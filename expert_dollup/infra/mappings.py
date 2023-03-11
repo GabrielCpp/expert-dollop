@@ -10,9 +10,9 @@ from expert_dollup.shared.automapping import (
 from expert_dollup.core.utils import *
 from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.infra.ressource_auth_db import *
-from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_storage import *
-
+from expert_dollup.core.domains import *
+from expert_dollup.core.units.evaluator import Unit
 
 from datetime import datetime
 
