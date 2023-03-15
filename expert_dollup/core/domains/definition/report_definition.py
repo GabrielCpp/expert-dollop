@@ -6,13 +6,12 @@ from expert_dollup.shared.database_services import QueryFilter
 
 ReportDefinitionColumnDict = Dict[str, Union[str, Decimal, bool, int, UUID, None]]
 ReportRowDict = Dict[str, ReportDefinitionColumnDict]
-ReportRowsCache = List[ReportRowDict]
 
 
 @dataclass
-class ReportRowKey:
-    project_definition_id: UUID
-    report_definition_id: UUID
+class Expression:
+    name: str
+    flat_ast: Optional[dict] = None
 
 
 @dataclass
@@ -27,7 +26,7 @@ class AttributeBucket:
 @dataclass
 class ReportComputation:
     name: str
-    expression: str
+    expression: Expression
     label: Optional[AttributeBucket] = None
     unit: Union[str, AttributeBucket, None] = None
     is_visible: bool = True
@@ -54,7 +53,7 @@ class ReportStructure:
     selection: Selection
     columns: List[ReportComputation]
     group_by: List[AttributeBucket]
-    having: str
+    having: Expression
     order_by: List[AttributeBucket]
     stage_summary: ReportComputation
     report_summary: List[ReportComputation]
@@ -67,6 +66,20 @@ class ReportDefinition:
     name: str
     structure: ReportStructure
     distributable: bool
+
+
+@dataclass
+class CompiledReportKey:
+    id: UUID
+    project_definition_id: UUID
+
+
+@dataclass
+class CompiledReport:
+    key: CompiledReportKey
+    name: str
+    structure: ReportStructure
+    rows: List[ReportRowDict]
 
 
 class ReportDefinitionFilter(QueryFilter):

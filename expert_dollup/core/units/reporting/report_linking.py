@@ -13,7 +13,7 @@ from expert_dollup.shared.database_services.time_it import log_execution_time_as
 from expert_dollup.shared.starlette_injection import Clock, LoggerFactory
 from ..formula_resolver import FormulaResolver, UnitInjector
 from .report_row_cache import ReportRowCache
-from ..evaluator import Unit
+from ..evaluator import Unit, Computation
 
 FORMULA_BUCKET_NAME = "formula"
 COLUMNS_BUCKET_NAME = "columns"
@@ -42,7 +42,7 @@ UnitCache = List[Unit]
 class LinkingData:
     report_definition: ReportDefinition
     project_details: ProjectDetails
-    unit_instances: UnitCache
+    units: UnitCache
     injector: UnitInjector
     datasheet_elements_by_id: Dict[UUID, DatasheetElement]
 
@@ -52,55 +52,41 @@ class ReportEvaluationContext:
         self.evaluator = evaluator
         self.injector = injector
 
-    def evaluate_row(self, expression, row, rows):
-        try:
-            return self.evaluator.evaluate(
-                expression,
-                {
-                    "row": row,
-                    "rows": rows,
-                    "round_number": round_number,
-                    "sum": sum,
-                    "injector": self.injector,
-                },
-            )
-        except AstRuntimeError as e:
-            raise ReportGenerationError(
-                f"Error while evaluating expression",
-                expression=expression,
-                row=row,
-                **e.props,
-            ) from e
+    def evaluate_row(self, expression: Expression, row, rows):
+        return self.evaluate(
+            expression,
+            {
+                "row": row,
+                "rows": rows,
+                "round_number": round_number,
+                "sum": sum,
+                "injector": self.injector,
+            },
+        )
 
-    def evaluate_columns(self, expression, columns):
-        try:
-            return self.evaluator.evaluate(
-                expression,
-                {
-                    "columns": columns,
-                    "round_number": round_number,
-                    "sum": sum,
-                    "injector": self.injector,
-                },
-            )
-        except AstRuntimeError as e:
-            raise ReportGenerationError(
-                f"Error while evaluating expression",
-                expression=expression,
-                columns=columns,
-                **e.props,
-            ) from e
+    def evaluate_columns(self, expression: Expression, columns):
+        return self.evaluate(
+            expression,
+            {
+                "columns": columns,
+                "round_number": round_number,
+                "sum": sum,
+                "injector": self.injector,
+            },
+        )
 
-    def evaluate(self, expression, scope):
+    def evaluate(self, expression: Expression, scope: dict):
         try:
-            return self.evaluator.evaluate(
-                expression,
-                scope,
+            return self.evaluator.compute(
+                expression.flat_ast,
+                {key: Computation(value) for key, value in scope.items()},
             )
         except AstRuntimeError as e:
             raise ReportGenerationError(
                 f"Error while evaluating expression",
                 expression=expression,
+                scope=scope,
+                original_message=str(e),
                 **e.props,
             ) from e
 
@@ -161,15 +147,15 @@ class JoinFormulaUnits(JoinStep):
     def __init__(
         self,
         selection: Selection,
-        unit_instances: UnitCache,
+        units: UnitCache,
     ):
         self.element_attribute = selection.datasheet_attribute
         self.formula_attribute = selection.formula_attribute
-        self.unit_instances_by_def_id: Dict[UUID, UnitCache] = group_by_key(
+        self.units_by_def_id: Dict[UUID, UnitCache] = group_by_key(
             (
                 unit_instance
-                for unit_instance in unit_instances
-                if not unit_instance.formula_id is None
+                for unit_instance in units
+                if not unit_instance.computable is None
                 and (
                     not isinstance(unit_instance.result, Decimal)
                     or unit_instance.result > 0
@@ -186,12 +172,12 @@ class JoinFormulaUnits(JoinStep):
         formula_id = self.formula_attribute.get(row)
         assert isinstance(formula_id, UUID)
 
-        if not formula_id in self.unit_instances_by_def_id:
+        if not formula_id in self.units_by_def_id:
             return []
 
         return [
             {**row, FORMULA_BUCKET_NAME: formula_instance.report_dict}
-            for formula_instance in self.unit_instances_by_def_id[formula_id]
+            for formula_instance in self.units_by_def_id[formula_id]
         ]
 
 
@@ -403,7 +389,6 @@ class ReportBuilder:
         scope = {
             "stages": stages,
             "round_number": round_number,
-            "sum": sum,
             "injector": self.linking_data.injector,
             "metas": metas,
         }
@@ -464,7 +449,7 @@ class ReportLinking:
         selection = report_definition.structure.selection
         structure = report_definition.structure
         report_generation = ReportGeneration(
-            join_steps=[JoinFormulaUnits(selection, linking_data.unit_instances)],
+            join_steps=[JoinFormulaUnits(selection, linking_data.units)],
             mutate_steps=[
                 DatasheetElementInstanceAssignation(
                     selection, linking_data.datasheet_elements_by_id
@@ -489,7 +474,7 @@ class ReportLinking:
         self,
         report_definition: ReportDefinition,
         project_details: ProjectDetails,
-    ) -> Tuple[ReportRowsCache, LinkingData]:
+    ) -> Tuple[CompiledReport, LinkingData]:
 
         rows = await self.report_row_cache_builder.refresh_cache(report_definition)
         injector = await self.formula_resolver.compute_all_project_formula(
@@ -506,7 +491,7 @@ class ReportLinking:
         return rows, LinkingData(
             report_definition=report_definition,
             project_details=project_details,
-            unit_instances=injector.unit_instances,
+            units=injector.units,
             injector=injector,
             datasheet_elements_by_id=datasheet_elements_by_id,
         )

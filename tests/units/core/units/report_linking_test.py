@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from dataclasses import dataclass
 from decimal import Decimal
 from uuid import UUID
-from expert_dollup.core.units.evaluator import UnitInjector
+from expert_dollup.core.units.evaluator import UnitInjector, FlatAstEvaluator
 from expert_dollup.shared.starlette_injection.clock_provider import StaticClock
 from expert_dollup.shared.database_services import Repository
 from tests.fixtures.factories.datasheet_factory import CustomDatasheetInstancePackage
@@ -207,7 +207,7 @@ async def test_given_row_cache_should_produce_correct_report(
         lambda x: x.compute_all_project_formula(
             project_fixture.project.id, report_definition.project_definition_id
         ),
-        returns_async=UnitInjector().add_all(project_fixture.unit_instances),
+        returns_async=UnitInjector().add_all(project_fixture.units),
     )
 
     datasheet_element_service.setup(
@@ -236,5 +236,6 @@ async def test_given_row_cache_should_produce_correct_report(
     report = await report_linking.link_report(
         report_definition, project_fixture.project
     )
-
+    dump_to_file(report)
+    dump_to_file(expected_report)
     assert report == expected_report

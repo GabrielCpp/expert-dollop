@@ -209,6 +209,14 @@ def create_connection(connection_string: str, **kwargs) -> DbConnection:
         except ImportError:
             pass
 
+        try:
+            from .database_adapters.bucket_adapter import BucketConnection
+
+            DbConnection._REGISTRY["local"] = BucketConnection
+            DbConnection._REGISTRY["gcs"] = BucketConnection
+        except ImportError:
+            pass
+
     build_connection = DbConnection._REGISTRY.get(scheme)
 
     if build_connection is None:

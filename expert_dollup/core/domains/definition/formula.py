@@ -81,12 +81,10 @@ class StagedFormula(Formula):
         )
 
 
-StagedFormulas = List[StagedFormula]
-
-
 @dataclass
-class StagedFormulasKey:
-    project_definition_id: UUID
+class FormulaPack:
+    key: UUID
+    formulas: List[StagedFormula]
 
 
 @dataclass

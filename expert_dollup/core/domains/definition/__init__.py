@@ -14,8 +14,7 @@ from .formula import (
     FormulaDependencyGraph,
     FormulaDependency,
     StagedFormula,
-    StagedFormulas,
-    StagedFormulasKey,
+    FormulaPack,
 )
 from .project_definition_node import (
     ProjectDefinitionNode,
@@ -45,12 +44,13 @@ from .report_definition import (
     AttributeBucket,
     ReportJoin,
     ReportRowDict,
-    ReportRowsCache,
-    ReportRowKey,
+    CompiledReport,
+    CompiledReportKey,
     ReportDefinitionColumnDict,
     ReportDefinitionFilter,
     ReportComputation,
     Selection,
+    Expression,
 )
 from .project_definition_tree import (
     ProjectDefinitionNodeTree,

@@ -1,19 +1,14 @@
 import ast
-from uuid import UUID
 from ast import AST
-from typing import Callable, Dict, Union, List, Any, Tuple, Protocol
+from typing import Callable, Dict, Union, List, Any, Tuple
 from decimal import Decimal
-from dataclasses import dataclass
-from typing_extensions import TypeAlias
 from .exceptions import AstRuntimeError
+from .computation import Computation
+from .computation_context import ComputationContext, LexicalScope
+from .types import AnyCallable
+from .builtin_functions import BUILD_INS
 
-PrimitiveWithNoneUnion = Union[bool, int, str, Decimal, None]
 Result = Tuple[Any, str]
-
-
-class AnyCallable(Protocol):
-    def __call__(self, *args, **kwargs) -> Any:
-        ...
 
 
 class ReturnSignal(Exception):
@@ -23,113 +18,11 @@ class ReturnSignal(Exception):
         self.details = details
 
 
-@dataclass
-class Computation:
-    value: PrimitiveWithNoneUnion = None
-    details: str = ""
-    index: int = 0
-
-    def add(self, result, details) -> str:
-        self.index = self.index + 1
-        temp_name = f"temp{self.index}({result})"
-        self.details = f"{self.details}\n{temp_name} = {details}"
-
-        return temp_name
-
-    def add_final(self, result, details) -> None:
-        self.index = self.index + 1
-        temp_name = f"\n<final_result, {result}>"
-        self.details = f"{self.details}\n{temp_name} = {details}"
-
-
-LexicalScope: TypeAlias = Dict[str, Computation]
-
-
 def div_or_0(left, right) -> Decimal:
     try:
         return Decimal(left / right)
     except ZeroDivisionError:
         return 0
-
-
-@dataclass
-class ComputationContext:
-    global_functions: Dict[str, AnyCallable]
-    lexical_scopes: List[LexicalScope]
-    calc: Computation
-    nodes: List[dict]
-
-    def append_scope(self, new_vars: dict) -> LexicalScope:
-        if len(self.lexical_scopes) == 0:
-            raise AstRuntimeError("No lexical scope in the context")
-
-        lexical_scope = self.lexical_scopes[-1]
-        new_lexical_scope = dict(lexical_scope)
-        new_lexical_scope.update(new_vars)
-        self.lexical_scopes.append(new_lexical_scope)
-
-        return new_lexical_scope
-
-    def assign(self, target, value) -> None:
-        if len(self.lexical_scopes) == 0:
-            raise AstRuntimeError("No lexical scope in the context")
-
-        lexical_scope = self.lexical_scopes[-1]
-        lexical_scope[target] = value
-
-    def pop_scope(self) -> None:
-        self.lexical_scopes.pop()
-
-    def is_kind(self, node: dict, kind: str) -> bool:
-        return node["kind"] == kind
-
-    def get_function(self, name: str) -> AnyCallable:
-        return self.global_functions[name]
-
-    def has_property(self, node: dict, name: str) -> bool:
-        return name in node["properties"]
-
-    def get_property(self, node: dict, name: str) -> dict:
-        return self.nodes[node["properties"][name]]
-
-    def has_children(self, node, name) -> bool:
-        return name in node["children"]
-
-    def get_children(self, node, name) -> list:
-        return [self.nodes[c] for c in node["children"][name]]
-
-    def get_name(self, name: str) -> Computation:
-        value = self.global_functions.get(name, None)
-
-        if not value is None:
-            return Computation(value=value)
-
-        if len(self.lexical_scopes) == 0:
-            raise AstRuntimeError("No lexical scope in the context")
-
-        lexical_scope = self.lexical_scopes[-1]
-
-        if not name in lexical_scope:
-            raise AstRuntimeError(
-                "Lexical scope is missing a name",
-                names=list(lexical_scope.keys()),
-                mssing_name=name,
-            )
-
-        return lexical_scope[name]
-
-
-def coerce_decimal(value: PrimitiveWithNoneUnion) -> Decimal:
-    if value is None:
-        return Decimal(0)
-
-    if isinstance(value, bool):
-        return Decimal(int(value))
-
-    if isinstance(value, (int, str)):
-        return Decimal(value)
-
-    return value
 
 
 def process_module_node(node: dict, scope: ComputationContext) -> Result:
@@ -334,7 +227,7 @@ def process_call_node(node: dict, scope: ComputationContext) -> Result:
         if fn is None:
             raise AstRuntimeError(f"Unknown function name", name=fn_id)
 
-        result = fn(scope, args)
+        result = fn(*args)
         details_str = f"{fn_id}({details_str})"
         return result, scope.calc.add(result, details_str)
 
@@ -519,7 +412,7 @@ def dispatch(node: dict, scope: ComputationContext) -> Result:
 
 
 class FlatAstEvaluator:
-    def __init__(self, global_functions: Dict[str, AnyCallable] = {}):
+    def __init__(self, global_functions: Dict[str, AnyCallable] = BUILD_INS):
         self.global_functions = global_functions
 
     def compute(self, flat_tree: dict, lexical_scope: LexicalScope) -> Result:
@@ -528,10 +421,10 @@ class FlatAstEvaluator:
         root_index = flat_tree["root_index"]
         node = nodes[root_index]
         scope = ComputationContext(
+            global_functions=self.global_functions,
             lexical_scopes=[lexical_scope],
             calc=calc,
             nodes=nodes,
-            global_functions=self.global_functions,
         )
 
         result, details = dispatch(node, scope)

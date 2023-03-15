@@ -2,9 +2,9 @@ import expert_dollup.core.usecases as usecases
 import expert_dollup.core.units as units
 import expert_dollup.core.builders as builders
 from expert_dollup.shared.starlette_injection import *
+from expert_dollup.shared.database_services import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.repositories import *
-from expert_dollup.core.object_storage import *
 from expert_dollup.core.units.evaluator import *
 
 
@@ -16,7 +16,7 @@ def bind_core_modules(builder: InjectorBuilder) -> None:
         formula_service=FormulaRepository,
         project_node_service=ProjectNodeRepository,
         project_definition_node_service=ProjectDefinitionNodeRepository,
-        stage_formulas_storage=ObjectStorage[StagedFormulas, StagedFormulasKey],
+        stage_formulas_storage=Repository[FormulaPack],
         compiler=InjectorBuilder.forward(ExpressionCompiler.create_simple()),
         logger=LoggerFactory,
     )

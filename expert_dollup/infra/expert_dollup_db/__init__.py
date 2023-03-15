@@ -4,6 +4,7 @@ from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
 from pydantic import BaseModel, Field, StrictStr, StrictFloat, StrictBool, StrictInt
+from expert_dollup.infra.daos import *
 from expert_dollup.shared.database_services import (
     DbConnection,
     DaoMappingConfig,
@@ -40,47 +41,6 @@ class ExpertDollupDatabase(DbConnection):
     pass
 
 
-class IntFieldValueDao(BaseModel):
-    integer: int
-
-
-class DecimalFieldValueDao(BaseModel):
-    numeric: Decimal
-
-
-class StringFieldValueDao(BaseModel):
-    text: str
-
-
-class BoolFieldValueDao(BaseModel):
-    enabled: bool
-
-
-class ReferenceIdDao(BaseModel):
-    uuid: UUID
-
-
-class ReferenceIdDao(BaseModel):
-    uuid: UUID
-
-
-PrimitiveWithNoneUnionDao: TypeAlias = Union[
-    BoolFieldValueDao, IntFieldValueDao, StringFieldValueDao, DecimalFieldValueDao, None
-]
-
-PrimitiveUnionDao: TypeAlias = Union[
-    BoolFieldValueDao, IntFieldValueDao, StringFieldValueDao, DecimalFieldValueDao
-]
-
-PrimitiveWithReferenceDaoUnion = Union[
-    BoolFieldValueDao,
-    IntFieldValueDao,
-    StringFieldValueDao,
-    DecimalFieldValueDao,
-    ReferenceIdDao,
-]
-
-
 class ProjectDefinitionDao(BaseModel):
     class Meta:
         pk = "id"
@@ -91,16 +51,6 @@ class ProjectDefinitionDao(BaseModel):
     id: UUID
     name: str = Field(max_length=64)
     creation_date_utc: datetime
-
-
-class FormulaDependencyDao(BaseModel):
-    target_type_id: UUID
-    name: str = Field(max_length=64)
-
-
-class FormulaDependencyGraphDao(BaseModel):
-    formulas: List[FormulaDependencyDao]
-    nodes: List[FormulaDependencyDao]
 
 
 class FormulaConfigDao(BaseModel):
@@ -410,13 +360,6 @@ class MeasureUnitDao(BaseModel):
         title = "unit"
 
     id: str = Field(max_length=16)
-
-
-class ComputedValueDao(BaseModel):
-    label: str
-    value: PrimitiveUnionDao
-    unit: Optional[str]
-    is_visible: bool
 
 
 class SuppliedItemDao(BaseModel):

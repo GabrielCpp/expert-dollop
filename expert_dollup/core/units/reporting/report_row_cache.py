@@ -8,7 +8,6 @@ from hashlib import sha256
 from expert_dollup.shared.database_services import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.exceptions import ReportGenerationError, RessourceNotFound
-from expert_dollup.core.object_storage import ObjectStorage
 
 
 @dataclass
@@ -26,24 +25,31 @@ class ReportRowCache:
     def __init__(
         self,
         db_context: DatabaseContext,
-        report_def_row_cache: ObjectStorage[ReportRowsCache, ReportRowKey],
+        report_def_row_cache: Repository[CompiledReport],
     ):
         self.db_context = db_context
         self.report_def_row_cache = report_def_row_cache
 
     async def refresh_cache(
         self, report_definition: ReportDefinition
-    ) -> ReportRowsCache:
-        key = ReportRowKey(
+    ) -> CompiledReport:
+        key = CompiledReportKey(
             project_definition_id=report_definition.project_definition_id,
             report_definition_id=report_definition.id,
         )
 
         try:
-            return await self.report_def_row_cache.load(key)
+            return await self.report_def_row_cache.find(key)
         except RessourceNotFound:
             rows = await self.build_cache(report_definition)
-            await self.report_def_row_cache.save(key, rows)
+            await self.report_def_row_cache.insert(
+                CompiledReport(
+                    key=key,
+                    name=report_definition.name,
+                    structure=report_definition.structure,
+                    rows=rows,
+                )
+            )
             return rows
 
     async def build_cache(
@@ -117,11 +123,11 @@ class ReportRowCache:
 
     async def _build_from_datasheet_elements(
         self, cache: ReportCache
-    ) -> ReportRowsCache:
+    ) -> CompiledReport:
         selection_alias = cache.report_definition.structure.datasheet_selection_alias
         aggregation_id = cache.report_definition.from_aggregate_collection_id
         aggregation = cache.aggregation_by_id[aggregation_id]
-        report_buckets: ReportRowsCache = [
+        report_buckets: CompiledReport = [
             {selection_alias: aggregate.report_dict}
             for aggregate in aggregation.aggregates
         ]
@@ -197,7 +203,7 @@ class ReportRowCache:
             )
 
         labels = cache.aggregation_by_id[joined_collection.id]
-        new_buckets: ReportRowsCache = []
+        new_buckets: CompiledReport = []
         attributes_to_label = defaultdict(list)
         seen = set()
 

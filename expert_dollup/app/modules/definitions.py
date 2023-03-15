@@ -1,8 +1,10 @@
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.shared.database_services import *
 from expert_dollup.core.domains import *
+from expert_dollup.core.units.evaluator import Unit
 from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.infra.ressource_auth_db import *
+from expert_dollup.infra.expert_dollup_storage import *
 
 expert_dollup_metadatas = [
     RepositoryMetadata(dao=AggregateCollectionDao, domain=AggregateCollection),
@@ -28,6 +30,10 @@ auth_metadatas = [
     RepositoryMetadata(dao=OrganizationDao, domain=Organization),
     RepositoryMetadata(dao=RessourceDao, domain=Ressource),
     RepositoryMetadata(dao=UserDao, domain=User),
+]
+storage_metadatas = [
+    RepositoryMetadata(dao=FormulaPackDao, domain=FormulaPack),
+    RepositoryMetadata(dao=CompiledReportDao, domain=CompiledReport),
 ]
 paginations = [
     PaginationDetails(

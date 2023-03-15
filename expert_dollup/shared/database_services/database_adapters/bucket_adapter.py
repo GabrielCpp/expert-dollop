@@ -1,5 +1,17 @@
 from dataclasses import dataclass
-from typing import Callable
+from pydantic import BaseModel
+from typing import (
+    Callable,
+    List,
+    Dict,
+    Awaitable,
+    TypeVar,
+    Type,
+    Optional,
+    Any,
+    get_args,
+)
+from expert_dollup.shared.automapping import Mapper
 from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 from ..collection_element_mapping import CollectionElementMapping
@@ -11,6 +23,9 @@ from ..adapter_interfaces import (
     RepositoryMetadata,
 )
 from ..storage_connectors import StorageClient
+
+Domain = TypeVar("Domain")
+Id = TypeVar("Id")
 
 
 @dataclass
@@ -24,7 +39,7 @@ class BucketConnection(DbConnection):
     def __init__(self, connection_string: str, **kwargs):
         schema, bucket = connection_string.split("://", 2)
 
-        if schema == "file":
+        if schema == "local":
             from ..storage_connectors import LocalStorage
 
             self._client = LocalStorage(bucket)

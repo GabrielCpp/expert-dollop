@@ -704,30 +704,6 @@ def map_staged_formula_from_dao(src: StagedFormulaDao, mapper: Mapper) -> Staged
     )
 
 
-def map_formula_instance_to_dao(src: Unit, mapper: Mapper) -> UnitDao:
-    return UnitDao(
-        formula_id=src.formula_id,
-        node_id=src.node_id,
-        node_path=src.path,
-        name=src.name,
-        calculation_details=src.calculation_details,
-        result=mapper.map(src.result, primitive_with_none_union_dao_mappings.to_origin),
-    )
-
-
-def map_formula_instance_from_dao(src: UnitDao, mapper: Mapper) -> Unit:
-    return Unit(
-        formula_id=src.formula_id,
-        node_id=src.node_id,
-        path=src.node_path,
-        name=src.name,
-        calculation_details=src.calculation_details,
-        result=mapper.map(
-            src.result, primitive_with_none_union_dao_mappings.from_origin
-        ),
-    )
-
-
 def map_aggregate_collection_to_dao(
     src: AggregateCollection, mapper: Mapper
 ) -> AggregateCollectionDao:

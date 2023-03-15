@@ -66,9 +66,9 @@ def mock_class(class_type, side_effects: dict = {}):
             methods[method_name] = MagicMock(side_effect=side_effect)
 
     if isabstract(class_type):
-        instance = type(class_type.__name__, (class_type,), methods)()
+        instance = type(str(class_type), (class_type,), methods)()
     else:
-        instance = type(class_type.__name__, (), methods)()
+        instance = type(str(class_type), (), methods)()
 
     for method_name, mock in repatchs.items():
         setattr(type(instance), method_name, mock)

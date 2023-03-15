@@ -1,8 +1,34 @@
 import factory
 from factory import SubFactory, fuzzy
-from expert_dollup.core.domains import *
+from factory.declarations import BaseDeclaration
 from datetime import timezone
 from decimal import Decimal
+from typing import *
+from expert_dollup.core.domains import *
+from expert_dollup.core.units.evaluator import ExpressionCompiler
+
+
+class FlatAstAttribute(BaseDeclaration):
+    """Specific BaseDeclaration computed using a lambda.
+
+    Attributes:
+        function (function): a function, expecting the current LazyStub and
+            returning the computed value.
+    """
+
+    COMPILERS = {
+        "simple": ExpressionCompiler.create_simple(),
+        "complex": ExpressionCompiler.create_complex(),
+    }
+
+    def __init__(self, function, compiler_name):
+        super().__init__()
+        self.function = function
+        self.compiler_name = compiler_name
+
+    def evaluate(self, instance, step, extra):
+        compiler = FlatAstAttribute.COMPILERS[self.compiler_name]
+        return compiler.compile(self.function(instance)).dict()
 
 
 class ProjectDefinitionFactory(factory.Factory):
@@ -32,20 +58,36 @@ class ProjectDefinitionNodeFactory(factory.Factory):
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
-class ReportRowKeyFactory(factory.Factory):
+class CompiledReportKeyFactory(factory.Factory):
     class Meta:
-        model = ReportRowKey
+        model = CompiledReportKey
 
+    id = factory.Faker("pyuuid4")
     project_definition_id = factory.Faker("pyuuid4")
-    report_definition_id = factory.Faker("pyuuid4")
+
+
+class SimpleExpressionFactory(factory.Factory):
+    class Meta:
+        model = Expression
+
+    name: str
+    flat_ast: Optional[dict] = FlatAstAttribute(lambda o: o.name, "simple")
+
+
+class ComplexExpressionFactory(factory.Factory):
+    class Meta:
+        model = Expression
+
+    name: str
+    flat_ast: Optional[dict] = FlatAstAttribute(lambda o: o.name, "complex")
 
 
 class ReportComputationFactory(factory.Factory):
     class Meta:
         model = ReportComputation
 
-    name = factory.Sequence(lambda n: f"property_{n}")
-    expression = factory.Sequence(lambda n: f"property_{n}*2+1")
+    name = factory.Sequence(lambda n: f"computation_{n}")
+    expression = SimpleExpressionFactory(name="property*2+1")
     label = None
     unit = "unit"
     is_visible = True
@@ -103,28 +145,34 @@ class ReportStructureFactory(factory.Factory):
             factory.SubFactory(
                 ReportComputationFactory,
                 name="stage",
-                expression="row['stage']['name']",
+                expression=ComplexExpressionFactory(name="row['stage']['name']"),
             ),
             factory.SubFactory(
                 ReportComputationFactory,
                 name="quantity",
-                expression="row['formula']['result']",
+                expression=ComplexExpressionFactory(name="row['formula']['result']"),
             ),
             factory.SubFactory(
                 ReportComputationFactory,
                 name="product_name",
-                expression="row['datasheet_element']['name']",
+                expression=ComplexExpressionFactory(
+                    name="row['datasheet_element']['name']"
+                ),
             ),
             factory.SubFactory(
                 ReportComputationFactory,
                 name="cost_per_unit",
-                expression="row['datasheet_element']['price']",
+                expression=ComplexExpressionFactory(
+                    name="row['datasheet_element']['price']"
+                ),
                 unit="$",
             ),
             factory.SubFactory(
                 ReportComputationFactory,
                 name="cost",
-                expression="row['columns']['quantity'] * row['columns']['cost_per_unit']",
+                expression=ComplexExpressionFactory(
+                    name="row['columns']['quantity'] * row['columns']['cost_per_unit']"
+                ),
                 unit="$",
             ),
         ]
@@ -156,7 +204,9 @@ class ReportStructureFactory(factory.Factory):
     stage_summary = factory.SubFactory(
         ReportComputationFactory,
         name="total",
-        expression="sum(row['columns']['cost'] for row in rows)",
+        expression=ComplexExpressionFactory(
+            name="sum(row['columns']['cost'] for row in rows)"
+        ),
         label=factory.SubFactory(
             AttributeBucketFactory,
             bucket_name="columns",
@@ -168,7 +218,9 @@ class ReportStructureFactory(factory.Factory):
             factory.SubFactory(
                 ReportComputationFactory,
                 name="subtotal",
-                expression="sum(stage.summary.value for stage in stages)",
+                expression=ComplexExpressionFactory(
+                    name="sum(stage.summary.value for stage in stages)"
+                ),
                 unit="$",
             ),
         ]

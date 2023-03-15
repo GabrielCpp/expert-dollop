@@ -1,4 +1,15 @@
-from typing import Callable, Iterable, List, TypeVar, Optional, Dict, Type, Set, Any
+from typing import (
+    Callable,
+    Iterable,
+    List,
+    TypeVar,
+    Optional,
+    Dict,
+    Type,
+    Set,
+    Any,
+    get_args,
+)
 from dataclasses import dataclass
 from collections import defaultdict
 from os import environ

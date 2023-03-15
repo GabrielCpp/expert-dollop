@@ -4,8 +4,8 @@ from uuid import UUID
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import cached_property
-from abc import ABC, abstractmethod
-from .flat_ast_evaluator import Computation, PrimitiveWithNoneUnion, FlatAstEvaluator
+from .computation import Computation, PrimitiveWithNoneUnion
+from .flat_ast_evaluator import FlatAstEvaluator
 
 
 @dataclass
@@ -15,10 +15,11 @@ class UnitRef:
     name: str
 
 
-class ValueComputationMethod(ABC):
-    @abstractmethod
+class ValueComputationMethod(Protocol):
+    computed: bool
+
     def update(self, unit: "Unit") -> PrimitiveWithNoneUnion:
-        pass
+        ...
 
 
 @dataclass
@@ -32,8 +33,14 @@ class Unit:
     computable: Optional[ValueComputationMethod] = None
 
     def update_computation(self) -> None:
-        if self._computed is False and not computable is None:
+        if not self.computable is None:
             self.computable.update(self)
+
+    def was_computed(self) -> bool:
+        if self.computable is None:
+            return True
+
+        return self.computable.computed
 
     @property
     def report_dict(self) -> dict:
@@ -48,11 +55,7 @@ class UnitInjector:
 
     def precompute(self) -> None:
         for unit in self.units:
-            unit.computed
-
-    @property
-    def unit_instances(self) -> List[Unit]:
-        return [unit.computed for unit in self.units]
+            unit.update_computation()
 
     def add(self, unit: Unit) -> None:
         for item in unit.path:
@@ -116,18 +119,36 @@ class UnitInjector:
 
 
 class ComputeFlatAst(ValueComputationMethod):
+    @staticmethod
+    def coerce_decimal(value: PrimitiveWithNoneUnion) -> Decimal:
+        if value is None:
+            return Decimal(0)
+
+        if isinstance(value, bool):
+            return Decimal(int(value))
+
+        if isinstance(value, (int, str)):
+            return Decimal(value)
+
+        return value
+
     def __init__(self, flat_ast: dict, unit_injector: UnitInjector):
         self.flat_ast = flat_ast
         self.unit_injector = unit_injector
         self.evaluator = FlatAstEvaluator()
+        self.computed = False
 
     def update(self, unit: Unit) -> None:
+        if self.computed is True:
+            return
+
         lexical_scope = self.build_lexical_scope(unit)
         result, calculation_details = self.evaluator.compute(
             self.flat_ast, lexical_scope
         )
         unit.value = result
         unit.calculation_details = calculation_details
+        self.computed = True
 
     def build_lexical_scope(self, unit: Unit) -> Dict[str, Computation]:
         return {
@@ -135,15 +156,22 @@ class ComputeFlatAst(ValueComputationMethod):
             for dependency in unit.dependencies
         }
 
-    def build_value(self, unit: Unit, dependency: str) -> Computation:
-        values = self.unit_injector.get_unit(self.node_id, self.path, name)
+    def build_value(self, unit: Unit, name: str) -> Computation:
+        dependant_units = self.unit_injector.get_by(unit.node_id, unit.path, name)
 
-        if len(values) == 1:
+        for dependant_unit in dependant_units:
+            if not dependant_unit.was_computed():
+                dependant_unit.update_computation()
+
+        if len(dependant_units) == 1:
             return Computation(
-                value=values[0].value,
-                details=f"<{name}[{values[0].node_id}], {values[0].value}>",
+                value=dependant_units[0].value,
+                details=f"<{name}[{dependant_units[0].node_id}], {dependant_units[0].value}>",
             )
 
-        sum_result = sum(coerce_decimal(unit.value) for unit in scope.unit.units[name])
+        sum_result = sum(
+            ComputeFlatAst.coerce_decimal(dependant_unit.value)
+            for dependant_unit in dependant_units
+        )
 
         return Computation(value=sum_result, details=f"<{sum_result}, sum({name})>")

@@ -4,10 +4,12 @@ from datetime import datetime, timezone
 from uuid import UUID
 from decimal import Decimal
 from expert_dollup.core.domains import *
-from expert_dollup.core.units.evaluator import Unit
+from expert_dollup.core.units.evaluator import Unit, ExpressionCompiler
 from .domains import *
 from .helpers import make_uuid
 from ..fake_db_helpers import FakeDb
+
+compiler = ExpressionCompiler.create_simple()
 
 
 class FormulaSeed:
@@ -20,6 +22,8 @@ class FormulaSeed:
         result: Decimal = Decimal("0"),
     ):
         self.expression = expression
+        self.expression_ast = compiler.compile(expression)
+        self.expression_pack = Expression(expression, self.expression_ast)
         self.calculation_details = calculation_details
         self.result = Decimal(result) if isinstance(result, (int, float)) else result
         self.formula_dependencies = formula_dependencies
@@ -263,7 +267,7 @@ class CustomProjectInstancePackage:
     project_definition: ProjectDefinition
     project: ProjectDetails
     formulas: List[Formula]
-    unit_instances: List[Unit]
+    units: List[Unit]
     definition_nodes: List[ProjectDefinitionNode]
     nodes: List[ProjectNode]
     any_id_to_name: Dict[str, str]
@@ -277,7 +281,7 @@ class ProjectInstanceFactory:
         datasheet_id: Optional[UUID] = None,
     ) -> CustomProjectInstancePackage:
         seed_nodes_by_name: Dict[str, NodeSeed] = {}
-        unit_instances_by_name: Dict[str, FormulaSeed] = {}
+        units_by_name: Dict[str, FormulaSeed] = {}
         formulas_by_name: Dict[str, FormulaSeed] = {}
 
         for def_node_seed in project_seed.definitions.values():
@@ -290,8 +294,8 @@ class ProjectInstanceFactory:
                 for formula_seed in node_seed.formulas.values():
                     formula_instance_name = formula_seed.full_name
 
-                    assert not formula_instance_name in unit_instances_by_name
-                    unit_instances_by_name[formula_instance_name] = formula_seed
+                    assert not formula_instance_name in units_by_name
+                    units_by_name[formula_instance_name] = formula_seed
 
                     previous_formula_definition = formulas_by_name.get(
                         formula_seed.name, formula_seed
@@ -378,16 +382,15 @@ class ProjectInstanceFactory:
             for formula_seed in formulas_by_name.values()
         ]
 
-        unit_instances = [
+        units = [
             Unit(
-                formula_id=formula_instance.id,
                 node_id=formula_instance.node.id,
                 path=formula_instance.node.path,
                 name=formula_instance.name,
                 calculation_details=formula_instance.calculation_details,
-                result=formula_instance.result,
+                value=formula_instance.result,
             )
-            for formula_instance in unit_instances_by_name.values()
+            for formula_instance in units_by_name.values()
         ]
 
         any_id_to_name: Dict[str, str] = {
@@ -413,7 +416,7 @@ class ProjectInstanceFactory:
             definition_nodes=definition_nodes,
             nodes=nodes,
             formulas=formulas,
-            unit_instances=unit_instances,
+            units=units,
             any_id_to_name=any_id_to_name,
         )
 
