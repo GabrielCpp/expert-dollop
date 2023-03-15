@@ -150,7 +150,7 @@ class ReportStructureFactory(factory.Factory):
             factory.SubFactory(
                 ReportComputationFactory,
                 name="quantity",
-                expression=ComplexExpressionFactory(name="row['formula']['result']"),
+                expression=ComplexExpressionFactory(name="row['formula']['value']"),
             ),
             factory.SubFactory(
                 ReportComputationFactory,
@@ -191,7 +191,7 @@ class ReportStructureFactory(factory.Factory):
             ),
         ]
     )
-    having = ""
+    having = None
     order_by = factory.List(
         [
             factory.SubFactory(

@@ -287,7 +287,7 @@ class FormulaResolver:
                         name=formula.name,
                         calculation_details="<was not calculated yet>",
                         dependencies=formula.dependency_graph.dependencies,
-                        computable=ComputeFlatAst(formula.final_ast, injector),
+                        computable=ComputeFlatAst(formula.id, formula.final_ast),
                     )
                 )
 

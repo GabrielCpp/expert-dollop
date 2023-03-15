@@ -53,7 +53,7 @@ class ReportStructure:
     selection: Selection
     columns: List[ReportComputation]
     group_by: List[AttributeBucket]
-    having: Expression
+    having: Optional[Expression]
     order_by: List[AttributeBucket]
     stage_summary: ReportComputation
     report_summary: List[ReportComputation]

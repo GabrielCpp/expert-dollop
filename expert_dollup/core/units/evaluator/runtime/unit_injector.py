@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import List, Dict, Protocol, Iterable, Optional
 from uuid import UUID
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from functools import cached_property
 from .computation import Computation, PrimitiveWithNoneUnion
 from .flat_ast_evaluator import FlatAstEvaluator
@@ -16,9 +16,12 @@ class UnitRef:
 
 
 class ValueComputationMethod(Protocol):
+    id: UUID
     computed: bool
 
-    def update(self, unit: "Unit") -> PrimitiveWithNoneUnion:
+    def update(
+        self, unit: "Unit", unit_injector: "UnitInjector"
+    ) -> PrimitiveWithNoneUnion:
         ...
 
 
@@ -32,9 +35,9 @@ class Unit:
     calculation_details: str = ""
     computable: Optional[ValueComputationMethod] = None
 
-    def update_computation(self) -> None:
+    def update_computation(self, unit_injector: "UnitInjector") -> None:
         if not self.computable is None:
-            self.computable.update(self)
+            self.computable.update(self, unit_injector)
 
     def was_computed(self) -> bool:
         if self.computable is None:
@@ -44,7 +47,14 @@ class Unit:
 
     @property
     def report_dict(self) -> dict:
-        return asdict(self)
+        return {
+            "node_id": self.node_id,
+            "path": self.path,
+            "name": self.name,
+            "value": self.value,
+            "formula_id": None if self.computable is None else self.computable.id,
+            "calculation_details": self.calculation_details,
+        }
 
 
 class UnitInjector:
@@ -55,7 +65,7 @@ class UnitInjector:
 
     def precompute(self) -> None:
         for unit in self.units:
-            unit.update_computation()
+            unit.update_computation(self)
 
     def add(self, unit: Unit) -> None:
         for item in unit.path:
@@ -132,13 +142,13 @@ class ComputeFlatAst(ValueComputationMethod):
 
         return value
 
-    def __init__(self, flat_ast: dict, unit_injector: UnitInjector):
+    def __init__(self, formula_id: UUID, flat_ast: dict):
+        self.id = formula_id
         self.flat_ast = flat_ast
-        self.unit_injector = unit_injector
         self.evaluator = FlatAstEvaluator()
         self.computed = False
 
-    def update(self, unit: Unit) -> None:
+    def update(self, unit: Unit, unit_injector: UnitInjector) -> None:
         if self.computed is True:
             return
 
@@ -150,18 +160,22 @@ class ComputeFlatAst(ValueComputationMethod):
         unit.calculation_details = calculation_details
         self.computed = True
 
-    def build_lexical_scope(self, unit: Unit) -> Dict[str, Computation]:
+    def build_lexical_scope(
+        self, unit_injector: UnitInjector, unit: Unit
+    ) -> Dict[str, Computation]:
         return {
-            dependency: self.build_value(unit, dependency)
+            dependency: self.build_value(unit_injector, unit, dependency)
             for dependency in unit.dependencies
         }
 
-    def build_value(self, unit: Unit, name: str) -> Computation:
-        dependant_units = self.unit_injector.get_by(unit.node_id, unit.path, name)
+    def build_value(
+        self, unit_injector: UnitInjector, unit: Unit, name: str
+    ) -> Computation:
+        dependant_units = unit_injector.get_by(unit.node_id, unit.path, name)
 
         for dependant_unit in dependant_units:
             if not dependant_unit.was_computed():
-                dependant_unit.update_computation()
+                dependant_unit.update_computation(unit_injector)
 
         if len(dependant_units) == 1:
             return Computation(

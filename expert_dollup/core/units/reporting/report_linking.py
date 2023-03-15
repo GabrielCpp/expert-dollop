@@ -77,10 +77,11 @@ class ReportEvaluationContext:
 
     def evaluate(self, expression: Expression, scope: dict):
         try:
-            return self.evaluator.compute(
+            result, _ = self.evaluator.compute(
                 expression.flat_ast,
                 {key: Computation(value) for key, value in scope.items()},
             )
+            return result
         except AstRuntimeError as e:
             raise ReportGenerationError(
                 f"Error while evaluating expression",
@@ -157,11 +158,11 @@ class JoinFormulaUnits(JoinStep):
                 for unit_instance in units
                 if not unit_instance.computable is None
                 and (
-                    not isinstance(unit_instance.result, Decimal)
-                    or unit_instance.result > 0
+                    not isinstance(unit_instance.value, Decimal)
+                    or unit_instance.value > 0
                 )
             ),
-            lambda x: x.formula_id,
+            lambda x: x.computable.id,
         )
 
     def apply(
@@ -291,7 +292,9 @@ class GroupedColumnProjection(ProjectionStep):
                     column.expression, current_row, rows
                 )
 
-            if not bool(evaluator.evaluate_columns(self.having_expression, columns)):
+            if self.having_expression is None or bool(
+                evaluator.evaluate_columns(self.having_expression, columns)
+            ):
                 new_rows.append(current_row)
 
         return new_rows

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 from decimal import Decimal
 from expert_dollup.core.domains import *
-from expert_dollup.core.units.evaluator import Unit, ExpressionCompiler
+from expert_dollup.core.units.evaluator import Unit, ExpressionCompiler, ComputeFlatAst
 from .domains import *
 from .helpers import make_uuid
 from ..fake_db_helpers import FakeDb
@@ -384,13 +384,14 @@ class ProjectInstanceFactory:
 
         units = [
             Unit(
-                node_id=formula_instance.node.id,
-                path=formula_instance.node.path,
-                name=formula_instance.name,
-                calculation_details=formula_instance.calculation_details,
-                value=formula_instance.result,
+                node_id=formula_seed.node.id,
+                path=formula_seed.node.path,
+                name=formula_seed.name,
+                calculation_details=formula_seed.calculation_details,
+                value=formula_seed.result,
+                computable=ComputeFlatAst(formula_seed.id, formula_seed.expression_ast),
             )
-            for formula_instance in units_by_name.values()
+            for formula_seed in units_by_name.values()
         ]
 
         any_id_to_name: Dict[str, str] = {

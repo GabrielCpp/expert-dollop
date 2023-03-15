@@ -162,7 +162,7 @@ async def test_given_row_cache_should_produce_correct_report(
                                 "path": [],
                                 "name": "formulaA",
                                 "calculation_details": "<fieldB, 2> * sum(<fieldA, 12>)",
-                                "result": Decimal("24"),
+                                "value": Decimal("24"),
                             },
                             "stage": {"name": "show_concrete"},
                             "substage": {
@@ -236,6 +236,5 @@ async def test_given_row_cache_should_produce_correct_report(
     report = await report_linking.link_report(
         report_definition, project_fixture.project
     )
-    dump_to_file(report)
-    dump_to_file(expected_report)
+
     assert report == expected_report
