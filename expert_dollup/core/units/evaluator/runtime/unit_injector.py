@@ -152,7 +152,7 @@ class ComputeFlatAst(ValueComputationMethod):
         if self.computed is True:
             return
 
-        lexical_scope = self.build_lexical_scope(unit)
+        lexical_scope = self.build_lexical_scope(unit_injector, unit)
         result, calculation_details = self.evaluator.compute(
             self.flat_ast, lexical_scope
         )
