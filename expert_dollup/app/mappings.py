@@ -330,7 +330,6 @@ def map_project_input_from_dto(
     return ProjectDetails(
         id=mapper.get(IdProvider).uuid4(),
         name=src.name,
-        is_staged=False,
         project_definition_id=src.project_definition_id,
         datasheet_id=src.datasheet_id,
         creation_date_utc=mapper.get(Clock).utcnow(),
@@ -343,7 +342,6 @@ def map_project_details_from_dto(
     return ProjectDetails(
         id=src.id,
         name=src.name,
-        is_staged=src.is_staged,
         project_definition_id=src.project_definition_id,
         datasheet_id=src.datasheet_id,
         creation_date_utc=src.creation_date_utc,
@@ -356,7 +354,6 @@ def map_project_details_to_dto(
     return ProjectDetailsDto(
         id=src.id,
         name=src.name,
-        is_staged=src.is_staged,
         project_definition_id=src.project_definition_id,
         datasheet_id=src.datasheet_id,
         creation_date_utc=src.creation_date_utc,

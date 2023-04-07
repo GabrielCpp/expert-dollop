@@ -81,7 +81,6 @@ class ProjectDetailsDtoFactory(factory.Factory):
 
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"project{n}")
-    is_staged = False
     project_definition_id = factory.Faker("pyuuid4")
     datasheet_id = factory.Faker("pyuuid4")
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
@@ -92,7 +91,6 @@ class NewProjectDetailsDtoFactory(factory.Factory):
         model = ProjectDetailsInputDto
 
     name = factory.Sequence(lambda n: f"project{n}")
-    is_staged = False
     project_definition_id = factory.Faker("pyuuid4")
     datasheet_id = factory.Faker("pyuuid4")
 

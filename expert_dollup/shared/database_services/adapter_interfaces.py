@@ -10,6 +10,7 @@ from typing import (
     Any,
     Callable,
     Awaitable,
+    Protocol,
 )
 from typing_extensions import TypeAlias
 from dataclasses import dataclass
@@ -26,6 +27,10 @@ Id = TypeVar("Id")
 WhereFilter: TypeAlias = Union[QueryFilter, QueryBuilder]
 
 
+class RepositoryDetails(Protocol):
+    primary_keys: List[str]
+
+
 class Repository(ABC, Generic[Domain]):
     @property
     @abstractmethod
@@ -35,6 +40,11 @@ class Repository(ABC, Generic[Domain]):
     @property
     @abstractmethod
     def batch_size(self) -> int:
+        pass
+
+    @property
+    @abstractmethod
+    def details(self) -> RepositoryDetails:
         pass
 
     @abstractmethod

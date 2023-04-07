@@ -316,7 +316,6 @@ class ProjectInstanceFactory:
         project = ProjectDetailsFactory(
             id=make_uuid(f"{project_name}-instance"),
             name=project_name,
-            is_staged=False,
             project_definition_id=project_definition.id,
             creation_date_utc=datetime(2011, 11, 4, 0, 5, 23, 283000, timezone.utc),
         )

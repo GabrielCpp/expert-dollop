@@ -13,7 +13,6 @@ class ProjectDetailsInputDto(CamelModel):
 class ProjectDetailsDto(CamelModel):
     id: UUID
     name: str
-    is_staged: bool
     project_definition_id: UUID
     datasheet_id: UUID
     creation_date_utc: datetime

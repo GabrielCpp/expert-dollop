@@ -36,3 +36,4 @@ from .pluck_query import (
 )
 from .storage_connectors import *
 from .query_reflector import queries
+from .query_ids import QuerySelfByPk, quey_self_pk

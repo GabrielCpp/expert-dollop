@@ -8,6 +8,7 @@ from .adapter_interfaces import (
     InternalRepository,
     DbConnection,
     QueryBuilder,
+    RepositoryDetails,
 )
 
 Domain = TypeVar("Domain")
@@ -26,6 +27,10 @@ class RepositoryProxy(Repository[Domain]):
     @property
     def batch_size(self) -> int:
         return self._impl.batch_size
+
+    @property
+    def details(self) -> RepositoryDetails:
+        return self._impl.details
 
     @property
     def db(self) -> DbConnection:

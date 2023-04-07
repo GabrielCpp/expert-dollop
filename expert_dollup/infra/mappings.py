@@ -320,7 +320,6 @@ def map_project_from_dao(src: ProjectDao, mapper: Mapper) -> ProjectDetails:
     return ProjectDetails(
         id=src.id,
         name=src.name,
-        is_staged=src.is_staged,
         project_definition_id=src.project_definition_id,
         datasheet_id=src.datasheet_id,
         creation_date_utc=src.creation_date_utc,
@@ -331,7 +330,6 @@ def map_project_to_dao(src: ProjectDetails, mapper: Mapper) -> ProjectDao:
     return ProjectDao(
         id=src.id,
         name=src.name,
-        is_staged=src.is_staged,
         project_definition_id=src.project_definition_id,
         datasheet_id=src.datasheet_id,
         creation_date_utc=src.creation_date_utc,

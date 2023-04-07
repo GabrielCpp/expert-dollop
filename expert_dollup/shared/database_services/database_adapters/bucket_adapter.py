@@ -21,11 +21,17 @@ from ..adapter_interfaces import (
     WhereFilter,
     DbConnection,
     RepositoryMetadata,
+    RepositoryDetails,
 )
 from ..storage_connectors import StorageClient
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")
+
+
+@dataclass
+class BucketDetails:
+    primary_keys: List[str]
 
 
 @dataclass
@@ -118,6 +124,10 @@ class BucketCollection(InternalRepository[Domain]):
     @property
     def batch_size(self) -> int:
         return 1000
+
+    @property
+    def details(self) -> RepositoryDetails:
+        return BucketDetails(["key"])
 
     @property
     def db(self) -> DbConnection:

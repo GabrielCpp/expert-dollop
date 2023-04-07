@@ -283,6 +283,10 @@ class FirestoreCollection(InternalRepository[Domain]):
     def batch_size(self) -> int:
         return 20
 
+    @property
+    def details(self) -> RepositoryDetails:
+        return self._table_details
+
     async def insert(self, domain: Domain):
         d = self._db_mapping.map_domain_to_dict(domain)
 

@@ -44,7 +44,7 @@ async def pluck_by_batch(
 
 
 @queries.register_executor(Pluck)
-async def plucks(repository: Repository[Domain], query: Pluck) -> QueryBuilder:
+async def plucks(repository: Repository[Domain], query: Pluck) -> List[Domain]:
     all_results = []
 
     async for batch_results in pluck_by_batch(repository, query.name, query.ids):
@@ -56,7 +56,7 @@ async def plucks(repository: Repository[Domain], query: Pluck) -> QueryBuilder:
 @queries.register_executor(PluckSubRessource)
 async def pluck_subressources(
     repository: Repository[Domain], query: PluckSubRessource
-) -> QueryBuilder:
+) -> List[Domain]:
     all_results = []
 
     async for batch_results in pluck_by_batch(

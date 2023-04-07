@@ -1,4 +1,4 @@
-from .project import ProjectDetails, Project
+from .project_details import ProjectDetails, Project
 from .project_node import (
     ProjectNode,
     ProjectNodeFilter,

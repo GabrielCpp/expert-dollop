@@ -415,7 +415,6 @@ class ProjectDetailsFactory(factory.Factory):
 
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"project{n}")
-    is_staged = False
     project_definition_id = factory.Faker("pyuuid4")
     datasheet_id = factory.Faker("pyuuid4")
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
@@ -463,3 +462,17 @@ class DatasheetFactory(factory.Factory):
     attributes_schema = factory.Dict({})
     instances_schema = factory.Dict({})
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
+
+
+class ProjectNodeFactory(factory.Factory):
+    class Meta:
+        model = ProjectNode
+
+    id = factory.Faker("pyuuid4")
+    project_id = factory.Faker("pyuuid4")
+    type_path = factory.List([factory.Faker("pyuuid4"), factory.Faker("pyuuid4")])
+    type_id = factory.Faker("pyuuid4")
+    type_name = factory.Sequence(lambda n: f"name{n}")
+    path = factory.List([factory.Faker("pyuuid4"), factory.Faker("pyuuid4")])
+    value = 6
+    label = ""

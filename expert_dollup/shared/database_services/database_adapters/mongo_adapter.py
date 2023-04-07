@@ -33,6 +33,7 @@ from ..adapter_interfaces import (
     WhereFilter,
     DbConnection,
     RepositoryMetadata,
+    RepositoryDetails,
 )
 from ..simplifier import Simplifier
 from ..query_reflector import queries
@@ -45,7 +46,7 @@ def build_count_key_id(d, keys: Set[str]):
 @dataclass
 class CollectionDetails:
     name: str
-    pimary_keys: List[str]
+    primary_keys: List[str]
     collection_count: bool
     key_counts: Set[Set[str]]
 
@@ -54,22 +55,22 @@ class CollectionDetails:
         return self.collection_count is True or len(self.key_counts) > 0
 
     def build_id(self, d):
-        if len(self.pimary_keys) == 1:
-            name = self.pimary_keys[0]
+        if len(self.primary_keys) == 1:
+            name = self.primary_keys[0]
             return str(d[name])
 
-        if len(self.pimary_keys) > 1:
-            return "_".join(str(d[name]) for name in self.pimary_keys)
+        if len(self.primary_keys) > 1:
+            return "_".join(str(d[name]) for name in self.primary_keys)
 
         assert False
 
     def build_id_from_pk(self, mapper, pk):
-        if len(self.pimary_keys) == 1:
+        if len(self.primary_keys) == 1:
             return str(pk)
 
-        if len(self.pimary_keys) > 1:
+        if len(self.primary_keys) > 1:
             d = self.unfold_query(pk, mapper)
-            return "_".join(str(d[name]) for name in self.pimary_keys)
+            return "_".join(str(d[name]) for name in self.primary_keys)
 
         return pk
 
@@ -142,11 +143,11 @@ class MongoConnection(DbConnection):
             assert "properties" in schema
 
             table_name = schema["title"]
-            pimary_keys = list(meta.pk) if isinstance(meta.pk, tuple) else [meta.pk]
+            primary_keys = list(meta.pk) if isinstance(meta.pk, tuple) else [meta.pk]
             options = getattr(meta, "options", {}).get("firestore", {})
             self.collections[metadata.dao] = CollectionDetails(
                 name=table_name,
-                pimary_keys=pimary_keys,
+                primary_keys=primary_keys,
                 collection_count=options.get("collection_count", False),
                 key_counts=options.get("key_counts", set()),
             )
@@ -316,6 +317,10 @@ class MongoCollection(InternalRepository[Domain]):
         return 1000
 
     @property
+    def details(self) -> RepositoryDetails:
+        return self._table_details
+
+    @property
     def db(self) -> DbConnection:
         return self._parent
 
@@ -411,7 +416,7 @@ class MongoCollection(InternalRepository[Domain]):
         handle = queries.get_executor(builder)
 
         if not handle is None:
-            return await handle(self._mapper, self, builder)
+            return await handle(self, builder)
 
         doc = await self._query_compiler.build_construct(self._collection, builder)
         return self._db_mapping.map_record_to_domain(doc)

@@ -287,6 +287,11 @@ Domain = TypeVar("Domain")
 Id = TypeVar("Id")
 
 
+@dataclass
+class TableDetails:
+    primary_keys: List[str]
+
+
 class PostgresTableService(InternalRepository[Domain]):
     def __init__(
         self,
@@ -321,6 +326,10 @@ class PostgresTableService(InternalRepository[Domain]):
     @property
     def batch_size(self) -> int:
         return 1000
+
+    @property
+    def details(self) -> RepositoryDetails:
+        return TableDetails(self.table_id_names)
 
     @property
     def db(self) -> DbConnection:

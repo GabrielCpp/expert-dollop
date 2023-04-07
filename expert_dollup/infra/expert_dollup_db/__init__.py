@@ -53,6 +53,25 @@ class ProjectDefinitionDao(BaseModel):
     creation_date_utc: datetime
 
 
+class ProjectDefinitionChangeSetDao(BaseModel):
+    nodes: List["ProjectNodeDao"]
+    metas: List["ProjectNodeMetaDao"]
+
+
+class ProjectDefinitionVersionDao(BaseModel):
+    class Meta:
+        pk = ("project_definition_id", "version")
+
+    class Config:
+        title = "project_definition_version"
+
+    project_definition_id: UUID
+    version: str = Field(max_length=64)
+    tag: Optional[str]
+    changes: ProjectDefinitionChangeSetDao
+    creation_date_utc: datetime
+
+
 class FormulaConfigDao(BaseModel):
     expression: str
     dependency_graph: FormulaDependencyGraphDao
@@ -132,7 +151,7 @@ class ProjectDao(BaseModel):
 
     id: UUID
     name: str = Field(max_length=64)
-    is_staged: bool
+    version: str
     project_definition_id: UUID
     datasheet_id: UUID
     creation_date_utc: datetime
