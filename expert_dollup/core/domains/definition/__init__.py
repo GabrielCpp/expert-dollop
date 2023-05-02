@@ -5,7 +5,13 @@ from .aggregate_collection import (
     Aggregation,
     AggregateCollectionFilter,
 )
-from .aggregate import AggregateAttribute, Aggregate, AggregateFilter, NewAggregate
+from .aggregate import (
+    AggregateAttribute,
+    Aggregate,
+    AggregateFilter,
+    NewAggregate,
+    LocalizedAggregate,
+)
 from .formula import (
     Formula,
     FormulaExpression,
@@ -57,3 +63,20 @@ from .project_definition_tree import (
     ProjectDefinitionTreeNode,
 )
 from .project_definition import ProjectDefinition, ProjectDefinitionFilter
+from .report import (
+    StageColumn,
+    ReportRow,
+    ReportRowFilter,
+    ReportStage,
+    Report,
+    ReportKey,
+    ComputedValue,
+)
+from .translation import (
+    Translation,
+    NewTranslation,
+    FieldTranslation,
+    TranslationId,
+    TranslationFilter,
+    TranslationPluckFilter,
+)

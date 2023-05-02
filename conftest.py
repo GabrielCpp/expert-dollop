@@ -13,8 +13,8 @@ from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import *
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
-from .fixtures.injector_override.mock_services import logger_observer
-from .fixtures import *
+from tests.fixtures.injector_override.mock_services import logger_observer
+from tests.fixtures import *
 
 
 class DateTimeProvider(faker.providers.date_time.Provider):

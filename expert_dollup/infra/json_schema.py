@@ -1,6 +1,6 @@
 from typing import Any
 from jsonschema import Draft7Validator
-from expert_dollup.core.exceptions import ValidationError
+from expert_dollup.shared.validation import ValidationError
 
 
 def validate_instance(validator: Draft7Validator, instance: Any) -> None:

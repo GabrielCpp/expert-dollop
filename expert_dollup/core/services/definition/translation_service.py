@@ -3,7 +3,8 @@ from itertools import chain
 from uuid import UUID
 from expert_dollup.shared.database_services import *
 from expert_dollup.shared.starlette_injection import Clock, IdProvider
-from expert_dollup.core.exceptions import RessourceNotFound, ValidationError
+from expert_dollup.core.exceptions import RessourceNotFound
+from expert_dollup.shared.validation import ValidationError
 from expert_dollup.core.domains import *
 
 

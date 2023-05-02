@@ -4,7 +4,7 @@ from typing import List
 from enum import Enum
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
-from .report import ComputedValue
+from ..definition.report import ComputedValue
 
 ColumnLabel = str
 

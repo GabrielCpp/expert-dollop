@@ -3,7 +3,7 @@ from uuid import UUID
 from typing import Optional, Dict, List
 from expert_dollup.shared.database_services import Paginator
 from expert_dollup.shared.starlette_injection import *
-from expert_dollup.core.usecases import DatasheetElementUseCase
+from expert_dollup.core.services import DatasheetElementUseCase
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *
 

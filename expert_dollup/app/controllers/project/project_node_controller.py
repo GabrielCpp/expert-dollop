@@ -8,7 +8,7 @@ from expert_dollup.shared.starlette_injection import (
     CanPerformRequired,
     Inject,
 )
-from expert_dollup.core.usecases import ProjectNodeUseCase
+from expert_dollup.core.services import ProjectNodeUseCase
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *
 

@@ -1,5 +1,5 @@
 from expert_dollup.infra.validators import SchemaValidator
-from expert_dollup.core.exceptions import ValidationError
+from expert_dollup.shared.validation import ValidationError
 from expert_dollup.core.domains import *
 from typing import Optional
 

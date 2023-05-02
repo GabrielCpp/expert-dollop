@@ -134,15 +134,15 @@ class BucketCollection(InternalRepository[Domain]):
         return self._parent
 
     async def insert(self, domain: Domain):
-        document = self._db_mapping.map_domain_to_dict(domain)
+        document = self._db_mapping.map_domain_to_record(domain)
         await self._write(document)
 
     async def inserts(self, domains: List[Domain]):
-        documents = self._db_mapping.map_many_domain_to_dict(domains)
+        documents = self._db_mapping.map_many_domain_to_record(domains)
         await self._writes(documents)
 
     async def update(self, value_filter: QueryFilter, where_filter: WhereFilter):
-        document_patch = self._db_mapping.map_domain_to_dict(domain)
+        document_patch = self._db_mapping.map_domain_to_record(domain)
         prefix = self._mapper.map(where_filter, str)
 
         async for result in self._stream(where_filter):
@@ -159,7 +159,7 @@ class BucketCollection(InternalRepository[Domain]):
             await self._write(document)
 
     async def upserts(self, domains: List[Domain]) -> None:
-        documents = self._db_mapping.map_many_domain_to_dict(domains)
+        documents = self._db_mapping.map_many_domain_to_record(domains)
         await self._writes(documents)
 
     async def all(self, limit: int = 1000) -> List[Domain]:
@@ -238,7 +238,7 @@ class BucketCollection(InternalRepository[Domain]):
         return results
 
     async def bulk_insert(self, daos: List[BaseModel]) -> None:
-        documents = self._db_mapping.map_many_dao_to_dict(daos)
+        documents = self._db_mapping.map_many_dao_to_record(daos)
         await self._writes(documents)
 
     def map_domain_to_dao(self, domain: Domain) -> BaseModel:

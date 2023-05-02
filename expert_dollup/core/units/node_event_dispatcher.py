@@ -5,6 +5,7 @@ from expert_dollup.core.builders import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.units import *
 from expert_dollup.core.repositories import *
+from expert_dollup.core.units.evaluator import UnitRef
 
 
 class NodeEventDispatcher:

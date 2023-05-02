@@ -57,7 +57,7 @@ class CollectionDetails:
     def build_id(self, d):
         if len(self.primary_keys) == 1:
             name = self.primary_keys[0]
-            return str(d[name])
+            return d[name]
 
         if len(self.primary_keys) > 1:
             return "_".join(str(d[name]) for name in self.primary_keys)
@@ -305,7 +305,7 @@ class MongoCollection(InternalRepository[Domain]):
         self._db_mapping = CollectionElementMapping(
             mapper,
             CollectionElementMapping.get_mapping_details(meta.domain, meta.dao),
-            dao_to_dict=self._dao_to_dict,
+            dao_to_dict=self._dao_to_record,
         )
 
     @property
@@ -325,11 +325,11 @@ class MongoCollection(InternalRepository[Domain]):
         return self._parent
 
     async def insert(self, domain: Domain):
-        document = self._db_mapping.map_domain_to_dict(domain)
+        document = self._db_mapping.map_domain_to_record(domain)
         await self._collection.insert_one(document)
 
     async def inserts(self, domains: List[Domain]):
-        dicts = self._db_mapping.map_many_domain_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_record(domains)
         for dicts_batch in batch(dicts, BATCH_SIZE):
             await self._collection.insert_many(dicts_batch)
 
@@ -340,7 +340,7 @@ class MongoCollection(InternalRepository[Domain]):
         await self._collection.update_many(compiled_filter, {"$set": simplified_dict})
 
     async def upserts(self, domains: List[Domain]) -> None:
-        dicts = self._db_mapping.map_many_domain_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_record(domains)
 
         for docs in batch(dicts, BATCH_SIZE):
             operations = [
@@ -445,7 +445,7 @@ class MongoCollection(InternalRepository[Domain]):
         return results
 
     async def bulk_insert(self, daos: List[BaseModel]) -> None:
-        dicts = self._db_mapping.map_many_dao_to_dict(daos)
+        dicts = self._db_mapping.map_many_dao_to_record(daos)
 
         for dicts_batch in batch(dicts, BATCH_SIZE):
             await self._collection.insert_many(dicts_batch)
@@ -453,7 +453,7 @@ class MongoCollection(InternalRepository[Domain]):
     def map_domain_to_dao(self, domain: Domain) -> BaseModel:
         return self._db_mapping.map_domain_to_dao(domain)
 
-    def _dao_to_dict(self, model: BaseModel) -> dict:
+    def _dao_to_record(self, model: BaseModel) -> dict:
         document = self._query_compiler.simplify(model)
         document["_id"] = self._table_details.build_id(document)
         return document

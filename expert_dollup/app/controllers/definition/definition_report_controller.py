@@ -6,7 +6,7 @@ from expert_dollup.shared.starlette_injection import (
     MappingChain,
 )
 from expert_dollup.shared.database_services import Repository
-from expert_dollup.core.usecases import ReportDefinitionUseCase
+from expert_dollup.core.services import ReportDefinitionUseCase
 from expert_dollup.core.domains import ReportDefinition
 from expert_dollup.app.dtos import ReportDefinitionDto
 

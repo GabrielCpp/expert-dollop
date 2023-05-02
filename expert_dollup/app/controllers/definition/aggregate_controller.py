@@ -5,7 +5,7 @@ from expert_dollup.shared.starlette_injection import *
 from expert_dollup.shared.database_services import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.dtos import *
-from expert_dollup.core.usecases import *
+from expert_dollup.core.services import *
 
 router = APIRouter()
 
@@ -73,7 +73,7 @@ async def add_aggregate(
     project_definition_id: UUID,
     collection_id: UUID,
     new_aggregate: NewAggregateDto,
-    usecase: AggregateUseCase = Depends(Inject(AggregateUseCase)),
+    usecase: AggregateService = Depends(Inject(AggregateService)),
     handler: RequestHandler = Depends(Inject(RequestHandler)),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:create"])
@@ -103,7 +103,7 @@ async def update_aggregate(
     collection_id: UUID,
     aggregate_id: UUID,
     replacement: NewAggregateDto,
-    usecase: AggregateUseCase = Depends(Inject(AggregateUseCase)),
+    usecase: AggregateService = Depends(Inject(AggregateService)),
     handler: RequestHandler = Depends(Inject(RequestHandler)),
     user=Depends(
         CanPerformOnRequired("project_definition_id", ["project_definition:create"])

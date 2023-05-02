@@ -6,7 +6,7 @@ from expert_dollup.shared.database_services import *
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.repositories import *
-from expert_dollup.core.usecases import *
+from expert_dollup.core.services import *
 
 router = APIRouter()
 

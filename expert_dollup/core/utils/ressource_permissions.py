@@ -1,10 +1,8 @@
 from expert_dollup.core.domains import *
-from typing import Type, Iterable, Set, List, Dict, Optional
+from typing import Type, Iterable, Set, List, Mapping, Optional
 from dataclasses import dataclass, field
-from uuid import UUID
-from itertools import chain
-from frozendict import frozendict
 from expert_dollup.core.exceptions import DetailedError
+from collections import namedtuple
 
 COMMON_ACTIONS: Set[str] = frozenset(["get", "list", "update", "create", "delete"])
 
@@ -16,12 +14,19 @@ def set_of(*actions: str) -> frozenset:
     return frozenset(actions)
 
 
+def freeze_auth(*auths: "RessourceAuthorization"):
+    return namedtuple(
+        "RessourceAuthorizationMapping", [a.type.__name__ for a in auths]
+    )(*auths)
+
+
 @dataclass(frozen=True)
 class RessourceAuthorization:
+    type: Type
     kind: str
     permissions: Set[str]
-    subressources: Dict[Type, "RessourceAuthorization"] = field(
-        default_factory=frozendict
+    subressources: Mapping[str, "RessourceAuthorization"] = field(
+        default_factory=namedtuple("Empty", [])
     )
 
     def ensure_permission_exists(self, permission: str) -> bool:
@@ -38,34 +43,32 @@ class RessourceAuthorization:
 
 @dataclass(frozen=True)
 class AuthorizationFactory:
-    authorizations: Dict[Type, RessourceAuthorization] = frozendict(
-        {
-            Ressource: RessourceAuthorization("ressource", set_of("imports")),
-            ProjectDetails: RessourceAuthorization(
-                "project", set_of(*COMMON_ACTIONS, "clone")
-            ),
-            ProjectDefinition: RessourceAuthorization(
-                "project_definition", COMMON_ACTIONS
-            ),
-            Datasheet: RessourceAuthorization(
-                "datasheet", set_of(*COMMON_ACTIONS, "clone")
-            ),
-        }
+    authorizations: Mapping[str, RessourceAuthorization] = freeze_auth(
+        RessourceAuthorization(Ressource, "ressource", set_of("imports")),
+        RessourceAuthorization(
+            ProjectDetails, "project", set_of(*COMMON_ACTIONS, "clone")
+        ),
+        RessourceAuthorization(ProjectDefinition, "project_definition", COMMON_ACTIONS),
+        RessourceAuthorization(
+            Datasheet, "datasheet", set_of(*COMMON_ACTIONS, "clone")
+        ),
     )
 
     @property
     def ressource_types(self) -> List[Type]:
-        return list(self.authorizations.keys())
+        return [a.type for a in self.authorizations]
 
     def get_ressource_details(self, ressource_type: Type) -> RessourceAuthorization:
-        if not ressource_type in self.authorizations:
+        name = ressource_type.__name__
+
+        if not name in self.authorizations:
             raise DetailedError(
                 "Missing ressource type",
                 ressource_type=ressource_type,
                 available_ressource_types=self.ressource_types,
             )
 
-        return self.authorizations[ressource_type]
+        return self.authorizations[name]
 
     def get_ressource_kind(self, ressource_type: Type) -> str:
         return self.get_ressource_details(ressource_type).kind
@@ -79,7 +82,7 @@ class AuthorizationFactory:
         return f"{kind}:{permission}"
 
     def build_permissions_for(
-        self, ressource: Type, permissions: Iterable[str]
+        self, ressource_type: Type, permissions: Iterable[str]
     ) -> List[str]:
         ressource_authorization = self.get_ressource_details(ressource_type)
         kind = ressource_authorization.kind
@@ -109,8 +112,8 @@ class AuthorizationFactory:
     def build_super_user_permisions(self) -> List[str]:
         permissions = []
 
-        for ressource_type in self.authorizations.keys():
-            permissions.extend(self.all_permissions_for(ressource_type))
+        for a in self.authorizations:
+            permissions.extend(self.all_permissions_for(a.type))
 
         return permissions
 

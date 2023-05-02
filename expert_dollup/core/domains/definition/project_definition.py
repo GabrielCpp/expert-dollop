@@ -9,7 +9,7 @@ from expert_dollup.shared.database_services import QueryFilter
 class ProjectDefinition:
     id: UUID
     name: str
-    version: str
+    revision: str
     creation_date_utc: datetime
 
 

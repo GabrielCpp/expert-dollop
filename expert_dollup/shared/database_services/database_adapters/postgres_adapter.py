@@ -336,13 +336,13 @@ class PostgresTableService(InternalRepository[Domain]):
         return self._database
 
     async def insert(self, domain: Domain):
-        value = self._db_mapping.map_domain_to_dict(domain)
+        value = self._db_mapping.map_domain_to_record(domain)
         query = self._table.insert().values(value)
 
         await self._execute(query)
 
     async def inserts(self, domains: List[Domain]):
-        dicts = self._db_mapping.map_many_domain_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_record(domains)
 
         for dicts_batch in batch(dicts, BATCH_SIZE):
             query = pg_insert(self._table, dicts_batch)
@@ -352,7 +352,7 @@ class PostgresTableService(InternalRepository[Domain]):
         if len(domains) == 0:
             return
 
-        dicts = self._db_mapping.map_many_domain_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_record(domains)
         constraint = f"{self._table.name}_pkey"
 
         for items in batch(dicts, BATCH_SIZE):
@@ -466,7 +466,7 @@ class PostgresTableService(InternalRepository[Domain]):
         columns_name = [column.name for column in self._table.c]
         records = []
 
-        for d in self._db_mapping.map_many_dao_to_dict(daos):
+        for d in self._db_mapping.map_many_dao_to_record(daos):
             records.append([d[column_name] for column_name in columns_name])
 
         async with self._database.connect() as connection:

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Callable, List, Dict, Type, TypeVar, Union, Optional
+from typing import Callable, List, Dict, Type, TypeVar, Union, Optional, Any
 from typing_extensions import TypeAlias
 from expert_dollup.shared.starlette_injection import Injector
 from inspect import isclass
@@ -81,11 +81,9 @@ class FakeDb:
         return first_object if len(args) == 1 else args
 
     def add_all(self, domains: List[Domain]) -> List[Domain]:
-        if len(domains) == 0:
-            return []
+        for domain in domains:
+            self.add(domain)
 
-        first_object = domains[0]
-        self.collections[type(first_object)].extend(domains)
         return domains
 
     def merge(self, other: "FakeDb") -> None:
@@ -125,5 +123,11 @@ class DbFixtureHelper:
 
     async def load_fixtures(self, *loaders: FakeDbLoader) -> FakeDb:
         db = FakeDb.load_into(self.db, loaders)
+        db = await self.init_db(db)
+        return db
+
+    async def load_models(self, *domains: Any) -> FakeDb:
+        db = FakeDb()
+        db.add_all(domains)
         db = await self.init_db(db)
         return db

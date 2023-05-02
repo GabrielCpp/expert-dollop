@@ -6,6 +6,14 @@ from expert_dollup.shared.database_services import QueryFilter
 
 
 @dataclass
+class NewTranslation:
+    locale: str
+    name: str
+    scope: UUID
+    value: str
+
+
+@dataclass
 class Translation:
     ressource_id: UUID
     locale: str
@@ -13,14 +21,6 @@ class Translation:
     name: str
     value: str
     creation_date_utc: datetime
-
-
-@dataclass
-class NewTranslation:
-    locale: str
-    name: str
-    scope: UUID
-    value: str
 
 
 @dataclass

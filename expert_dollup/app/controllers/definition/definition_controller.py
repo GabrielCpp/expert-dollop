@@ -4,7 +4,7 @@ from uuid import UUID
 from expert_dollup.shared.database_services import *
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
-from expert_dollup.core.usecases import *
+from expert_dollup.core.services import *
 from expert_dollup.app.dtos import *
 
 

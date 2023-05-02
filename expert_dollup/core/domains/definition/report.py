@@ -3,8 +3,8 @@ from uuid import UUID
 from typing import List, Optional
 from datetime import datetime
 from expert_dollup.shared.database_services import QueryFilter
-from .definition.report_definition import ReportRowDict
-from .values_union import PrimitiveUnion
+from .report_definition import ReportRowDict
+from ..values_union import PrimitiveUnion
 
 
 @dataclass

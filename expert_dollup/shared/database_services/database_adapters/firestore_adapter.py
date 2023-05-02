@@ -288,7 +288,7 @@ class FirestoreCollection(InternalRepository[Domain]):
         return self._table_details
 
     async def insert(self, domain: Domain):
-        d = self._db_mapping.map_domain_to_dict(domain)
+        d = self._db_mapping.map_domain_to_record(domain)
 
         if self._table_details.is_counting_enabled:
             await self._batch_operation([d], lambda b, doc_ref, d: b.set(doc_ref, d))
@@ -297,7 +297,7 @@ class FirestoreCollection(InternalRepository[Domain]):
             await self._collection.document(doc_id).set(d, retry=retry_strategy)
 
     async def inserts(self, domains: List[Domain]):
-        dicts = self._db_mapping.map_many_domain_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_record(domains)
         await self._batch_operation(dicts, lambda b, doc_ref, d: b.set(doc_ref, d))
 
     async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):
@@ -309,7 +309,7 @@ class FirestoreCollection(InternalRepository[Domain]):
         )
 
     async def upserts(self, domains: List[Domain]) -> None:
-        dicts = self._db_mapping.map_many_domain_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_record(domains)
         await self._batch_operation(
             dicts, lambda b, doc_ref, d: b.set(doc_ref, d, merge=True)
         )
@@ -406,7 +406,7 @@ class FirestoreCollection(InternalRepository[Domain]):
         return results
 
     async def bulk_insert(self, daos: List[BaseModel]):
-        dicts = self._db_mapping.map_many_dao_to_dict(daos)
+        dicts = self._db_mapping.map_many_dao_to_record(daos)
         await self._batch_operation(dicts, lambda b, doc_ref, d: b.set(doc_ref, d))
 
     def map_domain_to_dao(self, domain: Domain) -> BaseModel:

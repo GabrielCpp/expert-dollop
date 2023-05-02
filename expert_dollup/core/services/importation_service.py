@@ -3,12 +3,12 @@ from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import DatabaseContext
 from expert_dollup.core.utils.ressource_permissions import authorization_factory
 from expert_dollup.core.domains import *
-from .datasheet_usecase import DatasheetUseCase
-from .project_definition_usecase import ProjectDefinitonUseCase
-from .project_definition_node_usecase import ProjectDefinitionNodeUseCase
-from .formula_usecase import FormulaUseCase
-from .report_definition_usecase import ReportDefinitionUseCase
-from .project_node_usecase import ProjectNodeUseCase
+from .project.datasheet_service import DatasheetUseCase
+from .definition.definition_service import ProjectDefinitonUseCase
+from .definition.definition_node_service import ProjectDefinitionNodeUseCase
+from .definition.formula_service import FormulaUseCase
+from .definition.report_service import ReportDefinitionUseCase
+from .project.node_service import ProjectNodeUseCase
 
 
 class ImportationUseCase:
@@ -49,7 +49,9 @@ class ImportationUseCase:
                 ),
             )
 
-            assert len(elements) == 0, f"element id exists {element} -> {elements}"
+            assert (
+                len(elements) == 0
+            ), f"element id exists {datasheet_element} -> {elements}"
             await self.db_context.insert(DatasheetElement, datasheet_element)
 
     async def import_collections(

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from typing import List, Optional
 from uuid import UUID
-from expert_dollup.core.usecases import OrganizationUseCase
+from expert_dollup.core.services import OrganizationUseCase
 from expert_dollup.shared.starlette_injection import (
     Inject,
     RequestHandler,

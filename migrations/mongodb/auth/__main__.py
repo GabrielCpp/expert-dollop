@@ -15,7 +15,7 @@ async def main():
     schemas = db.get_collection("schemas")
 
     for module_name in listdir(path.dirname(__file__)):
-        if module_name.startswith("m") and module_name.endswith(".py"):
+        if str(module_name).startswith("m") and module_name.endswith(".py"):
             module_content = import_module(module_name[:-3])
             schema_version = {"_id": module_content.version}
 

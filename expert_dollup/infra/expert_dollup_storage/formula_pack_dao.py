@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import List
 from uuid import UUID
-from datetime import datetime
 from bson import encode, decode
 from expert_dollup.infra.daos import *
 

@@ -2,7 +2,6 @@ from factory import Factory, SubFactory, DictFactory
 from dataclasses import dataclass
 from textwrap import dedent
 from decimal import Decimal
-from math import sqrt
 from expert_dollup.core.domains import PrimitiveWithNoneUnion
 from expert_dollup.core.units.evaluator import *
 

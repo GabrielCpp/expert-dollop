@@ -37,6 +37,7 @@ class ProjectDefinitionFactory(factory.Factory):
 
     id = factory.Faker("pyuuid4")
     name = factory.Sequence(lambda n: f"project_definition_{n}")
+    revision = "0"
     creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
@@ -381,6 +382,77 @@ class AggregateFactory(factory.Factory):
     attributes = factory.Dict({})
 
 
+class FieldTranslationFactory(factory.Factory):
+    class Meta:
+        model = FieldTranslation
+
+    locale = "fr-ca"
+    name = factory.Sequence(lambda n: f"translation_{n}")
+    value = factory.Sequence(lambda n: f"translation_value_{n}")
+
+
+class NewAggregateFactory(factory.Factory):
+    class Meta:
+        model = NewAggregate
+
+    ordinal = factory.Sequence(lambda n: n)
+    name = factory.Sequence(lambda n: f"label_{n}")
+    is_extendable = False
+    attributes = factory.Dict({})
+    translated = factory.List([FieldTranslationFactory(), FieldTranslationFactory()])
+
+
+class TranslationFactory(factory.Factory):
+    class Meta:
+        model = Translation
+
+    ressource_id = factory.Faker("pyuuid4")
+    locale = "fr-ca"
+    scope = factory.Faker("pyuuid4")
+    name = factory.Sequence(lambda n: f"translation_{n}")
+    value = factory.Sequence(lambda n: f"translation_value_{n}")
+    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
+
+
+class LocalizedAggregateFactory(factory.Factory):
+    class Meta:
+        model = LocalizedAggregate
+
+    aggregate = factory.SubFactory(AggregateFactory)
+    translations = factory.LazyAttribute(
+        lambda o: [
+            TranslationFactory(
+                ressource_id=o.aggregate.project_definition_id,
+                locale="fr-ca",
+                name=o.aggregate.name,
+                scope=o.aggregate.id,
+                value=f"{o.aggregate.name} fr",
+            ),
+            TranslationFactory(
+                ressource_id=o.aggregate.project_definition_id,
+                locale="fr-ca",
+                name=f"{o.aggregate.name}_help_text",
+                scope=o.aggregate.id,
+                value=f"{o.aggregate.name} fr help",
+            ),
+            TranslationFactory(
+                ressource_id=o.aggregate.project_definition_id,
+                locale="en-ca",
+                name=o.aggregate.name,
+                scope=o.aggregate.id,
+                value=f"{o.aggregate.name} en",
+            ),
+            TranslationFactory(
+                ressource_id=o.aggregate.project_definition_id,
+                locale="en-ca",
+                name=f"{o.aggregate.name}_help_text",
+                scope=o.aggregate.id,
+                value=f"{o.aggregate.name} en help",
+            ),
+        ]
+    )
+
+
 class AggregateAttributeFactory(factory.Factory):
     class Meta:
         model = AggregateAttribute
@@ -395,18 +467,6 @@ class AggregateAttributeFactory(factory.Factory):
         ],
         lambda x: x.fuzz(),
     )
-
-
-class TranslationFactory(factory.Factory):
-    class Meta:
-        model = Translation
-
-    ressource_id = factory.Faker("pyuuid4")
-    locale = "fr-CA"
-    scope = factory.Faker("pyuuid4")
-    name = factory.Sequence(lambda n: f"translation_{n}")
-    value = factory.Sequence(lambda n: f"translation_value_{n}")
-    creation_date_utc = factory.Faker("date_time_s", tzinfo=timezone.utc)
 
 
 class ProjectDetailsFactory(factory.Factory):

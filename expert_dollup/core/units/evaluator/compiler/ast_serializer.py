@@ -18,7 +18,7 @@ class AstSerializer:
         node_type = type(node)
 
         if not node_type in self.serializers:
-            raise Exception(f"Unsupported node {type(node)}")
+            raise Exception(f"Unsupported node {type(node)}: {node}")
 
         serialie = self.serializers[node_type]
         index = self._add(serialie(self, node))
@@ -120,6 +120,10 @@ def add_num(s: AstSerializer, node: ast.Num) -> AstNode:
 
 def add_str(s: AstSerializer, node: ast.Str) -> AstNode:
     return AstNode(kind="Str", values={"s": AstNodeValue(text=node.value)})
+
+
+def add_raw_str(s: AstSerializer, node: str) -> AstNode:
+    return AstNode(kind="Str", values={"s": AstNodeValue(text=node)})
 
 
 def add_unary_op(s: AstSerializer, node: ast.UnaryOp) -> AstNode:
@@ -278,6 +282,7 @@ SIMPLE_AST_SERIALIZER: TypeSerializerMap = {
     ast.Constant: add_constant,
     ast.Num: add_num,
     ast.Str: add_str,
+    str: add_raw_str,
     ast.UnaryOp: add_unary_op,
     ast.BinOp: add_bin_op,
     ast.Compare: add_compare,
