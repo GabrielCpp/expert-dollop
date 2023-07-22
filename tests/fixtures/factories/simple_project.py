@@ -2,7 +2,7 @@ from uuid import UUID
 from typing import List
 from expert_dollup.core.domains import *
 from ..fake_db_helpers import FakeDb
-from ..factories_domain import *
+from .domains import *
 from .field_config_factory import FieldConfigFactory
 
 
@@ -35,7 +35,7 @@ class SimpleProject:
                     path=parents,
                     is_collection=index == 0,
                     instanciate_by_default=True,
-                    order_index=index,
+                    ordinal=index,
                     field_details=field_details,
                 )
 
@@ -48,7 +48,7 @@ class SimpleProject:
             path=[],
             is_collection=False,
             instanciate_by_default=True,
-            order_index=0,
+            ordinal=0,
             translations=TranslationConfig(
                 help_text_name="root_a_text", label="root_a"
             ),
@@ -63,7 +63,7 @@ class SimpleProject:
             path=[],
             is_collection=True,
             instanciate_by_default=False,
-            order_index=1,
+            ordinal=1,
             translations=TranslationConfig(
                 help_text_name="root_b_text", label="root_b"
             ),

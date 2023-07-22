@@ -1,7 +1,8 @@
 from decimal import Decimal
 from expert_dollup.core.domains import *
+from expert_dollup.core.utils import by_names
 from ..fake_db_helpers import FakeDb
-from ..factories_domain import *
+from .domains import *
 
 
 class MiniDatasheet:
@@ -9,73 +10,82 @@ class MiniDatasheet:
         project_definition = db.add(
             ProjectDefinitionFactory(
                 name=f"datasheet_definition_a",
-                properties={
-                    "conversion_factor": ElementPropertySchema(
-                        value_validator={"type": "number"}
-                    ),
-                    "lost": ElementPropertySchema(value_validator={"type": "number"}),
-                },
             )
         )
 
-        label_collection = db.add(
-            LabelCollectionFactory(
+        collection = db.add(
+            AggregateCollectionFactory(
                 project_definition_id=project_definition.id,
+                is_abstract=True,
                 name="abstract_product",
+                attributes_schema=by_names(
+                    [
+                        AggregateAttributeSchemaFactory(
+                            name="conversion_factor",
+                            details=DecimalFieldConfigFactory(
+                                default_value=Decimal("1.1")
+                            ),
+                        ),
+                        AggregateAttributeSchemaFactory(
+                            name="lost",
+                            details=DecimalFieldConfigFactory(),
+                        ),
+                    ]
+                ),
             )
         )
 
-        label_a = db.add(
-            LabelFactory(
-                label_collection_id=label_collection.id,
-                order_index=0,
-                name="label_a",
-            )
+        aggregate_a = AggregateFactory(
+            collection_id=collection.id,
+            ordinal=0,
+            name="aggregate_a",
         )
 
-        label_b = db.add(
-            LabelFactory(
-                label_collection_id=label_collection.id,
-                order_index=1,
-                name="label_b",
-            )
+        aggregate_b = AggregateFactory(
+            collection_id=collection.id,
+            ordinal=1,
+            name="aggregate_b",
         )
 
         db.add(
-            DatasheetDefinitionElementFactory(
-                unit_id="inch",
-                is_collection=False,
+            AggregateFactory(
+                is_extendable=False,
                 project_definition_id=project_definition.id,
-                order_index=0,
+                ordinal=0,
+                collection_id=collection.id,
                 name="single_element",
-                default_properties={
-                    "conversion_factor": DatasheetDefinitionElementProperty(
-                        is_readonly=True, value=Decimal(2)
-                    ),
-                    "lost": DatasheetDefinitionElementProperty(
-                        is_readonly=False, value=Decimal(1)
-                    ),
-                },
-                tags=[str(label_a.id)],
+                attributes=by_names(
+                    [
+                        AggregateAttributeFactory(
+                            name="conversion_factor", is_readonly=True, value=Decimal(2)
+                        ),
+                        AggregateAttributeFactory(
+                            name="lost", is_readonly=False, value=Decimal(1)
+                        ),
+                    ]
+                ),
             )
         )
 
         db.add(
-            DatasheetDefinitionElementFactory(
-                unit_id="inch",
-                is_collection=True,
+            AggregateFactory(
+                is_extendable=True,
                 project_definition_id=project_definition.id,
-                order_index=0,
+                ordinal=0,
+                collection_id=collection.id,
                 name="collection_element",
-                default_properties={
-                    "conversion_factor": DatasheetDefinitionElementProperty(
-                        is_readonly=True, value=Decimal("1.5")
-                    ),
-                    "lost": DatasheetDefinitionElementProperty(
-                        is_readonly=False, value=Decimal(0)
-                    ),
-                },
-                tags=[label_b.id],
+                attributes=by_names(
+                    [
+                        AggregateAttributeFactory(
+                            name="conversion_factor",
+                            is_readonly=True,
+                            value=Decimal("1.5"),
+                        ),
+                        AggregateAttributeFactory(
+                            name="lost", is_readonly=False, value=Decimal(0)
+                        ),
+                    ]
+                ),
             )
         )
 

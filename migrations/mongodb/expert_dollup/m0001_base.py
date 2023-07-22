@@ -15,6 +15,15 @@ async def create_project_definition_tables(db):
     project_definition = await db.create_collection("project_definition")
     await project_definition.create_index("name")
 
+    project_definition_versions = await db.create_collection(
+        "project_definition_versions"
+    )
+    project_definition_versions.create_index(
+        [("project_definition_id", DESCENDING), ("tag", ASCENDING)], unique=True
+    )
+
+    await db.create_collection("aggregate_collection")
+    await db.create_collection("aggregate")
     project_definition_node = await db.create_collection("project_definition_node")
     await project_definition_node.create_index(
         [("project_definition_id", DESCENDING), ("path", ASCENDING)]
@@ -38,15 +47,9 @@ async def create_project_tables(db):
 
 async def create_datasheet_tables(db):
     await db.create_collection("unit")
-    datasheet_definition_label = await db.create_collection(
-        "datasheet_definition_label"
-    )
-    await datasheet_definition_label.create_index("label_collection_id")
-
-    await db.create_collection("datasheet_definition_element")
     await db.create_collection("datasheet")
     datasheet_element = await db.create_collection("datasheet_element")
-    await datasheet_element.create_index("element_def_id")
+    await datasheet_element.create_index("aggregate_id")
     await datasheet_element.create_index("original_datasheet_id")
 
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from typing import List, Optional
 from uuid import UUID
-from expert_dollup.core.usecases import OrganizationUseCase
+from expert_dollup.core.services import OrganizationUseCase
 from expert_dollup.shared.starlette_injection import (
     Inject,
     RequestHandler,
@@ -25,7 +25,7 @@ async def get_organization_by_id(
     jwt_dict: dict = Depends(AuthenticationRequired()),
 ):
     return await handler.handle(
-        service.find_by_id,
+        service.find,
         organization_id,
         MappingChain(out_dto=OrganizationDto),
     )

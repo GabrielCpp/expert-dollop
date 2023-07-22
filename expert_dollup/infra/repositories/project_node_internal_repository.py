@@ -1,31 +1,16 @@
 from typing import List, Optional
 from uuid import UUID
-from expert_dollup.core.domains import (
-    ProjectNode,
-    ProjectDefinitionNode,
-    ProjectNodeFilter,
-)
-from expert_dollup.shared.database_services import (
-    RepositoryProxy,
-    InternalRepository,
-    PluckQuery,
-)
+from expert_dollup.core.domains import *
+from expert_dollup.shared.database_services import *
 from expert_dollup.infra.expert_dollup_db import ProjectNodeDao, FIELD_LEVEL
 from expert_dollup.core.utils.path_transform import join_uuid_path
 
 
-class ProjectNodeInternalRepository(
-    RepositoryProxy[ProjectNode], PluckQuery[ProjectNode]
-):
-    def __init__(self, repository: InternalRepository[ProjectNode]):
-        RepositoryProxy.__init__(self, repository)
-        PluckQuery.__init__(self, repository)
-        self._repository = repository
-
+class ProjectNodeInternalRepository(RepositoryProxy[ProjectNode]):
     async def find_children(
         self, project_id: UUID, path: List[UUID], level: Optional[int] = None
     ) -> List[ProjectNode]:
-        builder = self._repository.get_builder().where("project_id", "==", project_id)
+        builder = QueryBuilder().where("project_id", "==", project_id)
 
         if not level is None:
             builder.where("level", "==", level)
@@ -39,7 +24,7 @@ class ProjectNodeInternalRepository(
 
     async def remove_collection(self, container: ProjectNode) -> None:
         builder = (
-            self._repository.get_builder()
+            QueryBuilder()
             .where("project_id", "==", container.project_id)
             .where("path", "startwiths", join_uuid_path(container.subpath))
         )
@@ -48,7 +33,7 @@ class ProjectNodeInternalRepository(
 
     async def find_root_sections(self, project_id: UUID) -> List[ProjectNode]:
         builder = (
-            self._repository.get_builder()
+            QueryBuilder()
             .where("project_id", "==", project_id)
             .where("display_query_internal_id", "==", project_id)
             .orderby(("level", "desc"))
@@ -60,7 +45,7 @@ class ProjectNodeInternalRepository(
         self, project_id: UUID, root_section_id: UUID
     ) -> List[ProjectNode]:
         builder = (
-            self._repository.get_builder()
+            QueryBuilder()
             .where("project_id", "==", project_id)
             .where("display_query_internal_id", "==", root_section_id)
             .orderby(("level", "desc"))
@@ -72,7 +57,7 @@ class ProjectNodeInternalRepository(
         self, project_id: UUID, form_id: UUID
     ) -> List[ProjectNode]:
         builder = (
-            self._repository.get_builder()
+            QueryBuilder()
             .where("project_id", "==", project_id)
             .where("display_query_internal_id", "==", form_id)
             .orderby(("level", "desc"))
@@ -93,14 +78,14 @@ class ProjectNodeInternalRepository(
         assert len(start_with_path) >= 1, "Cannot start with an path"
 
         by_id_query = (
-            self._repository.get_builder()
+            QueryBuilder()
             .where("project_id", "==", project_id)
             .where("type_id", "==", type_id)
             .where("id", "==", start_with_path[-1])
         )
 
         by_path_query = (
-            self._repository.get_builder()
+            QueryBuilder()
             .where("project_id", "==", project_id)
             .where("type_id", "==", type_id)
             .where("path", "startwiths", join_uuid_path(start_with_path))

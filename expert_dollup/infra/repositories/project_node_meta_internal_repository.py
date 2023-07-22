@@ -1,19 +1,8 @@
 from typing import List
 from uuid import UUID
-from expert_dollup.infra.expert_dollup_db import (
-    ProjectNodeMetaDao,
-    ProjectDefinitionNodeDao,
-)
-from expert_dollup.core.domains import (
-    ProjectNodeMeta,
-    ProjectNodeMetaFilter,
-    ProjectDefinitionNode,
-)
-from expert_dollup.shared.database_services import (
-    RepositoryProxy,
-    CollectionElementMapping,
-    InternalRepository,
-)
+from expert_dollup.infra.expert_dollup_db import *
+from expert_dollup.core.domains import *
+from expert_dollup.shared.database_services import *
 
 
 class ProjectNodeMetaInternalRepository(RepositoryProxy[ProjectNodeMeta]):
@@ -23,9 +12,7 @@ class ProjectNodeMetaInternalRepository(RepositoryProxy[ProjectNodeMeta]):
 
     async def find_project_defs(self, project_id: UUID) -> List[ProjectDefinitionNode]:
         builder = (
-            self._repository.get_builder()
-            .select("definition")
-            .where("project_id", "==", project_id)
+            QueryBuilder().select("definition").where("project_id", "==", project_id)
         )
 
         records = await self._repository.fetch_all_records(

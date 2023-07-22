@@ -38,7 +38,5 @@ async def test_create_get_delete_formula(ac, db_helper: DbFixtureHelper):
         "/api/projects", project, unwrap_with=ProjectDetailsDto
     )
 
-    await ac.post_json(f"/api/projects/{project_dto.id}/formula_cache")
-
     # response = await ac.get(f"/api/projects/{project.id}formula_cache/{formula.id}")
     # assert response.status_code == 200, response.text

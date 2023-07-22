@@ -3,7 +3,7 @@ from typing import List
 from expert_dollup.core.domains import *
 from expert_dollup.core.utils import authorization_factory
 from ..fake_db_helpers import FakeDb
-from ..factories_domain import *
+from .domains import *
 from .helpers import make_uuid
 
 

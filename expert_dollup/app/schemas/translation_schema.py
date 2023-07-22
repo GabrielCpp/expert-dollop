@@ -4,7 +4,7 @@ from ariadne import ObjectType, QueryType, convert_kwargs_to_snake_case
 from ariadne.types import GraphQLResolveInfo
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
-from expert_dollup.app.controllers.translation import *
+from expert_dollup.app.controllers.translations_controller import *
 from expert_dollup.app.dtos import *
 from .types import mutation
 

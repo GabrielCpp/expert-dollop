@@ -8,7 +8,7 @@ from expert_dollup.shared.database_services import DatabaseContext
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
-from expert_dollup.core.usecases import *
+from expert_dollup.core.services import *
 
 
 class ProjectNodeMetaImport(BaseModel):
@@ -37,7 +37,7 @@ class MapProjectNodeMetaImportToDomain:
             assert model.project_id == project_id
 
         if not project_id in self.node_by_project_id:
-            project = await self.db_context.find_by_id(ProjectDetails, project_id)
+            project = await self.db_context.find(ProjectDetails, project_id)
             definitions = await self.db_context.find_by(
                 ProjectDefinitionNode,
                 ProjectDefinitionNodeFilter(
@@ -115,25 +115,20 @@ import_method_by_model_id: Dict[str, ImportationMethod] = {
         get_method=lambda u: u.import_datasheet_elements,
         backfill_user_fields=fill_original_owner_organization_id,
     ),
-    "/api/label_collection": ImportationMethod(
-        dto=LabelCollectionDto,
-        domain=LabelCollection,
-        get_method=lambda u: u.import_label_collections,
+    "aggregate_collections": ImportationMethod(
+        dto=AggregateCollectionDto,
+        domain=AggregateCollection,
+        get_method=lambda u: u.import_collections,
     ),
-    "/api/label": ImportationMethod(
-        dto=LabelDto,
-        domain=Label,
-        get_method=lambda u: u.import_labels,
+    "aggregates": ImportationMethod(
+        dto=AggregateDto,
+        domain=Aggregate,
+        get_method=lambda u: u.import_aggregates,
     ),
     "/api/translation": ImportationMethod(
         dto=TranslationDto,
         domain=Translation,
         get_method=lambda u: u.import_translations,
-    ),
-    "/api/datasheet_definition_element": ImportationMethod(
-        dto=DatasheetDefinitionElementDto,
-        domain=DatasheetDefinitionElement,
-        get_method=lambda u: u.import_datasheet_definition_elements,
     ),
     "/api/project_definition": ImportationMethod(
         dto=ProjectDefinitionDto,

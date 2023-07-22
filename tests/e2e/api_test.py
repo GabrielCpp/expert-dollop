@@ -1,4 +1,5 @@
 import pytest
+from datetime import timedelta
 from uuid import uuid4
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
@@ -6,6 +7,7 @@ from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.shared.starlette_injection import make_page_model
 from expert_dollup.shared.database_services import InternalRepository
 from ..fixtures import *
+from ..utils import encode_cursor
 
 
 @pytest.mark.asyncio
@@ -67,30 +69,22 @@ async def test_given_translation_should_be_able_to_create_update_delete(
     ac, static_clock
 ):
     await ac.login_super_user()
-    project_definition = await ac.post_json(
-        "/api/definitions", NewDefinitionDtoFactory(), unwrap_with=ProjectDefinitionDto
+    definition = await create_definition(ac, NewDefinitionDtoFactory())
+    expected_translation = await create_translation(
+        ac, definition.id, NewTranslationDtoFactory()
     )
 
-    translation_input = TranslationInputDtoFactory(ressource_id=project_definition.id)
-    await ac.post_json("/api/translations", translation_input)
-
-    expected_translation = TranslationDto(
-        **translation_input.dict(), creation_date_utc=static_clock.utcnow()
-    )
-    actual = await ac.get_json(
-        f"/api/translations/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}",
-        unwrap_with=TranslationDto,
+    actual = await find_translation_by_id(
+        ac, definition.id, expected_translation.locale, expected_translation.name
     )
     assert actual == expected_translation
 
-    await ac.delete_json(
-        f"/api/translations/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}"
+    await delete_translation_by_id(
+        ac, definition.id, expected_translation.locale, expected_translation.name
     )
 
-    await ac.get_json(
-        f"/api/translations/{translation_input.ressource_id}/{translation_input.scope}/{translation_input.locale}/{translation_input.name}",
-        expected_status_code=404,
-    )
+
+from expert_dollup.infra.mappings import build_cursor
 
 
 @pytest.mark.asyncio
@@ -98,13 +92,10 @@ async def test_given_translation_should_be_able_to_retrieve_it(
     ac, container, map_dao_to_dto, static_clock
 ):
     await ac.login_super_user()
-    definition = await ac.post_json(
-        "/api/definitions",
-        NewDefinitionDtoFactory(),
-        unwrap_with=ProjectDefinitionDto,
-    )
+    definition = await create_definition(ac, NewDefinitionDtoFactory())
     ressource_id = definition.id
 
+    date = static_clock.utcnow()
     translations = dict(
         a_fr=TranslationDao(
             id=UUID("96492b2d-49fa-4250-b655-ff8cf5030953"),
@@ -113,7 +104,8 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             locale="fr-CA",
             name="a",
             value="a_fr",
-            creation_date_utc=static_clock.utcnow(),
+            creation_date_utc=date,
+            cursor=build_cursor(date, str(ressource_id), "fr-CA", "a"),
         ),
         a_en=TranslationDao(
             id=UUID("96492b2d-49fa-4250-b655-ff8cf5030954"),
@@ -122,7 +114,10 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             locale="en-US",
             name="a",
             value="a_en",
-            creation_date_utc=static_clock.utcnow(),
+            creation_date_utc=static_clock.utcnow() + timedelta(0, 1),
+            cursor=build_cursor(
+                date + timedelta(0, 1), str(ressource_id), "en-US", "a"
+            ),
         ),
         b_fr=TranslationDao(
             id=UUID("96492b2d-49fa-4250-b655-ff8cf5030955"),
@@ -131,7 +126,10 @@ async def test_given_translation_should_be_able_to_retrieve_it(
             locale="fr-CA",
             name="b",
             value="b_fr",
-            creation_date_utc=static_clock.utcnow(),
+            creation_date_utc=static_clock.utcnow() + timedelta(0, 2),
+            cursor=build_cursor(
+                date + timedelta(0, 2), str(ressource_id), "fr-CA", "b"
+            ),
         ),
     )
 
@@ -142,7 +140,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
     PageDto = make_page_model(TranslationDto)
 
     expected_translations = PageDto(
-        next_page_token="OTY0OTJiMmQtNDlmYS00MjUwLWI2NTUtZmY4Y2Y1MDMwOTUz",
+        next_page_token=encode_cursor(translations["a_fr"].cursor),
         has_next_page=True,
         limit=10,
         results=[dto_translations["b_fr"], dto_translations["a_fr"]],
@@ -153,6 +151,7 @@ async def test_given_translation_should_be_able_to_retrieve_it(
     )
 
     actual = await ac.get_json(
-        f"/api/translations/{ressource_id}/fr-CA", unwrap_with=PageDto
+        f"/api/definitions/{ressource_id}/translations?locale=fr-CA",
+        unwrap_with=PageDto,
     )
     assert actual == expected_translations

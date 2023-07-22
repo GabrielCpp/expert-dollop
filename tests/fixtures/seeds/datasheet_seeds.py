@@ -1,11 +1,15 @@
 from decimal import Decimal
 from expert_dollup.core.domains import *
-from ..factories.datasheet_factory import DatasheetSeed, ElementSeed, CollectionSeed
+from ..factories.datasheet_factory import (
+    DatasheetSeed,
+    ElementSeed,
+    AggregateCollectionSeed,
+)
 
 
 def make_base_datasheet(project_seed):
     datasheet_seed = DatasheetSeed(
-        properties={"price": Decimal, "factor": Decimal},
+        attributes={"price": Decimal, "factor": Decimal},
         element_seeds={
             "wood_plank": ElementSeed(
                 tags=["productcategory_label_0"],
@@ -16,48 +20,49 @@ def make_base_datasheet(project_seed):
                 unit_id="m",
             ),
             "ceramix": ElementSeed(
-                tags=["productcategory_label_2"], unit_id="m", is_collection=True
+                tags=["productcategory_label_2"], unit_id="m", is_extendable=True
             ),
         },
         collection_seeds={
-            "datasheetelement_binding": CollectionSeed(
+            "datasheetelement_binding": AggregateCollectionSeed(
                 label_count=10,
                 schemas={
-                    "formula": FormulaAggregate("*"),
+                    "formula": NodeReferenceConfig(node_type=NodeType.FORMULA),
                     "special_condition": bool,
                     "quantity": Decimal,
-                    "stage": CollectionAggregate("stage"),
-                    "orderformcategory": CollectionAggregate("orderformcategory"),
-                    "datasheet_element": DatasheetAggregate("*"),
+                    "stage": AggregateReferenceConfig("stage"),
+                    "orderformcategory": AggregateReferenceConfig("orderformcategory"),
+                    "datasheet_element": AggregateReferenceConfig("datasheet"),
                 },
             ),
-            "substage": CollectionSeed(
+            "substage": AggregateCollectionSeed(
                 label_count=10,
                 schemas={
-                    "formula": FormulaAggregate("*"),
+                    "formula": NodeReferenceConfig(node_type=NodeType.FORMULA),
                     "special_condition": bool,
                     "quantity": Decimal,
-                    "stage": CollectionAggregate("stage"),
-                    "orderformcategory": CollectionAggregate("orderformcategory"),
-                    "datasheet_element": DatasheetAggregate("*"),
+                    "stage": AggregateReferenceConfig("stage"),
+                    "orderformcategory": AggregateReferenceConfig("orderformcategory"),
+                    "datasheet_element": AggregateReferenceConfig("datasheet"),
                 },
             ),
-            "stage": CollectionSeed(
+            "stage": AggregateCollectionSeed(
                 label_count=5,
                 schemas={
                     "localisation": str,
                     "associated_global_section": str,
                     "compile_in_one": bool,
-                    "floor": CollectionAggregate("floor"),
+                    "floor": AggregateReferenceConfig("floor"),
                 },
             ),
-            "orderformcategory": CollectionSeed(
+            "orderformcategory": AggregateCollectionSeed(
                 label_count=3,
-                schemas={"worksection": CollectionAggregate("worksection")},
+                schemas={"worksection": AggregateReferenceConfig("worksection")},
             ),
-            "worksection": CollectionSeed(label_count=3),
-            "productcategory": CollectionSeed(label_count=3),
-            "floor": CollectionSeed(label_count=3),
+            "worksection": AggregateCollectionSeed(label_count=3),
+            "productcategory": AggregateCollectionSeed(label_count=3),
+            "floor": AggregateCollectionSeed(label_count=3),
+            "datasheet": AggregateCollectionSeed(label_count=3),
         },
         formulas=project_seed.formulas,
     )

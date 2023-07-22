@@ -1,0 +1,68 @@
+from uuid import UUID
+from typing import List
+from expert_dollup.shared.database_services import Repository
+from expert_dollup.shared.starlette_injection import IdProvider
+from expert_dollup.core.domains import *
+from expert_dollup.core.utils import by_names
+
+
+class CollectionUseCase:
+    def __init__(
+        self, repository: Repository[AggregateCollection], id_provider: IdProvider
+    ):
+        self.repository = repository
+        self.id_provider = id_provider
+
+    async def all(self, project_definition_id: UUID):
+        return await self.repository.find_by(
+            AggregateCollectionFilter(project_definition_id=project_definition_id)
+        )
+
+    async def find(
+        self, project_definition_id: UUID, collection_id: UUID
+    ) -> AggregateCollection:
+        return await self.repository.find_one_by(
+            AggregateCollectionFilter(
+                id=collection_id, project_definition_id=project_definition_id
+            )
+        )
+
+    async def add(
+        self,
+        project_definition_id: UUID,
+        new_aggregate_collection: NewAggregateCollection,
+    ) -> AggregateCollection:
+        aggregate_collection = AggregateCollection(
+            id=self.id_provider.uuid4(),
+            project_definition_id=project_definition_id,
+            name=new_aggregate_collection.name,
+            is_abstract=new_aggregate_collection.is_abstract,
+            attributes_schema=by_names(new_aggregate_collection.attributes_schema),
+        )
+        await self.repository.insert(aggregate_collection)
+        return aggregate_collection
+
+    async def update(
+        self,
+        project_definition_id: UUID,
+        collection_id: UUID,
+        collection: NewAggregateCollection,
+    ) -> AggregateCollection:
+        aggregate_collection = AggregateCollection(
+            id=collection_id,
+            project_definition_id=project_definition_id,
+            name=collection.name,
+            is_abstract=collection.is_abstract,
+            attributes_schema=by_names(
+                collection.attributes_schema,
+            ),
+        )
+        await self.repository.upserts([aggregate_collection])
+        return aggregate_collection
+
+    async def delete(self, project_definition_id: UUID, collection_id: UUID) -> None:
+        await self.repository.delete_by(
+            AggregateCollectionFilter(
+                id=collection_id, project_definition_id=project_definition_id
+            )
+        )

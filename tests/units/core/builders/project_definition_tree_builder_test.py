@@ -14,7 +14,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             name="root_a_subsection_1_form_2",
             is_collection=False,
             instanciate_by_default=True,
-            order_index=2,
+            ordinal=2,
             field_details=None,
             translations=TranslationConfig(
                 help_text_name="root_a_subsection_1_form_2_help_text",
@@ -34,7 +34,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             name="root_a_subsection_0_form_0",
             is_collection=True,
             instanciate_by_default=True,
-            order_index=0,
+            ordinal=0,
             field_details=None,
             translations=TranslationConfig(
                 help_text_name="root_a_subsection_0_form_0_help_text",
@@ -54,7 +54,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             name="root_a_subsection_0_form_2",
             is_collection=False,
             instanciate_by_default=True,
-            order_index=2,
+            ordinal=2,
             field_details=None,
             translations=TranslationConfig(
                 help_text_name="root_a_subsection_0_form_2_help_text",
@@ -74,7 +74,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             name="root_a_subsection_1_form_0",
             is_collection=True,
             instanciate_by_default=True,
-            order_index=0,
+            ordinal=0,
             field_details=None,
             translations=TranslationConfig(
                 help_text_name="root_a_subsection_1_form_0_help_text",
@@ -94,7 +94,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             name="root_a_subsection_1_form_1",
             is_collection=False,
             instanciate_by_default=True,
-            order_index=1,
+            ordinal=1,
             field_details=None,
             translations=TranslationConfig(
                 help_text_name="root_a_subsection_1_form_1_help_text",
@@ -114,7 +114,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             name="root_a_subsection_0_form_1",
             is_collection=False,
             instanciate_by_default=True,
-            order_index=1,
+            ordinal=1,
             field_details=None,
             translations=TranslationConfig(
                 help_text_name="root_a_subsection_0_form_1_help_text",
@@ -134,7 +134,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             name="a",
             is_collection=False,
             instanciate_by_default=True,
-            order_index=0,
+            ordinal=0,
             field_details=CollapsibleContainerFieldConfig(is_collapsible=True),
             translations=TranslationConfig(
                 help_text_name="a_help_text",
@@ -151,7 +151,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             name="root_a_subsection_1",
             is_collection=False,
             instanciate_by_default=True,
-            order_index=1,
+            ordinal=1,
             field_details=None,
             translations=TranslationConfig(
                 help_text_name="root_a_subsection_1_help_text",
@@ -168,7 +168,7 @@ def test_project_definition_tree_builder_with_unbalenced_tree():
             name="root_a_subsection_0",
             is_collection=True,
             instanciate_by_default=True,
-            order_index=0,
+            ordinal=0,
             field_details=None,
             translations=TranslationConfig(
                 help_text_name="root_a_subsection_0_help_text",

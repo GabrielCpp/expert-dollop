@@ -71,6 +71,10 @@ class TypedInjection(Injector):
         origin = get_origin(t)
         args = get_args(t)
 
+        if isinstance(t, list):
+            concat_args = ",".join(TypedInjection.get_type_name(a) for a in t)
+            return f"[{concat_args}]"
+
         if origin is None:
             return t.__name__
 
@@ -167,14 +171,22 @@ class InjectorBuilder:
         )
 
     def add_factory(
-        self, binded_type: ProviderName, to: Type, **kwargs: ProviderName
-    ) -> None:
-        mapped_kwargs = self._get_providers(kwargs)
+        self, binded_type: ProviderName, to: Type[T], **kwargs: ProviderName
+    ) -> Callable[[], T]:
+        try:
+            mapped_kwargs = self._get_providers(kwargs)
+        except AttributeError as e:
+            raise Exception(f"Faile to inject {to} as {e}") from e
+
+        factory = Factory(to, **mapped_kwargs)
+
         setattr(
             self._container,
             InjectorBuilder.infer_name(binded_type),
-            Factory(to, **mapped_kwargs),
+            factory,
         )
+
+        return factory
 
     def add_abstract_factory(self, binded_type: ProviderName) -> None:
         setattr(

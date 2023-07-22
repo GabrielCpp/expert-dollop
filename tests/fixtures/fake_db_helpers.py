@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Callable, List, Dict, Type, TypeVar, Union, Optional
+from typing import Callable, List, Dict, Type, TypeVar, Union, Optional, Any
 from typing_extensions import TypeAlias
 from expert_dollup.shared.starlette_injection import Injector
 from inspect import isclass
@@ -62,6 +62,16 @@ class FakeDb:
         assert len(results) == 1
         return results[0]
 
+    def get_by_name(self, object_type: Type[Domain], name: str) -> Domain:
+        objects = self.collections[object_type]
+        results = [
+            matching_object
+            for matching_object in objects
+            if matching_object.name == name
+        ]
+        assert len(results) == 1
+        return results[0]
+
     def add(self, *args: Domain) -> Union[Domain, List[Domain]]:
         if len(args) == 0:
             raise Exception("Add at lead one object")
@@ -71,11 +81,9 @@ class FakeDb:
         return first_object if len(args) == 1 else args
 
     def add_all(self, domains: List[Domain]) -> List[Domain]:
-        if len(domains) == 0:
-            return []
+        for domain in domains:
+            self.add(domain)
 
-        first_object = domains[0]
-        self.collections[type(first_object)].extend(domains)
         return domains
 
     def merge(self, other: "FakeDb") -> None:
@@ -87,7 +95,7 @@ class DbFixtureHelper:
     @staticmethod
     def _insert_many(service, objects):
         async def do_inserts():
-            await service.insert_many(objects)
+            await service.inserts(objects)
 
         return do_inserts
 
@@ -108,12 +116,18 @@ class DbFixtureHelper:
         for domain_type, objects in fake_db.collections.items():
             service_type = Repository[domain_type]
             service = self.injector.get(service_type)
-            await service.insert_many(objects)
+            await service.inserts(objects)
 
         self.db = fake_db
         return fake_db
 
     async def load_fixtures(self, *loaders: FakeDbLoader) -> FakeDb:
         db = FakeDb.load_into(self.db, loaders)
+        db = await self.init_db(db)
+        return db
+
+    async def load_models(self, *domains: Any) -> FakeDb:
+        db = FakeDb()
+        db.add_all(domains)
         db = await self.init_db(db)
         return db

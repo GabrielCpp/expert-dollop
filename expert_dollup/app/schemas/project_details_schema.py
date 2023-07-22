@@ -5,9 +5,7 @@ from ariadne.types import GraphQLResolveInfo
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.app.dtos import *
 from expert_dollup.core.domains import *
-from expert_dollup.app.controllers.report.report_definition import (
-    get_project_def_reports_definitions,
-)
+from expert_dollup.app.controllers.definition.definition_report_controller import *
 from .types import project_details
 
 

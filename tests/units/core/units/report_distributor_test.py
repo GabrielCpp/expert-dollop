@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 from uuid import uuid4, UUID
 from expert_dollup.core.units import ReportDistributor
 from expert_dollup.core.domains import *
-from expert_dollup.shared.database_services import DatabaseContext, Plucker
+from expert_dollup.shared.database_services import DatabaseContext
 from tests.fixtures.mock_interface_utils import StrictInterfaceSetup, AsyncMock
 from ....fixtures import *
 
@@ -64,8 +64,8 @@ async def test_update_empty_distributable_from_report(static_clock):
                 formula_id=report.stages[0].rows[0].formula_id,
                 supplied_item=SuppliedItem(
                     datasheet_id=report.datasheet_id,
-                    element_def_id=report.stages[0].rows[0].element_def_id,
-                    child_reference_id=report.stages[0].rows[0].child_reference_id,
+                    aggregate_id=report.stages[0].rows[0].aggregate_id,
+                    element_id=report.stages[0].rows[0].element_id,
                     organization_id=organization_id,
                 ),
                 summary=report.stages[0].summary,
@@ -85,8 +85,8 @@ async def test_update_empty_distributable_from_report(static_clock):
                 formula_id=report.stages[0].rows[1].formula_id,
                 supplied_item=SuppliedItem(
                     datasheet_id=report.datasheet_id,
-                    element_def_id=report.stages[0].rows[1].element_def_id,
-                    child_reference_id=report.stages[0].rows[1].child_reference_id,
+                    aggregate_id=report.stages[0].rows[1].aggregate_id,
+                    element_id=report.stages[0].rows[1].element_id,
                     organization_id=organization_id,
                 ),
                 summary=report.stages[0].summary,

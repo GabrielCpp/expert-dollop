@@ -5,13 +5,10 @@ from ariadne.types import GraphQLResolveInfo
 from expert_dollup.shared.database_services import *
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
-from expert_dollup.app.controllers.translation import *
-from expert_dollup.app.controllers.project.project_definition_node import *
+from expert_dollup.app.controllers.translations_controller import *
+from expert_dollup.app.controllers.definition.definition_node_controller import *
+from expert_dollup.app.controllers.definition.formulas_controller import *
 from expert_dollup.app.dtos import *
-from expert_dollup.app.controllers.formulas_controller import (
-    find_paginated_formulas,
-    find_formula_by_id,
-)
 from .types import query
 
 

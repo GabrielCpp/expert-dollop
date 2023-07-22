@@ -4,8 +4,8 @@ from expert_dollup.shared.database_services import Repository
 from expert_dollup.core.builders import *
 from expert_dollup.core.domains import *
 from expert_dollup.core.units import *
-from expert_dollup.core.logits import *
 from expert_dollup.core.repositories import *
+from expert_dollup.core.units.evaluator import UnitRef
 
 
 class NodeEventDispatcher:
@@ -38,7 +38,7 @@ class NodeEventDispatcher:
             ProjectNodeFilter(project_id=bounded_node.node.project_id, id=node_id),
         )
 
-        return await self.project_node_service.find_by_id(node_id)
+        return await self.project_node_service.find(node_id)
 
     async def update_nodes_value(
         self, project_id: UUID, updates: List[FieldUpdate]

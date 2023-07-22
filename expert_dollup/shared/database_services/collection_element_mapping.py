@@ -158,10 +158,10 @@ class CollectionElementMapping:
         dao_type = self._mapping_details.domain_to_dao(domain)
         return self._mapper.map(domain, dao_type)
 
-    def map_domain_to_dict(self, domain: Domain) -> dict:
+    def map_domain_to_record(self, domain: Domain) -> Record:
         dao_type = self._mapping_details.domain_to_dao(domain)
         dao = self._mapper.map(domain, dao_type)
-        d = self.map_dao_to_dict(dao)
+        d = self.map_dao_to_record(dao)
         return d
 
     def map_dao_to_domain(self, dao: BaseModel) -> Domain:
@@ -169,7 +169,7 @@ class CollectionElementMapping:
         domain = self._mapper.map(dao, domain_type)
         return domain
 
-    def map_dao_to_dict(self, dao: BaseModel) -> dict:
+    def map_dao_to_record(self, dao: BaseModel) -> Record:
         d = self._dao_to_dict(dao)
         mapping = self._mapping_details.mapping_for(d)
         mapping.versioning.add_version(d, "_version")
@@ -188,11 +188,11 @@ class CollectionElementMapping:
         d = mapping.versioning.map_to_latest(d, "_version")
         return mapping.dao.parse_obj(d)
 
-    def map_many_domain_to_dict(self, domains: List[Domain]) -> List[dict]:
-        return [self.map_domain_to_dict(domain) for domain in domains]
+    def map_many_domain_to_record(self, domains: List[Domain]) -> List[Record]:
+        return [self.map_domain_to_record(domain) for domain in domains]
 
-    def map_many_dao_to_dict(self, daos: List[BaseModel]) -> Iterable[dict]:
-        return (self.map_dao_to_dict(dao) for dao in daos)
+    def map_many_dao_to_record(self, daos: List[BaseModel]) -> Iterable[Record]:
+        return (self.map_dao_to_record(dao) for dao in daos)
 
     def map_many_record_to_domain(self, records: List[Record]) -> List[Domain]:
         return [self.map_record_to_domain(record) for record in records]

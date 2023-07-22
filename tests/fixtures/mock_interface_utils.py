@@ -66,9 +66,9 @@ def mock_class(class_type, side_effects: dict = {}):
             methods[method_name] = MagicMock(side_effect=side_effect)
 
     if isabstract(class_type):
-        instance = type(class_type.__name__, (class_type,), methods)()
+        instance = type(str(class_type), (class_type,), methods)()
     else:
-        instance = type(class_type.__name__, (), methods)()
+        instance = type(str(class_type), (), methods)()
 
     for method_name, mock in repatchs.items():
         setattr(type(instance), method_name, mock)
@@ -173,10 +173,11 @@ class StrictInterfaceSetup:
             return call(*self.proxy.args, **self.proxy.kwargs)
 
     class Stub:
-        def __init__(self):
+        def __init__(self, abstract_class):
             self.effect_by_calls: List[StrictInterfaceSetup.CallCandidate] = []
             self.method_name = None
             self.invoke_count = 0
+            self.abstract_class = abstract_class.__name__
 
         def __call__(self, args, kwargs):
             invokation = call(*args, **kwargs)
@@ -201,7 +202,7 @@ class StrictInterfaceSetup:
             if selected_effect is None:
                 raise MatchingMockMismatch(
                     "No matching invokation found",
-                    target=f"object.{self.method_name}",
+                    target=f"{self.abstract_class}.{self.method_name}",
                     invokation=str(invokation),
                     candidates=str(self.effect_by_calls),
                 )
@@ -212,7 +213,9 @@ class StrictInterfaceSetup:
 
     def __init__(self, abstract_class):
         self._abstract_class = abstract_class
-        self._setups_by_member_name = defaultdict(StrictInterfaceSetup.Stub)
+        self._setups_by_member_name = defaultdict(
+            lambda: StrictInterfaceSetup.Stub(abstract_class)
+        )
         self._properties = set()
         self.defers = self._build_defer_map(abstract_class)
         self.object = mock_class(abstract_class, self.defers)

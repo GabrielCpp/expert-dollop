@@ -1,5 +1,5 @@
 from expert_dollup.infra.validators import SchemaValidator
-from expert_dollup.core.exceptions import ValidationError
+from expert_dollup.shared.validation import ValidationError
 from expert_dollup.core.domains import *
 from typing import Optional
 
@@ -29,7 +29,7 @@ TYPE_TO_SCHEMA = {
 }
 
 
-def make_schema(node_definition: ProjectDefinitionNode) -> Optional[JsonSchema]:
+def make_schema(node_definition: ProjectDefinitionNode) -> Optional[dict]:
     TYPE_TO_SCHEMA.get(type(node_definition.field_details))
     make_it = TYPE_TO_SCHEMA.get(type(node_definition.field_details))
 

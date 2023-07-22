@@ -1,58 +1,143 @@
 scalar JsonSchema
+scalar UUID
 
 type Unit {
   id: ID!
 }
 
-type DatasheetDefinitionPropertySchema {
-  valueValidator: JsonSchema!
-}
-
-type DatasheetDefinitionPropertySchemaDict {
+type AggregateAttribute {
   name: String!
-  schema: DatasheetDefinitionPropertySchema!
+  isReadonly: Boolean!
+  value: PrimitiveWithReferenceUnion!
 }
 
-type DatasheetDefinitionElementEdge {
-  node: DatasheetDefinitionElement!
-  cursor: String!
+input AggregateAttributeInput {
+  name: String!
+  isReadonly: Boolean!
+  value: FieldValueInput!
 }
 
-type DatasheetDefinitionElementConnection {
-  edges: [DatasheetDefinitionElementEdge!]!
+type Aggregate {
+  id: ID!
+  projectDefinitionId: String!
+  collectionId: String!
+  name: String!
+  translated: [Translation!]!
+  ordinal: Int!
+  isExtendable: Boolean!
+  attributes: [AggregateAttribute!]!
+}
+
+type AggregateConnection {
+  edges: [AggregateEdge!]!
   pageInfo: PageInfo!
 }
 
-type DatasheetDefinitionElementProperty {
-  isReadonly: Boolean!
-  value: String!
+type AggregateEdge {
+  node: Aggregate!
+  cursor: String!
 }
 
-type DatasheetDefinitionElementPropertyDict {
+input AggregateInput {
   name: String!
-  property: DatasheetDefinitionElementProperty!
+  ordinal: Int!
+  isExtendable: Boolean!
+  attributes: [AggregateAttributeInput!]!
+  translated: [TranslationInput!]!
 }
 
-type DatasheetDefinitionElement {
-  id: ID!
-  unitId: String!
-  isCollection: Boolean!
+enum NodeType {
+  FORMULA
+  FIELD
+  SECTION
+  FORM
+  SUB_SECTION
+  ROOT_SECTION
+}
+
+type NodeReferenceConfig {
+  nodeType: NodeType!
+}
+
+input NodeReferenceConfigInput {
+  nodeType: NodeType!
+}
+
+union AttributeDetailsUnion =
+    IntFieldConfig
+  | DecimalFieldConfig
+  | StringFieldConfig
+  | BoolFieldConfig
+  | StaticChoiceFieldConfig
+  | AggregateReferenceConfig
+  | NodeReferenceConfig
+
+enum AttributeDetailsEnum {
+  INT_FIELD_CONFIG
+  DECIMAL_FIELD_CONFIG
+  STRING_FIELD_CONFIG
+  BOOL_FIELD_CONFIG
+  STATIC_CHOICE_FIELD_CONFIG
+  AGGREGATE_REFERENCE_CONFIG
+  NODE_REFERENCE_CONFIG
+}
+
+input AttributeDetailsUnionInput {
+  kind: AttributeDetailsEnum!
+  int: IntFieldConfigInput
+  decimal: DecimalFieldConfigInput
+  string: StringFieldConfigInput
+  bool: BoolFieldConfigInput
+  staticChoice: StaticChoiceFieldConfigInput
+  aggregateReference: AggregateReferenceConfigInput
+  nodeReference: NodeReferenceConfigInput
+}
+
+type AggregateAttributeSchema {
+  name: String!
+  translations: TranslationConfig!
+  details: AttributeDetailsUnion!
+}
+
+input AggregateAttributeSchemaInput {
+  name: String!
+  details: AttributeDetailsUnionInput!
+}
+
+type AggregateCollection {
+  id: String!
   projectDefinitionId: String!
-  projectDefinition: ProjectDefinition
-  orderIndex: Int!
   name: String!
-  defaultProperties: [DatasheetDefinitionElementPropertyDict!]!
-  tags: [String!]!
-  creationDateUtc: String!
+  isAbstract: Boolean!
+  attributesSchema: [AggregateAttributeSchema!]!
+  translated: [Translation!]!
+}
+
+input AggregateCollectionInput {
+  name: String!
+  isAbstract: Boolean!
+  attributesSchema: [AggregateAttributeSchemaInput!]!
+}
+
+type InstanceSchema {
+  id: ID!
+  isExtendable: Boolean!
+  attributesSchema: [AggregateAttribute!]!
+}
+
+type Attribute {
+  name: String!
+  value: PrimitiveWithReferenceUnion
 }
 
 type DatasheetElement {
+  id: ID!
   datasheetId: String!
-  elementDefId: String!
-  elementDefinition: DatasheetDefinitionElement!
-  childElementReference: ID!
-  properties: String!
+  aggregateId: String!
+  schema: InstanceSchema!
+  attributes: [Attribute!]!
   originalDatasheetId: String!
+  originalOwnerOrganizationId: String!
   creationDateUtc: String!
 }
 
@@ -69,9 +154,8 @@ type DatasheetElementConnection {
 type Datasheet {
   id: ID!
   name: String!
-  isStaged: Boolean!
   projectDefinitionId: String!
-  fromDatasheetId: String
+  fromDatasheetId: String!
   elements(first: Int!, after: String): DatasheetElementConnection!
 }
 
@@ -114,6 +198,14 @@ type StaticChoiceOption {
 type StaticChoiceFieldConfig {
   options: [StaticChoiceOption!]!
   selected: String!
+}
+
+type AggregateReferenceConfig {
+  fromCollection: String!
+}
+
+input AggregateReferenceConfigInput {
+  fromCollection: String!
 }
 
 type CollapsibleContainerFieldConfig {
@@ -200,7 +292,7 @@ type BoolFieldValue {
   enabled: Boolean!
 }
 
-union FieldValue =
+union PrimitiveWithReferenceUnion =
     IntFieldValue
   | DecimalFieldValue
   | StringFieldValue
@@ -286,11 +378,16 @@ input BoolFieldValueInput {
   enabled: Boolean!
 }
 
+input ReferenceFieldValueInput {
+  uuid: String!
+}
+
 enum FieldValueType {
   INT_FIELD_VALUE
   DECIMAL_FIELD_VALUE
   STRING_FIELD_VALUE
   BOOL_FIELD_VALUE
+  REFERENCE_FIELD_VALUE
 }
 
 input FieldValueInput {
@@ -299,13 +396,14 @@ input FieldValueInput {
   decimal: DecimalFieldValueInput
   string: StringFieldValueInput
   bool: BoolFieldValueInput
+  reference: ReferenceFieldValueInput
 }
 
 input ProjectDefinitionNodeCreationInput {
   name: String!
   isCollection: Boolean!
   instanciateByDefault: Boolean!
-  orderIndex: Int!
+  ordinal: Int!
   path: [String!]!
   translations: TranslationConfigInput!
   fieldDetails: FieldDetailsUnionInput
@@ -337,7 +435,7 @@ type ProjectDefinitionNode {
   name: String!
   isCollection: Boolean!
   instanciateByDefault: Boolean!
-  orderIndex: Int!
+  ordinal: Int!
   fieldDetails: FieldDetailsUnion
   triggers: [Trigger!]!
   translations: TranslationConfig!
@@ -361,21 +459,9 @@ type ProjectDefinitionNodeTree {
 type ProjectDefinition {
   id: ID!
   name: String!
-  defaultDatasheetId: String!
-  defaultDatasheet: Datasheet!
-  projectDefinitionId: String!
-  projectDefinition: ProjectDefinition!
-  rootSections(projectDefinitionId: ID!): ProjectDefinitionNodeTree!
-  rootSectionContainers(
-    projectDefinitionId: ID!
-    rootSectionId: ID!
-  ): ProjectDefinitionNodeTree!
-  formContent(projectDefinitionId: ID!, formId: ID!): ProjectDefinitionNodeTree!
-  properties: [DatasheetDefinitionPropertySchemaDict!]!
-  elementsDefinition(
-    first: Int!
-    after: String
-  ): DatasheetDefinitionElementConnection
+  rootSections: ProjectDefinitionNodeTree!
+  rootSectionContainers(rootSectionId: ID!): ProjectDefinitionNodeTree!
+  formContent(formId: ID!): ProjectDefinitionNodeTree!
 }
 
 type ProjectDefinitionEdge {
@@ -423,14 +509,13 @@ type ProjectNode {
   typeId: String!
   typeName: String!
   path: [String!]!
-  value: FieldValue
+  value: PrimitiveWithReferenceUnion
   label: String
 }
 
 type ProjectDetails {
   id: ID!
   name: String!
-  isStaged: Boolean
   projectDefinitionId: String!
   projectDefinition: ProjectDefinition!
   datasheetId: String!
@@ -472,22 +557,43 @@ type ProjectNodeTree {
   roots: [ProjectNodeTreeTypeNode!]!
 }
 
+type ReportJoin {
+  fromBucket: AttributeBucket!
+  onCollection: AttributeBucket!
+  alias: String!
+}
+
 type AttributeBucket {
   bucketName: String!
   attributeName: String!
 }
 
+union ReportUnitUnion = Unit | AttributeBucket
+
 type ReportComputation {
+  label: AttributeBucket
   name: String!
   expression: String!
+  unit: ReportUnitUnion
   isVisible: Boolean!
-  unitId: String
+}
+
+type Selection {
+  fromCollectionId: String!
+  fromAlias: String!
+  joinsCache: [ReportJoin!]!
+  formulaAttribute: AttributeBucket!
+  datasheetAttribute: AttributeBucket!
 }
 
 type ReportDefinitionStructure {
-  formulaAttribute: AttributeBucket!
-  datasheetAttribute: AttributeBucket!
+  selection: Selection!
   columns: [ReportComputation!]!
+  groupBy: [AttributeBucket!]!
+  having: String!
+  orderBy: [AttributeBucket!]!
+  stageSummary: ReportComputation!
+  reportSummary: [ReportComputation!]!
 }
 
 type ReportDefinition {
@@ -507,7 +613,7 @@ type ReportRow {
 
 type ComputedValue {
   label: String!
-  value: FieldValue!
+  value: PrimitiveWithReferenceUnion!
   unit: String
   isVisible: Boolean!
 }
@@ -602,6 +708,24 @@ type Query {
   currentUser: User
   units: [Unit!]!
 
+  # Aggregates
+  findAggregates(
+    projectDefinitionId: ID!
+    collectionId: ID!
+    query: String!
+    first: Int!
+    after: String
+  ): AggregateConnection!
+
+  # Aggregates collection
+  findAggregateCollection(
+    projectDefinitionId: ID!
+    collectionId: ID!
+  ): AggregateCollection!
+  findDefinitionAggregateCollections(
+    projectDefinitionId: ID!
+  ): [AggregateCollection!]!
+
   # ProjectDefinition
   findDefinitionFormulaFieldMix(
     projectDefinitionId: ID!
@@ -620,12 +744,6 @@ type Query {
     first: Int!
     after: String
   ): DatasheetConnection!
-  findDatasheetDefinitionElements(
-    projectDefinitionId: ID!
-    query: String!
-    first: Int!
-    after: String
-  ): DatasheetDefinitionElementConnection!
   findProjectDefinition(id: ID!): ProjectDefinition!
   findProjectDefinitionRootSections(
     projectDefinitionId: ID!
@@ -666,6 +784,8 @@ type Query {
     first: Int!
     after: String
   ): FormulaConnection!
+
+  # Reports
   findReportDefinitions(projectDefinitionId: ID!): [ReportDefinition!]!
   findReportDefinition(reportDefinitionId: ID!): ReportDefinition!
   findProjectReport(projectId: ID!, reportDefinitionId: ID!): Report!
@@ -685,7 +805,6 @@ input TranslationInput {
 }
 
 input TranslationUpdateInput {
-  id: ID!
   ressourceId: String!
   scope: String!
   locale: String!
@@ -719,6 +838,39 @@ type Mutation {
 
   # ProjectDefinition
   addProjectDefinition(definitionInput: DefinitionInput!): ProjectDefinition!
+
+  # Aggregate Collection
+  addAggregateCollection(
+    projectDefinitionId: ID!
+    collection: AggregateCollectionInput!
+  ): AggregateCollection!
+  updateAggregateCollection(
+    projectDefinitionId: ID!
+    collectionId: ID!
+    collection: AggregateCollectionInput!
+  ): AggregateCollection!
+  deleteAggregateCollection(
+    projectDefinitionId: ID!
+    collectionId: ID!
+  ): String!
+
+  # Aggregate
+  addAggregate(
+    projectDefinitionId: ID!
+    collectionId: ID!
+    aggregate: AggregateInput!
+  ): Aggregate!
+  updateAggregate(
+    projectDefinitionId: ID!
+    collectionId: ID!
+    aggregateId: ID!
+    replacement: AggregateInput!
+  ): Aggregate!
+  deleteAggregate(
+    projectDefinitionId: ID!
+    collectionId: ID!
+    aggregateId: ID!
+  ): String!
 
   # ProjectDefinitionNode
   addProjectDefinitionNode(

@@ -14,7 +14,6 @@ class JwtSettings(BaseModel):
 
 class AppSettings(BaseModel):
     authjwt: JwtSettings
-    app_bucket_name: str
 
 
 def decode_base64(value: str) -> str:
@@ -55,6 +54,5 @@ def load_app_settings() -> AppSettings:
             audiences=get_config("JWT_AUDIENCES", loads),
             public_key=get_config("JWT_PUBLIC_KEY", decode_base64),
             private_key=get_config("JWT_PRIVATE_KEY", decode_base64, required=False),
-        ),
-        app_bucket_name=get_config("APP_BUCKET_NAME"),
+        )
     )

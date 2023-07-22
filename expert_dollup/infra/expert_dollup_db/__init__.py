@@ -4,6 +4,7 @@ from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
 from pydantic import BaseModel, Field, StrictStr, StrictFloat, StrictBool, StrictInt
+from expert_dollup.infra.daos import *
 from expert_dollup.shared.database_services import (
     DbConnection,
     DaoMappingConfig,
@@ -23,6 +24,8 @@ from .node_config_dao import (
     StringFieldConfigDao,
     DecimalFieldConfigDao,
     IntFieldConfigDao,
+    AggregateReferenceConfigDao,
+    NodeReferenceConfigDao,
 )
 
 ROOT_LEVEL = 0
@@ -38,54 +41,6 @@ class ExpertDollupDatabase(DbConnection):
     pass
 
 
-class IntFieldValueDao(BaseModel):
-    integer: int
-
-
-class DecimalFieldValueDao(BaseModel):
-    numeric: Decimal
-
-
-class StringFieldValueDao(BaseModel):
-    text: str
-
-
-class BoolFieldValueDao(BaseModel):
-    enabled: bool
-
-
-class ReferenceIdDao(BaseModel):
-    uuid: UUID
-
-
-class ReferenceIdDao(BaseModel):
-    uuid: UUID
-
-
-PrimitiveWithNoneUnionDao: TypeAlias = Union[
-    BoolFieldValueDao, IntFieldValueDao, StringFieldValueDao, DecimalFieldValueDao, None
-]
-
-PrimitiveUnionDao: TypeAlias = Union[
-    BoolFieldValueDao, IntFieldValueDao, StringFieldValueDao, DecimalFieldValueDao
-]
-
-
-LabelAttributeDaoUnion: TypeAlias = Union[
-    BoolFieldValueDao,
-    IntFieldValueDao,
-    StringFieldValueDao,
-    DecimalFieldValueDao,
-    ReferenceIdDao,
-]
-
-JsonSchemaDao = dict
-
-
-class ElementPropertySchemaDao(BaseModel):
-    value_validator: JsonSchemaDao
-
-
 class ProjectDefinitionDao(BaseModel):
     class Meta:
         pk = "id"
@@ -95,19 +50,26 @@ class ProjectDefinitionDao(BaseModel):
 
     id: UUID
     name: str = Field(max_length=64)
-    default_datasheet_id: UUID
-    properties: Dict[str, ElementPropertySchemaDao]
     creation_date_utc: datetime
 
 
-class FormulaDependencyDao(BaseModel):
-    target_type_id: UUID
-    name: str = Field(max_length=64)
+class ProjectDefinitionChangeSetDao(BaseModel):
+    nodes: List["ProjectNodeDao"]
+    metas: List["ProjectNodeMetaDao"]
 
 
-class FormulaDependencyGraphDao(BaseModel):
-    formulas: List[FormulaDependencyDao]
-    nodes: List[FormulaDependencyDao]
+class ProjectDefinitionVersionDao(BaseModel):
+    class Meta:
+        pk = ("project_definition_id", "version")
+
+    class Config:
+        title = "project_definition_version"
+
+    project_definition_id: UUID
+    version: str = Field(max_length=64)
+    tag: Optional[str]
+    changes: ProjectDefinitionChangeSetDao
+    creation_date_utc: datetime
 
 
 class FormulaConfigDao(BaseModel):
@@ -142,7 +104,7 @@ class ProjectDefinitionFormulaDao(BaseModel):
 class DefinitionNodeConfigDao(BaseModel):
     is_collection: bool
     instanciate_by_default: bool
-    order_index: int
+    ordinal: int
     translations: TranslationConfigDao
     triggers: List[TriggerDao]
     meta: NodeMetaConfigDao
@@ -189,7 +151,7 @@ class ProjectDao(BaseModel):
 
     id: UUID
     name: str = Field(max_length=64)
-    is_staged: bool
+    version: str
     project_definition_id: UUID
     datasheet_id: UUID
     creation_date_utc: datetime
@@ -235,7 +197,7 @@ class ProjectNodeMetaDao(BaseModel):
 
 class TranslationDao(BaseModel):
     class Meta:
-        pk = ("ressource_id", "scope", "locale", "name")
+        pk = ("ressource_id", "locale", "name")
         options = {
             "firestore": {
                 "collection_count": True,
@@ -248,13 +210,13 @@ class TranslationDao(BaseModel):
     class Config:
         title = "translation"
 
-    id: UUID
     ressource_id: UUID
     locale: str = Field(min_length=5, max_length=5)
-    scope: UUID
     name: str = Field(max_length=64)
+    scope: UUID
     value: str
     creation_date_utc: datetime
+    cursor: str
 
 
 class SettingDao(BaseModel):
@@ -268,90 +230,57 @@ class SettingDao(BaseModel):
     value: Union[dict, str, bool, int, list]
 
 
-class CollectionAggregateDao(BaseModel):
-    from_collection: str
-
-
-class DatasheetAggregateDao(BaseModel):
-    from_datasheet: str
-
-
-class FormulaAggregateDao(BaseModel):
-    from_formula: str
-
-
-class StaticPropertyDao(BaseModel):
-    json_schema: JsonSchemaDao
-
-
-LabelAttributeSchemaDaoUnion: TypeAlias = Union[
-    StaticPropertyDao,
-    CollectionAggregateDao,
-    DatasheetAggregateDao,
-    FormulaAggregateDao,
-]
-
-
-class LabelCollectionDao(BaseModel):
-    class Meta:
-        pk = "id"
-
-    class Config:
-        title = "datasheet_definition_label_collection"
-
-    id: UUID
-    project_definition_id: UUID
-    name: str = Field(max_length=64)
-    attributes_schema: Dict[str, LabelAttributeSchemaDaoUnion]
-
-
-class LabelDao(BaseModel):
-    class Meta:
-        pk = "id"
-        options = {
-            "firestore": {
-                "collection_count": False,
-                "key_counts": set([frozenset(["label_collection_id"])]),
-            }
-        }
-
-    class Config:
-        title = "datasheet_definition_label"
-
-    id: UUID
-    label_collection_id: UUID
-    order_index: int
-    name: str = Field(max_length=64)
-    attributes: Dict[str, LabelAttributeDaoUnion]
-
-
-class DatasheetDefinitionElementPropertyDao(BaseModel):
+class AggregateAttributeDao(BaseModel):
+    name: str
     is_readonly: bool
-    value: PrimitiveUnionDao
+    value: PrimitiveWithReferenceDaoUnion
 
 
-class DatasheetDefinitionElementDao(BaseModel):
+class AggregateDao(BaseModel):
     class Meta:
         pk = "id"
-        options = {
-            "firestore": {
-                "collection_count": False,
-                "key_counts": set([frozenset(["project_definition_id"])]),
-            }
-        }
 
     class Config:
-        title = "datasheet_definition_element"
+        title = "aggregate"
 
     id: UUID
-    unit_id: str
-    is_collection: bool
-    name: str = Field(max_length=64)
     project_definition_id: UUID
-    order_index: int
-    default_properties: Dict[str, DatasheetDefinitionElementPropertyDao]
-    tags: List[UUID]
-    creation_date_utc: datetime
+    collection_id: UUID
+    ordinal: int
+    name: str
+    is_extendable: bool
+    attributes: List[AggregateAttributeDao]
+
+
+class AggregateAttributeSchemaDao(BaseModel):
+    name: str
+    details: Union[
+        IntFieldConfigDao,
+        DecimalFieldConfigDao,
+        StringFieldConfigDao,
+        BoolFieldConfigDao,
+        AggregateReferenceConfigDao,
+        NodeReferenceConfigDao,
+    ]
+
+
+class InstanceSchemaDao(BaseModel):
+    is_extendable: bool
+    attributes_schema: Dict[str, AggregateAttributeDao]
+
+
+class AggregateCollectionDao(BaseModel):
+    class Meta:
+        pk = "id"
+
+    class Config:
+        title = "aggregate_collection"
+
+    id: UUID
+    project_definition_id: UUID
+    name: str = Field(max_length=64)
+    is_abstract: bool = False
+    attributes_schema: List[AggregateAttributeSchemaDao]
 
 
 class DatasheetDao(BaseModel):
@@ -363,35 +292,31 @@ class DatasheetDao(BaseModel):
 
     id: UUID
     name: str = Field(max_length=64)
-    is_staged: bool
     project_definition_id: UUID
+    abstract_collection_id: UUID
     from_datasheet_id: Optional[UUID]
+    attributes_schema: Dict[str, AggregateAttributeSchemaDao]
+    instances_schema: Dict[str, InstanceSchemaDao]
     creation_date_utc: datetime
+
+
+class AttributeDao(BaseModel):
+    name: str
+    value: PrimitiveWithReferenceDaoUnion
 
 
 class DatasheetElementDao(BaseModel):
     class Meta:
-        pk = ("datasheet_id", "element_def_id", "child_element_reference")
-        options = {
-            "firestore": {
-                "collection_count": False,
-                "key_counts": set(
-                    [
-                        frozenset(["datasheet_id"]),
-                        frozenset(["datasheet_id", "element_def_id"]),
-                    ]
-                ),
-            }
-        }
+        pk = "id"
 
     class Config:
         title = "datasheet_element"
 
+    id: UUID
     datasheet_id: UUID
-    element_def_id: UUID
-    child_element_reference: UUID
+    aggregate_id: UUID
     ordinal: int
-    properties: Dict[str, PrimitiveUnionDao]
+    attributes: Dict[str, AttributeDao]
     original_datasheet_id: UUID
     original_owner_organization_id: UUID
     creation_date_utc: datetime
@@ -420,11 +345,6 @@ class ReportComputationDao(BaseModel):
     is_visible: bool
 
 
-class StageSummaryDao(BaseModel):
-    label: AttributeBucketDao
-    summary: ReportComputationDao
-
-
 class ReportStructureDao(BaseModel):
     datasheet_selection_alias: str
     formula_attribute: AttributeBucketDao
@@ -433,7 +353,7 @@ class ReportStructureDao(BaseModel):
     columns: List[ReportComputationDao]
     group_by: List[AttributeBucketDao]
     order_by: List[AttributeBucketDao]
-    stage_summary: StageSummaryDao
+    stage_summary: ReportComputationDao
     report_summary: List[ReportComputationDao]
 
 
@@ -461,17 +381,10 @@ class MeasureUnitDao(BaseModel):
     id: str = Field(max_length=16)
 
 
-class ComputedValueDao(BaseModel):
-    label: str
-    value: PrimitiveUnionDao
-    unit: Optional[str]
-    is_visible: bool
-
-
 class SuppliedItemDao(BaseModel):
     datasheet_id: UUID
-    element_def_id: UUID
-    child_reference_id: UUID
+    aggregate_id: UUID
+    element_id: UUID
     organization_id: UUID
 
 

@@ -99,7 +99,6 @@ class ProjectBuilder:
         cloned_project = ProjectDetails(
             id=uuid4(),
             name=project_details.name,
-            is_staged=False,
             project_definition_id=project_details.project_definition_id,
             datasheet_id=project_details.datasheet_id,
             creation_date_utc=self.clock.utcnow(),

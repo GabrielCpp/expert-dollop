@@ -3,9 +3,9 @@ from datetime import datetime, timezone
 from dataclasses import dataclass
 from decimal import Decimal
 from uuid import UUID
-from expert_dollup.core.logits import FormulaInjector, FrozenUnit
+from expert_dollup.core.units.evaluator import UnitInjector, FlatAstEvaluator
 from expert_dollup.shared.starlette_injection.clock_provider import StaticClock
-from expert_dollup.shared.database_services import Repository, Plucker
+from expert_dollup.shared.database_services import Repository
 from tests.fixtures.factories.datasheet_factory import CustomDatasheetInstancePackage
 from tests.fixtures.factories.project_instance_factory import (
     CustomProjectInstancePackage,
@@ -25,7 +25,7 @@ class ReportSeed:
     datasheet_fixture: CustomDatasheetInstancePackage
     project_fixture: CustomProjectInstancePackage
     report_definition: ReportDefinition
-    element_def: DatasheetDefinitionElement
+    aggregate: Aggregate
     datasheet_element: DatasheetElement
     formula: Formula
 
@@ -35,22 +35,24 @@ def report_seed() -> ReportSeed:
     project_seed = make_base_project_seed()
     project_fixture = ProjectInstanceFactory.build(project_seed)
     datasheet_fixture = DatasheetInstanceFactory.build(
-        make_base_datasheet(project_seed), project_fixture.project_definition
+        make_base_datasheet(project_seed),
+        project_fixture.project_definition,
+        project_fixture.project.datasheet_id,
     )
 
     report_definition = ReportDefinitionFactory(
         project_definition_id=project_fixture.project_definition.id
     )
 
-    element_def = next(
+    aggregate = next(
         datasheet_definition_element
-        for datasheet_definition_element in datasheet_fixture.datasheet_definition_elements
+        for datasheet_definition_element in datasheet_fixture.aggregates
         if datasheet_definition_element.name == "concrete"
     )
     datasheet_element = next(
         datasheet_element
         for datasheet_element in datasheet_fixture.datasheet_elements
-        if datasheet_element.element_def_id == element_def.id
+        if datasheet_element.aggregate_id == aggregate.id
     )
 
     formula = next(
@@ -62,7 +64,7 @@ def report_seed() -> ReportSeed:
         datasheet_fixture=datasheet_fixture,
         project_fixture=project_fixture,
         report_definition=report_definition,
-        element_def=element_def,
+        aggregate=aggregate,
         datasheet_element=datasheet_element,
         formula=formula,
     )
@@ -72,7 +74,7 @@ def report_seed() -> ReportSeed:
 async def test_given_row_cache_should_produce_correct_report(
     report_seed: ReportSeed, logger_factory
 ):
-    element_def = report_seed.element_def
+    aggregate = report_seed.aggregate
     datasheet_element = report_seed.datasheet_element
     formula = report_seed.formula
     project_fixture = report_seed.project_fixture
@@ -80,15 +82,15 @@ async def test_given_row_cache_should_produce_correct_report(
     report_definition = report_seed.report_definition
     report_rows_cache = [
         {
-            "abstractproduct": element_def.report_dict,
+            "abstractproduct": aggregate.report_dict,
             "datasheet_element": datasheet_element.report_dict,
             "formula": formula.report_dict,
             "stage": {"name": "show_concrete"},
             "substage": {
                 "id": UUID("6524c49c-93e7-0606-4d62-1ac982d40027"),
                 "name": "floor_label_0",
-                "order_index": 0,
-                "datasheet_element": element_def.id,
+                "ordinal": 0,
+                "datasheet_element": aggregate.id,
                 "formula": formula.id,
             },
         }
@@ -113,8 +115,8 @@ async def test_given_row_cache_should_produce_correct_report(
                     ReportRow(
                         node_id=UUID("3e9245a2-855a-eca6-ebba-ce294ba5575d"),
                         formula_id=UUID("f1f1e0ff-2344-48bc-e757-8c9dcd3c671e"),
-                        element_def_id=UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
-                        child_reference_id=datasheet_element.child_element_reference,
+                        aggregate_id=UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
+                        element_id=datasheet_element.id,
                         columns=[
                             ComputedValue(
                                 label="stage", value="show_concrete", unit="unit"
@@ -135,26 +137,22 @@ async def test_given_row_cache_should_produce_correct_report(
                         row={
                             "abstractproduct": {
                                 "id": UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
-                                "unit_id": "m",
                                 "is_collection": False,
-                                "order_index": 1,
+                                "ordinal": 1,
                                 "name": "concrete",
                             },
                             "datasheet_element": {
                                 "id": UUID("00ecf6d0-6f00-c4bb-2902-4057469a3f3d"),
-                                "unit_id": "m",
                                 "is_collection": False,
-                                "order_index": 1,
+                                "ordinal": 1,
                                 "name": "concrete",
                                 "price": Decimal("1.01"),
                                 "factor": Decimal("1.01"),
-                                "element_def_id": UUID(
+                                "aggregate_id": UUID(
                                     "00ecf6d0-6f00-c4bb-2902-4057469a3f3d"
                                 ),
-                                "child_element_reference": datasheet_element.child_element_reference,
-                                "original_datasheet_id": UUID(
-                                    "0fc7fe86-ab22-a17d-6037-9fccc7d7f8f8"
-                                ),
+                                "element_id": datasheet_element.id,
+                                "original_datasheet_id": datasheet_fixture.datasheet.id,
                             },
                             "formula": {
                                 "formula_id": UUID(
@@ -164,13 +162,13 @@ async def test_given_row_cache_should_produce_correct_report(
                                 "path": [],
                                 "name": "formulaA",
                                 "calculation_details": "<fieldB, 2> * sum(<fieldA, 12>)",
-                                "result": Decimal("24"),
+                                "value": Decimal("24"),
                             },
                             "stage": {"name": "show_concrete"},
                             "substage": {
                                 "id": UUID("6524c49c-93e7-0606-4d62-1ac982d40027"),
                                 "name": "floor_label_0",
-                                "order_index": 0,
+                                "ordinal": 0,
                                 "datasheet_element": UUID(
                                     "00ecf6d0-6f00-c4bb-2902-4057469a3f3d"
                                 ),
@@ -185,7 +183,7 @@ async def test_given_row_cache_should_produce_correct_report(
                             },
                             "internal": {
                                 "group_digest": "show_concrete/concrete",
-                                "order_index": 0,
+                                "ordinal": 0,
                             },
                         },
                     )
@@ -209,9 +207,7 @@ async def test_given_row_cache_should_produce_correct_report(
         lambda x: x.compute_all_project_formula(
             project_fixture.project.id, report_definition.project_definition_id
         ),
-        returns_async=FormulaInjector().add_units(
-            FrozenUnit(i) for i in project_fixture.unit_instances
-        ),
+        returns_async=UnitInjector().add_all(project_fixture.units),
     )
 
     datasheet_element_service.setup(
@@ -230,7 +226,7 @@ async def test_given_row_cache_should_produce_correct_report(
 
     report_linking = ReportLinking(
         datasheet_element_service.object,
-        ExpressionEvaluator(),
+        FlatAstEvaluator(),
         report_row_cache.object,
         formula_resolver.object,
         clock,

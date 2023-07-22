@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 from expert_dollup.shared.database_services import *
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
-from expert_dollup.core.usecases import *
+from expert_dollup.core.services import *
 from expert_dollup.app.dtos import *
 
 router = APIRouter()
@@ -35,7 +35,7 @@ async def find_project_details(
     user=Depends(CanPerformOnRequired("project_id", ["project:get"])),
 ):
     return await handler.handle(
-        usecase.find_by_id, project_id, MappingChain(out_dto=ProjectDetailsDto)
+        usecase.find, project_id, MappingChain(out_dto=ProjectDetailsDto)
     )
 
 
@@ -81,4 +81,4 @@ async def delete_project(
     usecase=Depends(Inject(ProjectUseCase)),
     user=Depends(CanPerformOnRequired("project_id", ["project:delete"])),
 ):
-    await usecase.delete_by_id(project_id)
+    await usecase.delete(project_id)

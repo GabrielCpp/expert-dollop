@@ -10,6 +10,7 @@ from typing import (
     Any,
     Callable,
     Awaitable,
+    Protocol,
 )
 from typing_extensions import TypeAlias
 from dataclasses import dataclass
@@ -18,41 +19,16 @@ from urllib.parse import urlparse
 from expert_dollup.shared.automapping import Mapper
 from .page import Page
 from .query_filter import QueryFilter
-
-
-class QueryBuilder(ABC):
-    @abstractmethod
-    def select(self, *names: str) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def limit(self, limit: int) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def orderby(self, *orders) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def where(self, *ops) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def construct(self, name, *ops) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def apply(self, builder: callable, *args, **kargs) -> "QueryBuilder":
-        pass
-
-    @abstractmethod
-    def clone(self) -> "QueryBuilder":
-        pass
+from .query_builder import QueryBuilder
 
 
 Domain = TypeVar("Domain")
 Id = TypeVar("Id")
 WhereFilter: TypeAlias = Union[QueryFilter, QueryBuilder]
+
+
+class RepositoryDetails(Protocol):
+    primary_keys: List[str]
 
 
 class Repository(ABC, Generic[Domain]):
@@ -66,12 +42,17 @@ class Repository(ABC, Generic[Domain]):
     def batch_size(self) -> int:
         pass
 
+    @property
+    @abstractmethod
+    def details(self) -> RepositoryDetails:
+        pass
+
     @abstractmethod
     async def insert(self, domain: Domain):
         pass
 
     @abstractmethod
-    async def insert_many(self, domains: List[Domain]):
+    async def inserts(self, domains: List[Domain]):
         pass
 
     @abstractmethod
@@ -79,7 +60,7 @@ class Repository(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
-    async def find_all(self, limit: int = 1000) -> List[Domain]:
+    async def all(self, limit: int = 1000) -> List[Domain]:
         pass
 
     @abstractmethod
@@ -91,7 +72,7 @@ class Repository(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
-    async def find_by_id(self, pk_id: Id) -> Domain:
+    async def find(self, pk_id: Id) -> Domain:
         pass
 
     @abstractmethod
@@ -99,7 +80,7 @@ class Repository(ABC, Generic[Domain]):
         pass
 
     @abstractmethod
-    async def delete_by_id(self, pk_id: Id):
+    async def delete(self, pk_id: Id):
         pass
 
     @abstractmethod
@@ -120,12 +101,12 @@ class Repository(ABC, Generic[Domain]):
     async def count(self, query_filter: Optional[WhereFilter] = None) -> int:
         pass
 
-
-class InternalRepository(Repository[Domain]):
     @abstractmethod
-    def get_builder(self) -> QueryBuilder:
+    async def execute(self, builder: WhereFilter) -> Union[Domain, List[Domain], None]:
         pass
 
+
+class InternalRepository(Repository[Domain]):
     @abstractmethod
     async def fetch_all_records(
         self,
@@ -140,10 +121,6 @@ class InternalRepository(Repository[Domain]):
 
     @abstractmethod
     def map_domain_to_dao(self, domain: Domain) -> BaseModel:
-        pass
-
-    @abstractmethod
-    def unpack_query(self, query: QueryFilter) -> dict:
         pass
 
 
@@ -239,7 +216,15 @@ def create_connection(connection_string: str, **kwargs) -> DbConnection:
 
             DbConnection._REGISTRY["mongodb"] = MongoConnection
             DbConnection._REGISTRY["mongodb+srv"] = MongoConnection
-        except:
+        except ImportError:
+            pass
+
+        try:
+            from .database_adapters.bucket_adapter import BucketConnection
+
+            DbConnection._REGISTRY["local"] = BucketConnection
+            DbConnection._REGISTRY["gcs"] = BucketConnection
+        except ImportError:
             pass
 
     build_connection = DbConnection._REGISTRY.get(scheme)

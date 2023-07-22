@@ -5,12 +5,11 @@ description = ""
 authors = ["gabriel <gabcpp@outlook.fr>"]
 
 [tool.poetry.dependencies]
-python = "^3.8.0"
+python = "^3.9.5"
 fastapi = "^0.61.2"
 python-dotenv = "^0.15.0"
 python-json-logger = "^2.0.4"
 jsonschema = "^3.2.0"
-pyhumps = "^1.6.1"
 python-multipart = "^0.0.5"
 mypy-extensions = "^0.4.3"
 google-cloud-storage = "^1.43.0"
@@ -18,6 +17,7 @@ uvicorn = {extras = ["standard"], version = "^0.16.0"}
 ariadne = "^0.14.0"
 orjson = "^3.6.5"
 PyJWT = {extras = ["crypto"], version = "^2.3.0"}
+dependency-injector = "^4.40.0"
 
 # Optional
 google-cloud-firestore = {version = "^2.3.4", optional = true}
@@ -25,9 +25,7 @@ SQLAlchemy = {extras = ["asyncio"], version = "^1.4.29", optional = true}
 asyncpg = {version = "^0.25.0", optional = true}
 motor = {extras = ["srv"], version = "^3.0.0", optional = true}
 pymongo = {extras = ["srv"], version = "^4.2.0", optional = true}
-tenacity = "^8.0.1"
-frozendict = "^2.3.4"
-dependency-injector = "^4.40.0"
+
 
 [tool.poetry.extras]
 mongo = ["motor", "pymongo"]
@@ -38,17 +36,18 @@ firestore = ["google-cloud-firestore "]
 flake8 = "^3.8.4"
 pytest = "^6.1.2"
 pytest-asyncio = "^0.14.0"
-faker = "^5.0.1"
+pytest-snapshot = "^0.8.0"
+pytest-random-order = "^1.0.4"
 async_asgi_testclient = "^1.4.4"
 factory-boy = "^3.1.0"
 invoke = "^1.5.0"
 deepdiff = "^5.5.0"
 alembic = "^1.4.3"
-pytest-snapshot = "^0.8.0"
 wait-for-it = "^2.2.1"
 black = "^22.6.0"
 mypy = "^0.971"
-pytest-random-order = "^1.0.4"
+Faker = "^18.4.0"
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -1,13 +1,7 @@
 from typing import List, Dict, Optional
 from uuid import UUID
-from expert_dollup.shared.database_services import (
-    RepositoryProxy,
-    InternalRepository,
-)
-from expert_dollup.core.domains import (
-    ProjectDefinitionNode,
-    ProjectDefinitionNodeFilter,
-)
+from expert_dollup.shared.database_services import *
+from expert_dollup.core.domains import *
 from expert_dollup.infra.expert_dollup_db import ProjectDefinitionNodeDao
 from expert_dollup.core.utils.path_transform import join_uuid_path
 
@@ -22,7 +16,7 @@ class ProjectDefinitionNodeInternalRepository(RepositoryProxy[ProjectDefinitionN
     ) -> Dict[str, UUID]:
 
         query = (
-            self._repository.get_builder()
+            QueryBuilder()
             .select("id", "name")
             .where("project_definition_id", "==", project_definition_id)
         )
@@ -50,9 +44,9 @@ class ProjectDefinitionNodeInternalRepository(RepositoryProxy[ProjectDefinitionN
         return count > 0
 
     async def delete_child_of(self, id: UUID):
-        value = await self.find_by_id(id)
+        value = await self.find(id)
         query = (
-            self._repository.get_builder()
+            QueryBuilder()
             .where("project_definition_id", "==", value.project_definition_id)
             .where("path", "startwiths", join_uuid_path(value.subpath))
         )
@@ -62,7 +56,7 @@ class ProjectDefinitionNodeInternalRepository(RepositoryProxy[ProjectDefinitionN
     async def find_children(
         self, project_definition_id: UUID, path: List[UUID]
     ) -> List[ProjectDefinitionNode]:
-        query = self._repository.get_builder().where(
+        query = QueryBuilder().where(
             "project_definition_id", "==", project_definition_id
         )
 
@@ -77,7 +71,7 @@ class ProjectDefinitionNodeInternalRepository(RepositoryProxy[ProjectDefinitionN
         self, project_definition_id: UUID
     ) -> List[ProjectDefinitionNode]:
         query = (
-            self._repository.get_builder()
+            QueryBuilder()
             .where("project_definition_id", "==", project_definition_id)
             .where("display_query_internal_id", "==", project_definition_id)
             .orderby(("level", "desc"))
@@ -91,7 +85,7 @@ class ProjectDefinitionNodeInternalRepository(RepositoryProxy[ProjectDefinitionN
         self, project_definition_id: UUID, root_section_id: UUID
     ) -> List[ProjectDefinitionNode]:
         query = (
-            self._repository.get_builder()
+            QueryBuilder()
             .where("project_definition_id", "==", project_definition_id)
             .where("display_query_internal_id", "==", root_section_id)
             .orderby(("level", "desc"))
@@ -105,7 +99,7 @@ class ProjectDefinitionNodeInternalRepository(RepositoryProxy[ProjectDefinitionN
         self, project_definition_id: UUID, form_id: UUID
     ) -> List[ProjectDefinitionNode]:
         query = (
-            self._repository.get_builder()
+            QueryBuilder()
             .where("project_definition_id", "==", project_definition_id)
             .where("display_query_internal_id", "==", form_id)
             .orderby(("level", "desc"))

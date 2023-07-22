@@ -3,7 +3,6 @@ from typing import Union
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.shared.database_services import *
 from expert_dollup.shared.automapping import *
-from expert_dollup.infra.storage_connectors import *
 from expert_dollup.infra.expert_dollup_storage import ExpertDollupStorage
 from expert_dollup.infra.expert_dollup_db import ExpertDollupDatabase
 from expert_dollup.infra.ressource_auth_db import RessourceAuthDatabase
@@ -14,10 +13,14 @@ from expert_dollup.core.utils import authorization_factory
 from expert_dollup.core.domains import *
 from expert_dollup.core.exceptions import RessourceNotFound
 from expert_dollup.app.settings import load_app_settings
-import expert_dollup.infra.storages as storages
 from expert_dollup.infra.repositories import *
 from expert_dollup.core.repositories import *
-from ..definitions import auth_metadatas, expert_dollup_metadatas, paginations
+from ..definitions import (
+    auth_metadatas,
+    expert_dollup_metadatas,
+    paginations,
+    storage_metadatas,
+)
 
 storage_exception_mappings = {ObjectNotFound: lambda e: RessourceNotFound()}
 
@@ -48,6 +51,12 @@ def bind_database_auth(builder: InjectorBuilder) -> None:
     auth_db = create_connection(environ["AUTH_DB_URL"])
     auth_db.load_metadatas(auth_metadatas)
     builder.add_object(RessourceAuthDatabase, auth_db)
+
+
+def bind_storage(builder: InjectorBuilder) -> None:
+    blob_db = create_connection(environ["EXPERT_DOLLUP_STORAGE"])
+    blob_db.load_metadatas(storage_metadatas)
+    builder.add_object(ExpertDollupStorage, blob_db)
 
 
 def bind_database_context(builder: InjectorBuilder) -> None:
@@ -101,6 +110,23 @@ def bind_base_repositories(builder: InjectorBuilder) -> None:
             metadata=InjectorBuilder.forward(metadata),
         )
 
+    for metadata in storage_metadatas:
+        builder.add_factory(
+            TypedInjection.make_type_name(Repository, metadata.domain),
+            get_repository,
+            database=ExpertDollupStorage,
+            mapper=Mapper,
+            metadata=InjectorBuilder.forward(metadata),
+        )
+
+        builder.add_factory(
+            TypedInjection.make_type_name(InternalRepository, metadata.domain),
+            get_repository,
+            database=ExpertDollupStorage,
+            mapper=Mapper,
+            metadata=InjectorBuilder.forward(metadata),
+        )
+
 
 def bind_custom_repositories(builder: InjectorBuilder) -> None:
     builder.add_factory(
@@ -137,18 +163,16 @@ def bind_custom_repositories(builder: InjectorBuilder) -> None:
         ),
     )
 
+    builder.add_factory(
+        DatasheetElementRepository,
+        DatasheetElementInternalRepository,
+        repository=TypedInjection.make_type_name(InternalRepository, DatasheetElement),
+        mapper=Mapper,
+    )
+
 
 def bind_validators(builder: InjectorBuilder) -> None:
     builder.add_singleton(SchemaValidator, SchemaValidator)
-
-
-def bind_queries(builder: InjectorBuilder) -> None:
-    for metadata in expert_dollup_metadatas:
-        builder.add_factory(
-            TypedInjection.make_type_name(Plucker, metadata.domain),
-            PluckQuery,
-            repository=TypedInjection.make_type_name(Repository, metadata.domain),
-        )
 
 
 def bind_paginators(builder: InjectorBuilder) -> None:
@@ -164,23 +188,6 @@ def bind_paginators(builder: InjectorBuilder) -> None:
         )
 
 
-def bind_storages(builder: InjectorBuilder) -> None:
-    settings = load_app_settings()
-    builder.add_singleton(
-        ExpertDollupStorage,
-        lambda: StorageProxy(
-            LocalStorage(settings.app_bucket_name)
-            if is_development()
-            else GoogleCloudStorage(settings.app_bucket_name),
-            storage_exception_mappings,
-        ),
-    )
-
-    for class_type in get_classes(storages):
-        core_class_type = get_base(class_type)
-        builder.add_factory(core_class_type, class_type, **get_annotations(class_type))
-
-
 def bind_providers(builder: InjectorBuilder) -> None:
     with open("./assets/corncob_lowercase.txt") as f:
         words = [word for word in f.readlines() if word != ""]
@@ -193,12 +200,11 @@ def bind_providers(builder: InjectorBuilder) -> None:
 def bind_io_modules(builder: InjectorBuilder) -> None:
     bind_database_expert_dollup(builder)
     bind_database_auth(builder)
+    bind_storage(builder)
     bind_base_repositories(builder)
     bind_custom_repositories(builder)
-    bind_storages(builder)
     bind_database_context(builder)
     bind_providers(builder)
     bind_validators(builder)
     bind_ressource_engines(builder)
-    bind_queries(builder)
     bind_paginators(builder)

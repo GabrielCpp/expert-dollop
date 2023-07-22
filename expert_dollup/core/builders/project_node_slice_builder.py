@@ -2,7 +2,6 @@ from typing import Optional
 from uuid import UUID, uuid4
 from collections import defaultdict
 from expert_dollup.core.domains import *
-from .unit_instance_builder import UnitInstanceBuilder
 from expert_dollup.core.repositories import (
     ProjectNodeRepository,
     ProjectDefinitionNodeRepository,
@@ -14,11 +13,9 @@ class ProjectNodeSliceBuilder:
         self,
         project_node_repository: ProjectNodeRepository,
         project_definition_node_repository: ProjectDefinitionNodeRepository,
-        unit_instance_builder: UnitInstanceBuilder,
     ):
         self.project_node_repository = project_node_repository
         self.project_definition_node_repository = project_definition_node_repository
-        self.unit_instance_builder = unit_instance_builder
 
     async def build_collection(
         self,
@@ -81,14 +78,7 @@ class ProjectNodeSliceBuilder:
             ]
         ]
 
-        unit_instances = await self.unit_instance_builder.build(
-            project_details.project_definition_id,
-            [bounded_node.node for bounded_node in bounded_nodes],
-        )
-
-        return BoundedNodeSlice(
-            bounded_nodes=bounded_nodes, unit_instances=unit_instances
-        )
+        return BoundedNodeSlice(bounded_nodes=bounded_nodes)
 
     async def clone(self, project_id: UUID, node_id: UUID):
         parent_node = await self.project_node_repository.find_one_by(
@@ -132,11 +122,4 @@ class ProjectNodeSliceBuilder:
             )
         ]
 
-        unit_instances = await self.unit_instance_builder.build(
-            root_def_node.project_definition_id,
-            [bounded_node.node for bounded_node in bounded_nodes],
-        )
-
-        return BoundedNodeSlice(
-            bounded_nodes=bounded_nodes, unit_instances=unit_instances
-        )
+        return BoundedNodeSlice(bounded_nodes=bounded_nodes)

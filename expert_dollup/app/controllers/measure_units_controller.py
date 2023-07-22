@@ -18,7 +18,7 @@ async def get_measure_units(
     handler=Depends(Inject(RequestHandler)),
 ) -> List[MeasureUnitDto]:
     return await handler.forward_many(
-        service.find_all,
+        service.all,
         dict(),
         MappingChain(domain=MeasureUnit, out_dto=MeasureUnitDto),
     )

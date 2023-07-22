@@ -33,16 +33,14 @@ class CollectionPaginator(Paginator[Domain]):
         next_page_token: Optional[str] = None,
     ) -> Page[Domain]:
         builder = (
-            self._repository.get_builder()
-            if where_filter is None
-            else self._make_builder(where_filter)
+            QueryBuilder() if where_filter is None else self._make_builder(where_filter)
         )
         self._default_page_encoder.extend_query(builder, limit, next_page_token)
 
         results, total_count = await gather(
             self._repository.find_by(builder), self._repository.count(where_filter)
         )
-        print(total_count)
+
         new_next_page_token = self._default_page_encoder.default_token
 
         if len(results) > 0:
@@ -67,7 +65,7 @@ class CollectionPaginator(Paginator[Domain]):
             return where_filter.clone()
 
         columns_filter = self._mapper.map(where_filter, dict, where_filter.__class__)
-        builder = self._repository.get_builder()
+        builder = QueryBuilder()
 
         for name, value in columns_filter.items():
             builder.where(name, "==", value)

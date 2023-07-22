@@ -1,68 +1,67 @@
 from typing import Callable, Optional, TypeVar, Sequence, List
 from uuid import UUID
-from .adapter_interfaces import QueryFilter, InternalRepository
+from dataclasses import dataclass
+from .adapter_interfaces import QueryFilter, Repository
+from .query_builder import QueryBuilder
 from .batch_helper import batch
-from .plucker import Plucker
-
+from .query_reflector import queries
 
 Domain = TypeVar("Domain")
 
 
-class PluckQuery(Plucker[Domain]):
-    def __init__(self, repository: InternalRepository[Domain]):
-        self._repository = repository
-        self._batch_size = 10
+@dataclass
+class Pluck:
+    name: str
+    ids: list
 
-    async def plucks(
-        self,
-        build_pluck_filter: Callable[[Sequence[UUID]], QueryFilter],
-        ids: Sequence[UUID],
-    ) -> List[Domain]:
-        all_results = []
 
-        async for batch_results in self._pluck_by_batch(ids, build_pluck_filter):
-            all_results.extend(batch_results)
+@dataclass
+class PluckSubRessource:
+    base: dict
+    name: str
+    ids: list
 
-        return all_results
 
-    async def pluck_subressources(
-        self,
-        ressource_filter: QueryFilter,
-        build_pluck_filter: Callable[[Sequence[UUID]], QueryFilter],
-        ids: Sequence[UUID],
-    ) -> List[Domain]:
+async def pluck_by_batch(
+    repository: Repository[Domain],
+    name: str,
+    ids: List[UUID],
+    base: Optional[dict] = None,
+):
+    ressource_dict = {}
 
-        all_results = []
+    for ids_batch in batch(ids, repository.batch_size):
+        query_builder = QueryBuilder()
 
-        async for batch_results in self._pluck_by_batch(
-            ids, build_pluck_filter, ressource_filter
-        ):
-            all_results.extend(batch_results)
+        if not base is None:
+            for column_name, value in base.items():
+                query_builder = query_builder.where(column_name, "==", value)
 
-        return all_results
+        query_builder = query_builder.where(name, "in", ids)
 
-    async def _pluck_by_batch(
-        self,
-        ids: List[UUID],
-        build_pluck_filter: Callable[[list], QueryFilter],
-        ressource_filter: Optional[QueryFilter] = None,
+        results = await repository.find_by(query_builder)
+        yield results
+
+
+@queries.register_executor(Pluck)
+async def plucks(repository: Repository[Domain], query: Pluck) -> List[Domain]:
+    all_results = []
+
+    async for batch_results in pluck_by_batch(repository, query.name, query.ids):
+        all_results.extend(batch_results)
+
+    return all_results
+
+
+@queries.register_executor(PluckSubRessource)
+async def pluck_subressources(
+    repository: Repository[Domain], query: PluckSubRessource
+) -> List[Domain]:
+    all_results = []
+
+    async for batch_results in pluck_by_batch(
+        repository, query.name, query.ids, query.base
     ):
-        ressource_dict = {}
+        all_results.extend(batch_results)
 
-        if not ressource_filter is None:
-            ressource_dict = self._repository.unpack_query(ressource_filter)
-
-        for ids_batch in batch(ids, self._batch_size):
-            pluck_filter = build_pluck_filter(ids_batch)
-            pluck_filter_dict = self._repository.unpack_query(pluck_filter)
-
-            query = self._repository.get_builder()
-
-            for name, value in ressource_dict.items():
-                query = query.where(name, "==", value)
-
-            for name, values in pluck_filter_dict.items():
-                query = query.where(name, "in", values)
-
-            results = await self._repository.find_by(query)
-            yield results
+    return all_results

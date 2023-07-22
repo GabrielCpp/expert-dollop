@@ -2,10 +2,7 @@ from typing import List, Dict, Optional
 from uuid import UUID
 from expert_dollup.core.domains import Formula
 from expert_dollup.infra.expert_dollup_db import ProjectDefinitionFormulaDao
-from expert_dollup.shared.database_services import (
-    RepositoryProxy,
-    InternalRepository,
-)
+from expert_dollup.shared.database_services import *
 
 
 class FormulaInternalRepository(RepositoryProxy):
@@ -17,7 +14,7 @@ class FormulaInternalRepository(RepositoryProxy):
         self, project_definition_id: UUID, names: Optional[List[str]] = None
     ) -> Dict[str, UUID]:
         query = (
-            self._repository.get_builder()
+            QueryBuilder()
             .select("id", "name")
             .where("project_definition_id", "==", project_definition_id)
         )

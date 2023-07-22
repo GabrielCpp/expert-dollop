@@ -6,6 +6,7 @@ from expert_dollup.app.middlewares import ExceptionHandlerDict
 from expert_dollup.core.exceptions import *
 from expert_dollup.app.handlers import *
 from expert_dollup.app.jwt_auth import *
+from expert_dollup.shared.validation import ValidationError
 from expert_dollup.core.domains import User, Ressource
 from expert_dollup.shared.automapping import Mapper
 from expert_dollup.shared.database_services import *

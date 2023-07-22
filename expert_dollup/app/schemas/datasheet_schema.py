@@ -7,7 +7,7 @@ from expert_dollup.shared.database_services import *
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
 from expert_dollup.app.controllers.datasheet.datasheet_controller import *
-from expert_dollup.app.controllers.datasheet.datasheet_definition_element_controller import *
+from expert_dollup.app.controllers.datasheet.datasheet_element_controller import *
 from expert_dollup.app.dtos import *
 from .types import query, datasheet, mutation
 

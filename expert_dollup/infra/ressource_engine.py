@@ -3,15 +3,7 @@ from asyncio import gather
 from expert_dollup.core.utils import encode_date_with_uuid, authorization_factory
 from expert_dollup.core.domains import Ressource, RessourceProtocol
 from expert_dollup.shared.automapping import Mapper
-from expert_dollup.shared.database_services import (
-    FieldTokenEncoder,
-    Page,
-    InternalRepository,
-    batch,
-    UserRessourcePaginator,
-    UserRessourceQuery,
-)
-
+from expert_dollup.shared.database_services import *
 
 Domain = TypeVar("Domain", bound=RessourceProtocol)
 
@@ -45,7 +37,7 @@ class RessourceEngine(UserRessourcePaginator[Domain]):
         next_page_token: Optional[str],
     ) -> Page[Domain]:
         builder = (
-            self.ressource_service.get_builder()
+            QueryBuilder()
             .where("organization_id", "==", query.organization_id)
             .where("kind", "==", self._kind)
             .where("permissions", "contain_one", self._domain_get_permission)
@@ -66,9 +58,7 @@ class RessourceEngine(UserRessourcePaginator[Domain]):
 
             for results_batch in batch(results, self._domain_service.batch_size):
                 ids = [result.id for result in results_batch]
-                query_builder = self._domain_service.get_builder().where(
-                    "id", "in", ids
-                )
+                query_builder = QueryBuilder().where("id", "in", ids)
                 domains_batch = await self._domain_service.find_by(query_builder)
                 domains_batch.sort(key=lambda o: ids.index(o.id))
                 domains.extend(domains_batch)

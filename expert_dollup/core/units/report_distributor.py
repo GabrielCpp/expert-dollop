@@ -2,7 +2,7 @@ from typing import Dict, List
 from uuid import UUID, uuid4
 from expert_dollup.core.domains import *
 from expert_dollup.shared.starlette_injection import Clock
-from expert_dollup.shared.database_services import DatabaseContext, Plucker
+from expert_dollup.shared.database_services import DatabaseContext
 
 
 class ReportDistributor:
@@ -32,9 +32,9 @@ class ReportDistributor:
                     formula_id=row.formula_id,
                     supplied_item=SuppliedItem(
                         datasheet_id=report.datasheet_id,
-                        element_def_id=row.element_def_id,
-                        child_reference_id=row.child_reference_id,
-                        organization_id=organization_by_ids[row.child_reference_id],
+                        aggregate_id=row.aggregate_id,
+                        element_id=row.element_id,
+                        organization_id=organization_by_ids[row.element_id],
                     ),
                     distribution_ids=[],
                     summary=stage.summary,
@@ -81,20 +81,18 @@ class ReportDistributor:
 
         for stage in report.stages:
             for row in stage.rows:
-                reference_ids.append(row.child_reference_id)
+                reference_ids.append(row.element_id)
 
         return reference_ids
 
     async def _get_organization_id_by_child_reference(
         self, datasheet_id: UUID, child_reference_ids: List[UUID]
     ):
-        datasheet_element_plucker: Plucker[
-            DatasheetElement
-        ] = self.database_context.bind_query(Plucker[DatasheetElement])
-        report_datasheet_elements = await datasheet_element_plucker.pluck_subressources(
-            DatasheetElementFilter(datasheet_id=datasheet_id),
-            lambda ids: DatasheetElementPluckFilter(child_element_references=ids),
-            child_reference_ids,
+        report_datasheet_elements = await self.database_context.execute(
+            DatasheetElement,
+            DatasheetElementPluckFilter(
+                datasheet_id=datasheet_id, child_element_references=child_reference_ids
+            ),
         )
         organization_by_ids = {
             element.child_element_reference: element.original_owner_organization_id

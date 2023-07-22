@@ -11,6 +11,15 @@ class QueryFilter:
 
         self._args = kwargs
 
+    def put(self, name: str, value):
+        setattr(self, name, value)
+        self._args[name] = value
+
+    def put_when_present(self, name: str, value, blank=None):
+        if not value is blank:
+            setattr(self, name, value)
+            self._args[name] = value
+
     @property
     def args(self) -> dict:
         assert not self._args is None

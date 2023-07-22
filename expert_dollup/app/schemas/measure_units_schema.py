@@ -5,7 +5,7 @@ from ariadne.types import GraphQLResolveInfo
 from expert_dollup.shared.database_services import *
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.core.domains import *
-from expert_dollup.app.controllers.user.user_details import *
+from expert_dollup.app.controllers.organization.user_controller import *
 from expert_dollup.app.controllers.measure_units_controller import *
 from expert_dollup.app.dtos import *
 from .types import query, mutation

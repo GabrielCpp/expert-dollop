@@ -1,4 +1,15 @@
-from typing import Callable, Iterable, List, TypeVar, Optional, Dict, Type, Set, Any
+from typing import (
+    Callable,
+    Iterable,
+    List,
+    TypeVar,
+    Optional,
+    Dict,
+    Type,
+    Set,
+    Any,
+    get_args,
+)
 from dataclasses import dataclass
 from collections import defaultdict
 from os import environ
@@ -17,7 +28,6 @@ from ..query_filter import QueryFilter
 from ..exceptions import RecordNotFound
 from ..batch_helper import batch
 from ..collection_element_mapping import CollectionElementMapping
-from ..db_agnotist_query_builder import DbAgnotistQueryBuilder
 from ..simplifier import Simplifier
 from ..adapter_interfaces import (
     InternalRepository,
@@ -136,25 +146,25 @@ class QueryCompiler:
     def __init__(self, collection: AsyncCollectionReference):
         self.collection = collection
 
-    def compile_query(self, builder: DbAgnotistQueryBuilder):
+    def compile_query(self, builder: QueryBuilder):
         query = self.collection
 
-        if not builder._selections is None:
-            has_one_item = len(builder._selections) == 1
+        if not builder.selections is None:
+            has_one_item = len(builder.selections) == 1
 
-            if has_one_item and builder._selections[0] == "1":
+            if has_one_item and builder.selections[0] == "1":
                 query = query.select(["__name__"])
-            elif has_one_item and builder._selections[0] == "*":
+            elif has_one_item and builder.selections[0] == "*":
                 pass
             else:
-                query = query.select(builder._selections)
+                query = query.select(builder.selections)
 
-        for (column_name, op, value) in builder._wheres:
+        for (column_name, op, value) in builder.wheres:
             apply_op = SUPPORTED_OPS[op]
             query = apply_op(column_name, Simplifier.simplify(value), query)
 
-        if not builder._orders is None:
-            for name, direction in builder._orders:
+        if not builder.orders is None:
+            for name, direction in builder.orders:
                 query = query.order_by(
                     name,
                     direction=Query.DESCENDING
@@ -162,8 +172,8 @@ class QueryCompiler:
                     else Query.ASCENDING,
                 )
 
-        if not builder._max_records is None:
-            query = query.limit(builder._max_records)
+        if not builder.limit_value is None:
+            query = query.limit(builder.limit_value)
 
         return query
 
@@ -273,8 +283,12 @@ class FirestoreCollection(InternalRepository[Domain]):
     def batch_size(self) -> int:
         return 20
 
+    @property
+    def details(self) -> RepositoryDetails:
+        return self._table_details
+
     async def insert(self, domain: Domain):
-        d = self._db_mapping.map_domain_to_dict(domain)
+        d = self._db_mapping.map_domain_to_record(domain)
 
         if self._table_details.is_counting_enabled:
             await self._batch_operation([d], lambda b, doc_ref, d: b.set(doc_ref, d))
@@ -282,8 +296,8 @@ class FirestoreCollection(InternalRepository[Domain]):
             doc_id = self._build_id(d)
             await self._collection.document(doc_id).set(d, retry=retry_strategy)
 
-    async def insert_many(self, domains: List[Domain]):
-        dicts = self._db_mapping.map_many_domain_to_dict(domains)
+    async def inserts(self, domains: List[Domain]):
+        dicts = self._db_mapping.map_many_domain_to_record(domains)
         await self._batch_operation(dicts, lambda b, doc_ref, d: b.set(doc_ref, d))
 
     async def update(self, value_filter: QueryFilter, query_filter: WhereFilter):
@@ -295,12 +309,12 @@ class FirestoreCollection(InternalRepository[Domain]):
         )
 
     async def upserts(self, domains: List[Domain]) -> None:
-        dicts = self._db_mapping.map_many_domain_to_dict(domains)
+        dicts = self._db_mapping.map_many_domain_to_record(domains)
         await self._batch_operation(
             dicts, lambda b, doc_ref, d: b.set(doc_ref, d, merge=True)
         )
 
-    async def find_all(self, limit: int = 1000) -> List[Domain]:
+    async def all(self, limit: int = 1000) -> List[Domain]:
         results = []
 
         async for doc in self._collection.limit(limit).stream():
@@ -327,7 +341,7 @@ class FirestoreCollection(InternalRepository[Domain]):
 
         raise RecordNotFound()
 
-    async def find_by_id(self, pk_id: Id) -> Domain:
+    async def find(self, pk_id: Id) -> Domain:
         document_id = self._build_id_from_pk(pk_id)
         doc = await self._collection.document(document_id).get()
 
@@ -363,12 +377,12 @@ class FirestoreCollection(InternalRepository[Domain]):
             query_filter, lambda b, doc_ref, d: b.delete(doc_ref, d)
         )
 
-    async def delete_by_id(self, pk_id: Id):
+    async def delete(self, pk_id: Id):
         id = self._build_id_from_pk(pk_id)
         await self._collection.document(id).delete()
 
-    def get_builder(self) -> QueryBuilder:
-        return DbAgnotistQueryBuilder()
+    async def execute(self, builder: WhereFilter) -> Union[Domain, List[Domain], None]:
+        raise NotImplementedError()
 
     async def fetch_all_records(
         self,
@@ -392,7 +406,7 @@ class FirestoreCollection(InternalRepository[Domain]):
         return results
 
     async def bulk_insert(self, daos: List[BaseModel]):
-        dicts = self._db_mapping.map_many_dao_to_dict(daos)
+        dicts = self._db_mapping.map_many_dao_to_record(daos)
         await self._batch_operation(dicts, lambda b, doc_ref, d: b.set(doc_ref, d))
 
     def map_domain_to_dao(self, domain: Domain) -> BaseModel:
@@ -476,7 +490,7 @@ class FirestoreCollection(InternalRepository[Domain]):
         return self._query_compiler.build_count_key_id(d, keys_set)
 
     def _build_query(self, builder: WhereFilter):
-        if isinstance(builder, DbAgnotistQueryBuilder):
+        if isinstance(builder, QueryBuilder):
             return self._query_compiler.compile_query(builder)
 
         query = self._query_compiler.collection

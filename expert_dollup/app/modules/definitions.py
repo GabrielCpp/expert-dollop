@@ -1,15 +1,14 @@
 from expert_dollup.shared.starlette_injection import *
 from expert_dollup.shared.database_services import *
 from expert_dollup.core.domains import *
+from expert_dollup.core.units.evaluator import Unit
 from expert_dollup.infra.expert_dollup_db import *
 from expert_dollup.infra.ressource_auth_db import *
+from expert_dollup.infra.expert_dollup_storage import *
 
 expert_dollup_metadatas = [
-    RepositoryMetadata(
-        dao=DatasheetDefinitionElementDao, domain=DatasheetDefinitionElement
-    ),
-    RepositoryMetadata(dao=LabelCollectionDao, domain=LabelCollection),
-    RepositoryMetadata(dao=LabelDao, domain=Label),
+    RepositoryMetadata(dao=AggregateCollectionDao, domain=AggregateCollection),
+    RepositoryMetadata(dao=AggregateDao, domain=Aggregate),
     RepositoryMetadata(dao=DatasheetElementDao, domain=DatasheetElement),
     RepositoryMetadata(dao=DatasheetDao, domain=Datasheet),
     RepositoryMetadata(dao=DistributableItemDao, domain=DistributableItem),
@@ -32,13 +31,13 @@ auth_metadatas = [
     RepositoryMetadata(dao=RessourceDao, domain=Ressource),
     RepositoryMetadata(dao=UserDao, domain=User),
 ]
+storage_metadatas = [
+    RepositoryMetadata(dao=FormulaPackDao, domain=FormulaPack),
+    RepositoryMetadata(dao=CompiledReportDao, domain=CompiledReport),
+]
 paginations = [
     PaginationDetails(
-        default_page_encoder=FieldTokenEncoder("name", str, str, ""),
-        for_domain=DatasheetDefinitionElement,
-    ),
-    PaginationDetails(
-        default_page_encoder=FieldTokenEncoder("child_element_reference"),
+        default_page_encoder=FieldTokenEncoder("id"),
         for_domain=DatasheetElement,
     ),
     PaginationDetails(
@@ -65,10 +64,15 @@ paginations = [
         for_domain=ReportDefinition,
     ),
     PaginationDetails(
-        default_page_encoder=FieldTokenEncoder("id"), for_domain=Translation
+        default_page_encoder=FieldTokenEncoder("cursor", str, str, ""),
+        for_domain=Translation,
     ),
     PaginationDetails(
         default_page_encoder=FieldTokenEncoder("name", str, str, ""),
         for_domain=Union[ProjectDefinitionNode, Formula],
+    ),
+    PaginationDetails(
+        default_page_encoder=FieldTokenEncoder("name", str, str, ""),
+        for_domain=Aggregate,
     ),
 ]

@@ -4,8 +4,6 @@ from uuid import UUID
 from pydantic import BaseModel
 from decimal import Decimal
 
-JsonSchemaDao = dict
-
 
 class IntFieldConfigDao(BaseModel):
     unit: str
@@ -25,6 +23,10 @@ class StringFieldConfigDao(BaseModel):
 
 class BoolFieldConfigDao(BaseModel):
     enabled: bool
+
+
+class AggregateReferenceConfigDao(BaseModel):
+    from_collection: str
 
 
 class StaticNumberFieldConfigDao(BaseModel):
@@ -48,6 +50,10 @@ class CollapsibleContainerFieldConfigDao(BaseModel):
     is_collapsible: bool
 
 
+class NodeReferenceConfigDao(BaseModel):
+    node_type: str
+
+
 FieldDetailsUnionDao: TypeAlias = Union[
     StaticNumberFieldConfigDao,
     DecimalFieldConfigDao,
@@ -56,6 +62,8 @@ FieldDetailsUnionDao: TypeAlias = Union[
     StaticChoiceFieldConfigDao,
     CollapsibleContainerFieldConfigDao,
     BoolFieldConfigDao,
+    NodeReferenceConfigDao,
+    AggregateReferenceConfigDao,
     None,
 ]
 

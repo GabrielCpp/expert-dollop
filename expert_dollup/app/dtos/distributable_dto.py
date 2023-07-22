@@ -9,8 +9,8 @@ from expert_dollup.shared.starlette_injection import CamelModel
 
 class SuppliedItemDto(CamelModel):
     datasheet_id: UUID
-    element_def_id: UUID
-    child_reference_id: UUID
+    aggregate_id: UUID
+    element_id: UUID
     organization_id: UUID
 
 

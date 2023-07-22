@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Type, TypeVar, Optional
+from typing import Type, TypeVar, Optional, Any
 from pydantic import BaseModel
 from dataclasses import dataclass
 from ...database_services import Paginator, QueryFilter
@@ -13,6 +13,7 @@ class MappingChain:
     domain: Optional[Type] = None
     out_domain: Optional[Type] = None
     out_dto: Optional[Type] = None
+    value: Optional[Any] = None
 
 
 class PageHandler(ABC):
